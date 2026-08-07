@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wiggly Discovery — Research Board</title>
+  <style>
+    :root {
+      --paper: #f5f1e8;
+      --ink: #050718;
+      --muted: #5e667a;
+      --line: #cdd3df;
+      --aqua: #42d8f5;
+      --yellow: #ffe562;
+      --lime: #b7f34b;
+      --violet: #7347e8;
+      --coral: #ff6f61;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-snap-type: y mandatory;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, a { font: inherit; }
+
+    .deck-nav {
+      position: fixed;
+      z-index: 20;
+      top: 18px;
+      left: 50%;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: min(1180px, calc(100% - 40px));
+      padding: 10px 12px 10px 16px;
+      transform: translateX(-50%);
+      color: var(--white);
+      background: rgba(5, 7, 24, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(5, 7, 24, 0.16);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: max-content;
+      font-weight: 900;
+    }
+
+    .brand b {
+      color: var(--aqua);
+      font-size: 18px;
+      text-transform: uppercase;
+    }
+
+    .brand span {
+      color: #a8b0c4;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .progress {
+      display: flex;
+      flex: 1;
+      gap: 5px;
+    }
+
+    .progress a {
+      height: 5px;
+      flex: 1;
+      background: #343a4e;
+      border-radius: 999px;
+      transition: background 180ms ease;
+    }
+
+    .progress a[aria-current="true"] { background: var(--yellow); }
+
+    .nav-count {
+      min-width: 48px;
+      color: #a8b0c4;
+      font-size: 12px;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .slide {
+      min-height: 100svh;
+      padding: 96px clamp(24px, 5vw, 78px) 52px;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    .slide-inner {
+      width: min(1280px, 100%);
+      min-height: calc(100svh - 148px);
+      margin: 0 auto;
+      display: grid;
+      align-content: center;
+      gap: 28px;
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 30px;
+      padding: 6px 10px;
+      border: 2px solid var(--ink);
+      background: var(--aqua);
+      font-size: 11px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      max-width: 1060px;
+      font-size: clamp(50px, 7vw, 108px);
+      line-height: 0.93;
+      font-weight: 950;
+    }
+
+    h2 {
+      max-width: 980px;
+      font-size: clamp(38px, 5vw, 72px);
+      line-height: 0.96;
+      font-weight: 950;
+    }
+
+    h3 {
+      font-size: 20px;
+      line-height: 1.05;
+      font-weight: 900;
+    }
+
+    .lede {
+      max-width: 850px;
+      color: var(--muted);
+      font-size: clamp(20px, 2.2vw, 30px);
+      line-height: 1.32;
+      font-weight: 620;
+    }
+
+    .statement {
+      max-width: 1100px;
+      padding-left: 24px;
+      border-left: 10px solid var(--yellow);
+      font-size: clamp(28px, 4.2vw, 62px);
+      line-height: 1.04;
+      font-weight: 920;
+    }
+
+    .cols-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .cols-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .evidence {
+      min-width: 0;
+      overflow: hidden;
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 8px 8px 0 var(--ink);
+    }
+
+    .evidence-visual {
+      position: relative;
+      min-height: 280px;
+      background: #e8ecf3;
+      border-bottom: 2px solid var(--ink);
+      overflow: hidden;
+    }
+
+    .evidence-visual.tall { min-height: 430px; }
+
+    .evidence img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+      object-fit: cover;
+      object-position: top;
+    }
+
+    .evidence img.contain {
+      padding: 12px;
+      object-fit: contain;
+      background: #11131a;
+    }
+
+    .evidence-copy {
+      display: grid;
+      gap: 10px;
+      padding: 18px;
+    }
+
+    .source {
+      color: var(--violet);
+      font-size: 11px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .evidence-copy p {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.38;
+      font-weight: 600;
+    }
+
+    .decision {
+      background: var(--ink);
+      color: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 22px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .decision .label {
+      color: var(--aqua);
+      font-size: 11px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .decision p {
+      color: #d7dbea;
+      font-size: 17px;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    .flow-step {
+      position: relative;
+      min-height: 142px;
+      display: grid;
+      align-content: space-between;
+      gap: 14px;
+      padding: 16px;
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+    }
+
+    .flow-step:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      right: -16px;
+      width: 20px;
+      color: var(--ink);
+      background: var(--paper);
+      font-size: 22px;
+      font-weight: 950;
+      text-align: center;
+      transform: translateY(-50%);
+    }
+
+    .flow-step b {
+      color: var(--violet);
+      font-size: 12px;
+    }
+
+    .flow-step span {
+      font-size: 15px;
+      line-height: 1.25;
+      font-weight: 850;
+    }
+
+    .rules {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .rule {
+      padding: 20px;
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .rule b {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      background: var(--lime);
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      font-size: 14px;
+    }
+
+    .rule p {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.4;
+      font-weight: 650;
+    }
+
+    .rule strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--ink);
+      font-size: 18px;
+    }
+
+    .final-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .final-card {
+      min-height: 420px;
+      padding: clamp(24px, 4vw, 54px);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      display: grid;
+      align-content: space-between;
+      gap: 28px;
+    }
+
+    .final-card.primary {
+      background: var(--ink);
+      color: var(--white);
+      box-shadow: 10px 10px 0 var(--aqua);
+    }
+
+    .final-card.secondary {
+      background: var(--yellow);
+      box-shadow: 10px 10px 0 var(--ink);
+    }
+
+    .final-card p {
+      max-width: 680px;
+      color: inherit;
+      font-size: clamp(20px, 2.2vw, 31px);
+      line-height: 1.28;
+      font-weight: 700;
+    }
+
+    .final-card small {
+      color: inherit;
+      opacity: 0.7;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .slide.dark {
+      color: var(--white);
+      background: var(--ink);
+    }
+
+    .slide.dark .lede { color: #b9c0d2; }
+    .slide.dark .kicker { color: var(--ink); }
+
+    .slide.aqua { background: #dff8fb; }
+    .slide.yellow { background: #fff7c9; }
+
+    @media (max-width: 900px) {
+      .deck-nav { top: 10px; width: calc(100% - 20px); }
+      .brand span { display: none; }
+      .slide { padding: 84px 14px 28px; scroll-snap-align: none; }
+      .slide-inner { min-height: auto; }
+      .cols-2, .cols-3, .rules, .final-grid { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .flow-step { min-height: 94px; }
+      .flow-step:not(:last-child)::after {
+        content: "↓";
+        top: auto;
+        right: 50%;
+        bottom: -17px;
+        transform: translateX(50%);
+      }
+      .evidence-visual, .evidence-visual.tall { min-height: 300px; }
+      .progress a:nth-child(n+7) { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="deck-nav" aria-label="Research board navigation">
+    <div class="brand"><b>Wiggly</b><span>Discovery research</span></div>
+    <div class="progress">
+      <a href="#slide-1" aria-label="Slide 1"></a>
+      <a href="#slide-2" aria-label="Slide 2"></a>
+      <a href="#slide-3" aria-label="Slide 3"></a>
+      <a href="#slide-4" aria-label="Slide 4"></a>
+      <a href="#slide-5" aria-label="Slide 5"></a>
+      <a href="#slide-6" aria-label="Slide 6"></a>
+      <a href="#slide-7" aria-label="Slide 7"></a>
+      <a href="#slide-8" aria-label="Slide 8"></a>
+      <a href="#slide-9" aria-label="Slide 9"></a>
+    </div>
+    <div class="nav-count"><span id="current-slide">01</span> / 09</div>
+  </nav>
+
+  <main>
+    <section class="slide yellow" id="slide-1" data-slide="1">
+      <div class="slide-inner">
+        <span class="kicker">Research north star</span>
+        <h1>Show the ad.<br>Prove the recipe.</h1>
+        <p class="statement">“OMG, I can make this. They turned it into an exact science.”</p>
+        <p class="lede">Finished ads create desire. The attached Format creates confidence. Every screen must protect that order.</p>
+      </div>
+    </section>
+
+    <section class="slide dark" id="slide-2" data-slide="2">
+      <div class="slide-inner">
+        <span class="kicker">01 — Earn the stop</span>
+        <h2>The work gets the biggest pixels.</h2>
+        <div class="cols-3">
+          <article class="evidence">
+            <div class="evidence-visual"><img src="screenshots/round-1/runway-watch.png" alt="Runway Watch visual gallery"></div>
+            <div class="evidence-copy"><span class="source">Runway Watch</span><h3>Quiet cinematic display</h3><p>The interface gets out of the way so the work can sell itself.</p></div>
+          </article>
+          <article class="evidence">
+            <div class="evidence-visual"><img src="screenshots/round-1/civitai-images.png" alt="Civitai image discovery gallery"></div>
+            <div class="evidence-copy"><span class="source">Civitai</span><h3>Outputs before models</h3><p>People find an image first, then discover the reusable recipe behind it.</p></div>
+          </article>
+          <article class="evidence">
+            <div class="evidence-visual"><img src="screenshots/round-1/suno-explore.png" alt="Suno music discovery page"></div>
+            <div class="evidence-copy"><span class="source">Suno</span><h3>Playable discovery</h3><p>Media is usable in the feed, not trapped behind poster thumbnails.</p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide aqua" id="slide-3" data-slide="3">
+      <div class="slide-inner">
+        <span class="kicker">02 — Attach the science</span>
+        <h2>Keep the ad dominant. Put the recipe beside it.</h2>
+        <div class="cols-2">
+          <article class="evidence">
+            <div class="evidence-visual tall"><img src="screenshots/round-2/civitai-output-detail.png" alt="Civitai output detail page"></div>
+            <div class="evidence-copy"><span class="source">Civitai output detail</span><h3>Result first, provenance second</h3><p>Creator, process, tags, save, and remix stay available without covering the work.</p></div>
+          </article>
+          <div class="decision">
+            <span class="label">Wiggly decision</span>
+            <h3>Ad detail answers “I want this.”</h3>
+            <p>The playable finished ad owns the page. A compact side panel shows brand, creator, “Made with 3D Breakdown,” save, share, and one dominant Use action.</p>
+            <p>Raw prompts, provider names, and the technical kit remain collapsed under “How it was made.”</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-4" data-slide="4">
+      <div class="slide-inner">
+        <span class="kicker">03 — Make “use” concrete</span>
+        <h2>No ZIP file. No mystery handoff.</h2>
+        <div class="cols-3">
+          <article class="evidence">
+            <div class="evidence-visual"><img src="screenshots/round-2/replicate-model-detail.png" alt="Replicate model playground"></div>
+            <div class="evidence-copy"><span class="source">Replicate</span><h3>Inputs beside output</h3><p>The user can see what goes in, what comes out, and what it costs.</p></div>
+          </article>
+          <article class="evidence">
+            <div class="evidence-visual"><img src="screenshots/round-2/huggingface-model-detail.png" alt="Hugging Face model detail"></div>
+            <div class="evidence-copy"><span class="source">Hugging Face</span><h3>Trust and connectors</h3><p>Creator, version, usage, providers, and one-click use are layered around a stable identity.</p></div>
+          </article>
+          <article class="evidence">
+            <div class="evidence-visual"><img src="screenshots/round-2/smithery-server-detail.png" alt="Smithery server detail"></div>
+            <div class="evidence-copy"><span class="source">Smithery</span><h3>Add to the agent</h3><p>A reusable capability has one obvious action and the technical proof stays nearby.</p></div>
+          </article>
+        </div>
+        <div class="decision">
+          <span class="label">Wiggly decision</span>
+          <p><strong>Use this Format</strong> opens one short sheet: required inputs, typical time, estimated cost, available agent, and Start. The agent gets the exact Format version and asks one question at a time.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide dark" id="slide-5" data-slide="5">
+      <div class="slide-inner">
+        <span class="kicker">04 — Prove repeatability</span>
+        <h2>One great ad is luck. Five brands is a Format.</h2>
+        <div class="cols-2">
+          <article class="evidence">
+            <div class="evidence-visual tall"><img src="screenshots/round-2/civitai-model-detail.png" alt="Civitai model detail with multiple examples"></div>
+            <div class="evidence-copy"><span class="source">Civitai model detail</span><h3>Examples prove range</h3><p>Multiple outputs demonstrate what the reusable object can reliably create.</p></div>
+          </article>
+          <article class="evidence">
+            <div class="evidence-visual tall"><img src="screenshots/round-2/framer-template-detail.png" alt="Framer template embedded preview"></div>
+            <div class="evidence-copy"><span class="source">Framer Marketplace</span><h3>Experience before commitment</h3><p>A large embedded preview lets the user inspect the thing before paying or duplicating it.</p></div>
+          </article>
+        </div>
+        <div class="decision">
+          <span class="label">Wiggly decision</span>
+          <p>Every Format detail page opens with a cross-brand proof reel and three to five real ads. Successful outputs replace fake ratings and premature social proof.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide yellow" id="slide-6" data-slide="6">
+      <div class="slide-inner">
+        <span class="kicker">05 — Browse like an advertiser</span>
+        <h2>Filter by the job, not the machinery.</h2>
+        <div class="cols-3">
+          <article class="evidence">
+            <div class="evidence-visual"><img class="contain" src="screenshots/round-3/tiktok-top-ads-guide.png" alt="TikTok Top Ads guide"></div>
+            <div class="evidence-copy"><span class="source">TikTok Top Ads</span><h3>Industry + objective</h3><p>Real ads are organized around the advertiser's business question.</p></div>
+          </article>
+          <article class="evidence">
+            <div class="evidence-visual"><img src="screenshots/round-2/n8n-workflow-library.png" alt="n8n workflow library"></div>
+            <div class="evidence-copy"><span class="source">n8n</span><h3>Search by outcome</h3><p>Large libraries become useful when categories describe what the user wants done.</p></div>
+          </article>
+          <article class="evidence">
+            <div class="evidence-visual"><img src="screenshots/round-1/gumloop-templates.png" alt="Gumloop template gallery"></div>
+            <div class="evidence-copy"><span class="source">Gumloop</span><h3>Task and integration search</h3><p>Use-case language beats internal workflow jargon.</p></div>
+          </article>
+        </div>
+        <div class="decision">
+          <span class="label">Wiggly filters</span>
+          <p>Goal, business, platform, runtime, and media type. Model names and providers do not belong in the public feed.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-7" data-slide="7">
+      <div class="slide-inner">
+        <span class="kicker">06 — Mobile means less</span>
+        <h2>The ad fills the screen. Use stays near the thumb.</h2>
+        <div class="cols-3">
+          <article class="evidence">
+            <div class="evidence-visual tall"><img class="contain" src="screenshots/round-3/civitai-output-mobile.png" alt="Civitai mobile output page"></div>
+            <div class="evidence-copy"><span class="source">Civitai mobile</span><h3>Sticky reuse action</h3><p>Full-height media and a bottom action bar preserve the result.</p></div>
+          </article>
+          <article class="evidence">
+            <div class="evidence-visual tall"><img class="contain" src="screenshots/round-3/suno-song-mobile.png" alt="Suno mobile song detail"></div>
+            <div class="evidence-copy"><span class="source">Suno mobile</span><h3>Identity on the media</h3><p>Title, creator, and playback live with the result, not above a wall of metadata.</p></div>
+          </article>
+          <article class="evidence">
+            <div class="evidence-visual tall"><img class="contain" src="screenshots/round-3/replicate-model-mobile.png" alt="Replicate mobile model page"></div>
+            <div class="evidence-copy"><span class="source">Replicate mobile</span><h3>What to avoid first</h3><p>Trust data is useful, but it delays the proof when stacked ahead of the output.</p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide aqua" id="slide-8" data-slide="8">
+      <div class="slide-inner">
+        <span class="kicker">07 — The public loop</span>
+        <h2>Desire first. Confidence second. Agent third.</h2>
+        <div class="flow">
+          <div class="flow-step"><b>01</b><span>Watch a finished ad</span></div>
+          <div class="flow-step"><b>02</b><span>Open its detail</span></div>
+          <div class="flow-step"><b>03</b><span>See the attached Format</span></div>
+          <div class="flow-step"><b>04</b><span>Review cross-brand proof</span></div>
+          <div class="flow-step"><b>05</b><span>See time, cost, and inputs</span></div>
+          <div class="flow-step"><b>06</b><span>Choose an agent</span></div>
+          <div class="flow-step"><b>07</b><span>Start the guided run</span></div>
+        </div>
+        <div class="rules">
+          <div class="rule"><b>1</b><p><strong>Finished ad</strong>The discovery object that earns attention.</p></div>
+          <div class="rule"><b>2</b><p><strong>Format</strong>The repeatable recipe attached to the proof.</p></div>
+          <div class="rule"><b>3</b><p><strong>Creator</strong>Trusted through work, versions, and lineage.</p></div>
+          <div class="rule"><b>4</b><p><strong>Agent handoff</strong>The shortest path from wanting it to making it.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-9" data-slide="9">
+      <div class="slide-inner">
+        <span class="kicker">The Wiggly synthesis</span>
+        <h2>Not a template store.<br>A proof library for ads.</h2>
+        <div class="final-grid">
+          <div class="final-card primary">
+            <small>Public promise</small>
+            <p>Find an ad worth making. See the exact Format behind it. Hand it to an agent and make your version.</p>
+            <small>Finished ads → Formats → agents</small>
+          </div>
+          <div class="final-card secondary">
+            <small>MVP discipline</small>
+            <p>Curated feed. Real outputs. Four public pages. Save, share, use, and credit.</p>
+            <small>No social-network bloat</small>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const slides = [...document.querySelectorAll("[data-slide]")];
+    const progress = [...document.querySelectorAll(".progress a")];
+    const current = document.querySelector("#current-slide");
+
+    const activate = (index) => {
+      progress.forEach((item, itemIndex) => {
+        item.setAttribute("aria-current", itemIndex === index ? "true" : "false");
+      });
+      current.textContent = String(index + 1).padStart(2, "0");
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) activate(slides.indexOf(visible.target));
+    }, { threshold: [0.45, 0.7] });
+
+    slides.forEach((slide) => observer.observe(slide));
+    activate(0);
+
+    window.addEventListener("keydown", (event) => {
+      if (!["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft"].includes(event.key)) return;
+      event.preventDefault();
+      const active = progress.findIndex((item) => item.getAttribute("aria-current") === "true");
+      const direction = ["ArrowDown", "ArrowRight"].includes(event.key) ? 1 : -1;
+      const next = Math.max(0, Math.min(slides.length - 1, active + direction));
+      slides[next].scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  </script>
+</body>
+</html>

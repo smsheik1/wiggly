@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wiggly Discovery — Design Directions</title>
+  <style>
+    :root {
+      --ink: #050718;
+      --paper: #f4f0e7;
+      --white: #fff;
+      --line: #cbd2df;
+      --muted: #687188;
+      --aqua: #45d9f5;
+      --yellow: #ffe562;
+      --lime: #b9f34c;
+      --violet: #7547e8;
+      --coral: #ff7566;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button { font: inherit; }
+
+    .direction {
+      min-height: 100svh;
+      padding: 34px;
+      scroll-snap-align: start;
+      display: grid;
+      align-content: center;
+    }
+
+    .board {
+      width: min(1370px, 100%);
+      min-height: min(880px, calc(100svh - 68px));
+      margin: 0 auto;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 5px 8px;
+      border: 2px solid currentColor;
+      font-size: 10px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(48px, 6vw, 90px); line-height: 0.93; font-weight: 950; }
+    h2 { font-size: clamp(34px, 4vw, 58px); line-height: 0.96; font-weight: 950; }
+    h3 { font-size: 17px; line-height: 1.1; font-weight: 900; }
+    p { font-size: 14px; line-height: 1.4; font-weight: 620; }
+
+    .contact {
+      background: var(--paper);
+      box-shadow: 12px 12px 0 var(--ink);
+    }
+
+    .contact header {
+      height: 72px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--white);
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .wordmark { font-size: 25px; font-weight: 950; color: var(--violet); }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .nav button, .card-actions button {
+      min-height: 38px;
+      padding: 8px 13px;
+      background: var(--white);
+      color: var(--ink);
+      border: 2px solid var(--ink);
+      border-radius: 6px;
+      font-weight: 850;
+    }
+
+    .nav .primary, .card-actions .primary { background: var(--yellow); }
+
+    .contact-main {
+      padding: 34px 34px 28px;
+      display: grid;
+      gap: 22px;
+    }
+
+    .contact-title {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 24px;
+    }
+
+    .contact-title p { max-width: 520px; color: var(--muted); font-size: 16px; }
+
+    .filters { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    .filters span { padding: 7px 10px; background: var(--white); border: 1px solid var(--ink); border-radius: 999px; font-size: 11px; font-weight: 800; }
+    .filters .active { background: var(--aqua); }
+
+    .ad-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+
+    .ad-card {
+      min-width: 0;
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      overflow: hidden;
+      box-shadow: 6px 6px 0 var(--ink);
+    }
+
+    .ad-media {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      background: #0a0c18;
+      overflow: hidden;
+    }
+
+    .ad-media img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .ad-media .format-pill {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      padding: 6px 8px;
+      color: var(--ink);
+      background: var(--aqua);
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 950;
+    }
+
+    .sound {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      background: rgba(5, 7, 24, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      font-size: 15px;
+    }
+
+    .ad-info { padding: 15px; display: grid; gap: 10px; }
+    .ad-info .eyebrow { color: var(--violet); font-size: 10px; font-weight: 950; text-transform: uppercase; }
+    .ad-info .meta { color: var(--muted); font-size: 12px; font-weight: 650; }
+    .card-actions { display: flex; justify-content: space-between; gap: 8px; }
+    .card-actions button { min-height: 34px; padding: 6px 10px; font-size: 11px; }
+
+    .screening {
+      color: var(--white);
+      background: #07080d;
+      box-shadow: 12px 12px 0 var(--coral);
+    }
+
+    .screening header {
+      height: 70px;
+      padding: 0 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #292c36;
+    }
+
+    .screening .wordmark { color: var(--white); }
+    .screening .nav { color: #aeb4c2; }
+
+    .screening-main {
+      padding: 38px 30px;
+      display: grid;
+      gap: 28px;
+    }
+
+    .screening-title { display: flex; align-items: end; justify-content: space-between; gap: 30px; }
+    .screening-title p { max-width: 480px; color: #aeb4c2; font-size: 16px; }
+
+    .screening-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+
+    .film-card {
+      display: grid;
+      grid-template-columns: 0.78fr 1.22fr;
+      min-height: 560px;
+      background: #11131a;
+      border: 1px solid #343746;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .film-card img { width: 100%; height: 100%; object-fit: cover; }
+    .film-copy { padding: 28px; display: grid; align-content: end; gap: 14px; }
+    .film-copy p { color: #aeb4c2; }
+    .film-copy button { width: fit-content; padding: 10px 14px; color: var(--ink); background: var(--white); border: 0; border-radius: 4px; font-weight: 850; }
+
+    .registry {
+      background: #edf0f5;
+      box-shadow: 12px 12px 0 var(--violet);
+    }
+
+    .registry header {
+      height: 74px;
+      padding: 0 28px;
+      display: grid;
+      grid-template-columns: auto minmax(260px, 560px) auto;
+      align-items: center;
+      gap: 24px;
+      background: var(--white);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .search {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      color: var(--muted);
+      background: #f6f7f9;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .registry-main { padding: 30px; display: grid; grid-template-columns: 240px 1fr; gap: 24px; }
+
+    .registry aside {
+      min-height: 690px;
+      padding: 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+    }
+
+    .registry aside b { font-size: 12px; text-transform: uppercase; }
+    .registry aside span { color: var(--muted); font-size: 13px; font-weight: 700; }
+
+    .registry-content { display: grid; align-content: start; gap: 20px; }
+    .registry-title { display: flex; align-items: end; justify-content: space-between; }
+    .registry-title p { max-width: 440px; color: var(--muted); }
+
+    .proof-card {
+      display: grid;
+      grid-template-columns: 240px 1fr 220px;
+      min-height: 270px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      overflow: hidden;
+    }
+
+    .proof-card img { width: 100%; height: 100%; object-fit: cover; background: var(--ink); }
+    .proof-main { padding: 22px; display: grid; align-content: start; gap: 12px; }
+    .proof-main .tag { width: fit-content; padding: 5px 8px; background: #e7dcff; color: #5024b8; border-radius: 999px; font-size: 10px; font-weight: 900; }
+    .proof-main p { color: var(--muted); }
+    .proof-meta { padding: 20px; border-left: 1px solid var(--line); display: grid; align-content: start; gap: 14px; }
+    .proof-meta div { display: flex; justify-content: space-between; gap: 14px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .proof-meta strong { color: var(--ink); }
+    .proof-meta button { min-height: 42px; color: var(--white); background: var(--violet); border: 0; border-radius: 5px; font-weight: 850; }
+
+    .verdict {
+      background: var(--yellow);
+      box-shadow: 12px 12px 0 var(--ink);
+      padding: clamp(30px, 6vw, 90px);
+      display: grid;
+      align-content: center;
+      gap: 28px;
+    }
+
+    .verdict-grid { display: grid; grid-template-columns: 1.4fr 0.6fr; gap: 20px; }
+    .verdict-card { padding: 24px; background: var(--white); border: 2px solid var(--ink); border-radius: 8px; }
+    .verdict-card strong { display: block; margin-bottom: 8px; color: var(--violet); text-transform: uppercase; font-size: 11px; }
+    .verdict-card p { font-size: 17px; }
+
+    @media (max-width: 900px) {
+      html { scroll-snap-type: none; }
+      .direction { padding: 12px; }
+      .board { min-height: 0; }
+      .contact header, .screening header { padding: 0 14px; }
+      .nav span { display: none; }
+      .contact-main, .screening-main { padding: 24px 14px; }
+      .contact-title, .screening-title, .registry-title { display: grid; }
+      .filters { justify-content: flex-start; }
+      .ad-grid, .screening-grid, .registry-main, .verdict-grid { grid-template-columns: 1fr; }
+      .film-card { grid-template-columns: 1fr; }
+      .film-card img { height: 440px; }
+      .registry header { grid-template-columns: auto 1fr; }
+      .registry header .nav { display: none; }
+      .registry-main { padding: 14px; }
+      .registry aside { display: none; }
+      .proof-card { grid-template-columns: 1fr; }
+      .proof-card img { height: 420px; }
+      .proof-meta { border-left: 0; border-top: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <section class="direction">
+    <div class="board contact">
+      <header>
+        <div class="wordmark">WIGGLY</div>
+        <div class="nav"><span>Discover</span><span>Formats</span><span>Creators</span><button>Saved</button><button class="primary">Use with an agent</button></div>
+      </header>
+      <main class="contact-main">
+        <div class="contact-title">
+          <div>
+            <span class="label">Direction A — Studio contact sheet</span>
+            <h2>Ads worth stealing.</h2>
+          </div>
+          <div class="filters"><span class="active">For you</span><span>Ecommerce</span><span>Explain it</span><span>Under 30s</span></div>
+        </div>
+        <div class="ad-grid">
+          <article class="ad-card">
+            <div class="ad-media"><img src="../../v3/public/homepage/three-d-breakdown-showcase-poster.jpg" alt=""><span class="format-pill">3D Breakdown</span><span class="sound">⌁</span></div>
+            <div class="ad-info"><span class="eyebrow">Final Straw</span><h3>Why this straw never bends</h3><span class="meta">by Wiggly Studio · 20 sec</span><div class="card-actions"><button>Save</button><button class="primary">Use Format</button></div></div>
+          </article>
+          <article class="ad-card">
+            <div class="ad-media"><img src="../../v3/public/format-repositories/otaku-explainer-v1/outputs/naruto-compilers-contact-sheet.jpg" alt=""><span class="format-pill" style="background:var(--yellow)">Otaku Explainer</span><span class="sound">⌁</span></div>
+            <div class="ad-info"><span class="eyebrow">Developer tools</span><h3>Compilers, explained by Naruto</h3><span class="meta">by Shaz · 45 sec</span><div class="card-actions"><button>Save</button><button class="primary">Use Format</button></div></div>
+          </article>
+          <article class="ad-card">
+            <div class="ad-media"><img src="../../v3/public/memes/this_is_fine_full.png" alt=""><span class="format-pill" style="background:var(--lime)">Meme</span><span class="sound">⌁</span></div>
+            <div class="ad-info"><span class="eyebrow">Ecommerce</span><h3>When every ad looks the same</h3><span class="meta">by Wiggly Studio · static</span><div class="card-actions"><button>Save</button><button class="primary">Use Format</button></div></div>
+          </article>
+          <article class="ad-card">
+            <div class="ad-media"><img src="../../v3/public/maker-fixtures/hybrid-news/reference.png" alt=""><span class="format-pill" style="background:var(--coral)">Hybrid News</span><span class="sound">⌁</span></div>
+            <div class="ad-info"><span class="eyebrow">Founder-led</span><h3>Turn the announcement into the ad</h3><span class="meta">by Wiggly Studio · static</span><div class="card-actions"><button>Save</button><button class="primary">Use Format</button></div></div>
+          </article>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="direction">
+    <div class="board screening">
+      <header><div class="wordmark">WIGGLY</div><div class="nav"><span>Films</span><span>Formats</span><span>Creators</span></div></header>
+      <main class="screening-main">
+        <div class="screening-title">
+          <div><span class="label">Direction B — Night screening room</span><h2>Watch what works.</h2></div>
+          <p>Large, cinematic work. Almost no marketplace chrome.</p>
+        </div>
+        <div class="screening-grid">
+          <article class="film-card"><img src="../../v3/public/homepage/three-d-breakdown-showcase-poster.jpg" alt=""><div class="film-copy"><span class="label" style="color:var(--aqua)">3D Breakdown</span><h2>Hidden mechanics become the story.</h2><p>Built from one product page. Reusable across ecommerce brands.</p><button>Use this Format</button></div></article>
+          <article class="film-card"><img src="../../v3/public/format-repositories/three-d-breakdown-v1/goldens/finalstraw-contact-sheet.jpg" alt=""><div class="film-copy"><span class="label" style="color:var(--yellow)">Proof reel</span><h2>One recipe. Different brands.</h2><p>Watch first. Inspect the Format only when the result earns it.</p><button>Open proof</button></div></article>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="direction">
+    <div class="board registry">
+      <header><div class="wordmark">WIGGLY</div><div class="search">Search goals, brands, Formats, and creators</div><div class="nav"><span>Browse</span><span>Saved</span></div></header>
+      <main class="registry-main">
+        <aside><b>Goal</b><span>Sell a product</span><span>Explain how it works</span><span>Show proof</span><span>Tell the brand story</span><b>Platform</b><span>Meta</span><span>TikTok</span><span>YouTube Shorts</span><b>Runtime</b><span>Under 15s</span><span>15–30s</span><span>30–60s</span></aside>
+        <div class="registry-content">
+          <div class="registry-title"><div><span class="label">Direction C — Proof registry</span><h2>Repeatable ad systems.</h2></div><p>Compare the work, the inputs, and the run before choosing.</p></div>
+          <article class="proof-card"><img src="../../v3/public/homepage/three-d-breakdown-showcase-poster.jpg" alt=""><div class="proof-main"><span class="tag">3D Breakdown</span><h2>Explain a hidden product mechanism</h2><p>Turns a product page into a narrated 3D mini-documentary with a mechanism reveal.</p></div><div class="proof-meta"><div><span>Proof ads</span><strong>5</strong></div><div><span>Typical time</span><strong>5–12 min</strong></div><div><span>Est. cost</span><strong>~$0.70</strong></div><div><span>Current version</span><strong>v1</strong></div><button>Use this Format</button></div></article>
+          <article class="proof-card"><img src="../../v3/public/format-repositories/otaku-explainer-v1/outputs/naruto-compilers-contact-sheet.jpg" alt=""><div class="proof-main"><span class="tag">Otaku Explainer</span><h2>Teach with characters people know</h2><p>Uses a familiar scene, character voices, captions, and a structured explanation.</p></div><div class="proof-meta"><div><span>Proof ads</span><strong>6</strong></div><div><span>Typical time</span><strong>8–15 min</strong></div><div><span>Media</span><strong>Video</strong></div><div><span>Current version</span><strong>v1</strong></div><button>Use this Format</button></div></article>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="direction">
+    <div class="board verdict">
+      <span class="label">Selected direction</span>
+      <h1>Studio Contact Sheet wins.</h1>
+      <div class="verdict-grid">
+        <div class="verdict-card"><strong>Why</strong><p>It gives the ads the biggest pixels, feels like Wiggly, works across many creative styles, and stays easy to scan on desktop and mobile.</p></div>
+        <div class="verdict-card"><strong>Borrow</strong><p>Dark media wells from the screening room. Compact run facts from the proof registry.</p></div>
+      </div>
+      <p style="font-size:20px;font-weight:800">One visual system. No marketplace Frankenstein.</p>
+    </div>
+  </section>
+</body>
+</html>
