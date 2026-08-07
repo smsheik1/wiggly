@@ -2,6 +2,24 @@
 
 This file is the product memory for things we intentionally defer. When we make a practical v1 tradeoff, add it here immediately so it does not depend on anyone remembering a chat thread.
 
+## Reference Remix
+
+### Turn an inspiration ad into an editable ad for the user's brand
+
+**Status:** Deferred / tabled
+
+**Why:** A general-purpose editor is useful infrastructure but not a strong customer-acquisition promise. The sharper wedge is: upload an ad you wish your brand had made, paste your website, and receive one brand-specific, editable remix.
+
+**Goal:** Connect the existing reference analyzer, website research, static scene composer, and Builder through one customer-facing Reference Remix flow.
+
+**Acceptance criteria:**
+- `/create` accepts one static reference image and one public brand or product URL.
+- Wiggly produces one brand-grounded remix using real product evidence and native editable text.
+- The user sees a clear before-and-after preview, then downloads or opens the result in `/builder`.
+- The flow reuses `AdRenderSurface`, complete `AdScene` payloads, and the existing Builder rather than introducing another editor or renderer.
+- The product stops visibly when it cannot create a trustworthy editable result; it never substitutes a flattened generic AI image.
+- Implementation follows the phased scope in [the Reference Remix PRD](./docs/reference-remix-acquisition-prd.md).
+
 ## Event Demo Wow Moment
 
 ### Build a booth-ready option browser
