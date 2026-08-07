@@ -62,6 +62,7 @@ try {
   const entryList = readZipEntries(archive);
   const entries = entryList.join("\n");
   for (const required of [
+    "wiggly-cartoon-explainer-format-kit/README.md",
     "v3/package.json",
     "v3/kit-smoke.mjs",
     "v3/scripts/otaku-format.ts",
@@ -71,6 +72,10 @@ try {
     "v3/tests/otaku-format-runtime.test.ts",
     "v3/features/experiments/otaku-format/OtakuProofVideo.tsx",
     "v3/public/format-repositories/otaku-explainer-v1/SKILL.md",
+    "v3/public/format-repositories/otaku-explainer-v1/pipeline.json",
+    "v3/public/format-repositories/otaku-explainer-v1/goldens.json",
+    "v3/public/format-repositories/otaku-explainer-v1/goldens/naruto-apis-contact-sheet.jpg",
+    "v3/public/format-repositories/otaku-explainer-v1/assets/reference/reference.mp4",
     "v3/public/format-repositories/otaku-explainer-v1/renderer/OtakuFormatRenderer.tsx",
   ]) {
     assert.match(entries, new RegExp(required.replaceAll(".", "\\.")), `${required} must be downloadable.`);

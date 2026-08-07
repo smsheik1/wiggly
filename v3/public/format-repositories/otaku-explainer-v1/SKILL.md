@@ -7,6 +7,17 @@ description: Use the Cartoon Explainer Format to make a short story-world lesson
 
 You are operating a complete runnable Wiggly Format Kit. The user supplies a topic and chooses a packaged story world. This folder supplies the cast, voices, backgrounds, layouts, renderer, runner, audio rules, and quality checks.
 
+## Start the conversation
+
+Always name the step you are on.
+
+1. Ask one short question: **What should the characters explain?**
+2. If the user says “do it for me,” “pick for me,” or “Turbo,” use the default packaged world in `inputs.json` and continue without more creative questions.
+3. Otherwise ask one second question: **Which packaged story world should teach it?**
+4. Never ask budget questions. Before provider work, show the estimate from `pipeline.json` as a short list.
+
+Use these progress labels in every update: `1. Setup`, `2. Scene plan`, `3. Validation`, `4. Voice + render`, `5. Review`, `6. Final`.
+
 ## Use the packaged runtime
 
 Do not rebuild, replace, translate, or imitate the renderer. Run the renderer and runner already included in this kit. A different framework or a new scene-timing loop is a failed use of the Format, even when its final video looks similar.
@@ -24,6 +35,7 @@ npm run smoke
 npm run prototype:otaku -- check
 npm run prototype:otaku -- init --run=<run-id> --topic="<topic>" --world=naruto
 npm run prototype:otaku -- validate --run=<run-id>
+npm run prototype:otaku -- check --stage=render
 npm run prototype:otaku -- render --run=<run-id> --approve-loop
 npm run prototype:otaku -- inspect --run=<run-id>
 npm run prototype:otaku -- finalize --run=<run-id>
@@ -36,15 +48,29 @@ Run `npm run smoke` first. It makes a tiny local test video and verifies the pac
 ## Required loop
 
 1. Read this file, `requirements.json`, `worlds/<world>.json`, `layouts.json`, `scene-contract.json`, `prompts/script-system.md`, and `quality.json`.
-2. Run `npm run smoke`, then run `check`. If either fails, stop and report the exact missing local requirement. If `check` reports a missing key, ask the user to add the named key to `.env.local`. Never ask them to paste a secret into chat and never print its value.
+2. Run `npm run smoke`, then run `check`. Both are local and free. If either fails, stop and report the exact missing local requirement.
 3. Run `init`, then write 12–18 short scene records in the new run's `scene-plan.json`.
 4. Use only packaged role names, backgrounds, layout IDs, and assets. Do not invent character coordinates.
 5. Run `validate` before any media call. Fix every validation error first.
-6. Show the user the scene plan, scene count, cast, and estimated duration. If any media call may cost money, ask once for approval covering no more than three total render attempts.
-7. Run `render --approve-loop` for the first attempt. Later attempts use `render` without that flag.
-8. Run `inspect`. Look at the full video and contact sheet. Record only concrete problems in `quality-report.json`.
-9. Fix only the problems you found. Do not rewrite good scenes. Render and inspect again when needed.
-10. Run `finalize` only when every automatic and human review check passes.
+6. Show the user the scene plan, scene count, cast, estimated duration, and the estimate list from `pipeline.json`.
+7. Run `check --stage=render`. If it reports a missing key, ask the user to add the named key to `.env.local`. Never ask them to paste a secret into chat and never print its value.
+8. If any provider call may cost money, ask once for approval covering no more than three total render attempts. The packaged Fish model is currently listed as free, but the user’s request still authorizes only the current run.
+9. Run `render --approve-loop` for the first attempt. Later attempts use `render` without that flag.
+10. Run `inspect`. Look at the full video and contact sheet. Record only concrete problems in `quality-report.json`.
+11. Fix only the problems you found. Do not rewrite good scenes. Render and inspect again when needed.
+12. Run `finalize` only when every automatic and human review check passes.
+
+## Resume a run
+
+Run state lives in `public/format-repositories/otaku-explainer-v1/agent-runs/<run-id>/state.json`.
+
+- `draft`: validate the scene plan.
+- `rendering` with a failed attempt: fix the reported failure, then render again if attempts remain.
+- `rendered`: run `inspect`.
+- `inspected`: finish the creative review in the latest quality report.
+- `finalized`: return the paths in `final.json`.
+
+Never create a new run just because the chat restarted.
 
 ## Add a story world
 

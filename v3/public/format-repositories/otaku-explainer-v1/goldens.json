@@ -1,0 +1,14 @@
+{
+  "examples": [
+    {
+      "id": "naruto-apis",
+      "title": "Naruto explains APIs",
+      "topic": "How APIs work",
+      "storyWorld": "naruto",
+      "scenePlan": "scenes/naruto-apis.json",
+      "contactSheet": "goldens/naruto-apis-contact-sheet.jpg",
+      "qualityChecks": "quality.json",
+      "use": "Study the visual grammar and scene progression. Do not copy the lesson wording into unrelated topics."
+    }
+  ]
+}

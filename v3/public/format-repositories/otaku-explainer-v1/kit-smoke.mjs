@@ -10,9 +10,13 @@ const requiredFiles = [
   "audio.json",
   "layouts.json",
   "quality.json",
+  "pipeline.json",
+  "goldens.json",
+  "goldens/naruto-apis-contact-sheet.jpg",
   "scene-contract.json",
   "worlds/naruto.json",
   "prompts/script-system.md",
+  "assets/reference/reference.mp4",
 ];
 const runtimeFiles = [
   "scripts/otaku-format.ts",

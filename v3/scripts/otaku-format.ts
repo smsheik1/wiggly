@@ -44,7 +44,7 @@ type AudioManifest = {
 
 type AgentRunState = {
   id: string;
-  status: "draft" | "rendering" | "inspected" | "finalized";
+  status: "draft" | "rendering" | "rendered" | "inspected" | "finalized";
   createdAt: string;
   approval?: { approvedAt: string; maxAttempts: number };
   attempts: Array<{
@@ -140,6 +140,8 @@ async function validateRun(runId: string) {
 
 async function check() {
   await loadEnvironment();
+  const stage = argument("stage") ?? "validate";
+  if (!["validate", "render"].includes(stage)) throw new Error("--stage must be validate or render.");
   const manifest = await readJson<OtakuRequirementManifest>(path.join(packageRoot, "requirements.json"));
   const tools = {
     node: true,
@@ -151,13 +153,13 @@ async function check() {
     })(),
   };
   const result = evaluateRequirements({
-    command: "render",
+    command: stage,
     environment: process.env,
     manifest,
     needsNewAssets: hasFlag("needs-new-assets"),
     tools,
   });
-  console.log(result.ok ? "Otaku Format is ready." : "Otaku Format is not ready.");
+  console.log(result.ok ? `Otaku Format ${stage} stage is ready.` : `Otaku Format ${stage} stage is not ready.`);
   if (result.missingEnvironment.length) console.log(`Add to v3/.env.local: ${result.missingEnvironment.join(", ")}`);
   if (result.missingTools.length) console.log(`Install locally: ${result.missingTools.join(", ")}`);
   console.log("Secret values were not read back or printed.");
@@ -273,6 +275,7 @@ async function render() {
       `--contact-sheet=${contactSheetPath}`,
     ]);
     state.attempts[attemptNumber - 1].status = "rendered";
+    state.status = "rendered";
     console.log(`Attempt ${attemptNumber} rendered. Run inspect next.`);
   } catch (error) {
     state.attempts[attemptNumber - 1].status = "failed";

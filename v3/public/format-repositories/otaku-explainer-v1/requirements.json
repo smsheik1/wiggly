@@ -3,7 +3,10 @@
     {
       "name": "FISH_STUDIO_APIKEY",
       "requiredFor": ["render"],
-      "description": "Generates one free S2.1 Pro voice clip for each scene."
+      "description": "Generates one S2.1 Pro Free voice clip for each scene.",
+      "model": "s2.1-pro-free",
+      "pricingUrl": "https://docs.fish.audio/developer-guide/models-pricing/pricing-and-rate-limits",
+      "modelUrl": "https://docs.fish.audio/developer-guide/models-pricing/models-overview"
     },
     {
       "name": "SERPER_API_KEY",
@@ -25,5 +28,6 @@
     "image generation",
     "video generation"
   ],
+  "costPolicy": "Use pipeline.json for the estimate. Recheck the linked provider pricing before claiming a provider call is free.",
   "secretPolicy": "Read keys from the downloaded kit's v3/.env.local. Never write secret values to plans, logs, reports, or run records."
 }

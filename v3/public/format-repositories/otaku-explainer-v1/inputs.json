@@ -17,5 +17,6 @@
   "defaults": {
     "topic": "Compilers versus interpreters",
     "storyWorld": "naruto"
-  }
+  },
+  "defaultPolicy": "Use the default story world only when the user says do it for me, pick for me, Turbo, or has no preference."
 }

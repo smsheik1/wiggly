@@ -21,6 +21,9 @@ const readJson = <T,>(relativePath: string) => JSON.parse(readFileSync(path.join
 
 const requirements = readJson<OtakuRequirementManifest>("requirements.json");
 const installedTools = { node: true, ffmpeg: true, ffprobe: true, remotion: true, uvx: true };
+const freePlanningCheck = evaluateRequirements({ command: "validate", environment: {}, manifest: requirements, tools: installedTools });
+assert.deepEqual(freePlanningCheck.missingEnvironment, []);
+assert.equal(freePlanningCheck.ok, true);
 const missingVoiceKey = evaluateRequirements({ command: "render", environment: {}, manifest: requirements, tools: installedTools });
 assert.deepEqual(missingVoiceKey.missingEnvironment, ["FISH_STUDIO_APIKEY"]);
 assert.equal(missingVoiceKey.ok, false);
@@ -139,5 +142,9 @@ assert.equal(canFinalize({
   ...passingReport,
   automaticChecks: { ...passingReport.automaticChecks, voiceClipEndingsAreNotAbrupt: false },
 }), false);
+
+const runnerSource = readFileSync("scripts/otaku-format.ts", "utf8");
+assert.match(runnerSource, /status: "draft" \| "rendering" \| "rendered" \| "inspected" \| "finalized"/);
+assert.match(runnerSource, /state\.status = "rendered"/);
 
 console.log("Otaku agent runner tests passed.");

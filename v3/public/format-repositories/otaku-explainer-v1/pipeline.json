@@ -1,0 +1,55 @@
+{
+  "steps": [
+    {
+      "id": "setup",
+      "label": "Setup",
+      "kind": "local",
+      "produces": "A topic, packaged story world, and run id.",
+      "providerCalls": 0,
+      "estimate": { "cost": "$0", "time": "under 1 min" }
+    },
+    {
+      "id": "scene-plan",
+      "label": "Scene plan",
+      "kind": "agent",
+      "produces": "A 12-18 scene conversation using packaged roles and layouts.",
+      "providerCalls": 0,
+      "estimate": { "cost": "$0", "time": "2-5 min" }
+    },
+    {
+      "id": "validation",
+      "label": "Validation",
+      "kind": "local",
+      "produces": "A validated scene plan, cast, duration, and provider estimate.",
+      "providerCalls": 0,
+      "estimate": { "cost": "$0", "time": "under 1 min" }
+    },
+    {
+      "id": "voice-render",
+      "label": "Voice + render",
+      "kind": "provider-and-local",
+      "produces": "One Fish voice clip per scene and one local Remotion MP4.",
+      "providerCalls": { "min": 12, "max": 18, "provider": "Fish Audio" },
+      "approval": "The user must have requested the run. Ask again if the configured provider may charge money.",
+      "estimate": { "cost": "$0 with s2.1-pro-free under current fair-use terms", "time": "3-10 min" }
+    },
+    {
+      "id": "review",
+      "label": "Review",
+      "kind": "local-and-human",
+      "produces": "A contact sheet and completed quality report.",
+      "providerCalls": 0,
+      "estimate": { "cost": "$0", "time": "2-5 min" }
+    },
+    {
+      "id": "final",
+      "label": "Final",
+      "kind": "local",
+      "produces": "One vertical explainer MP4 plus run and quality records.",
+      "providerCalls": 0,
+      "estimate": { "cost": "$0", "time": "under 1 min" }
+    }
+  ],
+  "attemptLimit": 3,
+  "paidImageOrVideoGeneration": false
+}

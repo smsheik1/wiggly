@@ -42,8 +42,10 @@ for (const name of [
   "assets.json",
   "audio.json",
   "format.json",
+  "goldens.json",
   "inputs.json",
   "layouts.json",
+  "pipeline.json",
   "quality.json",
   "requirements.json",
   "scene-contract.json",
@@ -52,7 +54,7 @@ for (const name of [
 }
 await copyFromV3(path.join(formatRelative, ".env.example"), ".env.example");
 await copyFromV3(path.join(formatRelative, "kit-smoke.mjs"), "kit-smoke.mjs");
-for (const directory of ["fixtures", "prompts", "renderer", "scenes", "worlds", "assets/images"]) {
+for (const directory of ["fixtures", "goldens", "prompts", "renderer", "scenes", "worlds", "assets/images", "assets/reference"]) {
   await copyFromV3(path.join(formatRelative, directory));
 }
 const audioDirectory = path.join(formatRoot, "assets", "audio");
@@ -63,6 +65,17 @@ for (const name of await readdir(audioDirectory)) {
 }
 
 await writeFile(path.join(stagingV3, "package.json"), await readFile(path.join(formatRoot, "kit.package.json")));
+await writeFile(path.join(stagingRoot, "README.md"), `# Wiggly Cartoon Explainer Format Kit
+
+Start here.
+
+1. Open the \`v3\` folder.
+2. Run \`npm install\`.
+3. Run \`npm run smoke\`.
+4. Give your agent this request: “Read \`public/format-repositories/otaku-explainer-v1/SKILL.md\` and use the packaged renderer. Do not rebuild it.”
+
+The agent will ask what the characters should explain, then guide the run one step at a time. Planning and validation are local. Voice generation uses the BYOK Fish key only after the scene plan is valid.
+`);
 
 const fixedDate = new Date("2026-01-01T00:00:00.000Z");
 const normalizeTimes = async (directory) => {

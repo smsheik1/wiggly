@@ -49,6 +49,7 @@ const coreTextFiles = [
   { id: "instructions", label: "Format instructions", path: "README.md", description: "What this Format does and how to run it." },
   { id: "agent-skill", label: "Agent skill", path: "SKILL.md", description: "The complete loop an agent follows without the user explaining the Format." },
   { id: "requirements", label: "Requirements", path: "requirements.json", description: "The key names and local tools needed, without any secret values." },
+  { id: "pipeline", label: "Assembly line", path: "pipeline.json", description: "Every step, deliverable, provider call, estimate, and approval point." },
   { id: "layouts", label: "Approved layouts", path: "layouts.json", description: "Reusable two- and three-character positions. Scene writers do not invent coordinates." },
   { id: "inputs", label: "User inputs", path: "inputs.json", description: "The topic and story world the Format needs. The world pack supplies the cast." },
   { id: "assets", label: "Fixed assets", path: "assets.json", description: "Character cutouts, backgrounds, source links, and local files." },

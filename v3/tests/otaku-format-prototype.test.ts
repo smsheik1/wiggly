@@ -136,9 +136,14 @@ assert.match(repositoryServer, /function readOutputRuns/);
 assert.doesNotMatch(repositoryServer, /const runIds|world-naruto|world-spongebob/);
 assert.ok(existsSync(path.join(packageRoot, "SKILL.md")));
 assert.ok(existsSync(path.join(packageRoot, "requirements.json")));
+assert.ok(existsSync(path.join(packageRoot, "pipeline.json")));
+assert.ok(existsSync(path.join(packageRoot, "goldens.json")));
+assert.ok(existsSync(path.join(packageRoot, "goldens", "naruto-apis-contact-sheet.jpg")));
 assert.ok(existsSync(path.join(packageRoot, "downloads", "wiggly-cartoon-explainer-format-kit.zip")));
 assert.ok(existsSync(path.join(packageRoot, "worlds", "naruto.json")));
 assert.ok(existsSync(path.join(packageRoot, "worlds", "yugioh.json")));
+assert.match(readFileSync(path.join(packageRoot, "SKILL.md"), "utf8"), /What should the characters explain\?/);
+assert.match(readFileSync(path.join(packageRoot, "SKILL.md"), "utf8"), /Never create a new run just because the chat restarted/);
 
 const productionFiles = [
   "app/create/page.tsx",
