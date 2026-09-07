@@ -77,10 +77,46 @@
     "limitations": ["No direct moving-video or audio perception by the agent or maintainer", "Voice recognition, performed humor, speech accuracy and caption synchronization unverified", "Caption phrase timings are estimated, not forced-aligned", "Supplied media preparation was performed outside the child package, not by the blind consumer"]
   },
   "publication": {
-    "creatorLive": false,
-    "publicPackageFreshAgentTest": "not-yet-run",
+    "creatorLive": true,
+    "creatorVersion": "0.1.1",
+    "creatorZipSha256": "7cf18546f887516dc2420ed443d43bddf49f316a49e13e6d40e04f46ee3dc3dc",
+    "creatorZipBytes": 68377,
+    "page": "https://wiggly.agentenamel.com/formats/repo-builder",
+    "discover": "https://wiggly.agentenamel.com/discover#shelf-repo-builder",
+    "download": "https://wiggly.agentenamel.com/format-repositories/repo-builder-v1/downloads/wiggly-repo-builder-0.1.1.zip",
+    "mergeCommit": "ac1cd36cce6bd937a4aef4b938f8e2ba57677e8c",
+    "deployment": "https://github.com/smsheik1/wiggly/actions/runs/34066866339",
+    "deploymentStatus": "completed-success",
+    "evidence": "https://github.com/smsheik1/wiggly/pull/477#issuecomment-5563096864",
+    "publicPackageFreshAgentTest": "pass-bounded-usability-and-reference-intake",
+    "publicPackageConsumer": {
+      "reportSha256": "b72edb2c70fdd616687ee35749f74a32cd9ae5e12e59622b38c4c2b9e8e21e0f",
+      "inventoriedFilesVerified": 31,
+      "originalFilesUnchanged": 32,
+      "testsPassed": 47,
+      "doctor": "pass-with-optional-outdated-yt-dlp-warning",
+      "smoke": "pass-evidence-to-draft-only",
+      "referenceIntake": "pass-first-attempt-58.234s-24-frames-plus-audio",
+      "providerCalls": 0,
+      "installations": 0,
+      "limitation": "Started from the public ZIP without the Wiggly source checkout. Did not author a second child, directly review audio/motion, or claim creative acceptance."
+    },
+    "revalidatedDateUtc": "2026-09-07",
+    "revalidationScope": "Live Discover search, seven standard sections, actual public ZIP hash, actual copied version-pinned public-origin handoff, README expansion and desktop/mobile layout passed in Chrome with no page errors. Independently verified 32 public-consumer package files, 27 reference-run files, successful command receipts, test stdout, and unchanged real-media consumer report/output. No new consumer or provider run.",
+    "childPublished": true,
+    "childPublication": {
+      "version": "0.1.2",
+      "page": "https://wiggly.agentenamel.com/formats/character-gameplay-conversations",
+      "zipSha256": "f4732bec6e967a0d52c41fee04a714b76344a05525ec056871c6ee5449f82a26",
+      "mergeCommit": "5a2072b3551ab4c4ef1a1ac217464970b6366d2f",
+      "deployment": "https://github.com/smsheik1/wiggly/actions/runs/34085956523",
+      "evidence": "https://github.com/smsheik1/wiggly/pull/478#issuecomment-5565446596",
+      "authorization": "User requested publication after the 17-second example was presented; not a detailed audiovisual review verdict.",
+      "scope": "Supplied-media compositor. Selected finished preview is public; raw gameplay and separate voice clips are not in the ZIP."
+    },
     "goalComplete": false,
+    "remainingPlanGate": "Step 4: direct audiovisual acceptance remains unverified. Public baseline publication and technical usability are complete.",
     "privateMediaExcludedFromArchive": true,
-    "rights": "Private benchmark use only. No public redistribution rights inferred from YouTube access or voice generation."
+    "rights": "Raw benchmark footage and separate character audio remain private. Selected finished preview published at the user's request; no broader licensing or redistribution rights inferred."
   }
 }
