@@ -7,6 +7,24 @@ on:
   workflow_dispatch:
 
 jobs:
+  character-gameplay-kit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install local media tools
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Extract the public Character Gameplay Conversations kit
+        run: unzip -q v3/public/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.1.2.zip -d "$RUNNER_TEMP/character-gameplay-kit"
+      - name: Test the extracted runtime without providers
+        working-directory: ${{ runner.temp }}/character-gameplay-kit
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm test
+          npm run smoke
   repo-builder-kit:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -105,6 +123,7 @@ jobs:
             if curl -fsS "$CREATE_SMOKE_BASE_URL/create" >/dev/null; then
               npm run smoke:create
               npm run smoke:repos -w @wiggly/v3
+              npm run smoke:character-gameplay -w @wiggly/v3
               exit 0
             fi
             sleep 1

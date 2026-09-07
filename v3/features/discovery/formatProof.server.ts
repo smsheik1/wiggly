@@ -23,6 +23,31 @@ type FormatProfileConfig = {
 
 const formatConfigs: FormatProfileConfig[] = [
   {
+    slug: "character-gameplay-conversations",
+    promise: "Fan-favorite characters. Conversations fans wish existed. Real gameplay, character dialogue, and timed captions—assembled from the clips you provide.",
+    lastUpdated: "September 2026",
+    manifestPath: "format-repositories/character-gameplay-conversations-v1/format.json",
+    repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.1.2.zip",
+    technicalHref: "/format-repositories/character-gameplay-conversations-v1/BENCHMARK.md",
+    historicalProofVersions: ["0.1.1"],
+    whatStays: ["A persistent title and question", "Real gameplay beneath the conversation", "Speaker labels and timed dialogue captions", "One local renderer for same-universe casts and crossovers"],
+    whatChanges: ["The characters and their universes", "The topic, script and question", "The supplied gameplay and voice clips", "Caption phrasing and timing"],
+    handoff: {
+      requiredInputs: ["Your characters, topic and dialogue", "An authorized local gameplay clip", "One authorized audio clip per dialogue turn"],
+      deliverables: ["A validated episode input", "A captioned portrait MP4", "A receipt with media and runtime hashes"],
+      instructions: ["Read SKILL.md and run the free smoke", "Approve the script and supply gameplay and voice clips", "Use the packaged renderer without rebuilding it", "Watch and listen before accepting the final episode"],
+      estimates: [
+        { label: "Choose cast + script", cost: "Your coding agent usage", time: "depends on the conversation" },
+        { label: "Gameplay + dialogue audio", cost: "$0 with supplied clips", time: "prepared before rendering" },
+        { label: "Timing + local render", cost: "$0 provider cost", time: "depends on clip length and computer" },
+        { label: "Watch + review", cost: "$0 provider cost", time: "one full playback, then corrections if needed" },
+      ],
+      totalEstimate: "$0 media-provider cost with supplied clips. Coding-agent usage is separate.",
+      output: "One 480 × 640 portrait MP4, up to 60 seconds, with speaker labels and captions",
+      firstQuestion: "Which characters should talk, and what are they talking about?",
+    },
+  },
+  {
     slug: "repo-builder",
     promise: "Turn a reference video into a reusable Wiggly Repo with your coding agent. Inspect the ingredients, approve the blueprint, then build and test the recipe.",
     lastUpdated: "September 2026",

@@ -1,0 +1,30 @@
+{
+  "purpose": "A real Batman/SpongeBob episode demonstrates the supplied-media workflow. Diagnostic proofs separately test two different inputs through the same runtime.",
+  "examples": [
+    {
+      "id": "batman-spongebob",
+      "title": "Gotham Meets Optimism",
+      "role": "Real gameplay · blind-agent execution",
+      "whyItWorks": [
+        "A fresh agent rendered a 16.76-second Batman/SpongeBob exchange on its first attempt with no runtime changes or coaching.",
+        "11 tests, both smoke proofs, full decoding and 18 sampled caption frames passed."
+      ],
+      "knownWeaknesses": [
+        "Gameplay and six voice clips were prepared before handoff; acquisition and voice generation are not in this release.",
+        "Detailed voice-performance, pacing and caption/speech review remains unrecorded."
+      ]
+    },
+    {
+      "id": "two-input-smoke",
+      "title": "Same universe + crossover",
+      "role": "Original diagnostic fixtures",
+      "whyItWorks": [
+        "Two different scripts, casts, video sources and audio sequences use the same official renderer.",
+        "All assets for these free local checks ship in the ZIP."
+      ],
+      "knownWeaknesses": [
+        "Diagnostic tones are not character speech; these checks do not establish creative fidelity."
+      ]
+    }
+  ]
+}

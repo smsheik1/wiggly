@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.2",
+  "request": "make this a public repo",
+  "publicationAuthorized": true,
+  "authorizationContext": "User requested publication after the 16.76-second Batman/SpongeBob example was presented for review.",
+  "detailedCreativeReview": "not-provided",
+  "example": {
+    "file": "examples/batman-spongebob.mp4",
+    "sha256": "63de842509644808f9e519818ad9bba7a483cdef7d33e2a8c951fd2d796d5dff",
+    "durationSeconds": 16.76,
+    "displayOnly": true,
+    "sourceGameplay": "https://www.youtube.com/watch?v=k-T-stiSYgw",
+    "notes": "Existing independently sourced Arkham gameplay and newly generated dialogue from saved Fish character presets. Publication requested by the operator; this is not a claim of third-party licensing or independent voice-identity verification."
+  },
+  "excludedFromDownload": [
+    "Source/reference footage",
+    "Separate real character voice clips",
+    "Credentials",
+    "Private inputs and provider receipts"
+  ],
+  "paidGenerationsForPublication": 0
+}

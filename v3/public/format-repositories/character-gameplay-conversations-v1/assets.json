@@ -1,0 +1,18 @@
+{
+  "fixed": [
+    {
+      "path": "inputs/same-universe.json",
+      "label": "Same-universe starter",
+      "purpose": "Four-turn input example with original diagnostic video and tones."
+    },
+    {
+      "path": "inputs/crossover.json",
+      "label": "Crossover starter",
+      "purpose": "Three-turn input example with a different cast, clip and audio tones."
+    }
+  ],
+  "sourceReference": {
+    "verification": "The ZIP includes original diagnostic assets and both local smoke proofs. The finished Batman/SpongeBob example is viewable on this page; raw gameplay and separate voice clips are not distributed in the ZIP.",
+    "referenceNote": "Created from user-assisted analysis of the supplied Batman reference. User requested publication after the 17-second example was presented; no detailed audiovisual score was provided."
+  }
+}

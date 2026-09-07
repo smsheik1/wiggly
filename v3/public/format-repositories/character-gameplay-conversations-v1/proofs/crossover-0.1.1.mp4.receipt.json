@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "argv": [
+    "node",
+    "runtime/render.mjs",
+    "inputs/crossover.json",
+    "proofs/crossover-0.1.1.mp4"
+  ],
+  "inputSha256": "72e616468e5254a3f26afe018b5edf4fb9b39d93d51c278966cf81b554c5b657",
+  "runtimeSha256": "23a39095a50150d67930b5d8b318481f422fdc772dc41e38e12971aceb30f929",
+  "outputSha256": "1648d04f2ec6dab7dade54578bc46f316d9fdd9dbfd3491e5d2b6f4e73272d23",
+  "durationSeconds": 6,
+  "width": 480,
+  "height": 640,
+  "fps": 25,
+  "gameplaySha256": "5ac8a30660ead26b1e84253845e8179e137068c55a03a1404e23f3f404ae47f6",
+  "audioSha256": [
+    "4b3f542b4ef64f36e0623eb3575baa323aaf51d88ac6f2b9937256c8dfb7b702",
+    "eaaff3c15b694595665213bf863afa1d2673d374708341c61b497d9de698e800",
+    "4b3f542b4ef64f36e0623eb3575baa323aaf51d88ac6f2b9937256c8dfb7b702"
+  ],
+  "review": "Supplied-media composition completed. No direct moving-video or audio perception; voice identity, reference fidelity and creative approval remain unverified."
+}

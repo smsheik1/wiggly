@@ -332,6 +332,14 @@
   background: #080817;
 }
 
+.mediaWellThreeFour {
+  aspect-ratio: 3 / 4;
+}
+
+.mediaWell.mediaWellThreeFour video {
+  object-fit: contain;
+}
+
 .mediaWell.mediaWellLandscape video {
   object-fit: contain;
 }

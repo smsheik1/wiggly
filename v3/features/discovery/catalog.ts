@@ -2133,6 +2133,23 @@ const fortniteFilterDiscoveryEntries: DiscoveryEntry[] = [
 
 export const discoveryCatalog: DiscoveryEntry[] = [
   {
+    id: "character-gameplay-batman-spongebob",
+    status: "published",
+    order: 15,
+    brand: "Batman × SpongeBob",
+    title: "Gotham Meets Optimism",
+    curatorNote: "A fresh agent assembled this 17-second conversation from supplied Arkham gameplay and six voice clips using the unchanged runtime. Published at the user's request; detailed audiovisual review is unrecorded. The Repo takes supplied media—it does not download gameplay or generate voices.",
+    goal: "entertain",
+    media: {
+      kind: "video",
+      src: "/format-repositories/character-gameplay-conversations-v1/examples/batman-spongebob.mp4",
+      poster: "/format-repositories/character-gameplay-conversations-v1/examples/batman-spongebob-poster.jpg",
+      durationLabel: "17 sec",
+      aspectRatio: "3:4",
+    },
+    format: { slug: "character-gameplay-conversations", name: "Character Gameplay Conversations", version: "0.1.1", owner: "Wiggly Studio" },
+  },
+  {
     id: "repo-builder-overview",
     status: "published",
     order: 100,
@@ -2842,6 +2859,12 @@ export const discoveryShelfDefinitions = [
     title: "Minecraft Brainrot",
     description: "Fast dialogue and chaos built to hold attention.",
     formats: ["brainrot"],
+  },
+  {
+    id: "character-gameplay-conversations",
+    title: "Character Gameplay Conversations",
+    description: "Same-universe banter and dream crossovers over real gameplay. Bring your clips; the Repo assembles the conversation.",
+    formats: ["character-gameplay-conversations"],
   },
   {
     id: "video-memes",

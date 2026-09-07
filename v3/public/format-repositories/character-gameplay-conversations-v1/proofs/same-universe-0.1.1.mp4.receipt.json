@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "argv": [
+    "node",
+    "runtime/render.mjs",
+    "inputs/same-universe.json",
+    "proofs/same-universe-0.1.1.mp4"
+  ],
+  "inputSha256": "138fb3c4bb0d09f110fbd2c1b456c9415d598a3e9051372f0d956a20db7b406a",
+  "runtimeSha256": "23a39095a50150d67930b5d8b318481f422fdc772dc41e38e12971aceb30f929",
+  "outputSha256": "a519470a3b098be9c89db8744238ac4d14fe29cfcc04605186c53909034b1973",
+  "durationSeconds": 8,
+  "width": 480,
+  "height": 640,
+  "fps": 25,
+  "gameplaySha256": "238f6b95a2fc1e943bc543e8e00727c1d67aa42cd50d4139efbe2074e10642a2",
+  "audioSha256": [
+    "718807b3b122e6ebd675dc291b90babacf784242ac6392df4ec397b22c9834fb",
+    "aac5dc69dd34403e505f80abf52836101dc986195d45f8d8db34e84e0048d0c7",
+    "718807b3b122e6ebd675dc291b90babacf784242ac6392df4ec397b22c9834fb",
+    "aac5dc69dd34403e505f80abf52836101dc986195d45f8d8db34e84e0048d0c7"
+  ],
+  "review": "Supplied-media composition completed. No direct moving-video or audio perception; voice identity, reference fidelity and creative approval remain unverified."
+}
