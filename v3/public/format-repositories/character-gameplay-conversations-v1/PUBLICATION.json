@@ -1,21 +1,28 @@
 {
   "schemaVersion": 1,
-  "version": "0.1.3",
+  "version": "0.1.4",
   "request": "make this a public repo",
   "publicationAuthorized": true,
   "authorizationContext": "User requested publication after the 16.76-second Batman/SpongeBob example was presented for review.",
   "detailedCreativeReview": "not-provided",
+  "userAcceptance": {
+    "quote": "cool looks good to me. is this goal done",
+    "context": "User requested background music, received the playable 17-second music preview, and accepted it. This is qualitative baseline acceptance, not a fabricated numerical or per-channel review.",
+    "acceptedPreviewSha256": "becf9b97e74e3fdc725a14fcf9f9350159d200bb8f05d6b3c005b37dae18c767",
+    "releaseDifference": "The release adds music-credit metadata through the official renderer. Decoded video is identical; audio is sample-identical through 16.704 seconds, with tiny AAC tail differences thereafter (87.18 dB signal-to-error ratio). Same source clips, mix settings and duration; no new creative content."
+  },
+  "musicRequest": "can we add some background music like the original video",
   "layoutRequest": "The user clarified that the Batman video is for Shorts; 9:16 vertical was explained as the correct orientation, rather than 16:9 widescreen.",
   "example": {
-    "file": "examples/batman-spongebob-shorts.mp4",
-    "sha256": "5f3e53171e9b6e5dc079917e605b101c142aa179628ccb58b9ea05b0054ba812",
+    "file": "examples/batman-spongebob-music.mp4",
+    "sha256": "a0082108fa53e6be6cc6494fff070a87846d6d832708c09ae35be32df0a900de",
     "durationSeconds": 16.76,
     "width": 1080,
     "height": 1920,
     "aspectRatio": "9:16",
     "displayOnly": true,
     "sourceGameplay": "https://www.youtube.com/watch?v=k-T-stiSYgw",
-    "notes": "Existing independently sourced Arkham gameplay and newly generated dialogue from saved Fish character presets. Publication requested by the operator; this is not a claim of third-party licensing or independent voice-identity verification."
+    "notes": "Existing independently sourced Arkham gameplay and saved dialogue from Fish character presets; no new voices. Adds Dark Fog by Kevin MacLeod under CC BY 4.0 with credit. Music is an alternative, not an identified match to the original song. This is not independent voice-identity verification."
   },
   "previousExample": {
     "file": "examples/batman-spongebob.mp4",

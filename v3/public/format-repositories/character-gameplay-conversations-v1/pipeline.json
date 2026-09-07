@@ -11,7 +11,7 @@
     },
     {
       "id": "supply-gameplay-and-voices",
-      "output": "Provide one authorized gameplay file and one audio file per dialogue turn. This release does not download gameplay or generate voices."
+      "output": "Provide one authorized gameplay file and one audio file per dialogue turn. Optionally choose the credited background bed or supply another authorized music file. This release does not download gameplay or generate voices."
     },
     {
       "id": "prepare-captions",

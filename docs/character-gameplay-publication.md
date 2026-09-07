@@ -2,6 +2,20 @@
 
 User request: “make this a public repo,” after the 16.76-second Batman/SpongeBob example was presented. This authorizes publication of the format and its selected finished preview; it is not a fabricated direct audiovisual review score.
 
+## Music revision — 0.1.4 release checkpoint
+
+The user requested background music, received the playable 17-second music preview, and said “cool looks good to me,” then asked to finish the goal. Version 0.1.4 adds optional authorized local music to the one official compositor. The mix trims without looping, lowers, ducks and fades the bed, limits clipping, and retains attribution in the receipt and MP4 comment. Gameplay, six voice clips, captions, layout and duration are unchanged. No provider or paid call occurred.
+
+- The bundled alternative is “Dark Fog” by Kevin MacLeod, licensed CC BY 4.0. `MUSIC-CREDITS.md` records the official source, license, changes and visible-publishing credit. It is explicitly not claimed as the original reference song.
+- Runtime SHA-256: `bb19667f291641111eb07388aab9be887ef365a4a84c0d0543d60b65f4b396b1`.
+- Accepted preview SHA-256: `becf9b97e74e3fdc725a14fcf9f9350159d200bb8f05d6b3c005b37dae18c767`. Release preview SHA-256: `a0082108fa53e6be6cc6494fff070a87846d6d832708c09ae35be32df0a900de`; 16.76 seconds, 1080×1920, square pixels, 25fps H.264/48kHz mono AAC. Video decodes identically; tiny AAC tail differences from added metadata/re-encode are quantified in `BENCHMARK.md` rather than mislabeled byte-identical.
+- ZIP: `character-gameplay-conversations-0.1.4.zip`, 6,988,745 bytes, 41 files, SHA-256 `03788884fdbf18ed052a6ddfe4d71528e9f6cd7f0e0232bf0aa1168f4f3a05ab`.
+- Source and clean extraction both pass all 23 tests. The actual ZIP installs offline from existing cache and passes its two-input smoke. The previous no-music proofs retain their exact video/audio output hashes through the new optional runtime path.
+- Page/package parity, all 53 Repo presentation contracts, Discovery, handoff, Repo Builder page, typecheck and production build passed. The production build retains the existing seven broad-file-tracing warnings.
+- Local Chrome verification passed the actual preview playback/native dimensions, visible expanded music credit, all standard sections, desktop/mobile layout, version-pinned clipboard handoff, downloaded ZIP checksum, readable `MUSIC-CREDITS.md`, and share navigation. Screenshots were directly inspected at `/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/wiggly-character-page-8fwxNk`.
+
+This checkpoint is not live until PR/CI/deployment and the same production browser verification pass. The user’s qualitative acceptance resolves the former baseline-review decision without creating an agent direct-hearing claim or retroactively relabeling historical blind runs.
+
 ## Shorts revision — 0.1.3 release checkpoint
 
 The user clarified that the Batman video is for Shorts and that the old frame looked short. The corrected orientation is 9:16 vertical, not 16:9 widescreen. The single official compositor now uses a 1080×1920 canvas, a 306-pixel header, proportionally scaled/center-cropped gameplay and measured text within 90-pixel side margins. Captions leave at least 300 pixels clear at the bottom. There is no stretched 3:4 video, new renderer, new provider or new media generation.

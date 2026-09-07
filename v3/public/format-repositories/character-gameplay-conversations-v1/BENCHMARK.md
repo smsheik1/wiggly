@@ -1,5 +1,17 @@
 # Character Gameplay Conversations — evidence and history
 
+## Background music and user acceptance — 0.1.4
+
+After requesting background music and receiving the playable 17-second music preview, the user said “cool looks good to me,” then explicitly asked to finish this goal. This records qualitative acceptance of the refined baseline. It does not invent a detailed per-channel rubric, direct hearing by the agent, or independent identification of the source song.
+
+The same official compositor now accepts optional authorized local music, validates its duration and gain, lowers/ducks it beneath speech, fades the ends, limits clipping and carries attribution in the receipt and MP4 metadata. No new dependency, alternate renderer, voice generation or paid call. The bundled alternative is “Dark Fog” by Kevin MacLeod, CC BY 4.0; see MUSIC-CREDITS.md. The user was told it is not the identified original track.
+
+All 23 contract/music tests passed. Both no-music diagnostic proofs retain their exact 0.1.3 output hashes, proving the optional feature does not alter that path. The music integration test independently measures the quiet bed, preserved dialogue gain, ducking, ending fade, clipping protection and credit. Runtime SHA-256: `bb19667f291641111eb07388aab9be887ef365a4a84c0d0543d60b65f4b396b1`.
+
+Accepted preview SHA-256: `becf9b97e74e3fdc725a14fcf9f9350159d200bb8f05d6b3c005b37dae18c767`. Release SHA-256: `a0082108fa53e6be6cc6494fff070a87846d6d832708c09ae35be32df0a900de`, 16.76 seconds, 1080×1920. The release adds MP4 credit metadata and uses the exact same sources/settings. Decoded video matches exactly (`026759f69d65e02e361c3cc451e161cb3886ccf9e68008084b7ab4c9ee395a34`); audio is sample-identical until 16.704 seconds. Tiny final AAC-tail differences yield 87.18 dB signal-to-error ratio, maximum absolute sample difference 0.000507 and RMS error 0.000002045. This is not falsely recorded as byte-identical audio. No additional creative generation or substitution occurred.
+
+The older records below retain their then-pending review status as history; user acceptance above supersedes that pending baseline decision. Fresh-agent proof claims remain tied to their actual historical versions, not relabeled as new 0.1.4 blind runs.
+
 ## Shorts layout update — 0.1.3
 
 The user clarified that this is for Shorts. The same official FFmpeg/Sharp compositor now renders a 1080×1920 (9:16) canvas with proportionally scaled, center-cropped gameplay and repositioned text. This changes layout, not the footage, dialogue, timing or voice assets. Runtime SHA-256: `dd9e6571260b719b3088b9508ae16296bb07476796eed72f184b54acb1145fa6`.

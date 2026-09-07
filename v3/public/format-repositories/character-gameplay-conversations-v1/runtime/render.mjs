@@ -39,7 +39,16 @@ export async function validate(input,inputDirectory){
  }
  check(speakers.size>=2,'At least two characters must speak');check(total<=60,'Maximum output is 60 seconds');
  check(Number(gameplayProbe.format.duration)+0.02>=total,'Supplied gameplay is shorter than the conversation; no looping fallback');
- return {input,gameplay,turns,total};
+ let music=null;
+ if(input.music!==undefined){
+  check(input.music?.authorized===true&&typeof input.music.provenance==='string'&&input.music.provenance.trim(),'Music requires explicit authorization and provenance');
+  const volume=input.music.volume??0.1;check(positive(volume)&&volume<=0.25,'Music volume must be greater than 0 and at most 0.25');
+  const file=await media(inputDirectory,input.music.file);const info=probe(file);check(info.streams.some(s=>s.codec_type==='audio'),'Music needs an audio stream');
+  check(Number(info.format.duration)+0.02>=total,'Supplied music is shorter than the conversation; provide a full-length bed');
+  check(input.music.attribution===undefined||(typeof input.music.attribution==='string'&&input.music.attribution.trim().length>0&&input.music.attribution.length<=2000),'Music attribution must be nonempty text up to 2000 characters');
+  music={file,volume,attribution:input.music.attribution??null};
+ }
+ return {input,gameplay,turns,total,music};
 }
 function captionLines(value){const result=[];for(const word of value.split(' ')){const last=result.length-1;if(last>=0&&result[last].length+word.length+1<=19)result[last]+=' '+word;else result.push(word);}check(result.length<=2&&result.every(v=>v.length<=19),'Caption must fit two 19-character lines; split long phrases');return result;}
 const xml=value=>value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
@@ -61,15 +70,24 @@ export async function renderOverlay(input,turn,caption){
 }
 export async function render(inputFile,outputFile){
  const source=await readFile(inputFile);const prepared=await validate(JSON.parse(source),path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'));
- const {input,gameplay,turns,total}=prepared;for(const turn of turns)turn.captions.forEach(c=>captionLines(c.text));
+ const {input,gameplay,turns,total,music}=prepared;for(const turn of turns)turn.captions.forEach(c=>captionLines(c.text));
  check(outputFile.endsWith('.mp4'),'Output must be .mp4');check(!await lstat(outputFile).catch(()=>null),'Output exists; use a new path');
  await mkdir(path.dirname(path.resolve(outputFile)),{recursive:true});
  const args=['-v','error','-n','-threads','1','-protocol_whitelist','file,pipe','-i',gameplay];for(const turn of turns)args.push('-protocol_whitelist','file,pipe','-i',turn.audio);
- const overlayIndex=turns.length+1;args.push('-f','rawvideo','-pixel_format','rgba','-video_size',`${W}x${H}`,'-framerate',String(FPS),'-protocol_whitelist','file,pipe','-i','pipe:0');
+ const musicIndex=turns.length+1;if(music)args.push('-protocol_whitelist','file,pipe','-i',music.file);
+ const overlayIndex=musicIndex+(music?1:0);args.push('-f','rawvideo','-pixel_format','rgba','-video_size',`${W}x${H}`,'-framerate',String(FPS),'-protocol_whitelist','file,pipe','-i','pipe:0');
  const gameplayHeight=H-layout.headerHeight;
  const filters=[`[0:v]scale=${W}:${gameplayHeight}:force_original_aspect_ratio=increase,crop=${W}:${gameplayHeight},pad=${W}:${H}:0:${layout.headerHeight}:color=black,setsar=1,fps=${FPS}[base]`,`[base][${overlayIndex}:v]overlay=0:0:shortest=1[video]`];
  for(const [i,turn]of turns.entries())filters.push(`[${i+1}:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,apad,atrim=duration=${turn.durationSeconds},asetpts=PTS-STARTPTS[a${i}]`);
- filters.push(`${turns.map((_,i)=>`[a${i}]`).join('')}concat=n=${turns.length}:v=0:a=1[audio]`);
+ filters.push(`${turns.map((_,i)=>`[a${i}]`).join('')}concat=n=${turns.length}:v=0:a=1[${music?'dialogue':'audio'}]`);
+ if(music){
+  const fadeIn=Math.min(0.35,total/2),fadeOut=Math.min(0.7,total/2);
+  filters.push(`[dialogue]asplit=2[voice][ducking]`);
+  filters.push(`[${musicIndex}:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=duration=${total},asetpts=PTS-STARTPTS,volume=${music.volume},afade=t=in:d=${fadeIn},afade=t=out:st=${total-fadeOut}:d=${fadeOut}[bed]`);
+  filters.push('[bed][ducking]sidechaincompress=threshold=0.035:ratio=6:attack=15:release=250[quietbed]');
+  filters.push('[voice][quietbed]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:level=false:latency=true[audio]');
+ }
+ if(music?.attribution)args.push('-metadata',`comment=${music.attribution}`);
  args.push('-filter_complex_threads','1','-filter_complex',filters.join(';'),'-map','[video]','-map','[audio]','-t',String(total),'-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-threads','1','-c:a','aac','-b:a','128k','-movflags','+faststart',outputFile);
  const base=await renderOverlay(input);
  const child=spawn('ffmpeg',args,{stdio:['pipe','ignore','pipe']});let errors='',timedOut=false;child.stderr.on('data',b=>{errors=(errors+b).slice(-16000);});child.stdin.on('error',()=>{});
@@ -83,6 +101,7 @@ export async function render(inputFile,outputFile){
  }
  child.stdin.end();await exited; } finally {clearTimeout(timeout);if(child.exitCode===null)child.kill('SIGKILL');}
  const receipt={schemaVersion:1,argv:['node',path.relative(process.cwd(),fileURLToPath(import.meta.url)),path.relative(process.cwd(),inputFile),path.relative(process.cwd(),outputFile)],inputSha256:digest(source),runtimeSha256:digest(await readFile(fileURLToPath(import.meta.url))),outputSha256:digest(await readFile(outputFile)),durationSeconds:total,width:W,height:H,fps:FPS,gameplaySha256:digest(await readFile(gameplay)),audioSha256:await Promise.all(turns.map(async t=>digest(await readFile(t.audio)))),review:'Supplied-media composition completed. No direct moving-video or audio perception; voice identity, reference fidelity and creative approval remain unverified.'};
+ if(music)receipt.music={sha256:digest(await readFile(music.file)),volume:music.volume,duckedUnderDialogue:true,fadeInSeconds:Math.min(0.35,total/2),fadeOutSeconds:Math.min(0.7,total/2),attribution:music.attribution};
  await writeFile(`${outputFile}.receipt.json`,JSON.stringify(receipt,null,2)+'\n',{flag:'wx'});return receipt;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){

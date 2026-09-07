@@ -2,10 +2,10 @@
   "id": "character-gameplay-conversations",
   "name": "Character Gameplay Conversations",
   "title": "Character Gameplay Conversations",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "kind": "video",
   "status": "public-baseline",
-  "description": "Fan-favorite characters trade lines over real gameplay in 1080 × 1920 vertical Shorts. Supply your clips and dialogue audio; the agent assembles the header, speaker labels and timed captions.",
+  "description": "Fan-favorite characters trade lines over real gameplay in 1080 × 1920 vertical Shorts. Supply your clips and dialogue audio; add optional background music beneath the voices.",
   "runtime": "runtime/render.mjs",
   "entrypoint": "SKILL.md",
   "qualityContract": "quality.json"
