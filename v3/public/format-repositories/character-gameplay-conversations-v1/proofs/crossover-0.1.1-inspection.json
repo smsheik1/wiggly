@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "kind": "technical-media-inspection",
+  "media": {
+    "file": "crossover-0.1.1.mp4",
+    "sha256": "1648d04f2ec6dab7dade54578bc46f316d9fdd9dbfd3491e5d2b6f4e73272d23",
+    "sizeBytes": 178635,
+    "durationSeconds": 6,
+    "width": 480,
+    "height": 640,
+    "fps": 25,
+    "hasAudio": true
+  },
+  "streams": [
+    {
+      "index": 0,
+      "type": "video",
+      "codec": "h264",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "index": 1,
+      "type": "audio",
+      "codec": "aac",
+      "sampleRate": 48000,
+      "channels": 1
+    }
+  ],
+  "review": {
+    "status": "not-assessed",
+    "limitations": [
+      "Metadata and checksums do not verify motion, content, audio perception, or creative quality. Direct review remains required."
+    ]
+  }
+}

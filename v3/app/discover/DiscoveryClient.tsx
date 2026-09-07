@@ -482,6 +482,8 @@ export function DiscoveryClient({
                           className={`${styles.mediaWell} ${
                             entry.media.aspectRatio === "16:9"
                               ? styles.mediaWellLandscape
+                              : entry.media.aspectRatio === "3:4"
+                              ? styles.mediaWellThreeFour
                               : entry.media.kind === "image" || entry.format.slug === "brainrot"
                               ? styles.mediaWellImage
                               : ""

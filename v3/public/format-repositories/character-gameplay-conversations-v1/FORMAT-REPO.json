@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "kind": "wiggly-format",
+  "slug": "character-gameplay-conversations",
+  "version": "0.1.2",
+  "status": "ready-for-review",
+  "runtime": "runtime/render.mjs",
+  "releaseFiles": [
+    ".gitignore",
+    "CLAUDE.md",
+    "KIT-MANIFEST.json",
+    "format.json",
+    "pipeline.json",
+    "quality.json",
+    "assets.json",
+    "goldens.json",
+    "PUBLICATION.json",
+    "tests/smoke.mjs",
+    "SKILL.md",
+    "AGENTS.md",
+    "README.md",
+    "BENCHMARK.md",
+    "requirements.json",
+    "blueprint.json",
+    "FORMAT-REPO.json",
+    "runtime/render.mjs",
+    "tests/make-fixtures.mjs",
+    "tests/contract.test.mjs",
+    "tests/verify-proofs.mjs",
+    "inputs/same-universe.json",
+    "inputs/crossover.json",
+    "assets/warm.mp4",
+    "assets/cool.mp4",
+    "assets/low.wav",
+    "assets/high.wav",
+    "assets/bright.wav",
+    "assets/soft.wav",
+    "proofs/same-universe-0.1.1.mp4",
+    "proofs/same-universe-0.1.1.mp4.receipt.json",
+    "proofs/same-universe-0.1.1-inspection.json",
+    "proofs/crossover-0.1.1.mp4",
+    "proofs/crossover-0.1.1.mp4.receipt.json",
+    "proofs/crossover-0.1.1-inspection.json",
+    "package.json",
+    "package-lock.json"
+  ],
+  "assets": [
+    {
+      "path": "assets/warm.mp4",
+      "source": "Original locally generated FFmpeg diagnostic pattern",
+      "usage": "original",
+      "notes": "Distributable mechanical video fixture, not gameplay or a reference derivative."
+    },
+    {
+      "path": "assets/cool.mp4",
+      "source": "Original locally generated FFmpeg diagnostic pattern",
+      "usage": "original",
+      "notes": "Distributable mechanical video fixture, not gameplay or a reference derivative."
+    },
+    {
+      "path": "assets/low.wav",
+      "source": "Original locally generated sine tone",
+      "usage": "original",
+      "notes": "Distributable mechanical audio fixture, not speech, a character voice or a voice clone."
+    },
+    {
+      "path": "assets/high.wav",
+      "source": "Original locally generated sine tone",
+      "usage": "original",
+      "notes": "Distributable mechanical audio fixture, not speech, a character voice or a voice clone."
+    },
+    {
+      "path": "assets/bright.wav",
+      "source": "Original locally generated sine tone",
+      "usage": "original",
+      "notes": "Distributable mechanical audio fixture, not speech, a character voice or a voice clone."
+    },
+    {
+      "path": "assets/soft.wav",
+      "source": "Original locally generated sine tone",
+      "usage": "original",
+      "notes": "Distributable mechanical audio fixture, not speech, a character voice or a voice clone."
+    }
+  ],
+  "proofs": [
+    {
+      "id": "same-universe",
+      "input": "inputs/same-universe.json",
+      "output": "proofs/same-universe-0.1.1.mp4",
+      "inspection": "proofs/same-universe-0.1.1-inspection.json"
+    },
+    {
+      "id": "crossover",
+      "input": "inputs/crossover.json",
+      "output": "proofs/crossover-0.1.1.mp4",
+      "inspection": "proofs/crossover-0.1.1-inspection.json"
+    }
+  ],
+  "review": {
+    "status": "pending",
+    "reviewer": null,
+    "notes": "User-assisted reference interpretation and benchmark attestation only. Bundled diagnostic assets prove composition, not gameplay, speech or voice identity. Private real-media run with new Batman/Sonic dialogue informed the typography fix, but direct audiovisual review and real-media blind-consumer acceptance remain pending."
+  }
+}

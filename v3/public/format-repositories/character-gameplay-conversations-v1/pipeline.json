@@ -1,0 +1,26 @@
+{
+  "stages": [
+    {
+      "id": "check-and-smoke",
+      "output": "Check the local tools, install pinned dependencies, and run the free two-input smoke before starting an episode."
+    },
+    {
+      "id": "choose-the-conversation",
+      "output": "Choose a same-universe cast or a crossover, then approve the script, title and question.",
+      "approvalRequired": true
+    },
+    {
+      "id": "supply-gameplay-and-voices",
+      "output": "Provide one authorized gameplay file and one audio file per dialogue turn. This release does not download gameplay or generate voices."
+    },
+    {
+      "id": "prepare-captions",
+      "output": "The coding agent prepares speaker assignments, measured turn durations and phrase timestamps. Review synchronization against the actual speech."
+    },
+    {
+      "id": "render-and-inspect",
+      "output": "Use the unchanged official compositor, inspect the MP4 and receipt, then watch and listen before accepting the result.",
+      "approvalRequired": true
+    }
+  ]
+}

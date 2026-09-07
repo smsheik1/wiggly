@@ -65,6 +65,7 @@ export function DiscoveryProofMedia({
   return (
     <video
       className={className}
+      style={entry.media.aspectRatio === "3:4" ? { aspectRatio: "3 / 4", objectFit: "contain" } : undefined}
       src={entry.media.src}
       poster={entry.media.poster}
       autoPlay={autoPlay}

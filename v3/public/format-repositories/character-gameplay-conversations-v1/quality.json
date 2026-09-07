@@ -1,0 +1,18 @@
+{
+  "automatedChecks": [
+    "Run all 11 contract tests and the two-input free smoke from a clean download.",
+    "Validate cast/universe rules, authorized local media paths, measured durations and caption coverage before rendering.",
+    "Verify 480 × 640, 25 fps H.264/AAC output, visible caption pixels and supplied audio in the diagnostic proofs.",
+    "Keep the official runtime unchanged when replacing content."
+  ],
+  "creativeReview": [
+    "Watch and listen to the entire real episode; check character performance, intelligibility, pacing and caption/speech synchronization.",
+    "Record direct review separately from technical checks. Publication approval is not an invented quality score.",
+    "Do not use synthetic video or tones as the finished real episode."
+  ],
+  "limits": [
+    "This baseline requires supplied gameplay and per-turn audio; no automatic acquisition, voice generation or transcription.",
+    "Output is 3:4 portrait at 480 × 640, not 1080 × 1920; ASCII captions and up to 60 seconds.",
+    "No music mixing, visual character animation or automatic speech alignment."
+  ]
+}

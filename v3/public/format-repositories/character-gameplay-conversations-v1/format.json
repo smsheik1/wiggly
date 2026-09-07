@@ -1,0 +1,12 @@
+{
+  "id": "character-gameplay-conversations",
+  "name": "Character Gameplay Conversations",
+  "title": "Character Gameplay Conversations",
+  "version": "0.1.2",
+  "kind": "video",
+  "status": "public-baseline",
+  "description": "Fan-favorite characters trade lines over real gameplay. Supply your clips and dialogue audio; the agent assembles the header, speaker labels and timed captions.",
+  "runtime": "runtime/render.mjs",
+  "entrypoint": "SKILL.md",
+  "qualityContract": "quality.json"
+}

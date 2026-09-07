@@ -173,6 +173,7 @@ try {
     "newsletter-writer",
     "otaku-explainer",
     "repo-builder",
+    "character-gameplay-conversations",
   ]) {
     await page.goto(`${baseUrl}/formats/${slug}`, {
       waitUntil: "domcontentloaded",

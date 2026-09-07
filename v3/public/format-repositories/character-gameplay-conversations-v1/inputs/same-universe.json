@@ -1,0 +1,14 @@
+{
+ "schemaVersion":1,
+ "header":{"title":"ION AND EMBER","question":"WHO SHOULD LEAD THE TEAM?"},
+ "topic":"Leadership and listening",
+ "castMode":"same-universe",
+ "cast":[{"id":"ion","name":"ION","universe":"SKYPORT"},{"id":"ember","name":"EMBER","universe":"SKYPORT"}],
+ "gameplay":{"file":"assets/warm.mp4","authorized":true,"provenance":"Original FFmpeg diagnostic video. Mechanical fixture only, not gameplay."},
+ "turns":[
+  {"speaker":"ion","text":"I CAN FLY AHEAD.","durationSeconds":2,"audio":{"file":"assets/low.wav","authorized":true,"provenance":"Original 220 Hz tone fixture, not speech."},"captions":[{"text":"I CAN FLY AHEAD.","start":0,"end":2}]},
+  {"speaker":"ember","text":"CAN YOU LISTEN TOO?","durationSeconds":2,"audio":{"file":"assets/high.wav","authorized":true,"provenance":"Original 440 Hz tone fixture, not speech."},"captions":[{"text":"CAN YOU LISTEN TOO?","start":0,"end":2}]},
+  {"speaker":"ion","text":"THEN WE TAKE TURNS.","durationSeconds":2,"audio":{"file":"assets/low.wav","authorized":true,"provenance":"Original 220 Hz tone fixture, not speech."},"captions":[{"text":"THEN WE TAKE TURNS.","start":0,"end":2}]},
+  {"speaker":"ember","text":"NOW THAT IS A TEAM.","durationSeconds":2,"audio":{"file":"assets/high.wav","authorized":true,"provenance":"Original 440 Hz tone fixture, not speech."},"captions":[{"text":"NOW THAT IS A TEAM.","start":0,"end":2}]}
+ ]
+}

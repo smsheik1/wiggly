@@ -1,0 +1,58 @@
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFileSync, existsSync } from "node:fs";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import JSZip from "jszip";
+import { discoveryShelfDefinitions, getDiscoveryEntriesByFormat } from "../features/discovery/catalog";
+import { getDiscoveryFormatProfile } from "../features/discovery/formatProof.server";
+import { getFormatRepoPagePresentation } from "../features/discovery/formatRepoPage.server";
+import { FormatRepoPackageConnections, FormatRepoPackageAssets, FormatRepoPackageEvidence } from "../features/discovery/FormatRepoPackageSections";
+import { buildDiscoveryHandoffPrompt } from "../features/discovery/handoff";
+
+const profile = getDiscoveryFormatProfile("character-gameplay-conversations")!;
+assert.equal(profile.version, "0.1.2");
+assert.equal(profile.name, "Character Gameplay Conversations");
+const entries = getDiscoveryEntriesByFormat(profile.slug);
+assert.equal(entries.length, 1);
+assert.equal(entries[0].format.version, "0.1.1", "Preserve the real example's runtime version.");
+assert.equal(entries[0].media.kind, "video");
+assert.equal(entries[0].media.aspectRatio, "3:4");
+assert.match(readFileSync("features/discovery/DiscoveryProofMedia.tsx", "utf8"), /entry\.media\.aspectRatio === "3:4" \? \{ aspectRatio: "3 \/ 4", objectFit: "contain" \}/);
+assert.match(readFileSync("app/discover/DiscoveryClient.tsx", "utf8"), /entry\.media\.aspectRatio === "3:4"\s*\? styles\.mediaWellThreeFour/);
+assert.match(readFileSync("app/discover/discovery.module.css", "utf8"), /\.mediaWellThreeFour\s*\{\s*aspect-ratio:\s*3 \/ 4;/);
+assert.ok(existsSync(`public${entries[0].media.poster}`));
+const sha256 = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
+assert.equal(sha256(readFileSync(`public${entries[0].media.src}`)), "63de842509644808f9e519818ad9bba7a483cdef7d33e2a8c951fd2d796d5dff");
+assert.deepEqual(discoveryShelfDefinitions.find(s => s.id === profile.slug)!.formats, [profile.slug]);
+const presentation = await getFormatRepoPagePresentation(profile.slug);
+assert.equal(presentation.kind, "shared");
+if (presentation.kind !== "shared") throw new Error("Use the standard shared page.");
+const data = presentation.package!;
+assert.deepEqual(data.services, [], "No provider account is required for supplied-media composition.");
+assert.equal(data.workflow.length, 5);
+assert.equal(data.proof.examples.length, 2);
+const html = [FormatRepoPackageConnections, FormatRepoPackageAssets, FormatRepoPackageEvidence]
+  .map(component => renderToStaticMarkup(createElement(component, { format: profile, data }))).join("");
+for (const text of ["Same-universe starter", "Crossover starter", "not in this release", "remains unrecorded", "Readable Repo files."]) assert.ok(html.includes(text), text);
+const prompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
+assert.ok(prompt.includes("/downloads/character-gameplay-conversations-0.1.2.zip"));
+assert.match(prompt, /Never use a paid provider without my explicit approval/);
+const root = `public/${profile.packagePath}`;
+const zip = await JSZip.loadAsync(readFileSync(`public${profile.repositoryHref}`));
+for (const name of ["format.json", "KIT-MANIFEST.json", "FORMAT-REPO.json", "package.json", "package-lock.json", "RELEASE-CONTENTS.json"]) assert.equal(JSON.parse(await zip.file(name)!.async("string")).version, profile.version, name);
+const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
+assert.equal(inventory.files.length, 37);
+assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((entry: {file:string}) => entry.file), "RELEASE-CONTENTS.json"].sort());
+for (const item of inventory.files) {
+  const bytes = await zip.file(item.file)!.async("nodebuffer");
+  assert.equal(sha256(bytes), item.sha256, item.file);
+  assert.equal(bytes.byteLength, item.sizeBytes, item.file);
+  assert.deepEqual(bytes, readFileSync(`${root}/${item.file}`), `Public source / ZIP parity: ${item.file}`);
+}
+assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "23a39095a50150d67930b5d8b318481f422fdc772dc41e38e12971aceb30f929", "Publication must not rewrite the proven renderer.");
+assert.ok(!Object.keys(zip.files).some(file => /node_modules|secrets\.env|private\/|examples\/|batman-spongebob\.mp4/.test(file)), "Keep display-only and raw private media outside the ZIP.");
+const publication = JSON.parse(await zip.file("PUBLICATION.json")!.async("string"));
+assert.equal(publication.publicationAuthorized, true);
+assert.equal(publication.detailedCreativeReview, "not-provided");
+console.log("Character Gameplay Conversations: public page, real preview, supplied-media scope, pinned handoff and 38-file ZIP parity passed.");

@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "slug": "character-gameplay-conversations",
+  "title": "Character Gameplay Conversations",
+  "referenceSha256": "e7a0651f873f6ca0439cba6007d32a98249e79491971c8ca233a9acb6bbdb9c2",
+  "summary": "Fictional characters converse over supplied gameplay with a persistent title/question header and timed dialogue captions. USER-PROVIDED CONTEXT: the creative hook is fan-favorite fictional characters with cloned voices, in same-universe conversations or fan-dream crossovers, over Batman Arkham Knight or Spider-Man 2 gameplay. The independent sampled-frame/transcript analysis initially identified only header/gameplay/captions/dialogue and missed that hook. This child composes supplied authorized media; it neither generates nor verifies recognizable voices. Included original characters, diagnostic video and tones are mechanical proofs only.",
+  "observations": [
+    {
+      "id": "layout",
+      "atSeconds": 0,
+      "description": "A white header occupies approximately the top 136 of 640 pixels; red comparison text and black question sit above third-person game imagery. A white caption appears near y=465.",
+      "channel": "visual",
+      "basis": "frame"
+    },
+    {
+      "id": "persistent",
+      "atSeconds": 55.807583,
+      "description": "The same title/question header and outlined white caption treatment persist near the end, above changed game imagery.",
+      "channel": "visual",
+      "basis": "frame"
+    },
+    {
+      "id": "dialogue",
+      "atSeconds": 0,
+      "description": "Uncertain local transcript begins with a direct comparison question addressed to a character and continues as a conversational exchange.",
+      "channel": "audio",
+      "basis": "local-transcript"
+    },
+    {
+      "id": "reframe",
+      "atSeconds": 23.1,
+      "description": "Uncertain transcript distinguishes measured capability from its practical application and closes with a contrast in how it is used.",
+      "channel": "audio",
+      "basis": "local-transcript"
+    }
+  ],
+  "rules": [
+    {
+      "id": "layout",
+      "description": "480x640 portrait output retains a white 136-pixel title/question header above supplied continuous video, with outlined white captions over the video.",
+      "classification": "fixed",
+      "observationIds": [
+        "layout",
+        "persistent"
+      ],
+      "reasoning": "Repeated sampled frames support persistent spatial hierarchy. Dimensions and bitmap typography are scoped implementation choices; exact typography is unproved."
+    },
+    {
+      "id": "conversation",
+      "description": "At least two named fictional characters exchange 2-12 supplied audio turns with explicit caption timing and a shared topic.",
+      "classification": "fixed",
+      "observationIds": [
+        "dialogue",
+        "reframe"
+      ],
+      "reasoning": "Transcript supports dialogue; USER-PROVIDED CONTEXT supplies the fictional-character and cloned-voice creative hook. The runtime requires audio for every turn but cannot judge whether it is the correct character voice."
+    },
+    {
+      "id": "cast-topic",
+      "description": "Replace cast, universe metadata, same-universe/crossover mode, topic, dialogue, timing, header, gameplay and per-turn audio without changing renderer code.",
+      "classification": "variable",
+      "observationIds": [
+        "layout",
+        "dialogue"
+      ],
+      "reasoning": "USER-PROVIDED CONTEXT explicitly allows same-universe characters and fan-dream crossovers, with Batman Arkham Knight or Spider-Man 2 gameplay examples. The specific comparison-question arc is not imposed as universal."
+    },
+    {
+      "id": "gameplay",
+      "description": "Require an explicitly authorized local video and audio clip for every turn. Gameplay must cover the conversation duration; original soundtrack is omitted so supplied dialogue is the sole output audio.",
+      "classification": "fixed",
+      "observationIds": [
+        "layout",
+        "persistent",
+        "dialogue"
+      ],
+      "reasoning": "Continuous imagery beneath dialogue is observed. Muting source audio is an explicit limited implementation choice. No fallback video, silent narration, provider generation, or automatic download is supported."
+    },
+    {
+      "id": "cadence",
+      "description": "Caption phrases and pauses vary through explicit per-turn timestamps; speaker labels above captions help inspect supplied cast assignments.",
+      "classification": "variable",
+      "observationIds": [
+        "layout",
+        "persistent",
+        "dialogue"
+      ],
+      "reasoning": "Phrase treatment is sampled; exact word timing and speakers are not independently established. Small speaker labels are an implementation aid, not claimed source fidelity."
+    },
+    {
+      "id": "unsupported",
+      "description": "Voice cloning, recognizable character performance, game acquisition, exact cinematic/typographic fidelity, synchronized visual acting and creative acceptance remain unsupported or pending.",
+      "classification": "unsupported",
+      "observationIds": [
+        "layout",
+        "dialogue"
+      ],
+      "reasoning": "No direct moving-video or audio review occurred. User context is not evidence of successful voice generation. Mechanical fixtures cannot establish actual gameplay or cloned-voice fidelity."
+    }
+  ],
+  "inputs": [
+    {
+      "name": "header.title",
+      "type": "string",
+      "description": "Visible persistent title, maximum 25 supported ASCII characters."
+    },
+    {
+      "name": "header.question",
+      "type": "string",
+      "description": "Visible persistent question, maximum 36 supported ASCII characters."
+    },
+    {
+      "name": "topic",
+      "type": "string",
+      "description": "Episode topic kept in the input for authoring context; title/question carry the visible promise."
+    },
+    {
+      "name": "cast",
+      "type": "array",
+      "description": "2-6 members with id, name and universe; names become visible speaker labels."
+    },
+    {
+      "name": "castMode",
+      "type": "string",
+      "description": "same-universe requires one shared universe; crossover requires at least two."
+    },
+    {
+      "name": "gameplay",
+      "type": "asset",
+      "description": "Repo-root relative file, authorized:true and provenance. Video duration must cover all turns; file is limited to 100 MB."
+    },
+    {
+      "name": "turns",
+      "type": "array",
+      "description": "2-12 ordered turns, at least two speakers, with text, durationSeconds, required authorized per-turn audio file/provenance and captions with text/start/end seconds relative to turn. Output maximum 60 seconds."
+    }
+  ],
+  "runtime": {
+    "approach": "One standalone Node.js entrypoint validates inputs and supplied media using FFprobe, streams minimal bitmap header/caption RGBA overlays to FFmpeg, and composites the supplied video plus concatenated turn audio to H.264/AAC. No app source, renderer dependency, package install, model, provider or network call. All FFprobe and FFmpeg inputs allow only file and pipe protocols; media files are bounded and subprocesses timed out.",
+    "entrypoint": "runtime/render.mjs"
+  },
+  "review": {
+    "visual": "sampled-frames",
+    "audio": "transcript-only",
+    "limitations": [
+      "Current completing author inspected sampled frames at 0 and 55.807583 seconds and read the uncertain machine transcript; no direct moving-video or source-audio perception occurred.",
+      "Initial independent interpretation missed the fictional-character/cloned-voice creative hook. The corrected hook and gameplay examples came from the user and are not presented as independent discovery.",
+      "Bundled synthetic diagnostic videos and four original tone WAVs test real supplied-file decoding/composition, caption changes and audio turn routing. They do not test actual gameplay, speech, voice cloning, or reference fidelity.",
+      "Bitmap typography, crop policy, caption cadence, source-audio muting and small speaker labels require human creative review. The source emoji is omitted.",
+      "Benchmark attestation is authorized; neither blueprint user approval nor finished-output creative approval is claimed."
+    ]
+  },
+  "assets": [
+    {
+      "path": "assets/warm.mp4",
+      "source": "Original locally generated FFmpeg diagnostic pattern",
+      "usage": "original",
+      "notes": "Distributable mechanical video fixture, not gameplay or a reference derivative."
+    },
+    {
+      "path": "assets/cool.mp4",
+      "source": "Original locally generated FFmpeg diagnostic pattern",
+      "usage": "original",
+      "notes": "Distributable mechanical video fixture, not gameplay or a reference derivative."
+    },
+    {
+      "path": "assets/low.wav",
+      "source": "Original locally generated sine tone",
+      "usage": "original",
+      "notes": "Distributable mechanical audio fixture, not speech, a character voice or a voice clone."
+    },
+    {
+      "path": "assets/high.wav",
+      "source": "Original locally generated sine tone",
+      "usage": "original",
+      "notes": "Distributable mechanical audio fixture, not speech, a character voice or a voice clone."
+    },
+    {
+      "path": "assets/bright.wav",
+      "source": "Original locally generated sine tone",
+      "usage": "original",
+      "notes": "Distributable mechanical audio fixture, not speech, a character voice or a voice clone."
+    },
+    {
+      "path": "assets/soft.wav",
+      "source": "Original locally generated sine tone",
+      "usage": "original",
+      "notes": "Distributable mechanical audio fixture, not speech, a character voice or a voice clone."
+    }
+  ],
+  "proofs": [
+    {
+      "id": "same-universe",
+      "description": "Four two-second turns between original SKYPORT characters ION and EMBER about leadership and listening; original warm diagnostic video and alternating 220/440 Hz tones."
+    },
+    {
+      "id": "crossover",
+      "description": "Three two-second turns between original SKYPORT character EMBER and PAPER SEA character QUILL about navigating home after a storm; a different original diagnostic video, 660/330 Hz tones and a mid-turn caption change."
+    }
+  ]
+}

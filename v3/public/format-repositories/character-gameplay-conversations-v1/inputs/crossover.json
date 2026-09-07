@@ -1,0 +1,13 @@
+{
+ "schemaVersion":1,
+ "header":{"title":"EMBER MEETS QUILL","question":"CAN A BOOK STOP A STORM?"},
+ "topic":"Preparation across worlds",
+ "castMode":"crossover",
+ "cast":[{"id":"ember","name":"EMBER","universe":"SKYPORT"},{"id":"quill","name":"QUILL","universe":"PAPER SEA"}],
+ "gameplay":{"file":"assets/cool.mp4","authorized":true,"provenance":"Original FFmpeg diagnostic video. Mechanical fixture only, not gameplay."},
+ "turns":[
+  {"speaker":"ember","text":"YOUR BOOK IS WET.","durationSeconds":2,"audio":{"file":"assets/bright.wav","authorized":true,"provenance":"Original 660 Hz tone fixture, not speech."},"captions":[{"text":"YOUR BOOK IS WET.","start":0,"end":2}]},
+  {"speaker":"quill","text":"THE MAP IS IN MY HEAD.","durationSeconds":2,"audio":{"file":"assets/soft.wav","authorized":true,"provenance":"Original 330 Hz tone fixture, not speech."},"captions":[{"text":"THE MAP IS","start":0,"end":1},{"text":"IN MY HEAD.","start":1,"end":2}]},
+  {"speaker":"ember","text":"THEN GUIDE US HOME.","durationSeconds":2,"audio":{"file":"assets/bright.wav","authorized":true,"provenance":"Original 660 Hz tone fixture, not speech."},"captions":[{"text":"THEN GUIDE US HOME.","start":0,"end":2}]}
+ ]
+}
