@@ -1,8 +1,8 @@
 {
   "automatedChecks": [
-    "Run all 11 contract tests and the two-input free smoke from a clean download.",
+    "Run all 12 contract tests and the two-input free smoke from a clean download.",
     "Validate cast/universe rules, authorized local media paths, measured durations and caption coverage before rendering.",
-    "Verify 480 × 640, 25 fps H.264/AAC output, visible caption pixels and supplied audio in the diagnostic proofs.",
+    "Verify 1080 × 1920 (9:16), square pixels, 25 fps H.264/AAC output, visible caption pixels and supplied audio in the diagnostic proofs.",
     "Keep the official runtime unchanged when replacing content."
   ],
   "creativeReview": [
@@ -12,7 +12,7 @@
   ],
   "limits": [
     "This baseline requires supplied gameplay and per-turn audio; no automatic acquisition, voice generation or transcription.",
-    "Output is 3:4 portrait at 480 × 640, not 1080 × 1920; ASCII captions and up to 60 seconds.",
+    "Output is 9:16 vertical at 1080 × 1920; ASCII captions and up to 60 seconds. Gameplay is center-cropped, never stretched.",
     "No music mixing, visual character animation or automatic speech alignment."
   ]
 }

@@ -1,17 +1,27 @@
 {
   "schemaVersion": 1,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "request": "make this a public repo",
   "publicationAuthorized": true,
   "authorizationContext": "User requested publication after the 16.76-second Batman/SpongeBob example was presented for review.",
   "detailedCreativeReview": "not-provided",
+  "layoutRequest": "The user clarified that the Batman video is for Shorts; 9:16 vertical was explained as the correct orientation, rather than 16:9 widescreen.",
   "example": {
-    "file": "examples/batman-spongebob.mp4",
-    "sha256": "63de842509644808f9e519818ad9bba7a483cdef7d33e2a8c951fd2d796d5dff",
+    "file": "examples/batman-spongebob-shorts.mp4",
+    "sha256": "5f3e53171e9b6e5dc079917e605b101c142aa179628ccb58b9ea05b0054ba812",
     "durationSeconds": 16.76,
+    "width": 1080,
+    "height": 1920,
+    "aspectRatio": "9:16",
     "displayOnly": true,
     "sourceGameplay": "https://www.youtube.com/watch?v=k-T-stiSYgw",
     "notes": "Existing independently sourced Arkham gameplay and newly generated dialogue from saved Fish character presets. Publication requested by the operator; this is not a claim of third-party licensing or independent voice-identity verification."
+  },
+  "previousExample": {
+    "file": "examples/batman-spongebob.mp4",
+    "sha256": "63de842509644808f9e519818ad9bba7a483cdef7d33e2a8c951fd2d796d5dff",
+    "aspectRatio": "3:4",
+    "notes": "Historical blind-agent output, preserved unchanged. Shorts revision retains its exact input, gameplay, six audio clips and duration. No new dialogue generation."
   },
   "excludedFromDownload": [
     "Source/reference footage",
