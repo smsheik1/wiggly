@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "kind": "technical-media-inspection",
+  "media": {
+    "file": "same-universe-0.1.4.mp4",
+    "sha256": "e38117ce661ba51d0786388d1fded4e9174a54cd1a989da64330e050aed73411",
+    "sizeBytes": 4168087,
+    "durationSeconds": 8,
+    "width": 1080,
+    "height": 1920,
+    "fps": 25,
+    "hasAudio": true
+  },
+  "streams": [
+    {
+      "index": 0,
+      "type": "video",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "index": 1,
+      "type": "audio",
+      "codec": "aac",
+      "sampleRate": 48000,
+      "channels": 1
+    }
+  ],
+  "review": {
+    "status": "not-assessed",
+    "limitations": [
+      "Metadata and checksums do not verify motion, content, audio perception, or creative quality. Direct review remains required."
+    ]
+  }
+}

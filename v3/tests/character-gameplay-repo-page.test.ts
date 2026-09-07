@@ -12,11 +12,11 @@ import { FormatRepoPackageConnections, FormatRepoPackageAssets, FormatRepoPackag
 import { buildDiscoveryHandoffPrompt } from "../features/discovery/handoff";
 
 const profile = getDiscoveryFormatProfile("character-gameplay-conversations")!;
-assert.equal(profile.version, "0.1.3");
+assert.equal(profile.version, "0.1.4");
 assert.equal(profile.name, "Character Gameplay Conversations");
 const entries = getDiscoveryEntriesByFormat(profile.slug);
 assert.equal(entries.length, 1);
-assert.equal(entries[0].format.version, "0.1.3", "The preview must identify the revised Shorts runtime.");
+assert.equal(entries[0].format.version, "0.1.4", "The preview must identify the revised music runtime.");
 assert.equal(entries[0].media.kind, "video");
 assert.equal(entries[0].media.aspectRatio, "9:16");
 assert.match(readFileSync("features/discovery/DiscoveryProofMedia.tsx", "utf8"), /entry\.media\.aspectRatio === "3:4" \? \{ aspectRatio: "3 \/ 4", objectFit: "contain" \}/);
@@ -24,7 +24,7 @@ assert.match(readFileSync("app/discover/DiscoveryClient.tsx", "utf8"), /entry\.m
 assert.match(readFileSync("app/discover/discovery.module.css", "utf8"), /\.mediaWellThreeFour\s*\{\s*aspect-ratio:\s*3 \/ 4;/);
 assert.ok(existsSync(`public${entries[0].media.poster}`));
 const sha256 = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
-assert.equal(sha256(readFileSync(`public${entries[0].media.src}`)), "5f3e53171e9b6e5dc079917e605b101c142aa179628ccb58b9ea05b0054ba812");
+assert.equal(sha256(readFileSync(`public${entries[0].media.src}`)), "a0082108fa53e6be6cc6494fff070a87846d6d832708c09ae35be32df0a900de");
 const previewProbe = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-show_streams", "-of", "json", `public${entries[0].media.src}`], { encoding: "utf8" }));
 const previewVideo = previewProbe.streams.find((stream: {codec_type:string}) => stream.codec_type === "video");
 assert.equal(previewVideo.width, 1080);
@@ -40,15 +40,15 @@ assert.equal(data.workflow.length, 5);
 assert.equal(data.proof.examples.length, 2);
 const html = [FormatRepoPackageConnections, FormatRepoPackageAssets, FormatRepoPackageEvidence]
   .map(component => renderToStaticMarkup(createElement(component, { format: profile, data }))).join("");
-for (const text of ["Same-universe starter", "Crossover starter", "not in this release", "remains unrecorded", "Readable Repo files."]) assert.ok(html.includes(text), text);
+for (const text of ["Same-universe starter", "Crossover starter", "not in this release", "User accepted the preview", "Dark Fog", "CC BY 4.0", "Readable Repo files."]) assert.ok(html.includes(text), text);
 const prompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
-assert.ok(prompt.includes("/downloads/character-gameplay-conversations-0.1.3.zip"));
+assert.ok(prompt.includes("/downloads/character-gameplay-conversations-0.1.4.zip"));
 assert.match(prompt, /Never use a paid provider without my explicit approval/);
 const root = `public/${profile.packagePath}`;
 const zip = await JSZip.loadAsync(readFileSync(`public${profile.repositoryHref}`));
 for (const name of ["format.json", "KIT-MANIFEST.json", "FORMAT-REPO.json", "package.json", "package-lock.json", "RELEASE-CONTENTS.json"]) assert.equal(JSON.parse(await zip.file(name)!.async("string")).version, profile.version, name);
 const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
-assert.equal(inventory.files.length, 37);
+assert.equal(inventory.files.length, 40);
 assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((entry: {file:string}) => entry.file), "RELEASE-CONTENTS.json"].sort());
 for (const item of inventory.files) {
   const bytes = await zip.file(item.file)!.async("nodebuffer");
@@ -56,13 +56,18 @@ for (const item of inventory.files) {
   assert.equal(bytes.byteLength, item.sizeBytes, item.file);
   assert.deepEqual(bytes, readFileSync(`${root}/${item.file}`), `Public source / ZIP parity: ${item.file}`);
 }
-assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "dd9e6571260b719b3088b9508ae16296bb07476796eed72f184b54acb1145fa6", "Ship the exact layout used by the Shorts proofs.");
+assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "bb19667f291641111eb07388aab9be887ef365a4a84c0d0543d60b65f4b396b1", "Ship the exact compositor used by the music proof.");
+assert.equal(sha256(readFileSync(`${root}/downloads/character-gameplay-conversations-0.1.3.zip`)), "56ccc078a79463d1e7dd20248091a434c9085840bc9d13fd33edc4aaf9e3a5d2", "Preserve the prior Shorts release.");
+assert.ok(zip.file("assets/dark-fog-excerpt.mp3"));
+assert.match(await zip.file("MUSIC-CREDITS.md")!.async("string"), /creativecommons.org\/licenses\/by\/4.0/);
+assert.equal(JSON.parse(await zip.file("FORMAT-REPO.json")!.async("string")).review.reviewer, "User");
 assert.equal(sha256(readFileSync(`${root}/downloads/character-gameplay-conversations-0.1.2.zip`)), "f4732bec6e967a0d52c41fee04a714b76344a05525ec056871c6ee5449f82a26", "Preserve the already-public prior version.");
 assert.ok(!Object.keys(zip.files).some(file => /node_modules|secrets\.env|private\/|examples\/|batman-spongebob\.mp4/.test(file)), "Keep display-only and raw private media outside the ZIP.");
 const publication = JSON.parse(await zip.file("PUBLICATION.json")!.async("string"));
 assert.equal(publication.publicationAuthorized, true);
 assert.equal(publication.detailedCreativeReview, "not-provided");
+assert.match(publication.userAcceptance.quote, /cool looks good to me/);
 assert.equal(publication.example.width, 1080);
 assert.equal(publication.example.height, 1920);
 assert.equal(publication.example.sha256, sha256(readFileSync(`public${entries[0].media.src}`)));
-console.log("Character Gameplay Conversations: public page, real preview, supplied-media scope, pinned handoff and 38-file ZIP parity passed.");
+console.log("Character Gameplay Conversations: music preview, credit, user acceptance, pinned handoff and 41-file ZIP parity passed.");

@@ -24,16 +24,16 @@ type FormatProfileConfig = {
 const formatConfigs: FormatProfileConfig[] = [
   {
     slug: "character-gameplay-conversations",
-    promise: "Fan-favorite characters. Conversations fans wish existed. Real gameplay, character dialogue, and timed captions—assembled into vertical 9:16 Shorts from the clips you provide.",
+    promise: "Fan-favorite characters. Conversations fans wish existed. Real gameplay, character dialogue, timed captions and optional background music—assembled into vertical 9:16 Shorts.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/character-gameplay-conversations-v1/format.json",
-    repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.1.3.zip",
+    repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.1.4.zip",
     technicalHref: "/format-repositories/character-gameplay-conversations-v1/BENCHMARK.md",
-    historicalProofVersions: ["0.1.1", "0.1.2"],
+    historicalProofVersions: ["0.1.1", "0.1.2", "0.1.3"],
     whatStays: ["A persistent title and question", "Real gameplay beneath the conversation", "Speaker labels and timed dialogue captions", "One local renderer for same-universe casts and crossovers"],
-    whatChanges: ["The characters and their universes", "The topic, script and question", "The supplied gameplay and voice clips", "Caption phrasing and timing"],
+    whatChanges: ["The characters and their universes", "The topic, script and question", "The supplied gameplay, voices and optional music", "Caption phrasing and timing"],
     handoff: {
-      requiredInputs: ["Your characters, topic and dialogue", "An authorized local gameplay clip", "One authorized audio clip per dialogue turn"],
+      requiredInputs: ["Your characters, topic and dialogue", "An authorized local gameplay clip", "One authorized audio clip per dialogue turn", "Optional authorized background music"],
       deliverables: ["A validated episode input", "A captioned portrait MP4", "A receipt with media and runtime hashes"],
       instructions: ["Read SKILL.md and run the free smoke", "Approve the script and supply gameplay and voice clips", "Use the packaged renderer without rebuilding it", "Watch and listen before accepting the final episode"],
       estimates: [
@@ -43,7 +43,7 @@ const formatConfigs: FormatProfileConfig[] = [
         { label: "Watch + review", cost: "$0 provider cost", time: "one full playback, then corrections if needed" },
       ],
       totalEstimate: "$0 media-provider cost with supplied clips. Coding-agent usage is separate.",
-      output: "One 1080 × 1920 vertical MP4 (9:16 Shorts), up to 60 seconds, with speaker labels and captions",
+      output: "One 1080 × 1920 vertical MP4 (9:16 Shorts), up to 60 seconds, with speaker labels, captions and optional music",
       firstQuestion: "Which characters should talk, and what are they talking about?",
     },
   },

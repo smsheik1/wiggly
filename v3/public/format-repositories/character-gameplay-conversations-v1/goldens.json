@@ -1,18 +1,18 @@
 {
-  "purpose": "The Batman/SpongeBob episode is now composed for 9:16 Shorts using the same supplied footage, dialogue and timing. Diagnostic proofs separately test two inputs through this layout.",
+  "purpose": "The user accepted the Batman/SpongeBob 9:16 music preview. It retains the supplied footage, dialogue and timing; optional music uses the same compositor. Diagnostic proofs separately test execution.",
   "examples": [
     {
       "id": "batman-spongebob",
       "title": "Gotham Meets Optimism",
-      "role": "9:16 Shorts · preserved dialogue",
+      "role": "9:16 Shorts · dialogue + quiet music",
       "whyItWorks": [
         "The original 3:4 episode passed blind-agent execution. This 1080 × 1920 revision reuses its exact input, gameplay and six audio clips through the revised official layout.",
-        "12 contract tests and both 9:16 diagnostic proofs passed; the real 16.76-second revision decoded completely and its sampled frames were inspected."
+        "23 contract/music tests passed, including ducking, preserved dialogue level, fading and credit. The user accepted the playable music preview. The release preserves its video, source clips, mix settings and timing; PUBLICATION.json records the small AAC tail difference."
       ],
       "knownWeaknesses": [
         "Gameplay and six voice clips were prepared before handoff; acquisition and voice generation are not in this release.",
         "The Shorts layout is a maintainer refinement, not a new unaided authoring or blind-agent claim.",
-        "Detailed voice-performance, pacing and caption/speech review remains unrecorded."
+        "User accepted the preview qualitatively; no numerical voice-performance score or agent direct-hearing claim is provided."
       ]
     },
     {

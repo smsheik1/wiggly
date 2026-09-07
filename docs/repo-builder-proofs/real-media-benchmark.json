@@ -1,6 +1,16 @@
 {
   "schemaVersion": 1,
   "date": "2026-09-06",
+  "subsequentUserAcceptance": {
+    "date": "2026-09-07",
+    "quote": "cool looks good to me. is this goal done",
+    "followUp": "go ahead and finish this goal",
+    "context": "User accepted the playable 9:16 Batman/SpongeBob music refinement after requesting its music. Qualitative baseline acceptance, not an invented numerical or per-channel review.",
+    "previewSha256": "becf9b97e74e3fdc725a14fcf9f9350159d200bb8f05d6b3c005b37dae18c767",
+    "releaseVersion": "0.1.4",
+    "agentDirectPerceptionClaimed": false,
+    "historicalBlindRunUnchanged": true
+  },
   "scope": "User-assisted Batman reference authoring, maintainer refinement, and independent real-media child-package execution",
   "creator": {
     "version": "0.1.0",
@@ -115,7 +125,7 @@
       "scope": "Supplied-media compositor. Selected finished preview is public; raw gameplay and separate voice clips are not in the ZIP."
     },
     "goalComplete": false,
-    "remainingPlanGate": "Step 4: direct audiovisual acceptance remains unverified. Public baseline publication and technical usability are complete.",
+    "remainingPlanGate": "User accepted the refined music preview. Remaining: publish and live-verify the 0.1.4 music release; historical blind reports stay unchanged.",
     "privateMediaExcludedFromArchive": true,
     "rights": "Raw benchmark footage and separate character audio remain private. Selected finished preview published at the user's request; no broader licensing or redistribution rights inferred."
   }
