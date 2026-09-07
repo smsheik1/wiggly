@@ -25,4 +25,14 @@ User request: “make this a public repo,” after the 16.76-second Batman/Spong
 
 The source reference analysis remains user-assisted. The independent child consumer established supplied-media execution, not unaided understanding, voice recognition or creative acceptance. Historical benchmark metadata stays explicitly historical; detailed audiovisual review remains unrecorded.
 
-This document records the local release checkpoint, not successful deployment. The release must be merged through passing CI, and the deployed page, Discover entry, actual clipboard handoff and public ZIP must pass the same browser checks before publication is reported complete.
+## Verified public release — 2026-09-07 UTC
+
+- Page: https://wiggly.agentenamel.com/formats/character-gameplay-conversations
+- Discover: https://wiggly.agentenamel.com/discover#shelf-character-gameplay-conversations
+- PR https://github.com/smsheik1/wiggly/pull/478 merged as `5a2072b3551ab4c4ef1a1ac217464970b6366d2f` after all four CI jobs passed: https://github.com/smsheik1/wiggly/actions/runs/34085345200.
+- Production deployment succeeded: https://github.com/smsheik1/wiggly/actions/runs/34085956523.
+- The production browser check passed Discover search and 3:4 framing, actual unmuted playback of the 16.76-second example, all standard sections, desktop/mobile layout, actual copied version-pinned public handoff, downloaded ZIP checksum, README expansion and share-to-Repo navigation. The downloaded ZIP matched the SHA-256 above.
+- Live desktop/mobile screenshots were directly inspected at `/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/wiggly-character-page-sW42lZ`. The in-app browser displayed the live 0.1.2 page.
+- The initial production test typed into the server-rendered search input before client initialization and timed out. Waiting for the cold page to finish loading resolved that test timing issue; the diagnostic browser reported one matching entry and no page errors. No product or package changes were needed.
+
+Publication is complete for the supplied-media baseline. Technical browser playback checks do not claim direct audiovisual creative review.

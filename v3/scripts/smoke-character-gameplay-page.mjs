@@ -16,7 +16,8 @@ const browser = await chromium.launch({ headless: true, channel: process.env.PLA
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, permissions: ["clipboard-read", "clipboard-write"] });
   const page = await context.newPage();
-  await page.goto(`${origin}/discover`, { waitUntil: "domcontentloaded" });
+  // A cold production load can expose the server-rendered input before its client handlers initialize.
+  await page.goto(`${origin}/discover`, { waitUntil: "networkidle" });
   await page.getByRole("searchbox", { name: "Search finished ads" }).fill("Character Gameplay Conversations");
   await page.waitForFunction(() => document.querySelectorAll("article").length === 1);
   assert.equal(await page.locator('h3[id^="shelf-"]').innerText(), "Character Gameplay Conversations");
