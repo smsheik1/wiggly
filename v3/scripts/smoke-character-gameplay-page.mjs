@@ -8,7 +8,7 @@ import { chromium } from "playwright";
 const origin = process.env.REPO_SMOKE_BASE_URL || "http://localhost:3020";
 const slug = "character-gameplay-conversations";
 const root = "/format-repositories/character-gameplay-conversations-v1";
-const archive = `${root}/downloads/${slug}-0.1.2.zip`;
+const archive = `${root}/downloads/${slug}-0.1.3.zip`;
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
 const expectedHash = hash(readFileSync(`public${archive}`));
 const screenshots = mkdtempSync(path.join(tmpdir(), "wiggly-character-page-"));
@@ -22,22 +22,22 @@ try {
   await page.waitForFunction(() => document.querySelectorAll("article").length === 1);
   assert.equal(await page.locator('h3[id^="shelf-"]').innerText(), "Character Gameplay Conversations");
   const cardVideo = page.locator("article video");
-  const cardDimensions = await cardVideo.evaluate(video => ({ fit: getComputedStyle(video).objectFit, width: video.clientWidth, height: video.clientHeight }));
-  assert.equal(cardDimensions.fit, "contain");
-  assert.ok(Math.abs(cardDimensions.width / cardDimensions.height - 0.75) < 0.01);
+  const cardDimensions = await cardVideo.evaluate(video => ({ width: video.clientWidth, height: video.clientHeight }));
+  assert.ok(Math.abs(cardDimensions.width / cardDimensions.height - 9 / 16) < 0.01);
   await page.screenshot({ path: path.join(screenshots, "discover.png") });
   await page.getByRole("button", { name: "Play Gotham Meets Optimism with sound" }).click();
   await page.waitForFunction(() => { const v = document.querySelector("article video"); return v && !v.paused && !v.muted && v.currentTime > 0.1; });
   assert.ok(Math.abs(await cardVideo.evaluate(v => v.duration) - 16.76) < 0.1);
+  assert.deepEqual(await cardVideo.evaluate(v => [v.videoWidth, v.videoHeight]), [1080, 1920]);
   await page.getByRole("link", { name: "Open format", exact: true }).click();
   await page.waitForURL(`**/formats/${slug}`);
   for (const id of ["accounts-youll-connect", "included-assets", "examples", "workflow", "proof-quality", "repo-files", "run-with-agent"]) assert.equal(await page.locator(`#${id}`).count(), 1, id);
   assert.match(await page.locator("#proof-quality").innerText(), /remains unrecorded/);
   const hero = page.locator("video").first();
   await hero.waitFor();
-  const dimensions = await hero.evaluate(video => ({ width: video.clientWidth, height: video.clientHeight, fit: getComputedStyle(video).objectFit }));
-  assert.equal(dimensions.fit, "contain");
-  assert.ok(Math.abs(dimensions.width / dimensions.height - 0.75) < 0.01);
+  const dimensions = await hero.evaluate(video => ({ width: video.clientWidth, height: video.clientHeight }));
+  assert.ok(Math.abs(dimensions.width / dimensions.height - 9 / 16) < 0.01);
+  assert.match(await page.locator("#run-with-agent").innerText(), /1080 × 1920/);
   await page.screenshot({ path: path.join(screenshots, "repo-desktop.png") });
   await page.locator("#run-with-agent").getByRole("button", { name: "Send to Coding Agent" }).click();
   await page.getByRole("menuitem", { name: "Copy for another coding agent" }).click();
@@ -57,8 +57,8 @@ try {
   await page.screenshot({ path: path.join(screenshots, "repo-mobile.png") });
   await page.goto(`${origin}/s/character-gameplay-batman-spongebob`, { waitUntil: "domcontentloaded" });
   assert.equal(await page.locator('a[href="/formats/character-gameplay-conversations"]').count() > 0, true);
-  assert.equal(await page.locator("video").first().evaluate(v => getComputedStyle(v).objectFit), "contain");
-  console.log(JSON.stringify({ status: "pass", origin, archiveSha256: expectedHash, screenshots, checks: ["Discover search and 3:4 framing", "Playback control and 16.76-second media", "Standard Repo sections", "Desktop/mobile layout", "Actual clipboard handoff", "Downloaded ZIP checksum", "Readable files", "Share-to-Repo navigation"], limits: "Playback state and dimensions are technical browser checks, not direct audiovisual creative review." }, null, 2));
+  assert.ok(Math.abs(await page.locator("video").first().evaluate(v => v.clientWidth / v.clientHeight) - 9 / 16) < 0.01);
+  console.log(JSON.stringify({ status: "pass", origin, archiveSha256: expectedHash, screenshots, checks: ["Discover search and 9:16 framing", "Playback control and 1080x1920 16.76-second media", "Standard Repo sections", "Desktop/mobile layout", "Actual clipboard handoff", "Downloaded ZIP checksum", "Readable files", "Share-to-Repo navigation"], limits: "Playback state and dimensions are technical browser checks, not direct audiovisual creative review." }, null, 2));
 } finally {
   await browser.close();
 }

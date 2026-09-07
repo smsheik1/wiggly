@@ -6,7 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import sharp from 'sharp';
-const W=480,H=640,FPS=25;
+export const layout=Object.freeze({width:1080,height:1920,fps:25,headerHeight:306,textWidth:900,speakerTop:1260,captionTop:1350,captionLineHeight:86});
+const {width:W,height:H,fps:FPS}=layout;
 const check=(condition,message)=>{if(!condition)throw new Error(message);};
 const digest=buffer=>createHash('sha256').update(buffer).digest('hex');
 const positive=n=>Number.isFinite(n)&&n>0;
@@ -46,16 +47,16 @@ const xml=value=>value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 export async function renderOverlay(input,turn,caption){
  const layers=[];
  const label=async(value,top,size,fill,outline=false)=>{
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="100"><text x="10" y="60" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="${size}" fill="${fill}"${outline?' stroke="#101010" stroke-width="4" stroke-linejoin="round" paint-order="stroke fill"':''}>${xml(value.toUpperCase())}</text></svg>`;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="4096" height="256"><text x="24" y="180" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="${size}" fill="${fill}"${outline?' stroke="#101010" stroke-width="8" stroke-linejoin="round" paint-order="stroke fill"':''}>${xml(value.toUpperCase())}</text></svg>`;
   const cropped=await sharp(Buffer.from(svg)).trim().png().toBuffer();
-  const {data,info}=await sharp(cropped).resize({width:436,withoutEnlargement:true}).png().toBuffer({resolveWithObject:true});
+  const {data,info}=await sharp(cropped).resize({width:layout.textWidth,withoutEnlargement:true}).png().toBuffer({resolveWithObject:true});
   layers.push({input:data,left:Math.floor((W-info.width)/2),top});
  };
  const speaker=turn&&input.cast.find(c=>c.id===turn.speaker);
- await label(input.header.title,23,38,'#ce222a');
- await label(input.header.question,76,26,'#101010');
- if(caption){await label(speaker.name,420,16,'#ffe282',true);for(const [i,value]of captionLines(caption.text).entries())await label(value,451+i*38,34,'white',true);}
- const header=Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="480" height="640"><rect width="480" height="136" fill="white"/></svg>');
+ await label(input.header.title,52,86,'#ce222a');
+ await label(input.header.question,171,58,'#101010');
+ if(caption){await label(speaker.name,layout.speakerTop,36,'#ffe282',true);for(const [i,value]of captionLines(caption.text).entries())await label(value,layout.captionTop+i*layout.captionLineHeight,76,'white',true);}
+ const header=Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${layout.headerHeight}" fill="white"/></svg>`);
  return sharp(header).composite(layers).ensureAlpha().raw().toBuffer();
 }
 export async function render(inputFile,outputFile){
@@ -65,7 +66,8 @@ export async function render(inputFile,outputFile){
  await mkdir(path.dirname(path.resolve(outputFile)),{recursive:true});
  const args=['-v','error','-n','-threads','1','-protocol_whitelist','file,pipe','-i',gameplay];for(const turn of turns)args.push('-protocol_whitelist','file,pipe','-i',turn.audio);
  const overlayIndex=turns.length+1;args.push('-f','rawvideo','-pixel_format','rgba','-video_size',`${W}x${H}`,'-framerate',String(FPS),'-protocol_whitelist','file,pipe','-i','pipe:0');
- const filters=[`[0:v]scale=480:504:force_original_aspect_ratio=increase,crop=480:504,pad=480:640:0:136:color=black,setsar=1,fps=25[base]`,`[base][${overlayIndex}:v]overlay=0:0:shortest=1[video]`];
+ const gameplayHeight=H-layout.headerHeight;
+ const filters=[`[0:v]scale=${W}:${gameplayHeight}:force_original_aspect_ratio=increase,crop=${W}:${gameplayHeight},pad=${W}:${H}:0:${layout.headerHeight}:color=black,setsar=1,fps=${FPS}[base]`,`[base][${overlayIndex}:v]overlay=0:0:shortest=1[video]`];
  for(const [i,turn]of turns.entries())filters.push(`[${i+1}:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,apad,atrim=duration=${turn.durationSeconds},asetpts=PTS-STARTPTS[a${i}]`);
  filters.push(`${turns.map((_,i)=>`[a${i}]`).join('')}concat=n=${turns.length}:v=0:a=1[audio]`);
  args.push('-filter_complex_threads','1','-filter_complex',filters.join(';'),'-map','[video]','-map','[audio]','-t',String(total),'-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-threads','1','-c:a','aac','-b:a','128k','-movflags','+faststart',outputFile);

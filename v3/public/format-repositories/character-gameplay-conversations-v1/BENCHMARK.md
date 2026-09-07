@@ -1,4 +1,14 @@
-# Authoring benchmark receipt — 0.1.1
+# Character Gameplay Conversations — evidence and history
+
+## Shorts layout update — 0.1.3
+
+The user clarified that this is for Shorts. The same official FFmpeg/Sharp compositor now renders a 1080×1920 (9:16) canvas with proportionally scaled, center-cropped gameplay and repositioned text. This changes layout, not the footage, dialogue, timing or voice assets. Runtime SHA-256: `dd9e6571260b719b3088b9508ae16296bb07476796eed72f184b54acb1145fa6`.
+
+All 12 contract tests passed. Both distinct diagnostic inputs rendered at 1080×1920 with square pixels and passed numerical caption/audio checks. Their output hashes are `e38117ce661ba51d0786388d1fded4e9174a54cd1a989da64330e050aed73411` (same-universe, 8 seconds) and `ea9ac93ea4cd4db86f877c7c661c51a854b075da6ef4e29c67678e9f5df713ae` (crossover, 6 seconds). Current receipts and technical inspections ship beside these two 0.1.3 proofs.
+
+The maintainer re-rendered the real Batman/SpongeBob episode through this layout: 16.76 seconds, 1080×1920, 25 fps, H.264/AAC, SHA-256 `5f3e53171e9b6e5dc079917e605b101c142aa179628ccb58b9ea05b0054ba812`. Its input, gameplay, six voice-clip hashes and duration exactly match the original blind-consumer run. Full decoding passed, and 16 sampled frames were inspected for framing and readable text. No media generation occurred. This layout revision is not a new blind-agent run or a direct audiovisual creative pass.
+
+Historical 0.1.1 and 0.1.2 archives and the original displayed 3:4 output are preserved. The records below describe those versions, not the current 9:16 geometry.
 
 ## Public baseline update — 0.1.2
 
@@ -16,7 +26,7 @@ The initial analysis missed the fan-character/cloned-voice creative hook and ove
 
 The approved benchmark blueprint SHA-256 is bacd3948df9a2de105e61add25bff27707c983a9bf02abb5d8a500f0cb437a16. User approval is false and creative approval is false. Private evidence and approval history are excluded from this release.
 
-Current official runtime SHA-256:
+Historical 0.1.1 official runtime SHA-256:
 23a39095a50150d67930b5d8b318481f422fdc772dc41e38e12971aceb30f929
 
 Original 0.1.0 runtime SHA-256, retained in historical evidence:

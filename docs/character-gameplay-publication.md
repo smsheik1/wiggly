@@ -2,6 +2,22 @@
 
 User request: “make this a public repo,” after the 16.76-second Batman/SpongeBob example was presented. This authorizes publication of the format and its selected finished preview; it is not a fabricated direct audiovisual review score.
 
+## Shorts revision — 0.1.3 release checkpoint
+
+The user clarified that the Batman video is for Shorts and that the old frame looked short. The corrected orientation is 9:16 vertical, not 16:9 widescreen. The single official compositor now uses a 1080×1920 canvas, a 306-pixel header, proportionally scaled/center-cropped gameplay and measured text within 90-pixel side margins. Captions leave at least 300 pixels clear at the bottom. There is no stretched 3:4 video, new renderer, new provider or new media generation.
+
+- ZIP: `character-gameplay-conversations-0.1.3.zip`, 5,790,574 bytes, 38 files, SHA-256 `56ccc078a79463d1e7dd20248091a434c9085840bc9d13fd33edc4aaf9e3a5d2`.
+- Runtime SHA-256: `dd9e6571260b719b3088b9508ae16296bb07476796eed72f184b54acb1145fa6`.
+- New preview: `examples/batman-spongebob-shorts.mp4`, 16.76 seconds, 1080×1920, square pixels, 25 fps H.264/AAC. SHA-256 `5f3e53171e9b6e5dc079917e605b101c142aa179628ccb58b9ea05b0054ba812`.
+- The original input, gameplay, all six voice clips and duration have unchanged hashes/values. Historical ZIP 0.1.2 and the original 3:4 example remain untouched.
+- Twelve contract tests passed. Both distinct 9:16 proofs passed stream, square-pixel, caption and supplied-tone checks. A clean ZIP extraction installed from existing cache, passed all twelve tests, reproduced both smoke outputs and reproduced the real Shorts episode byte-for-byte without package edits. Workspace: `/private/tmp/wiggly-character-shorts.IuL5ln/release-check`.
+- The real episode fully decoded. Sixteen sampled frames were inspected for the crop, header, captions and clipping. This is sampled-frame review, not hearing voices or certifying motion/synchronization.
+- Page/ZIP parity, all 53 presentation contracts, Discover and handoff tests, typecheck and production build passed. Existing broad-file-tracing warnings remain unchanged in class.
+- Local browser QA passed the actual 1080×1920 playback, Discover search, 9:16 geometry on card/page/share, seven standard sections, version-pinned copied launcher, actual ZIP checksum, readable files and desktop/mobile overflow. In-app browser displayed the updated 0.1.3 page. Screenshots directly inspected: `/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/wiggly-character-page-KHTxKa`.
+- Required complexity review kept one layout definition shared by compositor and inspection; removed unused browser style measurements. No dependency or framework added.
+
+This is a verified local release checkpoint. Version 0.1.3 still requires passing CI, production deployment and the same live browser check before it is called live. Detailed audiovisual review remains unrecorded; the original 0.1.1 blind execution must not be mislabeled as a fresh blind run of this layout revision.
+
 ## Release scope
 
 - Public package: `character-gameplay-conversations-0.1.2.zip`, 2,384,255 bytes, 38 files.

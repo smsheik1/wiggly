@@ -1,16 +1,17 @@
 {
-  "purpose": "A real Batman/SpongeBob episode demonstrates the supplied-media workflow. Diagnostic proofs separately test two different inputs through the same runtime.",
+  "purpose": "The Batman/SpongeBob episode is now composed for 9:16 Shorts using the same supplied footage, dialogue and timing. Diagnostic proofs separately test two inputs through this layout.",
   "examples": [
     {
       "id": "batman-spongebob",
       "title": "Gotham Meets Optimism",
-      "role": "Real gameplay · blind-agent execution",
+      "role": "9:16 Shorts · preserved dialogue",
       "whyItWorks": [
-        "A fresh agent rendered a 16.76-second Batman/SpongeBob exchange on its first attempt with no runtime changes or coaching.",
-        "11 tests, both smoke proofs, full decoding and 18 sampled caption frames passed."
+        "The original 3:4 episode passed blind-agent execution. This 1080 × 1920 revision reuses its exact input, gameplay and six audio clips through the revised official layout.",
+        "12 contract tests and both 9:16 diagnostic proofs passed; the real 16.76-second revision decoded completely and its sampled frames were inspected."
       ],
       "knownWeaknesses": [
         "Gameplay and six voice clips were prepared before handoff; acquisition and voice generation are not in this release.",
+        "The Shorts layout is a maintainer refinement, not a new unaided authoring or blind-agent claim.",
         "Detailed voice-performance, pacing and caption/speech review remains unrecorded."
       ]
     },

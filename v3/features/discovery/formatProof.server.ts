@@ -24,12 +24,12 @@ type FormatProfileConfig = {
 const formatConfigs: FormatProfileConfig[] = [
   {
     slug: "character-gameplay-conversations",
-    promise: "Fan-favorite characters. Conversations fans wish existed. Real gameplay, character dialogue, and timed captions—assembled from the clips you provide.",
+    promise: "Fan-favorite characters. Conversations fans wish existed. Real gameplay, character dialogue, and timed captions—assembled into vertical 9:16 Shorts from the clips you provide.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/character-gameplay-conversations-v1/format.json",
-    repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.1.2.zip",
+    repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.1.3.zip",
     technicalHref: "/format-repositories/character-gameplay-conversations-v1/BENCHMARK.md",
-    historicalProofVersions: ["0.1.1"],
+    historicalProofVersions: ["0.1.1", "0.1.2"],
     whatStays: ["A persistent title and question", "Real gameplay beneath the conversation", "Speaker labels and timed dialogue captions", "One local renderer for same-universe casts and crossovers"],
     whatChanges: ["The characters and their universes", "The topic, script and question", "The supplied gameplay and voice clips", "Caption phrasing and timing"],
     handoff: {
@@ -43,7 +43,7 @@ const formatConfigs: FormatProfileConfig[] = [
         { label: "Watch + review", cost: "$0 provider cost", time: "one full playback, then corrections if needed" },
       ],
       totalEstimate: "$0 media-provider cost with supplied clips. Coding-agent usage is separate.",
-      output: "One 480 × 640 portrait MP4, up to 60 seconds, with speaker labels and captions",
+      output: "One 1080 × 1920 vertical MP4 (9:16 Shorts), up to 60 seconds, with speaker labels and captions",
       firstQuestion: "Which characters should talk, and what are they talking about?",
     },
   },
