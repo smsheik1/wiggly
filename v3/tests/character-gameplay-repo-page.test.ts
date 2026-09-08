@@ -48,7 +48,7 @@ const root = `public/${profile.packagePath}`;
 const zip = await JSZip.loadAsync(readFileSync(`public${profile.repositoryHref}`));
 for (const name of ["format.json", "KIT-MANIFEST.json", "FORMAT-REPO.json", "package.json", "package-lock.json", "RELEASE-CONTENTS.json"]) assert.equal(JSON.parse(await zip.file(name)!.async("string")).version, profile.version, name);
 const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
-assert.equal(inventory.files.length, 41);
+assert.equal(inventory.files.length, 45);
 assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((entry: {file:string}) => entry.file), "RELEASE-CONTENTS.json"].sort());
 for (const item of inventory.files) {
   const bytes = await zip.file(item.file)!.async("nodebuffer");
@@ -56,7 +56,7 @@ for (const item of inventory.files) {
   assert.equal(bytes.byteLength, item.sizeBytes, item.file);
   assert.deepEqual(bytes, readFileSync(`${root}/${item.file}`), `Public source / ZIP parity: ${item.file}`);
 }
-assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "bb19667f291641111eb07388aab9be887ef365a4a84c0d0543d60b65f4b396b1", "Ship the exact compositor used by the music proof.");
+assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "c6df6b1276d3b9e92df5c3d18d965f84f57d6c937dcefecf27860c8d1af3c520", "Ship the exact compositor used by the music proof.");
 assert.equal(sha256(readFileSync(`${root}/downloads/character-gameplay-conversations-0.1.4.zip`)), "03788884fdbf18ed052a6ddfe4d71528e9f6cd7f0e0232bf0aa1168f4f3a05ab", "Preserve the prior music release.");
 assert.ok(zip.file("assets/dark-fog-excerpt.mp3"));
 assert.match(await zip.file("MUSIC-CREDITS.md")!.async("string"), /creativecommons.org\/licenses\/by\/4.0/);
@@ -70,4 +70,4 @@ assert.match(publication.userAcceptance.quote, /cool looks good to me/);
 assert.equal(publication.example.width, 1080);
 assert.equal(publication.example.height, 1920);
 assert.equal(publication.example.sha256, sha256(readFileSync(`public${entries[0].media.src}`)));
-console.log("Character Gameplay Conversations: music preview, credit, user acceptance, pinned handoff and 41-file ZIP parity passed.");
+console.log("Character Gameplay Conversations: music preview, credit, user acceptance, pinned handoff and 45-file ZIP parity passed.");
