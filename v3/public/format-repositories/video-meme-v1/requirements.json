@@ -14,6 +14,14 @@
       ]
     }
   },
-  "providers": [],
-  "note": "The host agent researches and writes. Wiggly bundles the clips and renders locally, so this kit needs no API key."
+  "providers": [
+    {
+      "name": "Social Publisher (Buffer MCP or API)",
+      "purpose": "Simultaneous multi-platform publishing to YouTube Shorts, Instagram Reels, TikTok, and X.",
+      "optional": true,
+      "environmentVariables": ["BUFFER_API_KEY"],
+      "pricingSource": "https://buffer.com/pricing"
+    }
+  ],
+  "note": "The host agent researches and writes. Wiggly bundles the clips and renders locally, so this kit needs no API key for rendering. Multi-platform social distribution optionally connects Buffer."
 }

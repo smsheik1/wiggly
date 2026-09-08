@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "fixtures/nasa-curiosity.json",
+  "media": "goldens/nasa-curiosity.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "Breaking Fish News: NASA Found Pure Yellow Sulfur on Mars 🐟🧪 #Shorts",
+      "description": "Reporting live from Bikini Bottom: NASA's Curiosity rover cracked open a rock and discovered pure sulfur crystals on Mars.\n\n#Shorts #TalkingFishNews #NASA #Mars #Science #Space #Memes",
+      "categoryId": "25",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "Breaking news from Bikini Bottom: NASA's rover literally ran over a Martian rock and found pure elemental sulfur. The fish anchor has thoughts. 🪐🫧\n.\n.\n#talkingfishnews #nasa #mars #space #news #science #reels"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "BREAKING: NASA Curiosity rover just cracked open a rock and discovered pure sulfur on Mars. The fish anchor has thoughts. 🐟🚀 #NASA #Mars"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "NASA rover cracked a rock on Mars and the fish anchor is stunned 💀🐟 #talkingfishnews #nasa #space #mars #fyp #science",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}

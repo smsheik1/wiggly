@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "episode": "examples/we-the-artists/content.json",
+  "media": "examples/we-the-artists/evidence/final.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "Squilliam Fancyson Reports: An Artistic Emergency in Bikini Bottom! 🎨🍷 #Shorts",
+      "description": "Squilliam Fancyson anchors this 30-second breaking broadcast covering the We The Artists exhibition.\n\n#Shorts #Squilliam #SpongeBob #Animation #NewsParody #Art",
+      "categoryId": "23",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "post",
+      "caption": "Good evening, cultural connoisseurs. Squilliam Fancyson here with an urgent announcement regarding Bikini Bottom's premier art event. 🍷🖼️\n.\n.\n#squilliam #spongebob #art #animation #news #parody"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "Squilliam Fancyson interrupts your feed for a very refined breaking news announcement. 🍷🖼️ #Squilliam #BikiniBottom"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "Squilliam really thought he owned the art world 😭🍷 #squilliam #spongebob #art #news #fyp #animation",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}

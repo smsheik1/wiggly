@@ -1,5 +1,5 @@
 {
-  "progress": "Research -> Script -> Voice -> Render -> Deliver",
+  "progress": "Research -> Script -> Voice -> Render -> Deliver -> Distribute",
   "stages": [
     {
       "id": "Research",
@@ -28,6 +28,12 @@
     {
       "id": "Deliver",
       "output": "Inspected MP4, audio, script, scene, evidence, and run state",
+      "paid": false,
+      "approvalRequired": true
+    },
+    {
+      "id": "Distribute",
+      "output": "Author platform-tailored copy for YouTube Shorts, Instagram Reels, TikTok, and X, present for review, and dispatch to connected channels via runtime/publish.mjs. Writes live receipts to outputs/episode.distribution.json.",
       "paid": false,
       "approvalRequired": true
     }

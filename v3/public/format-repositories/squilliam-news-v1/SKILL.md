@@ -31,5 +31,11 @@ Ask one question at a time. If the user requests the packaged We The Artists pro
 10. Ask the user to confirm factual accuracy, voice identity, pronunciation, body language, lip sync, joke, and CTA.
 11. Run `node runner.mjs finalize --run=<run-id> --human-review=pass` only after approval.
 12. Return the final playable MP4.
+13. Multi-Platform Social Distribution (Optional):
+    When the bulletin is finalized and approved, distribute it across YouTube Shorts, X/Twitter, Instagram, and TikTok via the packaged `runtime/publish.mjs` CLI or connected Buffer MCP tools:
+    - Author platform copy in `inputs/distribution.json` (YouTube Shorts title ≤100 chars, categoryId "23" or "25", duration ≤60s; Twitter/X ≤280 chars; TikTok ≤2200 chars; Instagram non-empty caption).
+    - Dry-run validation: `node runtime/publish.mjs --dry-run inputs/distribution.json examples/we-the-artists/evidence/final.mp4`.
+    - Live dispatch requires explicit human sign-off (`approvalRequired: true`). Never leak or log `BUFFER_API_KEY`.
+    - Generates a verified distribution receipt (`<video>.distribution.json`).
 
 Stop on missing tools, invalid content, absent assets, unapproved provider use, failed inspection, or attempt three. Never print or store secret values. A content change that requires editing `runtime/renderer/app.js` is a portability failure, not permission to patch the renderer.

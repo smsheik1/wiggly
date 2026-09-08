@@ -1,5 +1,5 @@
 {
-  "progress": "Research -> Concepts -> Script -> Voice -> Render -> Deliver",
+  "progress": "Research -> Concepts -> Script -> Voice -> Render -> Deliver -> Distribute",
   "stages": [
     {
       "id": "Research",
@@ -35,6 +35,12 @@
       "id": "Deliver",
       "output": "Playable MP4, contact sheet, hashes, quality report, and explicit user verdict",
       "providerCall": false,
+      "approvalRequired": true
+    },
+    {
+      "id": "Distribute",
+      "output": "Simultaneous multi-platform publishing receipt (YouTube Shorts, Instagram Reels, TikTok, X) with zero secret leakage",
+      "providerCall": true,
       "approvalRequired": true
     }
   ]

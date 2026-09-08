@@ -127,3 +127,21 @@ Run commands from the downloaded kit's `v3` directory.
 - Music stays below the voice.
 - The MP4 is 1080x1920, 14-24 seconds, with one video and one audio stream.
 - The final artifact is not delivered until automated inspection passes and the user approves the complete video.
+
+## Multi-Platform Social Distribution (Optional)
+
+When a news report is approved and delivered, the agent can distribute it across YouTube Shorts, Instagram Reels, TikTok, and X via the packaged `runtime/publish.mjs` CLI or connected Buffer MCP tools:
+
+1. **Author platform-tailored copy in `inputs/distribution.json`:**
+   - **YouTube Shorts:** Urgent news title (≤100 chars), categoryId (`25` for News & Politics or `23` for Comedy), duration ≤60s.
+   - **Twitter/X:** Fast breaking news hook (≤280 chars total).
+   - **Instagram Reels:** Engaging caption with tags, strictly vertical (9:16).
+   - **TikTok:** Engaging caption with trending tags (≤2200 chars).
+2. **Dry-run validation:**
+   ```sh
+   node runtime/publish.mjs --dry-run inputs/distribution.json goldens/nasa-curiosity.mp4
+   ```
+3. **Live dispatch requires explicit human sign-off:**
+   - Confirm target channels and copy with the user (`approvalRequired: true`).
+   - Execute with connected Buffer MCP tools or `node runtime/publish.mjs inputs/distribution.json outputs/final.mp4`.
+   - Generates a verified distribution receipt (`<video>.distribution.json`) with zero secret leakage.
