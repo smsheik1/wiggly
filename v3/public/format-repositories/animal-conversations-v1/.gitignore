@@ -8,3 +8,7 @@ outputs/
 downloads/*
 *.zip
 !downloads/wiggly-animal-conversations-format-kit.zip
+!downloads/wiggly-animal-conversations-format-kit-*.zip
+!downloads/*.release.json
+!downloads/*.sha256
+!downloads/latest-release.json

@@ -90,7 +90,7 @@ assert.ok(
   profile?.handoff,
   "Animal Conversations should offer a runnable agent handoff.",
 );
-assert.equal(profile.version, "0.16.2");
+assert.equal(profile.version, "0.17.0");
 assert.ok(
   profile.proofEntries.every((entry) => entry.format.version === "0.15.1"),
   "Earlier example videos must not be relabeled as new-release proof.",
@@ -116,8 +116,15 @@ assert.match(
 assert.ok(existsSync(download), "The stable public Repo download must exist.");
 assert.equal(
   createHash("sha256").update(readFileSync(download)).digest("hex"),
+  "2d75c05367255f5aa4ebb92fd9e402a096c42f2677f79a84b1087141515dbe76",
+  "The public download must match the exact tested v0.17.0 kit.",
+);
+const historical0162 = `${repositoryRoot}/downloads/wiggly-animal-conversations-format-kit-0.16.2.zip`;
+assert.ok(existsSync(historical0162), "The historical v0.16.2 archive must remain present.");
+assert.equal(
+  createHash("sha256").update(readFileSync(historical0162)).digest("hex"),
   "0762a04c20c8229d98427a158debf09063512c65bb54c95a90e28f24ce56565d",
-  "The public download must match the exact tested v0.16.2 kit.",
+  "The historical v0.16.2 archive must remain byte-identical.",
 );
 const release = JSON.parse(
   readFileSync(`${repositoryRoot}/downloads/latest-release.json`, "utf8"),
@@ -142,8 +149,10 @@ for (const expected of [
   "SKILL.md",
   "runtime/render.mjs",
   "runtime/intake.mjs",
+  "runtime/publish.mjs",
   "runtime/workflow.mjs",
   "runtime/export.mjs",
+  "inputs/distribution.json",
   "RELEASE-CONTENTS.json",
   "fixtures/smoke/input.json",
   "fixtures/regression/overlapping-reassurance/input.json",
@@ -162,7 +171,7 @@ const archivedManifest = JSON.parse(
 ) as { formatVersion: string; canonicalSkill: string };
 assert.deepEqual(archivedManifest, {
   ...archivedManifest,
-  formatVersion: "0.16.2",
+  formatVersion: "0.17.0",
   canonicalSkill: "SKILL.md",
 });
 const archivedFormat = JSON.parse(
@@ -280,7 +289,11 @@ assert.deepEqual(trustData.stats, {
   cameras: 3,
   characters: 2,
 });
-assert.equal(trustData.requirements.providers.length, 0);
+assert.equal(trustData.requirements.providers.length, 1);
+assert.equal(
+  (trustData.requirements.providers[0] as { name: string })?.name,
+  "Social Publisher (Buffer MCP or API)",
+);
 assert.deepEqual(trustData.requirements.environmentVariables, [
   "FFMPEG",
   "FFPROBE",

@@ -1,7 +1,7 @@
 {
   "name": "wiggly-animal-conversations-format-kit",
   "private": true,
-  "version": "0.16.2",
+  "version": "0.17.0",
   "type": "module",
   "scripts": {
     "test": "node --test converter/tests/manifests.test.mjs converter/tests/render_tvg.test.mjs converter/tests/runtime_channels.test.mjs converter/tests/scene_transforms.test.mjs runtime/tests/*.test.mjs",
@@ -19,6 +19,7 @@
     "render": "node runner.mjs render",
     "inspect": "node runner.mjs inspect",
     "finalize": "node runner.mjs finalize",
+    "publish": "node runtime/publish.mjs",
     "build:kit": "node build-kit.mjs"
   },
   "dependencies": {

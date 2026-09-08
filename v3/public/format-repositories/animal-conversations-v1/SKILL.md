@@ -129,6 +129,35 @@ Run `status --run=<id> --json`, then show the actual exported MP4 with review st
 
 `upgrade-run --run=<old-id> --new-run=<fresh-id>` preserves legacy history but requires a newly displayed expanded review, fresh approval, and new render/quality evidence. Never manufacture upgraded approval or playback receipts.
 
+## 8. Multi-Platform Social Distribution (Optional)
+
+When an episode is rendered and approved, the agent can distribute it across YouTube Shorts, Instagram Reels, TikTok, and X via the packaged `runtime/publish.mjs` CLI or connected Buffer MCP tools:
+
+1. **Author platform-tailored copy in `inputs/distribution.json`:**
+   - **YouTube Shorts:** Punchy title (≤100 chars), categoryId (`15` for Pets & Animals), duration ≤60s.
+   - **Twitter/X:** Strong hook with viral hashtags (≤280 chars total).
+   - **Instagram Reels:** Engaging caption with tags, strictly vertical (9:16).
+   - **TikTok:** Engaging caption with trending tags (≤2200 chars).
+
+2. **Probe the release before publishing (`--dry-run`):**
+   ```sh
+   node runtime/publish.mjs --dry-run inputs/distribution.json <path-to-mp4>
+   ```
+
+3. **Obtain explicit user approval:**
+   - Present the copy and selected platforms to the user.
+   - **Never dispatch live to social media without explicit human sign-off.**
+
+4. **Live dispatch and receipts:**
+   - If `BUFFER_API_KEY` is provided, dispatch live via Buffer MCP or CLI.
+   - If unconfigured, the runtime validates assets and logs a graceful `unconfigured_environment` receipt.
+   - Durable receipts are saved to `<video-path>.distribution.json`.
+
+## Behavioral Guardrails
+- **Human in the Loop:** Never publish without explicit confirmation from the user.
+- **Probe First:** Always validate media format and character limits before dispatching.
+- **Zero Token Leakage:** Never print or store API keys in repo files or receipts.
+
 ## Fixed animation and authoring rules
 
 - Start the timeline at zero and finish at measured audio duration. Schema 1 retains 20 ms boundary tolerance; new drafts use exactly shared boundaries. The review exposes discrepancies.

@@ -141,6 +141,7 @@ export async function getAnimalConversationsTrustData(): Promise<AnimalConversat
       { label: "Audio intake", path: "runtime/intake.mjs" },
       { label: "Guided workflow", path: "runtime/workflow.mjs" },
       { label: "Verified export", path: "runtime/export.mjs" },
+      { label: "Social distribution", path: "runtime/publish.mjs" },
     ].map(async (file) => ({
       ...file,
       content: await readFile(path.join(repoRoot, file.path), "utf8"),
@@ -256,7 +257,7 @@ export async function getAnimalConversationsTrustData(): Promise<AnimalConversat
         { value: "3", label: "Approved camera angles" },
       ],
       noteTitle: "Evidence stays explicit.",
-      note: "The agent proposes the words and characters; you approve them. Transcription never approves casting, and this Repo never claims automatic diarization. The examples are earlier-version proof, not a new v0.16.2 review.",
+      note: "The agent proposes the words and characters; you approve them. Transcription never approves casting, and this Repo never claims automatic diarization. The examples are earlier-version proof, not a new v0.17.0 review.",
       criteriaTitle: `The playback review checks ${quality.blindReview.criteria.length} things`,
       criteriaSubtitle:
         "Character, speaker, caption, camera, motion, and audio evidence",
@@ -281,7 +282,7 @@ export async function getAnimalConversationsTrustData(): Promise<AnimalConversat
           value: `${quality.automatic.width} × ${quality.automatic.height} · ${durationSeconds.toFixed(3)}s MP4`,
         },
       ],
-      note: "The example MP4s retain their approved soundtracks. Raw audio and review clips from new runs remain user-supplied, local, and excluded from the download. Version 0.16.2 passed automated and platform checks; full fresh-agent acceptance of this exact release remains incomplete.",
+      note: "The example MP4s retain their approved soundtracks. Raw audio and review clips from new runs remain user-supplied, local, and excluded from the download. Version 0.17.0 passed automated and platform checks; full fresh-agent acceptance of this exact release remains incomplete.",
     },
     commands,
     files,
