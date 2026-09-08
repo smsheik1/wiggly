@@ -11,6 +11,9 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const VOICE_PRESETS = {
   'batman': { id: 'ef549174cea246468ce32b00afa6affa', name: 'BATMAN', universe: 'DC' },
   'kevin conroy': { id: 'ef549174cea246468ce32b00afa6affa', name: 'BATMAN', universe: 'DC' },
+  'robin': { id: 'bc748d906c524a91bbb88e87f2bac62b', name: 'ROBIN', universe: 'DC' },
+  'tim drake': { id: 'bc748d906c524a91bbb88e87f2bac62b', name: 'ROBIN', universe: 'DC' },
+  'nightwing': { id: '5ff622f2dd30418ebb5bce8c1b920bdf', name: 'NIGHTWING', universe: 'DC' },
   'jason todd': { id: 'ecaac6caa8f14415aa02de57459b27c8', name: 'JASON TODD', universe: 'DC' },
   'red hood': { id: 'ecaac6caa8f14415aa02de57459b27c8', name: 'RED HOOD', universe: 'DC' },
   'joker': { id: '9fbad48d836748c5ab748abe7ac523b1', name: 'THE JOKER', universe: 'DC' },
@@ -249,6 +252,43 @@ async function ensureGameplay(requestedGameplay, char1, char2) {
     const c1Name = c1.name.toUpperCase();
     const c2Name = c2.name.toUpperCase();
     const combo = `${c1Name}+${c2Name}`;
+    const topicLow = (topic || '').toLowerCase();
+
+    if (combo.includes('ROBIN') && combo.includes('BATMAN')) {
+      if (topicLow.includes('sleep') || topicLow.includes('rest') || topicLow.includes('tired')) {
+        const rId = c1Name.includes('ROBIN') ? 'char1' : 'char2';
+        const bId = c1Name.includes('BATMAN') ? 'char1' : 'char2';
+        return [
+          { speakerId: rId, text: 'Bruce, serious question. How do you actually survive on no sleep? You patrol all night and work all day.' },
+          { speakerId: bId, text: "I don't stay awake 24 hours a day, Tim." },
+          { speakerId: rId, text: 'Yeah, but standard REM sleep takes at least 90 minutes to kick in. If you just take quick naps, your brain never repairs itself.' },
+          { speakerId: bId, text: 'Think about the biology. What happens if you intentionally drop your resting heart rate to 40 beats per minute while your central nervous system is exhausted?' },
+          { speakerId: rId, text: 'I don\'t know. Your organs shut down?' },
+          { speakerId: bId, text: 'No. You skip the light sleep stages entirely. The body panics and drops straight into REM to repair itself.' },
+          { speakerId: rId, text: 'Wait. So, 20-minute cycles four times a day?' },
+          { speakerId: bId, text: 'It forces the exact same neurological repair as a full night of sleep.' },
+          { speakerId: rId, text: 'So you just park the Batmobile in an alley and force yourself into a 20-minute coma?' },
+          { speakerId: bId, text: "It's efficient." },
+          { speakerId: rId, text: 'That sounds miserable. Aren\'t you exhausted all the time?' },
+          { speakerId: bId, text: "Let's just say Alfred's coffee budget is higher than my gadget budget." }
+        ];
+      }
+
+      if (topicLow.includes('batarang') || topicLow.includes('gadget') || topicLow.includes('pouch') || topicLow.includes('keep')) {
+        const rId = c1Name.includes('ROBIN') ? 'char1' : 'char2';
+        const bId = c1Name.includes('BATMAN') ? 'char1' : 'char2';
+        return [
+          { speakerId: rId, text: 'Bruce, where do you actually keep fifty batarangs? Your utility belt is like two inches wide.' },
+          { speakerId: bId, text: 'They are folded titanium micro-alloys, Tim. They compress flat until magnetic deployment.' },
+          { speakerId: rId, text: 'Okay, what about the smoke pellets, grapple gun, explosive gel, and cryptographic sequencer?' },
+          { speakerId: bId, text: 'Carbon-fiber compartmentalized pouches along the lumbar spine. Proper weight distribution.' },
+          { speakerId: rId, text: 'Right. So when you sit down in the Batmobile, are you just sitting on fifty pounds of metal?' },
+          { speakerId: bId, text: 'The driver seat is magnetically contoured to receive the belt.' },
+          { speakerId: rId, text: 'You customized a multi-million dollar tank seat just so your belt wouldn\'t poke you.' },
+          { speakerId: bId, text: 'Preparation is not optional.' }
+        ];
+      }
+    }
 
     if (combo.includes('SPIDER') && combo.includes('VENOM')) {
       return [

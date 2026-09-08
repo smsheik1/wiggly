@@ -4,12 +4,13 @@ Public baseline **0.2.0**, for **9:16 Shorts at 1080 × 1920**. Choose your char
 
 Run `npm ci --ignore-scripts --no-audit --no-fund`, `npm test`, and `npm run smoke` from this folder to verify offline baseline contracts.
 
-## Autonomous Generation & 3 Sub-Formats
+## Autonomous Generation & 4 Sub-Formats
 
-This format kit supports 3 distinct viral sub-formats detailed in `SKILL.md`:
-1. **1v1 Debates / Moral Clashes** (e.g. *Batman vs. The Joker*, *Batman vs. Jason Todd*)
-2. **Top 5 Countdown Rankings** with left-side number ladder and card reveals (e.g. *Top 5 Villains Batman Respects*)
-3. **Multi-Universe Crossovers** with dynamic gameplay cutting and digital glitch whoosh transitions (e.g. *Batman vs. Spider-Man*, *Batman vs. Goku*)
+This format kit supports 4 distinct viral sub-formats detailed in `SKILL.md`:
+1. **Physiology & Human Reality Q&A** (e.g. *Robin Asked Bruce How He Survives on No Sleep* [5.2M peak views], *Where He Keeps Batarangs*, *How He Recovers*, *How He Pees*)
+2. **Multi-Universe Crossovers** with dynamic gameplay cutting and digital glitch whoosh transitions (e.g. *Batman vs. Spider-Man* [767K views], *Batman vs. Goku*, *Destroy Gojo*)
+3. **Top 5 Countdown Rankings** with left-side number ladder and card reveals (e.g. *Top 5 Villains Batman Respects* [648K views], *5 Villains That Actually Scare Him*)
+4. **1v1 Debates / Moral Clashes** (e.g. *Batman vs. The Joker* [451K views], *Batman vs. Jason Todd*)
 
 To automatically resolve community voice models, script the fan debate, cut gameplay, and render the complete Short:
 

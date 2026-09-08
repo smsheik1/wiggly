@@ -17,27 +17,33 @@ This Format Kit is built for autonomous AI agents to write, voice, and render hi
 
 ---
 
-## 3 Supported Sub-Formats & Editorial Routing
+## 4 Supported Sub-Formats & Editorial Routing
 
 Think like a viral Shorts editor. Match the format to the viewer's psychological itch:
 
-### 1. 1v1 Debate / Moral Clash (Drama & Philosophy)
-- **Viewer Itch:** Fans want deep lore, moral tension, and philosophical arguments between two characters who know each other well.
-- **Formula:** `[Character A]` confronts `[Character B]` over a deep moral failure, broken code, or betrayal.
-- **Pacing & Visuals:** Steady, high-intensity gameplay (e.g. Arkham gliding) letting the dialogue breathe without visual interruptions.
-- **Reference Example:** `inputs/batman-vs-the-joker.json`, `inputs/batman-jason-todd.json`
+### 1. Physiology & Human Reality Q&A (The #1 Viral Hit - 5.2M Peak Views)
+- **Viewer Itch:** Relatability, humor, and grounded fascination. Viewers love seeing mythological superheroes subjected to ridiculous real-world human limits (sleep, bathroom, broken bones, calories, money, hiding bruises, bullet dodging).
+- **Formula:** Sidekick/apprentice (Robin) or Butler (Alfred) asks an incredulous, unfiltered biological or logistical question. Hero (Batman) responds with deadpan, hyper-detailed, pseudo-medical/scientific protocol (e.g. polyphasic REM micro-naps, dropping resting heart rate to 40 bpm, bone micro-fracture calcification). Sidekick reacts with modern comedic disbelief; Hero lands an iconic deadpan punchline.
+- **Visuals & Pacing:** Single continuous Arkham Knight gliding or nighttime city traversal. Two-speaker dialogue letting the comedic timing, pacing, and deadpan delivery drive maximum comment-section virality.
+- **Reference Examples:** `inputs/how-batman-sleeps.json` (5.2M views on @ArkhamStories), *Where He Keeps Batarangs* (339K), *How He Hides Bruises* (308K), *How He Recovers* (295K), *How He Pees* (285K).
 
-### 2. Top 5 Countdown Rankings (Curiosity & Retention)
-- **Viewer Itch:** High scroll-stopping retention. Viewers cannot swipe away because they want to find out who or what takes the #1 spot.
-- **Formula:** Robin asks Batman: *"Who/What are your Top 5 [opponents you secretly respect / most dangerous gadgets / biggest Gotham mistakes]?"*
-- **Visuals & Contract:** Left-side ranking ladder (`1.` to `5.`) with docked thumbnail cards revealed turn-by-turn (`revealedRanks: [5, 4, ...]`) plus optional center cards (`featuredCard: { label, image }`).
-- **Reference Example:** `inputs/top-5-batman-villains.json`
-
-### 3. Hypothetical Matchup & Multi-Universe Crossover (Hype & Spectacle)
+### 2. Hypothetical Matchup & Multi-Universe Crossover (Hype & Spectacle)
 - **Viewer Itch:** Power-scaling debates and unexpected spectacle. The viral "wait, what?!" moment when another hero crashes the scene and the game world changes.
 - **Formula:** Batman & Robin discuss how to defeat `[Character X]`, when `[Character X]` suddenly interrupts, cutting the footage dynamically to their game universe with digital scanline glitches and whoosh SFX.
 - **Visuals & Contract:** Multi-gameplay routing via `input.gameplays` and `turn.gameplay`, with `assets/sfx/glitch-whoosh.wav` mixed at intro and cut points.
-- **Reference Example:** `inputs/batman-vs-spiderman-crossover.json`, `inputs/batman-vs-goku.json`
+- **Reference Examples:** `inputs/batman-vs-spiderman-crossover.json` (767K views on @ArkhamStories), `inputs/batman-vs-goku.json` (437K), *Destroy Gojo* (711K), *Hellbat vs Kratos* (473K).
+
+### 3. Top 5 Countdown Rankings (Curiosity & Retention)
+- **Viewer Itch:** High scroll-stopping retention. Viewers cannot swipe away because they want to find out who or what takes the #1 spot.
+- **Formula:** Robin asks Batman: *"Who/What are your Top 5 [opponents you secretly respect / most dangerous gadgets / biggest Gotham mistakes]?"* Batman counts down from #5 to #1.
+- **Visuals & Contract:** Left-side ranking ladder (`1.` to `5.`) with docked thumbnail cards revealed turn-by-turn (`revealedRanks: [5, 4, ...]`) plus optional center cards (`featuredCard: { label, image }`).
+- **Reference Examples:** `inputs/top-5-batman-villains.json` (648K views on @ArkhamStories), *5 Villains That Actually Scare Him* (229K), *5 Villains He Actually Respects* (175K).
+
+### 4. 1v1 Debate / Moral Clash (Drama & Philosophy)
+- **Viewer Itch:** Fans want deep lore, moral tension, and philosophical arguments between two characters who know each other well.
+- **Formula:** `[Character A]` confronts `[Character B]` over a deep moral failure, broken code, or betrayal.
+- **Pacing & Visuals:** Steady, high-intensity gameplay (e.g. Arkham gliding) letting the dialogue breathe without visual interruptions.
+- **Reference Examples:** `inputs/batman-vs-the-joker.json` (451K views on @ArkhamStories), `inputs/batman-jason-todd.json`.
 
 ---
 
@@ -46,14 +52,15 @@ Think like a viral Shorts editor. Match the format to the viewer's psychological
 When an agent receives a prompt, route deterministically without guessing:
 
 1. **Explicit Keyword Matching:**
-   - Prompt contains `top`, `rank`, `countdown`, `list`, `best`, `worst` $\rightarrow$ **Top 5 Countdown Rankings**
+   - Prompt contains `sleep`, `eat`, `food`, `pee`, `bathroom`, `bones`, `bruises`, `survive`, `heal`, `batarangs`, `suit`, `money`, `real life`, `biology`, `human` $\rightarrow$ **Physiology & Human Reality Q&A**
    - Prompt contains `vs`, `who wins`, `could beat`, `fight`, `crossover`, or two characters from different franchises $\rightarrow$ **Multi-Universe Crossover**
+   - Prompt contains `top`, `rank`, `countdown`, `list`, `best`, `worst` $\rightarrow$ **Top 5 Countdown Rankings**
    - Prompt contains `argue`, `debate`, `truth`, `confront`, `philosophy`, or two characters from the same franchise $\rightarrow$ **1v1 Debate**
 
 2. **Autonomous / Ambiguous Fallback ("Make a video", "Surprise me"):**
    - Inspect existing MP4s in `outputs/` or previous session context.
-   - Apply the **Viral Diversity Rule**: Pick whichever sub-format was least recently produced (Rotation: **Crossover $\rightarrow$ Countdown $\rightarrow$ Debate**).
-   - If starting fresh, default to **Multi-Universe Crossover** (highest initial spectacle) or **Top 5 Countdown** (highest retention).
+   - Apply the **Viral Diversity Rule**: Pick whichever sub-format was least recently produced (Rotation: **Physiology Q&A $\rightarrow$ Crossover $\rightarrow$ Countdown $\rightarrow$ Debate**).
+   - If starting fresh, default to **Physiology & Human Reality Q&A** (highest proven viewer appeal with 5.2M peak views) or **Multi-Universe Crossover** (highest spectacle).
 
 ---
 
