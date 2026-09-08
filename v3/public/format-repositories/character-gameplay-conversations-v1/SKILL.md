@@ -98,3 +98,5 @@ Use these focused CLI tools to gather assets and synthesize voice lines:
 6. **Validate:** Run `node runtime/render.mjs --validate inputs/<episode>.json`.
 7. **Render:** Run `node runtime/render.mjs inputs/<episode>.json outputs/<episode>.mp4`.
 8. **Inspect:** Extract sample keyframe PNGs via `ffmpeg -ss <time> -i outputs/<episode>.mp4 -frames:v 1 frame.png` and use `view_file` on the extracted PNGs to visually verify layout, typography, cards, glitch effects, and subtitles.
+9. **Distribute (Stage 6):** Author platform-tailored copy in `inputs/distribution.json` (YouTube Shorts title/tags, Instagram Reel caption, Twitter/X teaser). Present for human review and approval. Once approved, run `node runtime/publish.mjs inputs/distribution.json outputs/<episode>.mp4` (or dispatch via Buffer MCP). Return the recorded live links from `outputs/<episode>.distribution.json` to the user alongside the finished MP4.
+
