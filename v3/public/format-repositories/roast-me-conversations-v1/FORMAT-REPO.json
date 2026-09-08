@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "wiggly-format",
   "slug": "roast-me-conversations",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "status": "ready-for-review",
   "runtime": "runtime/render.mjs",
   "releaseFiles": [
@@ -50,6 +50,14 @@
     "assets/avatars/founder-selfie.jpg",
     "assets/avatars/sydney-avatar.png",
     "assets/avatars/sydney-selfie.jpg",
+    "assets/characters/female/laugh.png",
+    "assets/characters/female/neutral.png",
+    "assets/characters/female/shock.png",
+    "assets/characters/female/talk.png",
+    "assets/characters/male/laugh.png",
+    "assets/characters/male/neutral.png",
+    "assets/characters/male/shock.png",
+    "assets/characters/male/talk.png",
     "assets/cool.mp4",
     "assets/gameplay/minecraft-parkour.mp4",
     "assets/sfx/pop.wav",
@@ -69,6 +77,7 @@
     "goldens.json",
     "inputs/family-friends-roast.json",
     "inputs/smoke.json",
+    "inputs/specular-commentary-proof.json",
     "inputs/startup-pitch-roast.json",
     "package-lock.json",
     "package.json",
@@ -76,6 +85,9 @@
     "proofs/family-friends-roast-0.1.0-inspection.json",
     "proofs/family-friends-roast-0.1.0.mp4",
     "proofs/family-friends-roast-0.1.0.mp4.receipt.json",
+    "proofs/specular-commentary-proof-0.2.0-inspection.json",
+    "proofs/specular-commentary-proof.mp4",
+    "proofs/specular-commentary-proof.mp4.receipt.json",
     "proofs/startup-pitch-roast-0.1.0-inspection.json",
     "proofs/startup-pitch-roast-0.1.0.mp4",
     "proofs/startup-pitch-roast-0.1.0.mp4.receipt.json",
@@ -374,6 +386,54 @@
       "source": "Original locally generated FFmpeg diagnostic video pattern",
       "usage": "original",
       "notes": "Diagnostic video fixture"
+    },
+    {
+      "path": "assets/characters/male/neutral.png",
+      "source": "SpecularAction-inspired male avatar asset",
+      "usage": "licensed",
+      "notes": "Male presenter neutral pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/male/laugh.png",
+      "source": "SpecularAction-inspired male avatar asset",
+      "usage": "licensed",
+      "notes": "Male presenter laugh pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/male/talk.png",
+      "source": "SpecularAction-inspired male avatar asset",
+      "usage": "licensed",
+      "notes": "Male presenter talk pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/male/shock.png",
+      "source": "SpecularAction-inspired male avatar asset",
+      "usage": "licensed",
+      "notes": "Male presenter shock pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/female/neutral.png",
+      "source": "SpecularAction-inspired female avatar asset",
+      "usage": "licensed",
+      "notes": "Female presenter neutral pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/female/laugh.png",
+      "source": "SpecularAction-inspired female avatar asset",
+      "usage": "licensed",
+      "notes": "Female presenter laugh pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/female/talk.png",
+      "source": "SpecularAction-inspired female avatar asset",
+      "usage": "licensed",
+      "notes": "Female presenter talk pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/female/shock.png",
+      "source": "SpecularAction-inspired female avatar asset",
+      "usage": "licensed",
+      "notes": "Female presenter shock pose for animated commentary layer"
     }
   ],
   "proofs": [
@@ -388,6 +448,15 @@
       "input": "inputs/startup-pitch-roast.json",
       "output": "proofs/startup-pitch-roast-0.1.0.mp4",
       "inspection": "proofs/startup-pitch-roast-0.1.0-inspection.json"
+    },
+    {
+      "id": "specular-commentary-proof",
+      "input": "inputs/specular-commentary-proof.json",
+      "output": "proofs/specular-commentary-proof.mp4",
+      "receipt": "proofs/specular-commentary-proof.mp4.receipt.json",
+      "inspection": "proofs/specular-commentary-proof-0.2.0-inspection.json",
+      "outputSha256": "a70d7d273b3d92d8ff8a7fe3f16d4db6d7b5fe0be85313b0334c5385e559fcc6",
+      "durationSeconds": 9.2
     }
   ],
   "review": {

@@ -12,12 +12,12 @@ import { FormatRepoPackageConnections, FormatRepoPackageAssets, FormatRepoPackag
 import { buildDiscoveryHandoffPrompt } from "../features/discovery/handoff";
 
 const profile = getDiscoveryFormatProfile("roast-me-conversations")!;
-assert.equal(profile.version, "0.1.0");
+assert.equal(profile.version, "0.2.0");
 assert.equal(profile.name, "Roast Me Conversations");
 
 const entries = getDiscoveryEntriesByFormat(profile.slug);
 assert.equal(entries.length, 1);
-assert.equal(entries[0].format.version, "0.1.0", "The preview must identify the generator runtime version.");
+assert.equal(entries[0].format.version, "0.2.0", "The preview must identify the generator runtime version.");
 assert.equal(entries[0].media.kind, "video");
 assert.equal(entries[0].media.aspectRatio, "9:16");
 assert.ok(existsSync(`public${entries[0].media.poster}`));
@@ -55,7 +55,7 @@ for (const text of [
 }
 
 const prompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
-assert.ok(prompt.includes("/downloads/roast-me-conversations-0.1.0.zip"));
+assert.ok(prompt.includes("/downloads/roast-me-conversations-0.2.0.zip"));
 
 const root = `public/${profile.packagePath}`;
 const zip = await JSZip.loadAsync(readFileSync(`public${profile.repositoryHref}`));
@@ -65,7 +65,7 @@ for (const name of ["format.json", "KIT-MANIFEST.json", "FORMAT-REPO.json", "pac
 }
 
 const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
-assert.equal(inventory.files.length, 79);
+assert.equal(inventory.files.length, 91);
 assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((entry: { file: string }) => entry.file), "RELEASE-CONTENTS.json"].sort());
 
 for (const item of inventory.files) {
@@ -75,11 +75,11 @@ for (const item of inventory.files) {
   assert.deepEqual(bytes, readFileSync(`${root}/${item.file}`), `Public source / ZIP parity: ${item.file}`);
 }
 
-assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "075d465e6e10efb9a9570e1aa36daa0583efa4c245b1b32542125c1a145b3958");
+assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "8f6b3aff46a978d1bda7144f563679c0805c716aff460c4cd3b537c964e993a4");
 assert.equal(JSON.parse(await zip.file("FORMAT-REPO.json")!.async("string")).review.reviewer, "User");
 
 const publication = JSON.parse(await zip.file("PUBLICATION.json")!.async("string"));
 assert.equal(publication.publicationAuthorized, true);
 assert.equal(publication.paidGenerationsForPublication, 0);
 
-console.log("Roast Me Conversations: format presentation, public parity, handoff, and 79-file ZIP verified.");
+console.log("Roast Me Conversations: format presentation, public parity, handoff, and 91-file ZIP verified.");

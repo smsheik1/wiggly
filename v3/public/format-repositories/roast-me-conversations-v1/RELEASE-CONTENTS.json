@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "wiggly-format",
   "slug": "roast-me-conversations",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "review": {
     "status": "approved",
     "reviewer": "User",
@@ -37,20 +37,20 @@
     },
     {
       "file": "FORMAT-REPO.json",
-      "sha256": "6071618a9fcd082440b06b1df2b574336fb3536baab3c4b06e3ea3af8e67ed0a",
-      "sizeBytes": 13543,
+      "sha256": "edaf7f024cdaad3ce021a56045a8c772b1d4e1681a858edf34eda994423d7741",
+      "sizeBytes": 16334,
       "mode": "0644"
     },
     {
       "file": "KIT-MANIFEST.json",
-      "sha256": "baf6eebdac568412da8a69c8ea0cd8af151bfdd750ef0d8a96c741dc5725daf2",
+      "sha256": "cf122eafbb710c47bd26cb65b4f5770f0e592455b4d9b51b8de13932012a6394",
       "sizeBytes": 330,
       "mode": "0644"
     },
     {
       "file": "PUBLICATION.json",
-      "sha256": "8fe70a5b1254783e4b5737ba72046d6d3adb658bea6f4a8f54911d7dc10f5b47",
-      "sizeBytes": 1190,
+      "sha256": "83f799a8a387f619c39cbe307723c90494ff8db0dc544eb91c9b8472d26beec6",
+      "sizeBytes": 1440,
       "mode": "0644"
     },
     {
@@ -61,14 +61,14 @@
     },
     {
       "file": "SKILL.md",
-      "sha256": "3b5797f2e0326a0e2124a55c636a08986487fd3b452509cfbdcc8e15d42ee0c0",
-      "sizeBytes": 2481,
+      "sha256": "0dcf964e9c5a3c51fe540450cd1cfad024901a46685b8512295a7e622344c339",
+      "sizeBytes": 2947,
       "mode": "0644"
     },
     {
       "file": "assets.json",
-      "sha256": "7ffc6bacc9801e8745d48dbc697cd2cd9ad5d4fa8055d0022cf8a067ce8ef483",
-      "sizeBytes": 1724,
+      "sha256": "a3049ff99a36af9aec2acc166ef3e045c1f287b44d7fe7345f4823afd81f3019",
+      "sizeBytes": 3830,
       "mode": "0644"
     },
     {
@@ -276,6 +276,54 @@
       "mode": "0644"
     },
     {
+      "file": "assets/characters/female/laugh.png",
+      "sha256": "f905926ad012c3b18eeaf18989a2fa58b7460560e030e77f437955a062f9f791",
+      "sizeBytes": 506015,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/female/neutral.png",
+      "sha256": "dd242fca10166c730deebfdf96360be97511b1a7331b4487295a409ea9127c8b",
+      "sizeBytes": 439728,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/female/shock.png",
+      "sha256": "613c15422f6bebaaa0383655778061cdefa99268e1b5ce74b27edcbc33b5929b",
+      "sizeBytes": 598737,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/female/talk.png",
+      "sha256": "11c52a98d026b162463074f5cdbd4712f1c4a9969f058fb46fb92422b24c5499",
+      "sizeBytes": 485061,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/male/laugh.png",
+      "sha256": "24df0c5ea08ad7c2436ed7627a44367f5b8021bec3260b52d859743375778071",
+      "sizeBytes": 441403,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/male/neutral.png",
+      "sha256": "06dac4de2e55b199b61b62ab07d52031a650ea70a9b5c7a81d775ed93f589f23",
+      "sizeBytes": 343199,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/male/shock.png",
+      "sha256": "3f855397adbd6164f27cfdc8b03352e6453ba3bd00c0a88fdde422990fc22da8",
+      "sizeBytes": 512510,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/male/talk.png",
+      "sha256": "0329ecdeed6080dc66ecbf95e0a5388f8a8193620a03c24e8ef30d29e1d2ffb2",
+      "sizeBytes": 449173,
+      "mode": "0644"
+    },
+    {
       "file": "assets/cool.mp4",
       "sha256": "3bbd979a0be11fa7c08a80d75106055a8a64662275d73bab118d708a9534d7df",
       "sizeBytes": 107743,
@@ -361,13 +409,13 @@
     },
     {
       "file": "blueprint.json",
-      "sha256": "d4bca603336e92d59fb3b96cd21f66d0f87588708f5f7a708a639e7de9183c62",
-      "sizeBytes": 8705,
+      "sha256": "33ce7a98f7a77df203709129400879f0f6951a52744252efe9c0d2e043100969",
+      "sizeBytes": 9021,
       "mode": "0644"
     },
     {
       "file": "format.json",
-      "sha256": "fa119392dff123fbac3e684e2add8ac03b3c344885ad582cae8ab4db15e00fa6",
+      "sha256": "575da6a9469abc04e44c9c72839219fc5da31c6f0198f4595898f5060a522aaa",
       "sizeBytes": 506,
       "mode": "0644"
     },
@@ -390,6 +438,12 @@
       "mode": "0644"
     },
     {
+      "file": "inputs/specular-commentary-proof.json",
+      "sha256": "0c2a9938e203e9e38cc51cce3a2d84f32330406ac4ad231a1b8e4b81fc8e82ea",
+      "sizeBytes": 2664,
+      "mode": "0644"
+    },
+    {
       "file": "inputs/startup-pitch-roast.json",
       "sha256": "efa6d8f375243e2988d6535073c74b659ff5e87ebf3c81ab9533e2b84cb20dad",
       "sizeBytes": 3697,
@@ -403,8 +457,8 @@
     },
     {
       "file": "package.json",
-      "sha256": "73a21cfe3948200b652b668fe75a9f17d561abd6f7a2af75aa87ab5bb4ad5ceb",
-      "sizeBytes": 319,
+      "sha256": "3a27d551b3aaf4804aec935941d07f20a7952a1a13633f47b4b566df577cc0fa",
+      "sizeBytes": 327,
       "mode": "0644"
     },
     {
@@ -429,6 +483,24 @@
       "file": "proofs/family-friends-roast-0.1.0.mp4.receipt.json",
       "sha256": "5b0be6a88ecb568a442305f4fc224ea7e2e44bda67378a9d422ce24649357984",
       "sizeBytes": 579,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/specular-commentary-proof-0.2.0-inspection.json",
+      "sha256": "d37fd2aaee7f48ddb9ae31ecaa62513e8d8eed955dc7a21d940225be736c3a8f",
+      "sizeBytes": 822,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/specular-commentary-proof.mp4",
+      "sha256": "a70d7d273b3d92d8ff8a7fe3f16d4db6d7b5fe0be85313b0334c5385e559fcc6",
+      "sizeBytes": 6422562,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/specular-commentary-proof.mp4.receipt.json",
+      "sha256": "3a731cd9d7d8d30ce2746112c53d1dabf7c5acb7bf3786381ed640daa68d1961",
+      "sizeBytes": 641,
       "mode": "0644"
     },
     {
@@ -457,20 +529,20 @@
     },
     {
       "file": "requirements.json",
-      "sha256": "e7ad06c55e417ecbc15586d2b148d7614b87c103c6381c56971df08c7bda4b69",
-      "sizeBytes": 910,
+      "sha256": "fd267647a550156d66eb57ff23f17fe57df4864c9908ce7e8ec52fa26bbb4cf5",
+      "sizeBytes": 1014,
       "mode": "0644"
     },
     {
       "file": "runtime/render.mjs",
-      "sha256": "075d465e6e10efb9a9570e1aa36daa0583efa4c245b1b32542125c1a145b3958",
-      "sizeBytes": 21524,
+      "sha256": "8f6b3aff46a978d1bda7144f563679c0805c716aff460c4cd3b537c964e993a4",
+      "sizeBytes": 28314,
       "mode": "0644"
     },
     {
       "file": "tests/contract.test.mjs",
-      "sha256": "29f4996f0da97532f5b987a569458cbb6f370d71bd430fb6d5c304edc7a8b12b",
-      "sizeBytes": 2699,
+      "sha256": "df13da41cc27006bfc88214ccafbf834d5029250267f7a92bf93e34ff3c6989a",
+      "sizeBytes": 6036,
       "mode": "0644"
     },
     {
@@ -481,8 +553,8 @@
     },
     {
       "file": "tests/verify-proofs.mjs",
-      "sha256": "d148e9eafc29cf2fccea6cba96381afffadb9b958b7d46e2f340566e2c9bcfed",
-      "sizeBytes": 2280,
+      "sha256": "a475f0544aba828946c27d2ce9ce14dbcb2e5330f46cfea4e7f4d95ffd42d000",
+      "sizeBytes": 3238,
       "mode": "0644"
     }
   ]

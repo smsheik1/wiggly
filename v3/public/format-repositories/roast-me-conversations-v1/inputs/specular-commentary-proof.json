@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "topic": "Sonic Lore Canonical Merch Commentary",
+  "gameplay": {
+    "file": "assets/gameplay/minecraft-parkour.mp4",
+    "authorized": true,
+    "provenance": "Authorized local CC0 parkour footage"
+  },
+  "hook": {
+    "authorName": "Sonic the Hedgehog",
+    "handle": "sonic_hedgehog",
+    "theme": "dark",
+    "badge": "gold",
+    "text": "Out of the game and into our world! New merch featuring Android Sonic, Android Knuckles, and Android Shadow.",
+    "timestamp": "12:00 PM · Aug 15, 2024",
+    "views": "2.4M",
+    "retweets": "14.2K",
+    "quotes": "3,810",
+    "likes": "58.1K",
+    "durationSeconds": 3.2,
+    "audio": {
+      "file": "assets/tones/tone_hook_3.2s.wav",
+      "authorized": true,
+      "provenance": "Diagnostic mechanical sine tone fixture"
+    }
+  },
+  "presenter": {
+    "enabled": true,
+    "character": "male",
+    "sway": {
+      "cycleSeconds": 1.4,
+      "maxAngleDeg": 2.2,
+      "maxHorizontalPx": 16,
+      "maxVerticalPx": 6
+    },
+    "cues": [
+      {
+        "atSeconds": 0,
+        "pose": "neutral",
+        "flip": false
+      },
+      {
+        "atSeconds": 3.2,
+        "pose": "talk",
+        "flip": false
+      },
+      {
+        "atSeconds": 5.2,
+        "pose": "laugh",
+        "flip": true
+      },
+      {
+        "atSeconds": 7.2,
+        "pose": "shock",
+        "flip": false
+      }
+    ]
+  },
+  "contacts": [
+    {
+      "id": "tomat",
+      "name": "tomat - The Sellout",
+      "initial": "T"
+    }
+  ],
+  "scenes": [
+    {
+      "contactId": "tomat",
+      "turns": [
+        {
+          "speaker": "victim",
+          "text": "SEGA forced Epic to make a canonical reason Sonic has long limbs in Fortnite lol",
+          "durationSeconds": 2,
+          "audio": {
+            "file": "assets/tones/tone_220_2s.wav",
+            "authorized": true,
+            "provenance": "Diagnostic mechanical tone fixture"
+          }
+        },
+        {
+          "speaker": "roaster",
+          "text": "Wait so the Fortnite skin is actually canon lore?! That is wild haha",
+          "durationSeconds": 2,
+          "audio": {
+            "file": "assets/tones/tone_330_2s.wav",
+            "authorized": true,
+            "provenance": "Diagnostic mechanical tone fixture"
+          }
+        },
+        {
+          "speaker": "roaster",
+          "text": "They literally made android doppelgängers just so he could hold a sniper rifle!",
+          "durationSeconds": 2,
+          "audio": {
+            "file": "assets/tones/tone_440_2s.wav",
+            "authorized": true,
+            "provenance": "Diagnostic mechanical tone fixture"
+          }
+        }
+      ]
+    }
+  ]
+}

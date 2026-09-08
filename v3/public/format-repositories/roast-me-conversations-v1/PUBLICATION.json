@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "request": "can we turn this video into our next wiggly repo? I like this format alot -> https://www.youtube.com/shorts/nCVTDHdV7gA",
   "publicationAuthorized": true,
   "authorizationContext": "User requested turning the YouTube Short format into an official Wiggly Repo. Official runtime and two distinct proofs rendered and inspected.",
@@ -19,5 +19,6 @@
     "private run evidence and intermediate working files",
     "credentials"
   ],
-  "paidGenerationsForPublication": 0
+  "paidGenerationsForPublication": 0,
+  "notes": "v0.2.0 adds the SpecularAction animated 2D character presenter extension (male and female character presets with neutral, laugh, talk, and shock poses), continuous idle sway harmonic motion, dark theme cards, and full commentary proof."
 }

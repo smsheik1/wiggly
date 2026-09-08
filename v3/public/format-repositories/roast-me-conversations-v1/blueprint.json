@@ -179,6 +179,10 @@
     {
       "id": "startup-pitch-roast",
       "description": "A diverse domain proof: a founder asking investors and engineers to roast their AI pitch deck, with brutal critique from VC Partner, Tech Lead, and Angel."
+    },
+    {
+      "id": "specular-commentary-proof",
+      "description": "SpecularAction animated character commentary proof: dark theme Twitter card with Sonic lore discussion, animated 2D male presenter with continuous idle sway and pose switching (neutral, talk, laugh flipped, shock) over Minecraft gameplay."
     }
   ]
 }
