@@ -17,50 +17,63 @@ This Format Kit is built for autonomous AI agents to write, voice, and render hi
 
 ---
 
-## 4 Supported Sub-Formats & Editorial Routing
+## Editorial Engine & Viral Ideation
 
-Think like a viral Shorts editor. Match the format to the viewer's psychological itch:
+Think like a viral Shorts creative director. An idea is defined by **1 Visual Layout**, **1 Creative Flavor**, and strict obedience to the **3 Inviolable Hook Laws**.
 
-### 1. Physiology & Human Reality Q&A (The #1 Viral Hit - 5.2M Peak Views)
-- **Viewer Itch:** Relatability, humor, and grounded fascination. Viewers love seeing mythological superheroes subjected to ridiculous real-world human limits (sleep, bathroom, broken bones, calories, money, hiding bruises, bullet dodging).
-- **Formula:** Sidekick/apprentice (Robin) or Butler (Alfred) asks an incredulous, unfiltered biological or logistical question. Hero (Batman) responds with deadpan, hyper-detailed, pseudo-medical/scientific protocol (e.g. polyphasic REM micro-naps, dropping resting heart rate to 40 bpm, bone micro-fracture calcification). Sidekick reacts with modern comedic disbelief; Hero lands an iconic deadpan punchline.
-- **Visuals & Pacing:** Single continuous Arkham Knight gliding or nighttime city traversal. Two-speaker dialogue letting the comedic timing, pacing, and deadpan delivery drive maximum comment-section virality.
-- **Reference Examples:** `inputs/how-batman-sleeps.json` (5.2M views on @ArkhamStories), *Where He Keeps Batarangs* (339K), *How He Hides Bruises* (308K), *How He Recovers* (295K), *How He Pees* (285K).
+### 1. The 3 Visual Layouts (Technical Engine)
+The renderer only ever composes 3 visual layouts:
+1. **The Classic Patrol (80% of episodes):** Two-character dialogue over continuous, seamless Arkham gliding. Fast, zero custom assets needed.
+2. **The Universe Breach (Crossovers):** Multi-gameplay routing with scanlines and `assets/sfx/glitch-whoosh.wav` when an outside universe (Spider-Man, Goku, Gojo) cuts in.
+3. **The Top 5 Ladder (Rankings):** 5-to-1 left-side ranking ladder with docked thumbnail card reveals (`revealedRanks`, `featuredCard`).
 
-### 2. Hypothetical Matchup & Multi-Universe Crossover (Hype & Spectacle)
-- **Viewer Itch:** Power-scaling debates and unexpected spectacle. The viral "wait, what?!" moment when another hero crashes the scene and the game world changes.
-- **Formula:** Batman & Robin discuss how to defeat `[Character X]`, when `[Character X]` suddenly interrupts, cutting the footage dynamically to their game universe with digital scanline glitches and whoosh SFX.
-- **Visuals & Contract:** Multi-gameplay routing via `input.gameplays` and `turn.gameplay`, with `assets/sfx/glitch-whoosh.wav` mixed at intro and cut points.
-- **Reference Examples:** `inputs/batman-vs-spiderman-crossover.json` (767K views on @ArkhamStories), `inputs/batman-vs-goku.json` (437K), *Destroy Gojo* (711K), *Hellbat vs Kratos* (473K).
+### 2. The 2 Creative Flavors (Ideation Engine)
+When scripting dialogue (especially for *The Classic Patrol*), pick one of two proven viral flavors:
 
-### 3. Top 5 Countdown Rankings (Curiosity & Retention)
-- **Viewer Itch:** High scroll-stopping retention. Viewers cannot swipe away because they want to find out who or what takes the #1 spot.
-- **Formula:** Robin asks Batman: *"Who/What are your Top 5 [opponents you secretly respect / most dangerous gadgets / biggest Gotham mistakes]?"* Batman counts down from #5 to #1.
-- **Visuals & Contract:** Left-side ranking ladder (`1.` to `5.`) with docked thumbnail cards revealed turn-by-turn (`revealedRanks: [5, 4, ...]`) plus optional center cards (`featuredCard: { label, image }`).
-- **Reference Examples:** `inputs/top-5-batman-villains.json` (648K views on @ArkhamStories), *5 Villains That Actually Scare Him* (229K), *5 Villains He Actually Respects* (175K).
+- **Flavor A: "Mythology Meets Mundane Reality" (Comedy Goldmine — 5.2M Peak Views)**
+  - *Core Tension:* Crash Batman's ultra-serious, mythological persona into gritty, mundane real-world logistics.
+  - *Proven Angles:*
+    - **Biological:** Not sleeping, peeing in the suit, hiding broken ribs at board meetings (`inputs/how-batman-sleeps.json`).
+    - **Bureaucratic / IRS:** Lucius Fox auditing multi-million dollar write-offs for Batmobiles and Kevlar ears.
+    - **Gaming Meme / No-Kill:** Robin pointing out that hitting a thug with a 60mph tank breaks the "no-kill rule."
+    - **Internet Culture:** Gotham Reddit zooming in on Bruce Wayne's jawline with 40,000 upvotes.
+  - *Formula:* Sidekick points out absurdity $\rightarrow$ Batman gives clinical, deadpan rationalization $\rightarrow$ Sidekick comedic disbelief $\rightarrow$ Deadpan punchline.
 
-### 4. 1v1 Debate / Moral Clash (Drama & Philosophy)
-- **Viewer Itch:** Fans want deep lore, moral tension, and philosophical arguments between two characters who know each other well.
-- **Formula:** `[Character A]` confronts `[Character B]` over a deep moral failure, broken code, or betrayal.
-- **Pacing & Visuals:** Steady, high-intensity gameplay (e.g. Arkham gliding) letting the dialogue breathe without visual interruptions.
-- **Reference Examples:** `inputs/batman-vs-the-joker.json` (451K views on @ArkhamStories), `inputs/batman-jason-todd.json`.
+- **Flavor B: "Deep Lore & Moral Checkmate" (Serious Fan Debates — 767K Peak Views)**
+  - *Core Tension:* Two characters in an unyielding ideological deadlock where both sides have a point.
+  - *Proven Angles:*
+    - **Prep-Time Contingency:** Cold psychological/biochemical plans to take down god-like heroes (Homelander, Superman).
+    - **Moral Confrontation:** Jason Todd or Joker grilling Batman on the body count caused by his code (`inputs/batman-vs-the-joker.json`, `inputs/batman-jason-todd.json`).
+
+### 3. The 3 Inviolable Hook Laws
+1. **In Media Res (0–3s Hook):** Zero pleasantries. Never start with "Hello Bruce" or "Nice night for patrol". Turn 1 drops directly into the irresistible conflict (*"Bruce, you haven't slept in 86 hours."*).
+2. **Comment Bait:** Always inject an unresolved argument or deadpan logical absurdity that compels viewers to debate in the comments (*"Shattered pelvis is a non-lethal injury"*).
+3. **The Hard Clock:** 45–55 seconds total duration (never exceeding 60s); captions max 2 lines of 19 characters each.
+
+### 4. Autonomous Pitching Flow
+When a user asks for an episode or says "make a video", pitch **3 contrasting angles** before generating:
+> *"Here are 3 viral angles for today's episode:*  
+> 1. 🩻 **Mundane Comedy:** *Robin asks how Bruce survives 86 hours without sleep.*  
+> 2. ⚡ **Universe Breach:** *Batman breaks down how to counter Spider-Sense until Peter Parker drops in.*  
+> 3. ⚖️ **Moral Debate:** *Jason Todd confronts Bruce on why Joker is still breathing.*  
+>  
+> *Which one do you want to run with? (Or say 'Surprise me' and I'll produce #1!)"*
 
 ---
 
 ## Autonomous Decision Matrix
 
-When an agent receives a prompt, route deterministically without guessing:
+When an agent receives an unguided prompt, route deterministically:
 
 1. **Explicit Keyword Matching:**
-   - Prompt contains `sleep`, `eat`, `food`, `pee`, `bathroom`, `bones`, `bruises`, `survive`, `heal`, `batarangs`, `suit`, `money`, `real life`, `biology`, `human` $\rightarrow$ **Physiology & Human Reality Q&A**
-   - Prompt contains `vs`, `who wins`, `could beat`, `fight`, `crossover`, or two characters from different franchises $\rightarrow$ **Multi-Universe Crossover**
-   - Prompt contains `top`, `rank`, `countdown`, `list`, `best`, `worst` $\rightarrow$ **Top 5 Countdown Rankings**
-   - Prompt contains `argue`, `debate`, `truth`, `confront`, `philosophy`, or two characters from the same franchise $\rightarrow$ **1v1 Debate**
+   - Prompt contains `sleep`, `bathroom`, `bones`, `taxes`, `irs`, `money`, `bruises`, `kill` $\rightarrow$ **Flavor A: Mundane Reality**
+   - Prompt contains `vs`, `who wins`, `crossover`, `spider`, `goku` $\rightarrow$ **Universe Breach**
+   - Prompt contains `top`, `rank`, `countdown`, `list` $\rightarrow$ **Top 5 Ladder**
+   - Prompt contains `debate`, `joker`, `jason`, `moral`, `confront` $\rightarrow$ **Flavor B: Moral Debate**
 
-2. **Autonomous / Ambiguous Fallback ("Make a video", "Surprise me"):**
-   - Inspect existing MP4s in `outputs/` or previous session context.
-   - Apply the **Viral Diversity Rule**: Pick whichever sub-format was least recently produced (Rotation: **Physiology Q&A $\rightarrow$ Crossover $\rightarrow$ Countdown $\rightarrow$ Debate**).
-   - If starting fresh, default to **Physiology & Human Reality Q&A** (highest proven viewer appeal with 5.2M peak views) or **Multi-Universe Crossover** (highest spectacle).
+2. **Ambiguous Fallback ("Make a video", "Surprise me"):**
+   - Inspect existing MP4s in `outputs/`.
+   - Apply the **Viral Diversity Rule**: Rotate across **Flavor A $\rightarrow$ Universe Breach $\rightarrow$ Top 5 Ladder $\rightarrow$ Flavor B**. Default to **Flavor A** (highest proven viewer appeal with 5.2M views).
 
 ---
 
