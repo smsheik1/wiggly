@@ -15,6 +15,12 @@
       "approvalFlag": "--approve-voice",
       "automaticRetry": false,
       "providerCost": "$0"
+    },
+    {
+      "name": "Social Publisher (Buffer MCP or API)",
+      "environmentVariables": ["BUFFER_API_KEY"],
+      "optional": true,
+      "purpose": "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
     }
   ],
   "tools": [

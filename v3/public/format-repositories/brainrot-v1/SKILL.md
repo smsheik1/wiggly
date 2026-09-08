@@ -32,15 +32,16 @@ Guide mode shows the three options and asks the user to choose.
 
 Always show:
 
-`Research -> Script -> Voice -> Render -> Deliver`
+`Research -> Script -> Voice -> Render -> Deliver -> Distribute`
 
 Start every update with the current step:
 
-- `Step 1 of 5: Research`
-- `Step 2 of 5: Script`
-- `Step 3 of 5: Voice`
-- `Step 4 of 5: Render`
-- `Step 5 of 5: Deliver`
+- `Step 1 of 6: Research`
+- `Step 2 of 6: Script`
+- `Step 3 of 6: Voice`
+- `Step 4 of 6: Render`
+- `Step 5 of 6: Deliver`
+- `Step 6 of 6: Distribute`
 
 Keep updates short.
 
@@ -67,6 +68,32 @@ Run commands from the downloaded kit's `v3` directory.
 17. Run `inspect --run=<id>`.
 18. Let the user watch the whole MP4.
 19. If it is good, run `finalize --run=<id> --approve-final`.
+20. In Stage 6 (`Distribute`), prepare platform-tailored copy in `inputs/distribution.json` and probe with `node runtime/publish.mjs --dry-run inputs/distribution.json <path-to-mp4>`.
+
+## Distribution (Optional)
+
+Once finalized, the agent can distribute the video across YouTube Shorts, Instagram Reels, TikTok, and X:
+
+1. **Author platform-tailored copy in `inputs/distribution.json`:**
+   - **YouTube Shorts:** Punchy title (≤100 chars), categoryId (`20` for Gaming), duration ≤60s.
+   - **Twitter/X:** Engaging hook with hashtags (≤280 chars total).
+   - **Instagram Reels:** Engaging caption with tags, vertical 9:16 framing.
+   - **TikTok:** Engaging caption with tags (≤2200 chars).
+2. **Probe with `--dry-run`:**
+   ```sh
+   node runtime/publish.mjs --dry-run inputs/distribution.json outputs/<run-id>/episode.mp4
+   ```
+3. **Present copy to user and obtain explicit approval:**
+   - Never publish live to social media without human sign-off (`approvalRequired: true`).
+4. **Dispatch:**
+   - If `BUFFER_API_KEY` is provided, publish live via Buffer MCP or CLI.
+   - If unconfigured, the runtime validates assets and logs a graceful `unconfigured_environment` receipt.
+   - Receipts are saved to `<video-path>.distribution.json`.
+
+## Behavioral Guardrails
+- **Human in the Loop:** Never publish without explicit confirmation from the user.
+- **Probe First:** Always validate media format and character limits before dispatching.
+- **Zero Token Leakage:** Never print or store API keys in repo files or receipts.
 
 ## Script rules
 

@@ -58,9 +58,10 @@ for (const name of [
 ]) {
   await copyFromV3(path.join(formatRelative, name));
 }
-for (const directory of ["fixtures", "goldens", "prompts"]) {
+for (const directory of ["fixtures", "goldens", "prompts", "inputs", "runtime", "tests"]) {
   await copyFromV3(path.join(formatRelative, directory));
 }
+await copyFromV3(path.join(formatRelative, "runtime", "publish.mjs"), "runtime/publish.mjs");
 await copyFromV3(path.join(formatRelative, "kit-smoke.mjs"), "kit-smoke.mjs");
 await copyFromV3(path.join(formatRelative, "SKILL.md"), "SKILL.md");
 await writeFile(path.join(stagingV3, "package.json"), await readFile(path.join(formatRoot, "kit.package.json")));

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "fixtures/finalstraw.json",
+  "media": "goldens/davids-cookies.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "When the Minecraft parkour gets too philosophical 💀 #Shorts",
+      "description": "Two characters having an existential crisis over high-speed parkour.\n\n#Shorts #Brainrot #Minecraft #SubwaySurfers #GamingMemes #AIHumor",
+      "categoryId": "20",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "Why is the parkour so relaxing though? 💀\n.\n.\n#brainrot #minecraft #subwaysurfers #memes #reels #gaming"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "The dopamine reset is real 😭 Why did this actually make sense #Minecraft #Brainrot #Gaming"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "Bro dropped the deepest lore over parkour 💀 #brainrot #minecraft #fyp #gaming #parkour",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}
