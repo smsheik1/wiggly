@@ -578,6 +578,7 @@ export async function render(inputFile, outputFile) {
     '-pix_fmt', 'yuv420p',
     '-c:a', 'aac',
     '-b:a', '192k',
+    '-ar', '48000',
     '-t', totalDuration.toFixed(3),
     outputFile
   );

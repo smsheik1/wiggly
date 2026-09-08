@@ -11,17 +11,17 @@
     "handle": "sonic_hedgehog",
     "theme": "dark",
     "badge": "gold",
-    "text": "Out of the game and into our world! New merch featuring Android Sonic, Android Knuckles, and Android Shadow.",
+    "text": "Sonic 3 merch just dropped featuring Android Sonic, Knuckles, and Shadow!",
     "timestamp": "12:00 PM · Aug 15, 2024",
     "views": "2.4M",
     "retweets": "14.2K",
     "quotes": "3,810",
     "likes": "58.1K",
-    "durationSeconds": 3.2,
+    "durationSeconds": 4.92,
     "audio": {
-      "file": "assets/tones/tone_hook_3.2s.wav",
+      "file": "assets/audio/specular_hook.wav",
       "authorized": true,
-      "provenance": "Diagnostic mechanical sine tone fixture"
+      "provenance": "Neural AI voice actor (ChristopherNeural)"
     }
   },
   "presenter": {
@@ -36,22 +36,22 @@
     "cues": [
       {
         "atSeconds": 0,
-        "pose": "neutral",
-        "flip": false
-      },
-      {
-        "atSeconds": 3.2,
         "pose": "talk",
         "flip": false
       },
       {
-        "atSeconds": 5.2,
+        "atSeconds": 4.92,
+        "pose": "shock",
+        "flip": false
+      },
+      {
+        "atSeconds": 9.14,
         "pose": "laugh",
         "flip": true
       },
       {
-        "atSeconds": 7.2,
-        "pose": "shock",
+        "atSeconds": 14.44,
+        "pose": "talk",
         "flip": false
       }
     ]
@@ -69,32 +69,32 @@
       "turns": [
         {
           "speaker": "victim",
-          "text": "SEGA forced Epic to make a canonical reason Sonic has long limbs in Fortnite lol",
-          "durationSeconds": 2,
+          "text": "Wait, SEGA gave Sonic a canonical reason to have long limbs in Fortnite?!",
+          "durationSeconds": 4.22,
           "audio": {
-            "file": "assets/tones/tone_220_2s.wav",
+            "file": "assets/audio/specular_turn1.wav",
             "authorized": true,
-            "provenance": "Diagnostic mechanical tone fixture"
+            "provenance": "Neural AI voice actor (GuyNeural)"
           }
         },
         {
           "speaker": "roaster",
-          "text": "Wait so the Fortnite skin is actually canon lore?! That is wild haha",
-          "durationSeconds": 2,
+          "text": "Yup! They made android clones just so Sonic could hold a sniper rifle!",
+          "durationSeconds": 5.3,
           "audio": {
-            "file": "assets/tones/tone_330_2s.wav",
+            "file": "assets/audio/specular_turn2.wav",
             "authorized": true,
-            "provenance": "Diagnostic mechanical tone fixture"
+            "provenance": "Neural AI voice actor (ChristopherNeural)"
           }
         },
         {
           "speaker": "roaster",
-          "text": "They literally made android doppelgängers just so he could hold a sniper rifle!",
-          "durationSeconds": 2,
+          "text": "Bro, that is absolutely unhinged haha!",
+          "durationSeconds": 3.17,
           "audio": {
-            "file": "assets/tones/tone_440_2s.wav",
+            "file": "assets/audio/specular_turn3.wav",
             "authorized": true,
-            "provenance": "Diagnostic mechanical tone fixture"
+            "provenance": "Neural AI voice actor (ChristopherNeural)"
           }
         }
       ]

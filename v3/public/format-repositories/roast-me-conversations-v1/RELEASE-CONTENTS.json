@@ -13,8 +13,8 @@
   "files": [
     {
       "file": ".gitignore",
-      "sha256": "7b64527f8e74b9e7263d4aa6fb1fc3a0e422cfa56253b78193b043de70043fcc",
-      "sizeBytes": 43,
+      "sha256": "b9821f47ac509646f7ff6ccd7b4cc311cc958fd9b0f4786ab1865926a9249bcd",
+      "sizeBytes": 50,
       "mode": "0644"
     },
     {
@@ -439,8 +439,8 @@
     },
     {
       "file": "inputs/specular-commentary-proof.json",
-      "sha256": "0c2a9938e203e9e38cc51cce3a2d84f32330406ac4ad231a1b8e4b81fc8e82ea",
-      "sizeBytes": 2664,
+      "sha256": "4b2625adf30db2844f19b4ee3c90165643d47340a6c4768af5e2277e2e943828",
+      "sizeBytes": 2615,
       "mode": "0644"
     },
     {
@@ -451,7 +451,7 @@
     },
     {
       "file": "package-lock.json",
-      "sha256": "19b02934b87c70490d6953cb19ba577119092f15ed8d51ea3fd313b1e89698af",
+      "sha256": "d99de052cabdc152148dc07bad81011b14f483577620d580608d258bdab1c764",
       "sizeBytes": 19187,
       "mode": "0644"
     },
@@ -487,20 +487,20 @@
     },
     {
       "file": "proofs/specular-commentary-proof-0.2.0-inspection.json",
-      "sha256": "d37fd2aaee7f48ddb9ae31ecaa62513e8d8eed955dc7a21d940225be736c3a8f",
-      "sizeBytes": 822,
+      "sha256": "8cd36e3c7307390836c178ff4e616cb8110fcb47049cc8673eaa73da5544b7fa",
+      "sizeBytes": 812,
       "mode": "0644"
     },
     {
       "file": "proofs/specular-commentary-proof.mp4",
-      "sha256": "a70d7d273b3d92d8ff8a7fe3f16d4db6d7b5fe0be85313b0334c5385e559fcc6",
-      "sizeBytes": 6422562,
+      "sha256": "523a72f8356dd51de0cb5677836305593f4669d81b17d58fc6346d39532b0394",
+      "sizeBytes": 13502252,
       "mode": "0644"
     },
     {
       "file": "proofs/specular-commentary-proof.mp4.receipt.json",
-      "sha256": "3a731cd9d7d8d30ce2746112c53d1dabf7c5acb7bf3786381ed640daa68d1961",
-      "sizeBytes": 641,
+      "sha256": "cf8f0c2d787a8f51f98669672f994b99cea61ffe7207b5ea23b0a4c440cdfd52",
+      "sizeBytes": 643,
       "mode": "0644"
     },
     {
@@ -535,8 +535,8 @@
     },
     {
       "file": "runtime/render.mjs",
-      "sha256": "8f6b3aff46a978d1bda7144f563679c0805c716aff460c4cd3b537c964e993a4",
-      "sizeBytes": 28314,
+      "sha256": "7a21114cf914b363f21dac7c1777dd7f5ca3c0e62fc18ab6bca9fe7f91fae54b",
+      "sizeBytes": 28334,
       "mode": "0644"
     },
     {

@@ -75,7 +75,7 @@ for (const item of inventory.files) {
   assert.deepEqual(bytes, readFileSync(`${root}/${item.file}`), `Public source / ZIP parity: ${item.file}`);
 }
 
-assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "8f6b3aff46a978d1bda7144f563679c0805c716aff460c4cd3b537c964e993a4");
+assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "7a21114cf914b363f21dac7c1777dd7f5ca3c0e62fc18ab6bca9fe7f91fae54b");
 assert.equal(JSON.parse(await zip.file("FORMAT-REPO.json")!.async("string")).review.reviewer, "User");
 
 const publication = JSON.parse(await zip.file("PUBLICATION.json")!.async("string"));

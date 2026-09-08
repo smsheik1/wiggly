@@ -3,9 +3,9 @@
   "kind": "technical-media-inspection",
   "media": {
     "file": "specular-commentary-proof.mp4",
-    "sha256": "a70d7d273b3d92d8ff8a7fe3f16d4db6d7b5fe0be85313b0334c5385e559fcc6",
-    "sizeBytes": 6422562,
-    "durationSeconds": 9.2,
+    "sha256": "523a72f8356dd51de0cb5677836305593f4669d81b17d58fc6346d39532b0394",
+    "sizeBytes": 13502252,
+    "durationSeconds": 17.61,
     "width": 1080,
     "height": 1920,
     "fps": 25,
@@ -30,7 +30,7 @@
   "review": {
     "status": "not-assessed",
     "limitations": [
-      "Metadata and checksums do not verify character idle sway, pose transitions, or creative perception. Direct human review remains required."
+      "Metadata and checksums do not verify motion, content, audio perception, or creative quality. Direct review remains required."
     ]
   }
 }
