@@ -46,7 +46,7 @@ When scripting dialogue (especially for *The Classic Patrol*), pick one of two p
     - **Moral Confrontation:** Jason Todd or Joker grilling Batman on the body count caused by his code (`inputs/batman-vs-the-joker.json`, `inputs/batman-jason-todd.json`).
 
 ### 3. The 3 Inviolable Hook Laws
-1. **In Media Res (0–3s Hook):** Zero pleasantries. Never start with "Hello Bruce" or "Nice night for patrol". Turn 1 drops directly into the irresistible conflict (*"Bruce, you haven't slept in 86 hours."*).
+1. **In Media Res Hook (0–3s):** Zero idle small talk. The signature ArkhamStories opener pairs a casual direct address with the provocative question in the **very first breath** (e.g., *"Bruce, serious question: how do you actually survive on no sleep?"* or *"Hey Bruce, quick question: you just hit that thug with an electrified tank, is he alive?"*). Never waste separate turns on polite greeting exchanges (*"Hey Bruce"* $\rightarrow$ *"Yes, Robin?"*). Fire the core question immediately in Turn 1.
 2. **Comment Bait:** Always inject an unresolved argument or deadpan logical absurdity that compels viewers to debate in the comments (*"Shattered pelvis is a non-lethal injury"*).
 3. **The Hard Clock:** 45–55 seconds total duration (never exceeding 60s); captions max 2 lines of 19 characters each.
 
