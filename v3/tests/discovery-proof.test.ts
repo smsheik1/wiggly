@@ -172,9 +172,10 @@ assert.ok(
     discoveryFormatSlugs.includes("shaz-puppet-runtime") &&
     discoveryFormatSlugs.includes("lego-music-video") &&
     discoveryFormatSlugs.includes("repo-builder") &&
+    discoveryFormatSlugs.includes("tutorial-video") &&
     discoveryFormatSlugs.includes("character-gameplay-conversations") &&
     discoveryFormatSlugs.includes("roast-me-conversations") &&
-    discoveryFormatSlugs.length === 54 &&
+    discoveryFormatSlugs.length === 55 &&
     !discoveryFormatSlugs.includes("motion-story"),
 );
 

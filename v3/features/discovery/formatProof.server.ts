@@ -127,6 +127,53 @@ const formatConfigs: FormatProfileConfig[] = [
     },
   },
   {
+    slug: "tutorial-video",
+    promise: "Turn one real Wiggly Format run into a clear, proof-first 16:9 tutorial a beginner can follow.",
+    lastUpdated: "September 2026",
+    manifestPath: "format-repositories/tutorial-video-v1/format.json",
+    repositoryHref: "/format-repositories/tutorial-video-v1/downloads/wiggly-tutorial-video-format-kit-0.1.0.zip",
+    technicalHref: "/format-repositories/tutorial-video-v1/PROOF-REPORT.md",
+    whatStays: [
+      "The finished Wiggly result appears before the explanation",
+      "A real Send to Coding Agent handoff",
+      "Explicit source, storyboard, permission, and paid-call gates",
+      "One local renderer with captions, inspection, hashes, and cost receipt",
+    ],
+    whatChanges: [
+      "The source Wiggly Format and its audience",
+      "The supplied tutorial master, narration, and captions",
+      "The format-specific proof, assets, and workflow steps",
+      "The coding-agent choice and final call to action",
+    ],
+    handoff: {
+      requiredInputs: [
+        "One permitted tutorial master or approved local source workflow",
+        "The Wiggly Format URL and its actual runtime handoff",
+        "Narration/caption assets or a clearly approved script",
+        "A coding agent with terminal, filesystem, and media access",
+      ],
+      deliverables: [
+        "A proof-first narrated and captioned 16:9 tutorial",
+        "A local runner, contracts, provenance, and quality receipt",
+        "A package ZIP with at least two input-driven proof runs",
+      ],
+      instructions: [
+        "Read SKILL.md and run the free offline smoke test",
+        "Separate reference evidence from assumptions and show the real handoff",
+        "Ask for approval before any paid call or final render",
+        "Render, inspect, watch, and deliver the exact MP4 plus hashes",
+      ],
+      estimates: [
+        { label: "Evidence + storyboard", cost: "$0 provider cost", time: "depends on source length" },
+        { label: "Narration + captions", cost: "$0 with supplied assets; paid calls require approval", time: "depends on script" },
+        { label: "Local render + inspection", cost: "$0 provider cost", time: "about 1–3 min on a modern Mac" },
+      ],
+      totalEstimate: "$0 provider cost with supplied media; coding-agent usage is separate. Paid calls require an estimate and approval.",
+      output: "One narrated, captioned 1920 × 1080 MP4 (16:9), exactly 90 seconds",
+      firstQuestion: "Which Wiggly Format should the tutorial teach, and what finished result should a new user reach?",
+    },
+  },
+  {
     slug: "lego-music-video",
     promise: "Turn your brand into a Lego music video: one original song, a miniature world, and three cinematic scenes.",
     lastUpdated: "September 2026",

@@ -409,6 +409,7 @@ const approvedRepoOrder = [
   ["conversations", "iMessage Ad"],
   ["written-content", "Newsletter Writer"],
   ["repo-builder", "Wiggly Repo Builder"],
+  ["tutorial-video", "Tutorial Video"],
 ];
 assert.deepEqual(
   shelves.map((shelf) => [shelf.id, shelf.title]),

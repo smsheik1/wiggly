@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "kit": "wiggly-tutorial-video-format-kit",
+  "formatVersion": "0.1.0",
+  "officialFormat": ".",
+  "canonicalSkill": "SKILL.md",
+  "install": "npm ci",
+  "check": "npm test",
+  "smoke": "npm run smoke",
+  "render": "node runner.mjs render --input=<input.json> --output=<output.mp4>",
+  "releaseAcceptance": "Offline package and produced evidence pass; direct human playback remains required.",
+  "excluded": ["secrets", "node_modules", "raw third-party source media", "paid provider outputs"]
+}

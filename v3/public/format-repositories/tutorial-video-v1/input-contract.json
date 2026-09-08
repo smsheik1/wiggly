@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "required": ["title", "sourceFormat", "sourceVideo", "durationSeconds", "aspectRatio", "captionStrategy", "steps"],
+  "properties": {
+    "title": {"type": "string", "minLength": 1},
+    "sourceFormat": {"type": "string", "minLength": 1},
+    "sourceVideo": {"type": "string", "description": "A permitted local tutorial master, relative to the kit root."},
+    "durationSeconds": {"type": "number", "minimum": 1, "maximum": 90},
+    "aspectRatio": {"const": "16:9"},
+    "captionStrategy": {"enum": ["burned-in", "sidecar-reviewed"]},
+    "narration": {"type": "object"},
+    "steps": {"type": "array", "minItems": 4},
+    "approvalGates": {"type": "array"},
+    "cost": {"type": "object"}
+  }
+}

@@ -2233,6 +2233,23 @@ export const discoveryCatalog: DiscoveryEntry[] = [
     },
     format: { slug: "repo-builder", name: "Wiggly Repo Builder", version: "0.1.1", owner: "Wiggly Studio" },
   },
+  {
+    id: "tutorial-video-animal-conversations",
+    status: "published",
+    order: 100.1,
+    brand: "Wiggly Tutorial Format · 16:9",
+    title: "A format becomes a finished tutorial",
+    curatorNote: "A recovered Animal Conversations workflow became a proof-first tutorial: show the result, send the real prompt to a coding agent, approve the plan, render locally, inspect the MP4, and state the cost honestly. The kit assembles the delivery with no paid generation.",
+    goal: "teach",
+    media: {
+      kind: "video",
+      src: "/format-repositories/tutorial-video-v1/examples/animal-conversations-first-run/final.mp4",
+      poster: "/format-repositories/tutorial-video-v1/examples/animal-conversations-first-run/poster.jpg",
+      durationLabel: "90 sec",
+      aspectRatio: "16:9",
+    },
+    format: { slug: "tutorial-video", name: "Tutorial Video", version: "0.1.0", owner: "Wiggly Studio" },
+  },
   ...(["cheesecake", "cookies"] as const).map((example, index): DiscoveryEntry => ({
     id: `lego-music-video-${example}`,
     status: "published",
@@ -3019,6 +3036,13 @@ export const discoveryShelfDefinitions = [
     title: "Wiggly Repo Builder",
     description: "Bring a reference video. Work with your coding agent to turn its recipe into a reusable Wiggly Repo. Assisted-authoring baseline.",
     formats: ["repo-builder"],
+  },
+  {
+    id: "tutorial-video",
+    title: "Tutorial Video",
+    description: "Show the finished Wiggly result, then teach the real coding-agent workflow with proof, approvals, and an honest cost receipt.",
+    formats: ["tutorial-video"],
+    layout: "landscape",
   },
   {
     id: "more",

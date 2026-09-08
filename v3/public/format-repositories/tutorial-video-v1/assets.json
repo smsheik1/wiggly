@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "fixed": [
+    {"localPath": "assets/source/animal-conversations-tutorial-v11.mp4", "label": "Approved tutorial master · v11", "purpose": "Operator-supplied Animal Conversations tutorial with narrated captions, real handoff, local render, and final proof."},
+    {"localPath": "assets/source/animal-conversations-tutorial-v10.mp4", "label": "Approved tutorial master · v10", "purpose": "Separately authored editorial master used to exercise a second input through the same runner."}
+  ],
+  "sourceReference": {
+    "exampleOutput": "examples/animal-conversations-first-run/final.mp4",
+    "referenceNote": "Produced by the packaged runner from the approved tutorial master; no paid generation was used.",
+    "verification": "The source master is a recovered QA-passed Animal Conversations tutorial asset; raw creator media is not redistributed separately."
+  }
+}
