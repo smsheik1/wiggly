@@ -25,6 +25,15 @@
       "approvalFlag": "--approve-voice",
       "automaticRetry": false,
       "providerCost": "BYOK; normally pennies or less for one short clip"
+    },
+    {
+      "id": "social-publisher",
+      "name": "Social Publisher (Buffer MCP or API)",
+      "purpose": "Simultaneous multi-platform publishing to YouTube Shorts, Instagram Reels, TikTok, and X.",
+      "environmentVariable": "BUFFER_API_KEY",
+      "requiredFor": ["distribution"],
+      "optional": true,
+      "providerCost": "Free tier available / BYOK"
     }
   ],
   "tools": [

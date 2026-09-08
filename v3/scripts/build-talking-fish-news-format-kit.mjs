@@ -110,7 +110,7 @@ for (const name of [
   "scene-contract.json",
 ]) await copyFromV3(path.join(formatRelative, name));
 
-for (const directory of ["fixtures", "goldens", "prompts"]) {
+for (const directory of ["fixtures", "goldens", "prompts", "inputs", "runtime", "tests"]) {
   await copyFromV3(path.join(formatRelative, directory));
 }
 
