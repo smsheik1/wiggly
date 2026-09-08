@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "kind": "format-render-receipt",
+  "inputSha256": "0c2a9938e203e9e38cc51cce3a2d84f32330406ac4ad231a1b8e4b81fc8e82ea",
+  "runtimeSha256": "8f6b3aff46a978d1bda7144f563679c0805c716aff460c4cd3b537c964e993a4",
+  "outputFile": "specular-commentary-proof.mp4",
+  "outputSha256": "a70d7d273b3d92d8ff8a7fe3f16d4db6d7b5fe0be85313b0334c5385e559fcc6",
+  "totalDurationSeconds": 9.2,
+  "width": 1080,
+  "height": 1920,
+  "fps": 25,
+  "videoCodec": "h264",
+  "audioCodec": "aac",
+  "turnsCount": 3,
+  "scenesCount": 1,
+  "presenter": {
+    "character": "male",
+    "cuesCount": 4
+  },
+  "renderedAt": "2026-09-08T07:29:02.260Z"
+}

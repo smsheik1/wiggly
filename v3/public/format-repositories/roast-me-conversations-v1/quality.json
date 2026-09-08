@@ -1,0 +1,18 @@
+{
+  "automatedChecks": [
+    "Run unit tests and offline smoke test from a clean download (npm test && npm run smoke).",
+    "Validate input contract: schema version, authorized gameplay, author avatar/selfie, contact roster, and per-turn audio files.",
+    "Verify 1080 × 1920 (9:16), 25 fps H.264/AAC output, visible card overlays, and dynamic bubble positioning.",
+    "Ensure the official runtime runtime/render.mjs remains unchanged across content variations."
+  ],
+  "creativeReview": [
+    "Watch and listen to the entire real episode; check comedic timing, punchline delivery, speech intelligibility, and bubble pop synchronization.",
+    "Inspect visual card borders, drop shadows, avatar alignment, and verified badge fidelity.",
+    "Record direct review separately from technical checks."
+  ],
+  "limits": [
+    "Baseline requires supplied gameplay, avatar assets, and per-turn audio; no automatic video scraping or voice cloning.",
+    "Output is strictly 9:16 vertical at 1080 × 1920, 25 fps. Cards expand downwards up to layout constraints.",
+    "Gameplay is scaled and center-cropped to fill 1080x1920 canvas without stretching."
+  ]
+}

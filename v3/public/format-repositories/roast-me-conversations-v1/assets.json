@@ -1,0 +1,83 @@
+{
+  "fixed": [
+    {
+      "path": "assets/sfx/pop.wav",
+      "label": "iOS message pop sound effect",
+      "purpose": "Clean synthesized message bubble arrival SFX triggered at each turn reveal."
+    },
+    {
+      "path": "assets/sfx/sent.wav",
+      "label": "iOS message sent sound effect",
+      "purpose": "Clean synthesized outgoing message SFX triggered on victim message turns."
+    },
+    {
+      "path": "assets/gameplay/minecraft-parkour.mp4",
+      "label": "Minecraft parkour gameplay loop",
+      "purpose": "Authorized vertical parkour gameplay loop providing continuous visual retention behind floating cards."
+    },
+    {
+      "path": "inputs/smoke.json",
+      "label": "Offline smoke input",
+      "purpose": "Deterministic test input utilizing mechanical patterns and tone fixtures for fast offline verification."
+    },
+    {
+      "path": "inputs/family-friends-roast.json",
+      "label": "Canonical roast proof input",
+      "purpose": "Full 39-second canonical episode with tweet hook and 3 contacts (Mom, Ben, Dad)."
+    },
+    {
+      "path": "inputs/startup-pitch-roast.json",
+      "label": "Startup pitch deck roast proof input",
+      "purpose": "Full 36-second domain-transfer episode with tweet hook and 2 contacts (Marc, Alex)."
+    },
+    {
+      "path": "assets/characters/male/neutral.png",
+      "label": "Male character presenter neutral pose",
+      "purpose": "Bust shot 2D avatar in calm listening pose with cel shading and Minecraft-style pupils."
+    },
+    {
+      "path": "assets/characters/male/laugh.png",
+      "label": "Male character presenter laugh pose",
+      "purpose": "Smug grinning laugh pose with tongue out and fist pumped near chest."
+    },
+    {
+      "path": "assets/characters/male/talk.png",
+      "label": "Male character presenter talk pose",
+      "purpose": "Explaining/talking pose with open mouth and raised index finger."
+    },
+    {
+      "path": "assets/characters/male/shock.png",
+      "label": "Male character presenter shock pose",
+      "purpose": "Shocked disbelief pose with wide surprised eyes, open mouth, and raised hands."
+    },
+    {
+      "path": "assets/characters/female/neutral.png",
+      "label": "Female character presenter neutral pose",
+      "purpose": "Bust shot 2D avatar in teal gamer hoodie with calm smile and cel shading."
+    },
+    {
+      "path": "assets/characters/female/laugh.png",
+      "label": "Female character presenter laugh pose",
+      "purpose": "Cheerful laughing pose with squinting eyes, tongue out, and victory fist."
+    },
+    {
+      "path": "assets/characters/female/talk.png",
+      "label": "Female character presenter talk pose",
+      "purpose": "Explaining/talking pose with raised finger and animated expression."
+    },
+    {
+      "path": "assets/characters/female/shock.png",
+      "label": "Female character presenter shock pose",
+      "purpose": "Shocked disbelief pose with wide amber eyes, mouth agape, and raised hands."
+    },
+    {
+      "path": "inputs/specular-commentary-proof.json",
+      "label": "Specular commentary proof input",
+      "purpose": "Commentary proof input demonstrating dark tweet hook card, dialogue turns, and animated character presenter."
+    }
+  ],
+  "sourceReference": {
+    "verification": "The release package contains original sound effects, parkour gameplay footage, avatar fixtures, audio turns, and two rendered proofs with inspections.",
+    "referenceNote": "Modeled from the viral Roast Me YouTube Short (https://www.youtube.com/shorts/nCVTDHdV7gA). Implements faithful vector recreations of Twitter/X social post cards and dynamic iOS iMessage cards over continuous gameplay. v0.2.0 introduces the animated PNGtuber / 2D avatar presenter extension modeled directly from SpecularAction (https://www.youtube.com/@SpecularAction/shorts)."
+  }
+}

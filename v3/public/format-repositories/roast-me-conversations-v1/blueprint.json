@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "slug": "roast-me-conversations",
+  "title": "Roast Me Conversations",
+  "referenceSha256": "8c7a186f5dbef329490646c47ee4e73621da78341c71db30c95c8b306521d3d5",
+  "summary": "A social prompt (e.g., asking friends and family to roast you on Twitter/X) opens with a floating social card and selfie over vertical gameplay, then transitions into rapid, brutal iMessage exchanges with multiple contacts that progressively expand the chat window as voiceover punchlines land.",
+  "observations": [
+    {
+      "id": "tweet-hook-frame",
+      "atSeconds": 0,
+      "description": "A floating Twitter/X post card with rounded corners and drop shadow is centered over continuous Minecraft gameplay. It displays a profile avatar, verified name, handle, roast prompt text, an attached selfie, timestamp, and social metrics.",
+      "channel": "visual",
+      "basis": "frame"
+    },
+    {
+      "id": "imessage-mama-frame",
+      "atSeconds": 4.89675,
+      "description": "The video cuts to an iOS Messages card with a top header (back chevron, contact avatar M, 'Mama >', and FaceTime icon). Blue sender and gray recipient bubbles pop in over continuous background gameplay.",
+      "channel": "visual",
+      "basis": "frame"
+    },
+    {
+      "id": "imessage-expansion-frame",
+      "atSeconds": 11.42575,
+      "description": "As Mama delivers her punchline about coffee, the white iOS messages card extends downwards to accommodate the growing chat history while preserving background gameplay below.",
+      "channel": "visual",
+      "basis": "frame"
+    },
+    {
+      "id": "imessage-ben-frame",
+      "atSeconds": 17.95475,
+      "description": "The scene resets to a new contact header 'Ben >' with avatar B. A new conversation begins with the victim asking to be roasted, followed by Ben delivering harsh insults.",
+      "channel": "visual",
+      "basis": "frame"
+    },
+    {
+      "id": "imessage-dad-frame",
+      "atSeconds": 32.645,
+      "description": "The scene transitions to contact 'Dad >' with avatar D, delivering a quick fitness/food roast punchline before the video concludes.",
+      "channel": "visual",
+      "basis": "frame"
+    }
+  ],
+  "rules": [
+    {
+      "id": "floating-cards-hierarchy",
+      "description": "Output is 1080x1920 (9:16 vertical). High-retention gameplay footage plays continuously in full screen behind centered, floating white cards with clean borders and drop shadows.",
+      "classification": "fixed",
+      "observationIds": [
+        "tweet-hook-frame",
+        "imessage-mama-frame",
+        "imessage-expansion-frame"
+      ],
+      "reasoning": "Observed across all sampled frames. The card container stays centered horizontally and occupies the upper half, ensuring gameplay remains clearly visible beneath it."
+    },
+    {
+      "id": "tweet-hook-scene",
+      "description": "The video begins with Scene 0: a floating social card establishing the premise (e.g. asking for roasts), accompanied by the victim's photo, social engagement counts, and opening narration.",
+      "classification": "fixed",
+      "observationIds": [
+        "tweet-hook-frame"
+      ],
+      "reasoning": "Frame 001 and transcript prove the video begins with a social media hook establishing the viral premise before showing individual message threads."
+    },
+    {
+      "id": "contact-scenes-reset",
+      "description": "Each roast contact (e.g. Mom, Ben, Dad) starts as a fresh iMessage scene with its own contact header, resetting card height to fit the initial greeting.",
+      "classification": "fixed",
+      "observationIds": [
+        "imessage-mama-frame",
+        "imessage-ben-frame",
+        "imessage-dad-frame"
+      ],
+      "reasoning": "Frames 004, 012, and 021 demonstrate clear scene transitions where the previous chat clears and a new contact conversation begins from the top."
+    },
+    {
+      "id": "dynamic-bubble-expansion",
+      "description": "Within each contact scene, speech bubbles appear sequentially in sync with voice audio, dynamically growing the card's vertical height.",
+      "classification": "fixed",
+      "observationIds": [
+        "imessage-mama-frame",
+        "imessage-expansion-frame"
+      ],
+      "reasoning": "Comparison between frames 004 and 008 shows the card boundary starts compact and smoothly grows downward as new bubbles arrive."
+    },
+    {
+      "id": "replaceable-roast-content",
+      "description": "Replace the victim profile, hook text, photo, contact roster, message exchanges, roast punchlines, background gameplay, and voice clips without modifying the runtime renderer.",
+      "classification": "variable",
+      "observationIds": [
+        "tweet-hook-frame",
+        "imessage-mama-frame",
+        "imessage-ben-frame",
+        "imessage-dad-frame"
+      ],
+      "reasoning": "The core visual engine is an iMessage + Social Card layout over gameplay. The subject of the roast, the contacts, and the specific jokes are purely content inputs."
+    },
+    {
+      "id": "audio-sfx-sync",
+      "description": "Each speech bubble arrival triggers a subtle iOS message pop/sent SFX, synchronized with multi-speaker voiceover and optional ducked background audio.",
+      "classification": "optional",
+      "observationIds": [
+        "imessage-mama-frame",
+        "imessage-expansion-frame"
+      ],
+      "reasoning": "Audio inspection reveals standard message-pop cues marking bubble appearances alongside multi-voice dialogue."
+    },
+    {
+      "id": "unsupported-claims",
+      "description": "Live screen recording of real iOS devices, private user data harvesting, or claiming actual human family participants is unsupported.",
+      "classification": "unsupported",
+      "observationIds": [
+        "tweet-hook-frame",
+        "imessage-mama-frame"
+      ],
+      "reasoning": "The format is a clean programmatic composite of UI overlays, gameplay, and voiceover, not actual phone screen recording."
+    }
+  ],
+  "inputs": [
+    {
+      "name": "hook",
+      "type": "array",
+      "description": "Social card configuration: author name, handle, avatar image, tweet text, selfie image, timestamp, and metrics."
+    },
+    {
+      "name": "contacts",
+      "type": "array",
+      "description": "List of 2-5 roast contacts with id, name, and avatar initial or image."
+    },
+    {
+      "name": "scenes",
+      "type": "array",
+      "description": "Ordered sequence of roast conversations, each referencing a contact and containing turns with speaker, text, audio file, and bubble timing."
+    },
+    {
+      "name": "gameplay",
+      "type": "asset",
+      "description": "Authorized 9:16 vertical video clip (at least total conversation duration, max 100 MB)."
+    }
+  ],
+  "runtime": {
+    "approach": "One standalone Node.js entrypoint validates inputs, rasterizes vector SVG cards and speech bubbles via Sharp into RGBA frames, and composites over scaled 9:16 gameplay video with FFmpeg via pipe. Multi-turn dialogue audio and synchronized message-pop SFX are mixed deterministically into an H.264/AAC MP4.",
+    "entrypoint": "runtime/render.mjs"
+  },
+  "review": {
+    "visual": "sampled-frames",
+    "audio": "unavailable",
+    "limitations": [
+      "Author evaluated 24 uniformly sampled frames and auto-subtitles; direct human listening review is required for voice realism.",
+      "Vector typography and bubble geometry are simulated iOS and Twitter representations.",
+      "Diagnostic test assets utilize mechanical patterns and tone files to ensure zero-cost reproducible tests."
+    ]
+  },
+  "assets": [
+    {
+      "path": "assets/gameplay/minecraft-parkour.mp4",
+      "source": "Authorized royalty-free / CC-BY Minecraft parkour loop",
+      "usage": "licensed",
+      "notes": "9:16 vertical gameplay video for background retention."
+    },
+    {
+      "path": "assets/sfx/pop.wav",
+      "source": "Original synthesized message pop sound effect",
+      "usage": "original",
+      "notes": "Short clean pop SFX triggered on bubble reveal."
+    },
+    {
+      "path": "assets/sfx/sent.wav",
+      "source": "Original synthesized message swoosh/sent sound effect",
+      "usage": "original",
+      "notes": "Short clean sent SFX triggered on outgoing bubble."
+    }
+  ],
+  "proofs": [
+    {
+      "id": "family-friends-roast",
+      "description": "The canonical format proof: a tweet asking family to roast the victim, with conversations from Mom, Brother Ben, and Dad over parkour gameplay."
+    },
+    {
+      "id": "startup-pitch-roast",
+      "description": "A diverse domain proof: a founder asking investors and engineers to roast their AI pitch deck, with brutal critique from VC Partner, Tech Lead, and Angel."
+    },
+    {
+      "id": "specular-commentary-proof",
+      "description": "SpecularAction animated character commentary proof: dark theme Twitter card with Sonic lore discussion, animated 2D male presenter with continuous idle sway and pose switching (neutral, talk, laugh flipped, shock) over Minecraft gameplay."
+    }
+  ]
+}

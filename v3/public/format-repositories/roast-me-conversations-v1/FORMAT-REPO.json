@@ -1,0 +1,467 @@
+{
+  "schemaVersion": 1,
+  "kind": "wiggly-format",
+  "slug": "roast-me-conversations",
+  "version": "0.2.0",
+  "status": "ready-for-review",
+  "runtime": "runtime/render.mjs",
+  "releaseFiles": [
+    ".gitignore",
+    "AGENTS.md",
+    "BENCHMARK.md",
+    "CLAUDE.md",
+    "FORMAT-REPO.json",
+    "KIT-MANIFEST.json",
+    "PUBLICATION.json",
+    "README.md",
+    "SKILL.md",
+    "assets.json",
+    "assets/audio/ben_01.wav",
+    "assets/audio/ben_02.wav",
+    "assets/audio/ben_03.wav",
+    "assets/audio/ben_04.wav",
+    "assets/audio/ben_05.wav",
+    "assets/audio/ben_06.wav",
+    "assets/audio/ben_07.wav",
+    "assets/audio/dad_01.wav",
+    "assets/audio/dad_02.wav",
+    "assets/audio/dad_03.wav",
+    "assets/audio/dad_04.wav",
+    "assets/audio/dad_05.wav",
+    "assets/audio/hook.wav",
+    "assets/audio/mama_01.wav",
+    "assets/audio/mama_02.wav",
+    "assets/audio/mama_03.wav",
+    "assets/audio/mama_04.wav",
+    "assets/audio/mama_05.wav",
+    "assets/audio/mama_06.wav",
+    "assets/audio/mama_07.wav",
+    "assets/audio/mama_08.wav",
+    "assets/audio/mama_09.wav",
+    "assets/audio/startup/alex_01.wav",
+    "assets/audio/startup/alex_02.wav",
+    "assets/audio/startup/alex_03.wav",
+    "assets/audio/startup/hook.wav",
+    "assets/audio/startup/marc_01.wav",
+    "assets/audio/startup/marc_02.wav",
+    "assets/audio/startup/marc_03.wav",
+    "assets/audio/startup/marc_04.wav",
+    "assets/avatars/founder-avatar.png",
+    "assets/avatars/founder-selfie.jpg",
+    "assets/avatars/sydney-avatar.png",
+    "assets/avatars/sydney-selfie.jpg",
+    "assets/characters/female/laugh.png",
+    "assets/characters/female/neutral.png",
+    "assets/characters/female/shock.png",
+    "assets/characters/female/talk.png",
+    "assets/characters/male/laugh.png",
+    "assets/characters/male/neutral.png",
+    "assets/characters/male/shock.png",
+    "assets/characters/male/talk.png",
+    "assets/cool.mp4",
+    "assets/gameplay/minecraft-parkour.mp4",
+    "assets/sfx/pop.wav",
+    "assets/sfx/sent.wav",
+    "assets/tones/tone_220_1s.wav",
+    "assets/tones/tone_220_2s.wav",
+    "assets/tones/tone_330_1s.wav",
+    "assets/tones/tone_330_2s.wav",
+    "assets/tones/tone_440_1s.wav",
+    "assets/tones/tone_440_2s.wav",
+    "assets/tones/tone_550_1s.wav",
+    "assets/tones/tone_550_2s.wav",
+    "assets/tones/tone_hook_3.2s.wav",
+    "assets/warm.mp4",
+    "blueprint.json",
+    "format.json",
+    "goldens.json",
+    "inputs/family-friends-roast.json",
+    "inputs/smoke.json",
+    "inputs/specular-commentary-proof.json",
+    "inputs/startup-pitch-roast.json",
+    "package-lock.json",
+    "package.json",
+    "pipeline.json",
+    "proofs/family-friends-roast-0.1.0-inspection.json",
+    "proofs/family-friends-roast-0.1.0.mp4",
+    "proofs/family-friends-roast-0.1.0.mp4.receipt.json",
+    "proofs/specular-commentary-proof-0.2.0-inspection.json",
+    "proofs/specular-commentary-proof.mp4",
+    "proofs/specular-commentary-proof.mp4.receipt.json",
+    "proofs/startup-pitch-roast-0.1.0-inspection.json",
+    "proofs/startup-pitch-roast-0.1.0.mp4",
+    "proofs/startup-pitch-roast-0.1.0.mp4.receipt.json",
+    "quality.json",
+    "requirements.json",
+    "runtime/render.mjs",
+    "tests/contract.test.mjs",
+    "tests/smoke.mjs",
+    "tests/verify-proofs.mjs"
+  ],
+  "assets": [
+    {
+      "path": "assets/audio/ben_01.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/ben_02.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/ben_03.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/ben_04.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/ben_05.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/ben_06.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/ben_07.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/dad_01.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/dad_02.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/dad_03.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/dad_04.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/dad_05.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/hook.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/mama_01.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/mama_02.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/mama_03.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/mama_04.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/mama_05.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/mama_06.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/mama_07.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/mama_08.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/mama_09.wav",
+      "source": "Reference roast speech audio slices",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for canonical family roast proof"
+    },
+    {
+      "path": "assets/audio/startup/alex_01.wav",
+      "source": "Locally generated multi-speaker dialogue audio",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for startup deck roast proof"
+    },
+    {
+      "path": "assets/audio/startup/alex_02.wav",
+      "source": "Locally generated multi-speaker dialogue audio",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for startup deck roast proof"
+    },
+    {
+      "path": "assets/audio/startup/alex_03.wav",
+      "source": "Locally generated multi-speaker dialogue audio",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for startup deck roast proof"
+    },
+    {
+      "path": "assets/audio/startup/hook.wav",
+      "source": "Locally generated multi-speaker dialogue audio",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for startup deck roast proof"
+    },
+    {
+      "path": "assets/audio/startup/marc_01.wav",
+      "source": "Locally generated multi-speaker dialogue audio",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for startup deck roast proof"
+    },
+    {
+      "path": "assets/audio/startup/marc_02.wav",
+      "source": "Locally generated multi-speaker dialogue audio",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for startup deck roast proof"
+    },
+    {
+      "path": "assets/audio/startup/marc_03.wav",
+      "source": "Locally generated multi-speaker dialogue audio",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for startup deck roast proof"
+    },
+    {
+      "path": "assets/audio/startup/marc_04.wav",
+      "source": "Locally generated multi-speaker dialogue audio",
+      "usage": "licensed",
+      "notes": "Dialogue voice line for startup deck roast proof"
+    },
+    {
+      "path": "assets/avatars/founder-avatar.png",
+      "source": "Original founder photo/avatar fixture",
+      "usage": "licensed",
+      "notes": "Founder avatar and selfie images for startup deck roast proof"
+    },
+    {
+      "path": "assets/avatars/founder-selfie.jpg",
+      "source": "Original founder photo/avatar fixture",
+      "usage": "licensed",
+      "notes": "Founder avatar and selfie images for startup deck roast proof"
+    },
+    {
+      "path": "assets/avatars/sydney-avatar.png",
+      "source": "Reference roast victim photo/avatar crop",
+      "usage": "licensed",
+      "notes": "Victim avatar and selfie images for canonical proof"
+    },
+    {
+      "path": "assets/avatars/sydney-selfie.jpg",
+      "source": "Reference roast victim photo/avatar crop",
+      "usage": "licensed",
+      "notes": "Victim avatar and selfie images for canonical proof"
+    },
+    {
+      "path": "assets/cool.mp4",
+      "source": "Original locally generated FFmpeg diagnostic video pattern",
+      "usage": "original",
+      "notes": "Diagnostic video fixture"
+    },
+    {
+      "path": "assets/gameplay/minecraft-parkour.mp4",
+      "source": "Authorized royalty-free / CC-BY Minecraft parkour loop",
+      "usage": "licensed",
+      "notes": "9:16 vertical continuous gameplay footage for background retention"
+    },
+    {
+      "path": "assets/sfx/pop.wav",
+      "source": "Original synthesized message sound effect",
+      "usage": "original",
+      "notes": "Synthesized iOS message audio cue"
+    },
+    {
+      "path": "assets/sfx/sent.wav",
+      "source": "Original synthesized message sound effect",
+      "usage": "original",
+      "notes": "Synthesized iOS message audio cue"
+    },
+    {
+      "path": "assets/tones/tone_220_1s.wav",
+      "source": "Original locally generated sine tone audio fixture",
+      "usage": "original",
+      "notes": "Zero-cost diagnostic audio fixture"
+    },
+    {
+      "path": "assets/tones/tone_220_2s.wav",
+      "source": "Original locally generated sine tone audio fixture",
+      "usage": "original",
+      "notes": "Zero-cost diagnostic audio fixture"
+    },
+    {
+      "path": "assets/tones/tone_330_1s.wav",
+      "source": "Original locally generated sine tone audio fixture",
+      "usage": "original",
+      "notes": "Zero-cost diagnostic audio fixture"
+    },
+    {
+      "path": "assets/tones/tone_330_2s.wav",
+      "source": "Original locally generated sine tone audio fixture",
+      "usage": "original",
+      "notes": "Zero-cost diagnostic audio fixture"
+    },
+    {
+      "path": "assets/tones/tone_440_1s.wav",
+      "source": "Original locally generated sine tone audio fixture",
+      "usage": "original",
+      "notes": "Zero-cost diagnostic audio fixture"
+    },
+    {
+      "path": "assets/tones/tone_440_2s.wav",
+      "source": "Original locally generated sine tone audio fixture",
+      "usage": "original",
+      "notes": "Zero-cost diagnostic audio fixture"
+    },
+    {
+      "path": "assets/tones/tone_550_1s.wav",
+      "source": "Original locally generated sine tone audio fixture",
+      "usage": "original",
+      "notes": "Zero-cost diagnostic audio fixture"
+    },
+    {
+      "path": "assets/tones/tone_550_2s.wav",
+      "source": "Original locally generated sine tone audio fixture",
+      "usage": "original",
+      "notes": "Zero-cost diagnostic audio fixture"
+    },
+    {
+      "path": "assets/tones/tone_hook_3.2s.wav",
+      "source": "Original locally generated sine tone audio fixture",
+      "usage": "original",
+      "notes": "Zero-cost diagnostic audio fixture"
+    },
+    {
+      "path": "assets/warm.mp4",
+      "source": "Original locally generated FFmpeg diagnostic video pattern",
+      "usage": "original",
+      "notes": "Diagnostic video fixture"
+    },
+    {
+      "path": "assets/characters/male/neutral.png",
+      "source": "SpecularAction-inspired male avatar asset",
+      "usage": "licensed",
+      "notes": "Male presenter neutral pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/male/laugh.png",
+      "source": "SpecularAction-inspired male avatar asset",
+      "usage": "licensed",
+      "notes": "Male presenter laugh pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/male/talk.png",
+      "source": "SpecularAction-inspired male avatar asset",
+      "usage": "licensed",
+      "notes": "Male presenter talk pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/male/shock.png",
+      "source": "SpecularAction-inspired male avatar asset",
+      "usage": "licensed",
+      "notes": "Male presenter shock pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/female/neutral.png",
+      "source": "SpecularAction-inspired female avatar asset",
+      "usage": "licensed",
+      "notes": "Female presenter neutral pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/female/laugh.png",
+      "source": "SpecularAction-inspired female avatar asset",
+      "usage": "licensed",
+      "notes": "Female presenter laugh pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/female/talk.png",
+      "source": "SpecularAction-inspired female avatar asset",
+      "usage": "licensed",
+      "notes": "Female presenter talk pose for animated commentary layer"
+    },
+    {
+      "path": "assets/characters/female/shock.png",
+      "source": "SpecularAction-inspired female avatar asset",
+      "usage": "licensed",
+      "notes": "Female presenter shock pose for animated commentary layer"
+    }
+  ],
+  "proofs": [
+    {
+      "id": "family-friends-roast",
+      "input": "inputs/family-friends-roast.json",
+      "output": "proofs/family-friends-roast-0.1.0.mp4",
+      "inspection": "proofs/family-friends-roast-0.1.0-inspection.json"
+    },
+    {
+      "id": "startup-pitch-roast",
+      "input": "inputs/startup-pitch-roast.json",
+      "output": "proofs/startup-pitch-roast-0.1.0.mp4",
+      "inspection": "proofs/startup-pitch-roast-0.1.0-inspection.json"
+    },
+    {
+      "id": "specular-commentary-proof",
+      "input": "inputs/specular-commentary-proof.json",
+      "output": "proofs/specular-commentary-proof.mp4",
+      "receipt": "proofs/specular-commentary-proof.mp4.receipt.json",
+      "inspection": "proofs/specular-commentary-proof-0.2.0-inspection.json",
+      "outputSha256": "a70d7d273b3d92d8ff8a7fe3f16d4db6d7b5fe0be85313b0334c5385e559fcc6",
+      "durationSeconds": 9.2
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "User",
+    "notes": "User requested turning the YouTube Short format into a Wiggly Repo. Official runtime and two distinct proofs rendered and inspected."
+  }
+}

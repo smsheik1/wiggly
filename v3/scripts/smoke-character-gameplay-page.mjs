@@ -18,10 +18,10 @@ try {
   const page = await context.newPage();
   // A cold production load can expose the server-rendered input before its client handlers initialize.
   await page.goto(`${origin}/discover`, { waitUntil: "networkidle" });
-  await page.getByRole("searchbox", { name: "Search finished ads" }).fill("Character Gameplay Conversations");
-  await page.waitForFunction(() => document.querySelectorAll("article").length === 1);
-  assert.equal(await page.locator('h3[id^="shelf-"]').innerText(), "Character Gameplay Conversations");
-  const cardVideo = page.locator("article video");
+  await page.getByRole("searchbox", { name: "Search finished ads" }).fill("Batman Arkham Conversations");
+  await page.waitForFunction(() => document.querySelectorAll("article").length === 4);
+  assert.equal(await page.locator('h3[id^="shelf-"]').innerText(), "Batman Arkham Conversations");
+  const cardVideo = page.locator("article video").first();
   const cardDimensions = await cardVideo.evaluate(video => ({ width: video.clientWidth, height: video.clientHeight }));
   assert.ok(Math.abs(cardDimensions.width / cardDimensions.height - 9 / 16) < 0.01);
   await page.screenshot({ path: path.join(screenshots, "discover.png") });
@@ -29,7 +29,7 @@ try {
   await page.waitForFunction(() => { const v = document.querySelector("article video"); return v && !v.paused && !v.muted && v.currentTime > 0.1; });
   assert.ok(Math.abs(await cardVideo.evaluate(v => v.duration) - 16.76) < 0.1);
   assert.deepEqual(await cardVideo.evaluate(v => [v.videoWidth, v.videoHeight]), [1080, 1920]);
-  await page.getByRole("link", { name: "Open format", exact: true }).click();
+  await page.getByRole("link", { name: "Open format", exact: true }).first().click();
   await page.waitForURL(`**/formats/${slug}`);
   for (const id of ["accounts-youll-connect", "included-assets", "examples", "workflow", "proof-quality", "repo-files", "run-with-agent"]) assert.equal(await page.locator(`#${id}`).count(), 1, id);
   assert.match(await page.locator("#proof-quality").innerText(), /User accepted the preview/);

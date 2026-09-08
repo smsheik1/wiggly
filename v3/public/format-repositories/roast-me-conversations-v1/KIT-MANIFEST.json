@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "kit": "roast-me-conversations",
+  "version": "0.2.0",
+  "runtime": "runtime/render.mjs",
+  "runtimeSha256": "075d465e6e10efb9a9570e1aa36daa0583efa4c245b1b32542125c1a145b3958",
+  "publication": "user-requested-public-baseline",
+  "creativeReview": "user-requested-format; two-distinct-proofs-verified"
+}

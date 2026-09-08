@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "kind": "technical-media-inspection",
+  "media": {
+    "file": "specular-commentary-proof.mp4",
+    "sha256": "a70d7d273b3d92d8ff8a7fe3f16d4db6d7b5fe0be85313b0334c5385e559fcc6",
+    "sizeBytes": 6422562,
+    "durationSeconds": 9.2,
+    "width": 1080,
+    "height": 1920,
+    "fps": 25,
+    "hasAudio": true
+  },
+  "streams": [
+    {
+      "index": 0,
+      "type": "video",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "index": 1,
+      "type": "audio",
+      "codec": "aac",
+      "sampleRate": 48000,
+      "channels": 1
+    }
+  ],
+  "review": {
+    "status": "not-assessed",
+    "limitations": [
+      "Metadata and checksums do not verify character idle sway, pose transitions, or creative perception. Direct human review remains required."
+    ]
+  }
+}

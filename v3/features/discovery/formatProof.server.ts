@@ -24,7 +24,7 @@ type FormatProfileConfig = {
 const formatConfigs: FormatProfileConfig[] = [
   {
     slug: "character-gameplay-conversations",
-    promise: "Fan-favorite characters. Conversations fans wish existed. Real gameplay, character dialogue, timed captions and optional background music—assembled into vertical 9:16 Shorts.",
+    promise: "Fan-favorite characters trade lines over Arkham Knight and Spider-Man 2 gameplay with timed captions and ducked music—assembled into vertical 9:16 Shorts.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/character-gameplay-conversations-v1/format.json",
     repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.2.0.zip",
@@ -45,6 +45,56 @@ const formatConfigs: FormatProfileConfig[] = [
       totalEstimate: "$0 media-provider cost with supplied clips. Coding-agent usage is separate.",
       output: "One 1080 × 1920 vertical MP4 (9:16 Shorts), up to 60 seconds, with speaker labels, captions and optional music",
       firstQuestion: "Which characters should talk, and what are they talking about?",
+    },
+  },
+  {
+    slug: "roast-me-conversations",
+    promise: "A viral social roast format. Opens with a floating Twitter/X card over continuous vertical gameplay, transitioning into rapid iMessage roast exchanges that expand downward with audio and pop sound effects.",
+    lastUpdated: "September 2026",
+    manifestPath: "format-repositories/roast-me-conversations-v1/format.json",
+    repositoryHref: "/format-repositories/roast-me-conversations-v1/downloads/roast-me-conversations-0.2.0.zip",
+    technicalHref: "/format-repositories/roast-me-conversations-v1/BENCHMARK.md",
+    historicalProofVersions: ["0.1.0"],
+    whatStays: [
+      "Centered floating cards over continuous vertical gameplay",
+      "Scene 0 Twitter/X prompt card with avatar and selfie photo",
+      "Dynamic iMessage card expansion downward as turns pop in",
+      "Synchronized dialogue audio and iOS message sound effects",
+      "One official FFmpeg/Sharp compositor for all roast concepts",
+    ],
+    whatChanges: [
+      "The victim profile, prompt text, handle, and selfie photo",
+      "The roster of roasting contacts and their names/avatars",
+      "The conversation scripts, comedic punchlines, and voice audio",
+      "The background 9:16 gameplay video footage",
+    ],
+    handoff: {
+      requiredInputs: [
+        "A victim profile (name, handle, tweet text, selfie photo)",
+        "A roster of contacts and roast conversation scripts",
+        "Authorized per-turn dialogue voice audio clips",
+        "An authorized 9:16 vertical gameplay video (e.g. Minecraft parkour)",
+      ],
+      deliverables: [
+        "A validated roast episode JSON input",
+        "A finished 1080 × 1920 vertical MP4 (9:16 Shorts) with sound effects",
+        "A receipt with media properties and runtime SHA-256 hashes",
+      ],
+      instructions: [
+        "Read SKILL.md and run the offline smoke test (npm test && npm run smoke)",
+        "Author the roast script and gather authorized audio clips and images",
+        "Validate the episode input with node runtime/render.mjs --validate",
+        "Render the final video using the packaged official runtime",
+      ],
+      estimates: [
+        { label: "Script + comedic concept", cost: "Your coding agent usage", time: "depends on script complexity" },
+        { label: "Gameplay + voice audio", cost: "$0 with supplied media", time: "prepared before rendering" },
+        { label: "Local render + SFX mix", cost: "$0 provider cost", time: "about 5–10s on tested Mac" },
+        { label: "Inspect + review", cost: "$0 provider cost", time: "one full playback review" },
+      ],
+      totalEstimate: "$0 media-provider cost with supplied media. Coding-agent usage is separate.",
+      output: "One 1080 × 1920 vertical MP4 (9:16 Shorts), up to 60 seconds, with expanding iMessage cards and sound effects",
+      firstQuestion: "Who is the roast victim, and what contacts are roasting them?",
     },
   },
   {

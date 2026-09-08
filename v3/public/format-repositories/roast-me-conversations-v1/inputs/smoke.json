@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "topic": "Diagnostic smoke test",
+  "gameplay": {
+    "file": "assets/warm.mp4",
+    "authorized": true,
+    "provenance": "Original locally generated FFmpeg diagnostic pattern"
+  },
+  "hook": {
+    "authorName": "Sydney",
+    "handle": "sydpaek02",
+    "verified": true,
+    "text": "i asked my friends and family to roast me. here's what they said",
+    "avatar": "assets/avatars/sydney-avatar.png",
+    "image": "assets/avatars/sydney-selfie.jpg",
+    "timestamp": "12:02 PM · 08 Apr 24",
+    "views": "1.06M",
+    "retweets": "12.5K",
+    "quotes": "4,243",
+    "likes": "42.7K",
+    "durationSeconds": 3.2,
+    "audio": {
+      "file": "assets/tones/tone_hook_3.2s.wav",
+      "authorized": true,
+      "provenance": "Original locally generated diagnostic tone"
+    }
+  },
+  "contacts": [
+    {
+      "id": "mama",
+      "name": "Mama",
+      "initial": "M"
+    }
+  ],
+  "scenes": [
+    {
+      "contactId": "mama",
+      "turns": [
+        {
+          "speaker": "victim",
+          "text": "Hi mom, can you roast me",
+          "durationSeconds": 1.0,
+          "audio": {
+            "file": "assets/tones/tone_440_1s.wav",
+            "authorized": true,
+            "provenance": "Original locally generated diagnostic tone"
+          }
+        },
+        {
+          "speaker": "mama",
+          "text": "roast you? what",
+          "durationSeconds": 1.0,
+          "audio": {
+            "file": "assets/tones/tone_550_1s.wav",
+            "authorized": true,
+            "provenance": "Original locally generated diagnostic tone"
+          }
+        }
+      ]
+    }
+  ]
+}

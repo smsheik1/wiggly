@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "kind": "format-render-receipt",
+  "inputSha256": "efa6d8f375243e2988d6535073c74b659ff5e87ebf3c81ab9533e2b84cb20dad",
+  "runtimeSha256": "075d465e6e10efb9a9570e1aa36daa0583efa4c245b1b32542125c1a145b3958",
+  "outputFile": "startup-pitch-roast-0.1.0.mp4",
+  "outputSha256": "ab0f460023a496ef81b4a715422bfd4606f0f7b2000056c341d78f7eb8d62fe4",
+  "totalDurationSeconds": 36.44,
+  "width": 1080,
+  "height": 1920,
+  "fps": 25,
+  "videoCodec": "h264",
+  "audioCodec": "aac",
+  "turnsCount": 7,
+  "scenesCount": 2,
+  "renderedAt": "2026-09-08T06:44:49.250Z"
+}

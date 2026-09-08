@@ -1,0 +1,26 @@
+{
+  "stages": [
+    {
+      "id": "check-and-smoke",
+      "output": "Check the local tools, verify Sharp and FFmpeg installation, and run the offline smoke test before starting an episode."
+    },
+    {
+      "id": "author-roast-concept",
+      "output": "Choose the roast subject (family/friends, startup/founder, gaming, workplace) and author the tweet hook and contact roast exchanges.",
+      "approvalRequired": true
+    },
+    {
+      "id": "supply-assets-and-audio",
+      "output": "Provide authorized avatar/selfie images, background gameplay footage (1080x1920 vertical), and per-turn dialogue audio clips."
+    },
+    {
+      "id": "validate-contract",
+      "output": "Run the contract validator to ensure all media files exist, durations match audio, and contacts are properly mapped."
+    },
+    {
+      "id": "render-and-inspect",
+      "output": "Use the unchanged official compositor runtime/render.mjs to render the 1080x1920 MP4, then inspect receipt and media before accepting.",
+      "approvalRequired": true
+    }
+  ]
+}

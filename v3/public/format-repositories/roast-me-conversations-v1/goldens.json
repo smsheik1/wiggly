@@ -1,0 +1,33 @@
+{
+  "purpose": "Two complete rendered proofs demonstrate the official runtime on two distinct roast concepts: the canonical family/friends roast and a tech startup pitch deck roast.",
+  "examples": [
+    {
+      "id": "family-friends-roast",
+      "title": "Family & Friends Roast Me",
+      "role": "Canonical proof · 39.17s 1080x1920",
+      "whyItWorks": [
+        "Faithfully replicates the source reference structure: tweet hook asking to be roasted with selfie photo, transitioning into 3 distinct family contacts (Mom, Ben, Dad).",
+        "Dynamic iMessage card expansion downward as conversation turns accumulate with synced pop SFX over continuous Minecraft parkour gameplay.",
+        "Verified by technical inspection with exact dimensions, 25 fps H.264/AAC, and receipt."
+      ],
+      "knownWeaknesses": [
+        "Speech audio was sliced and leveled from reference episode rather than live generative speech.",
+        "iOS UI is vector rendered recreation, not native Apple UIKit screen recording."
+      ]
+    },
+    {
+      "id": "startup-pitch-roast",
+      "title": "AI Startup Pitch Deck Roast",
+      "role": "Domain-transfer proof · 36.44s 1080x1920",
+      "whyItWorks": [
+        "Proves format generalizability to tech/startup comedy: founder tweets pitch deck prompt, followed by brutal feedback from Marc and Alex.",
+        "Same official runtime, vector card rendering engine, and SFX mixing.",
+        "Verified by technical inspection with exact dimensions, 25 fps H.264/AAC, and receipt."
+      ],
+      "knownWeaknesses": [
+        "Requires curated comedic script and multi-speaker audio clips.",
+        "Gameplay is background retention layer and does not interact with dialogue topics."
+      ]
+    }
+  ]
+}

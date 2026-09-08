@@ -173,7 +173,8 @@ assert.ok(
     discoveryFormatSlugs.includes("lego-music-video") &&
     discoveryFormatSlugs.includes("repo-builder") &&
     discoveryFormatSlugs.includes("character-gameplay-conversations") &&
-    discoveryFormatSlugs.length === 53 &&
+    discoveryFormatSlugs.includes("roast-me-conversations") &&
+    discoveryFormatSlugs.length === 54 &&
     !discoveryFormatSlugs.includes("motion-story"),
 );
 

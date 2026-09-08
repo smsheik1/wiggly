@@ -1,0 +1,561 @@
+{
+  "schemaVersion": 1,
+  "kind": "wiggly-format",
+  "slug": "roast-me-conversations",
+  "version": "0.2.0",
+  "review": {
+    "status": "approved",
+    "reviewer": "User",
+    "notes": "User requested turning the YouTube Short format into a Wiggly Repo. Official runtime and two distinct proofs rendered and inspected."
+  },
+  "publication": "local-only",
+  "checks": "integrity-and-structure-not-creative-certification",
+  "files": [
+    {
+      "file": ".gitignore",
+      "sha256": "7b64527f8e74b9e7263d4aa6fb1fc3a0e422cfa56253b78193b043de70043fcc",
+      "sizeBytes": 43,
+      "mode": "0644"
+    },
+    {
+      "file": "AGENTS.md",
+      "sha256": "5980969a86bb936495749139538fc4824fd6844015571916454e6be5a9977503",
+      "sizeBytes": 278,
+      "mode": "0644"
+    },
+    {
+      "file": "BENCHMARK.md",
+      "sha256": "95b9c43e6a4b159512b81a3c06fd6234a28cd1aeaa3b23846553c76ffbfef94a",
+      "sizeBytes": 1475,
+      "mode": "0644"
+    },
+    {
+      "file": "CLAUDE.md",
+      "sha256": "7a7c7f9b76d41df5be620911caf6494dfae45f4c92eb4d84a2e5dd50b0420cb2",
+      "sizeBytes": 179,
+      "mode": "0644"
+    },
+    {
+      "file": "FORMAT-REPO.json",
+      "sha256": "edaf7f024cdaad3ce021a56045a8c772b1d4e1681a858edf34eda994423d7741",
+      "sizeBytes": 16334,
+      "mode": "0644"
+    },
+    {
+      "file": "KIT-MANIFEST.json",
+      "sha256": "cf122eafbb710c47bd26cb65b4f5770f0e592455b4d9b51b8de13932012a6394",
+      "sizeBytes": 330,
+      "mode": "0644"
+    },
+    {
+      "file": "PUBLICATION.json",
+      "sha256": "83f799a8a387f619c39cbe307723c90494ff8db0dc544eb91c9b8472d26beec6",
+      "sizeBytes": 1440,
+      "mode": "0644"
+    },
+    {
+      "file": "README.md",
+      "sha256": "571cc8aeca6d114c553701b36884b914004aefadb94bd472653078e0fae35156",
+      "sizeBytes": 2187,
+      "mode": "0644"
+    },
+    {
+      "file": "SKILL.md",
+      "sha256": "0dcf964e9c5a3c51fe540450cd1cfad024901a46685b8512295a7e622344c339",
+      "sizeBytes": 2947,
+      "mode": "0644"
+    },
+    {
+      "file": "assets.json",
+      "sha256": "a3049ff99a36af9aec2acc166ef3e045c1f287b44d7fe7345f4823afd81f3019",
+      "sizeBytes": 3830,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/ben_01.wav",
+      "sha256": "792f96b0b07c84760040a8255a095e3b00497d1f9b409922fe12a3921ae9d011",
+      "sizeBytes": 86478,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/ben_02.wav",
+      "sha256": "809284d4b272de7a26a9845e9b2691051beff5541e346ef92edaff61ea6ee622",
+      "sizeBytes": 326478,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/ben_03.wav",
+      "sha256": "ad711f1b9263f610c29785327e82d70605b5c2df3e14aa07599578a31c3afc86",
+      "sizeBytes": 76878,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/ben_04.wav",
+      "sha256": "69177648f0fb7051d7960d687a13188072e14622d6c86c5457a06d37fc1b99b6",
+      "sizeBytes": 76878,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/ben_05.wav",
+      "sha256": "2e23595e3b13bed6b713a8226ef635f779d46d0da09a355fbb29bb32f4bd3823",
+      "sizeBytes": 57678,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/ben_06.wav",
+      "sha256": "1458f4ffa59439d0876b471608d5993b58d86c2568b4a122a8e3a75cb61b41ef",
+      "sizeBytes": 624078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/ben_07.wav",
+      "sha256": "f2a3b4f91c30c0e660c66c2e097c16948b3e7a0ee7ef8df83dc94952231394fe",
+      "sizeBytes": 192078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/dad_01.wav",
+      "sha256": "f87762ed29a68306fe909e25b8a6ded7ac9968e3d7364445aac7d6b95b567359",
+      "sizeBytes": 124878,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/dad_02.wav",
+      "sha256": "6706b6ca895d002611ce366a785e46db5eab02a4dcbda74b55d95d27323a318d",
+      "sizeBytes": 38478,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/dad_03.wav",
+      "sha256": "03927f0a88f8d162496d9b95ffcfaaf0788ab04954b21f9a4231ba47a333476b",
+      "sizeBytes": 48078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/dad_04.wav",
+      "sha256": "f1f469b941b7aaaeb81569150aef7bdf26c8b794a4eaa29c46b29c52764933b0",
+      "sizeBytes": 432078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/dad_05.wav",
+      "sha256": "111fb2eefc36befd3383cc54c3c339dc077584fd61a2e5cfbee22793f6c2db9d",
+      "sizeBytes": 93198,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/hook.wav",
+      "sha256": "1dd2564966c71ee82af673cfe9125e1e446ca356086d3e710751c65ea96e41b9",
+      "sizeBytes": 303342,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/mama_01.wav",
+      "sha256": "0f313bf6863107fe68ff9f75dcb54c9b90cc8630389e2ab45d9d834bf6543a64",
+      "sizeBytes": 153678,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/mama_02.wav",
+      "sha256": "6b213107b7e49b5d0755f15edaa14fdc10f0778c7965a9d3fb3e3422791b833c",
+      "sizeBytes": 71118,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/mama_03.wav",
+      "sha256": "57e702cf34124e068783096039191bb505ff8dc84fc88d741db4a3aa8d9348bb",
+      "sizeBytes": 86478,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/mama_04.wav",
+      "sha256": "518a63399dff7ecdcb8d09debbdc5d5a5f617e913e672a0ee6658b094cc5ad88",
+      "sizeBytes": 96078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/mama_05.wav",
+      "sha256": "af20c05e1ac29d3485a3a7ec025f17249ae462d223a2abc8a13e93e066441738",
+      "sizeBytes": 76878,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/mama_06.wav",
+      "sha256": "5b665ae9072588154bf5dfc47f9f5fa37e5630b984b150176178c42e8886f84a",
+      "sizeBytes": 326478,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/mama_07.wav",
+      "sha256": "f6034250280d679bc7895151c871a3e632330df339930532ffcaf8cd915e369a",
+      "sizeBytes": 57678,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/mama_08.wav",
+      "sha256": "edfc9662eaefd918086a7a71240a34971923233eb8a5e01337496e44901a5549",
+      "sizeBytes": 220878,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/mama_09.wav",
+      "sha256": "5e0c0213378c0e6154a33c4316426ca6b950197bbf07b54d5a1b3ed20da2a52c",
+      "sizeBytes": 192078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/startup/alex_01.wav",
+      "sha256": "253a2b8ed873f77f0026e38d6f7a894aa312aa66616f2210f38f155811bee5d4",
+      "sizeBytes": 229352,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/startup/alex_02.wav",
+      "sha256": "ce1f3fa6e3ba5d53d51ffbf7ef24439c1ae2b606f16a2eefb212ffcd3e68f3fb",
+      "sizeBytes": 765920,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/startup/alex_03.wav",
+      "sha256": "802eb1b948c69fbcab9147f3406bd7e3d09191f242b08b52282c502183db5e15",
+      "sizeBytes": 320422,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/startup/hook.wav",
+      "sha256": "6d7fa5fa7a72e4a4bb554e3be934db95892dfbcd13f43b164a5ad2baa1cf5a0e",
+      "sizeBytes": 476740,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/startup/marc_01.wav",
+      "sha256": "9f203ec1a86dd2955009264a0980abc0b21de0e822835e7c4869f5168b430298",
+      "sizeBytes": 321794,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/startup/marc_02.wav",
+      "sha256": "da7416f0c77e60fddbf641dfa374f15741931339f9d011b4790f03cc29a390b7",
+      "sizeBytes": 871802,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/startup/marc_03.wav",
+      "sha256": "65ebf06c9c9a2b7972c341b9a40fcfa50a4f030d675a1552f0011f7582b7f527",
+      "sizeBytes": 155530,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/audio/startup/marc_04.wav",
+      "sha256": "4e5efb94f654c4174beed3e0fe0132d17edb5719a0c646368020fb0b1ac869fa",
+      "sizeBytes": 355762,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/avatars/founder-avatar.png",
+      "sha256": "cfcf6606b75c4b68cd89585e2ef11bfab99b43c7d3dabcfccbddd4f688867be1",
+      "sizeBytes": 3298,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/avatars/founder-selfie.jpg",
+      "sha256": "30c64f32ba85fa4d3a40598ad9228157405000481dc6d00ae705439859dc1586",
+      "sizeBytes": 59518,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/avatars/sydney-avatar.png",
+      "sha256": "3d3457d46db12301f7efad73f43d50c11a19383b530af96e56a692d6dca07eb5",
+      "sizeBytes": 33927,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/avatars/sydney-selfie.jpg",
+      "sha256": "7bc7f4464cd918d7102c164f487ca90de331adbd5f658731f26b3093bf0075a9",
+      "sizeBytes": 94573,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/female/laugh.png",
+      "sha256": "f905926ad012c3b18eeaf18989a2fa58b7460560e030e77f437955a062f9f791",
+      "sizeBytes": 506015,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/female/neutral.png",
+      "sha256": "dd242fca10166c730deebfdf96360be97511b1a7331b4487295a409ea9127c8b",
+      "sizeBytes": 439728,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/female/shock.png",
+      "sha256": "613c15422f6bebaaa0383655778061cdefa99268e1b5ce74b27edcbc33b5929b",
+      "sizeBytes": 598737,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/female/talk.png",
+      "sha256": "11c52a98d026b162463074f5cdbd4712f1c4a9969f058fb46fb92422b24c5499",
+      "sizeBytes": 485061,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/male/laugh.png",
+      "sha256": "24df0c5ea08ad7c2436ed7627a44367f5b8021bec3260b52d859743375778071",
+      "sizeBytes": 441403,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/male/neutral.png",
+      "sha256": "06dac4de2e55b199b61b62ab07d52031a650ea70a9b5c7a81d775ed93f589f23",
+      "sizeBytes": 343199,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/male/shock.png",
+      "sha256": "3f855397adbd6164f27cfdc8b03352e6453ba3bd00c0a88fdde422990fc22da8",
+      "sizeBytes": 512510,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/characters/male/talk.png",
+      "sha256": "0329ecdeed6080dc66ecbf95e0a5388f8a8193620a03c24e8ef30d29e1d2ffb2",
+      "sizeBytes": 449173,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/cool.mp4",
+      "sha256": "3bbd979a0be11fa7c08a80d75106055a8a64662275d73bab118d708a9534d7df",
+      "sizeBytes": 107743,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/gameplay/minecraft-parkour.mp4",
+      "sha256": "a2425bb2c3ced68b7d2b20818629978cfa9f91531d60b5bbbc2b4bfd4268f931",
+      "sizeBytes": 27016280,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/sfx/pop.wav",
+      "sha256": "4ce5927b311af2c96307cdc2d6c3aacf49c78847a7624b79e933e24371bbbfec",
+      "sizeBytes": 7724,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/sfx/sent.wav",
+      "sha256": "fa4caf6298e5d428ec94d0eaaa412d53b7856f7eeb42c76842f336170b9e844d",
+      "sizeBytes": 11564,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/tones/tone_220_1s.wav",
+      "sha256": "a32b783ec799835e9b3c654b1341ef70b77da844e6d385fe08415a7b7ba222ab",
+      "sizeBytes": 96078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/tones/tone_220_2s.wav",
+      "sha256": "5e9459590f62778387dc410db7101dc757453f0e11097c84b78dfb5214567487",
+      "sizeBytes": 192078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/tones/tone_330_1s.wav",
+      "sha256": "bae145d42ae8a57dd1425d93a6e94eb681d7ac45c2832728cb67219344d287fa",
+      "sizeBytes": 96078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/tones/tone_330_2s.wav",
+      "sha256": "8ec3b7133b5b40d7a2b8755068fa172ce469044ab86d69c36fe765c21f48c112",
+      "sizeBytes": 192078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/tones/tone_440_1s.wav",
+      "sha256": "bf6ee9b267cc34c946f1c251dd93c8aedb87e1bbb061cb2d334727cf19121c42",
+      "sizeBytes": 96078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/tones/tone_440_2s.wav",
+      "sha256": "7637819c1f3a0ffdd1795f462d633749f7e944521d6b0b20bfc78ae64e441ec4",
+      "sizeBytes": 192078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/tones/tone_550_1s.wav",
+      "sha256": "60fc04d099478e360ca759f1b50d2a17b5edfa3c76369ec2efc5d2d9b5a8afac",
+      "sizeBytes": 96078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/tones/tone_550_2s.wav",
+      "sha256": "a6d59e69efe6f8efadd89eaca43f2ab835b5b415960e244e3a3be48ce6e5a32a",
+      "sizeBytes": 192078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/tones/tone_hook_3.2s.wav",
+      "sha256": "bc317a2ddf422dde878e5947bb31943d77dd44b932df2369baccd05dbd4a18b6",
+      "sizeBytes": 307278,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/warm.mp4",
+      "sha256": "82f81dd8090cb1e6d9521c9b06cba110fbc6dafd4bca2b8a8d0fcf9cee493654",
+      "sizeBytes": 4596692,
+      "mode": "0644"
+    },
+    {
+      "file": "blueprint.json",
+      "sha256": "33ce7a98f7a77df203709129400879f0f6951a52744252efe9c0d2e043100969",
+      "sizeBytes": 9021,
+      "mode": "0644"
+    },
+    {
+      "file": "format.json",
+      "sha256": "575da6a9469abc04e44c9c72839219fc5da31c6f0198f4595898f5060a522aaa",
+      "sizeBytes": 506,
+      "mode": "0644"
+    },
+    {
+      "file": "goldens.json",
+      "sha256": "81fe3c7623f5a13449dd1270482be3390fdb94f9b7db9f61121294bb5393115e",
+      "sizeBytes": 1748,
+      "mode": "0644"
+    },
+    {
+      "file": "inputs/family-friends-roast.json",
+      "sha256": "336a5cedd489a207e49a5e4511a578214e4b176c92cfcea00fafb4bb14c4d632",
+      "sizeBytes": 7776,
+      "mode": "0644"
+    },
+    {
+      "file": "inputs/smoke.json",
+      "sha256": "1e75dd9844952928c0c1f020ff741267ad300172f3bd9e1f603f729b1dd9a089",
+      "sizeBytes": 1613,
+      "mode": "0644"
+    },
+    {
+      "file": "inputs/specular-commentary-proof.json",
+      "sha256": "0c2a9938e203e9e38cc51cce3a2d84f32330406ac4ad231a1b8e4b81fc8e82ea",
+      "sizeBytes": 2664,
+      "mode": "0644"
+    },
+    {
+      "file": "inputs/startup-pitch-roast.json",
+      "sha256": "efa6d8f375243e2988d6535073c74b659ff5e87ebf3c81ab9533e2b84cb20dad",
+      "sizeBytes": 3697,
+      "mode": "0644"
+    },
+    {
+      "file": "package-lock.json",
+      "sha256": "19b02934b87c70490d6953cb19ba577119092f15ed8d51ea3fd313b1e89698af",
+      "sizeBytes": 19187,
+      "mode": "0644"
+    },
+    {
+      "file": "package.json",
+      "sha256": "3a27d551b3aaf4804aec935941d07f20a7952a1a13633f47b4b566df577cc0fa",
+      "sizeBytes": 327,
+      "mode": "0644"
+    },
+    {
+      "file": "pipeline.json",
+      "sha256": "48163e987e0a52fe1b01e81a9c9f9eb3d6431477018cbb39ff1ef3d6ad806d6a",
+      "sizeBytes": 1044,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/family-friends-roast-0.1.0-inspection.json",
+      "sha256": "6b93ea7bc5e7695b5c0c6fd73f8ee5f26dcd120bfe898695602f6aa462184223",
+      "sizeBytes": 813,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/family-friends-roast-0.1.0.mp4",
+      "sha256": "c91388878985439d75cda2ae3fa2d672722b38339ce527f3517b7321d9f1a4ba",
+      "sizeBytes": 23745550,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/family-friends-roast-0.1.0.mp4.receipt.json",
+      "sha256": "5b0be6a88ecb568a442305f4fc224ea7e2e44bda67378a9d422ce24649357984",
+      "sizeBytes": 579,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/specular-commentary-proof-0.2.0-inspection.json",
+      "sha256": "d37fd2aaee7f48ddb9ae31ecaa62513e8d8eed955dc7a21d940225be736c3a8f",
+      "sizeBytes": 822,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/specular-commentary-proof.mp4",
+      "sha256": "a70d7d273b3d92d8ff8a7fe3f16d4db6d7b5fe0be85313b0334c5385e559fcc6",
+      "sizeBytes": 6422562,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/specular-commentary-proof.mp4.receipt.json",
+      "sha256": "3a731cd9d7d8d30ce2746112c53d1dabf7c5acb7bf3786381ed640daa68d1961",
+      "sizeBytes": 641,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/startup-pitch-roast-0.1.0-inspection.json",
+      "sha256": "3507572d034ec637be2bf6735dcc367c1e40a027baac0386e89329267a4bbaa4",
+      "sizeBytes": 812,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/startup-pitch-roast-0.1.0.mp4",
+      "sha256": "ab0f460023a496ef81b4a715422bfd4606f0f7b2000056c341d78f7eb8d62fe4",
+      "sizeBytes": 24200239,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/startup-pitch-roast-0.1.0.mp4.receipt.json",
+      "sha256": "e257e9865f25b4cca17bb51db622ed6ed64659d41ceafe5081baacb145a17ce2",
+      "sizeBytes": 577,
+      "mode": "0644"
+    },
+    {
+      "file": "quality.json",
+      "sha256": "874d94e6f1efd7ada3bd6ae63628f6013271d6df0a9abca8a73b8810789eaede",
+      "sizeBytes": 1155,
+      "mode": "0644"
+    },
+    {
+      "file": "requirements.json",
+      "sha256": "fd267647a550156d66eb57ff23f17fe57df4864c9908ce7e8ec52fa26bbb4cf5",
+      "sizeBytes": 1014,
+      "mode": "0644"
+    },
+    {
+      "file": "runtime/render.mjs",
+      "sha256": "8f6b3aff46a978d1bda7144f563679c0805c716aff460c4cd3b537c964e993a4",
+      "sizeBytes": 28314,
+      "mode": "0644"
+    },
+    {
+      "file": "tests/contract.test.mjs",
+      "sha256": "df13da41cc27006bfc88214ccafbf834d5029250267f7a92bf93e34ff3c6989a",
+      "sizeBytes": 6036,
+      "mode": "0644"
+    },
+    {
+      "file": "tests/smoke.mjs",
+      "sha256": "91121b486e6bc460cdfe7d2b68d0242320046b91f470e91945a283158faa397d",
+      "sizeBytes": 791,
+      "mode": "0644"
+    },
+    {
+      "file": "tests/verify-proofs.mjs",
+      "sha256": "a475f0544aba828946c27d2ce9ce14dbcb2e5330f46cfea4e7f4d95ffd42d000",
+      "sizeBytes": 3238,
+      "mode": "0644"
+    }
+  ]
+}

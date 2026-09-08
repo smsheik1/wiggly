@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "topic": "I asked investors and engineers to roast our AI startup pitch deck",
+  "gameplay": {
+    "file": "assets/gameplay/minecraft-parkour.mp4",
+    "authorized": true,
+    "provenance": "Royalty-free vertical parkour gameplay loop"
+  },
+  "hook": {
+    "authorName": "Sam Altman Fan",
+    "handle": "tech_founder_ai",
+    "verified": true,
+    "text": "i asked top investors to roast my AI startup pitch deck. here's what they said",
+    "avatar": "assets/avatars/founder-avatar.png",
+    "image": "assets/avatars/founder-selfie.jpg",
+    "timestamp": "9:41 AM · 12 Sep 26",
+    "views": "2.4M",
+    "retweets": "18.2K",
+    "quotes": "3,110",
+    "likes": "64.8K",
+    "durationSeconds": 4.97,
+    "audio": {
+      "file": "assets/audio/startup/hook.wav",
+      "authorized": true,
+      "provenance": "Original locally synthesized speech voiceover"
+    }
+  },
+  "contacts": [
+    {
+      "id": "marc",
+      "name": "Marc (VC)",
+      "initial": "M"
+    },
+    {
+      "id": "alex",
+      "name": "Alex (Tech Lead)",
+      "initial": "A"
+    }
+  ],
+  "scenes": [
+    {
+      "contactId": "marc",
+      "turns": [
+        {
+          "speaker": "victim",
+          "text": "Hey Marc, what do you think of our AI agent cloud pitch?",
+          "durationSeconds": 3.35,
+          "audio": {
+            "file": "assets/audio/startup/marc_01.wav",
+            "authorized": true,
+            "provenance": "Founder asking VC for critique"
+          }
+        },
+        {
+          "speaker": "marc",
+          "text": "Honestly? It looks like you took open source repos, slapped a forty million dollar valuation on it, and called it proprietary.",
+          "durationSeconds": 9.08,
+          "audio": {
+            "file": "assets/audio/startup/marc_02.wav",
+            "authorized": true,
+            "provenance": "VC delivering evaluation roast"
+          }
+        },
+        {
+          "speaker": "victim",
+          "text": "Ouch. What about our moat?",
+          "durationSeconds": 1.62,
+          "audio": {
+            "file": "assets/audio/startup/marc_03.wav",
+            "authorized": true,
+            "provenance": "Founder asking about competitive advantage"
+          }
+        },
+        {
+          "speaker": "marc",
+          "text": "Your moat is a kiddie pool filled with free API credits.",
+          "durationSeconds": 3.71,
+          "audio": {
+            "file": "assets/audio/startup/marc_04.wav",
+            "authorized": true,
+            "provenance": "VC deliver moat punchline"
+          }
+        }
+      ]
+    },
+    {
+      "contactId": "alex",
+      "turns": [
+        {
+          "speaker": "victim",
+          "text": "Alex, roast our backend architecture.",
+          "durationSeconds": 2.39,
+          "audio": {
+            "file": "assets/audio/startup/alex_01.wav",
+            "authorized": true,
+            "provenance": "Founder asking lead engineer"
+          }
+        },
+        {
+          "speaker": "alex",
+          "text": "Our codebase has more race conditions than Monaco, and half the agents are just talking to each other in an infinite loop.",
+          "durationSeconds": 7.98,
+          "audio": {
+            "file": "assets/audio/startup/alex_02.wav",
+            "authorized": true,
+            "provenance": "Engineer roast punchline"
+          }
+        },
+        {
+          "speaker": "victim",
+          "text": "Okay, I asked for feedback, not a homicide.",
+          "durationSeconds": 3.34,
+          "audio": {
+            "file": "assets/audio/startup/alex_03.wav",
+            "authorized": true,
+            "provenance": "Founder reaction"
+          }
+        }
+      ]
+    }
+  ]
+}

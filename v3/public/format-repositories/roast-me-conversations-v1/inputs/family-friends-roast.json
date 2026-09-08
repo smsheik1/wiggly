@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+  "topic": "I asked my friends and family to roast me",
+  "gameplay": {
+    "file": "assets/gameplay/minecraft-parkour.mp4",
+    "authorized": true,
+    "provenance": "Royalty-free vertical parkour gameplay loop"
+  },
+  "hook": {
+    "authorName": "Sydney",
+    "handle": "sydpaek02",
+    "verified": true,
+    "text": "i asked my friends and family to roast me. here's what they said",
+    "avatar": "assets/avatars/sydney-avatar.png",
+    "image": "assets/avatars/sydney-selfie.jpg",
+    "timestamp": "12:02 PM · 08 Apr 24",
+    "views": "1.06M",
+    "retweets": "12.5K",
+    "quotes": "4,243",
+    "likes": "42.7K",
+    "durationSeconds": 3.16,
+    "audio": {
+      "file": "assets/audio/hook.wav",
+      "authorized": true,
+      "provenance": "Introductory spoken hook voiceover"
+    }
+  },
+  "contacts": [
+    {
+      "id": "mama",
+      "name": "Mama",
+      "initial": "M"
+    },
+    {
+      "id": "ben",
+      "name": "Ben",
+      "initial": "B"
+    },
+    {
+      "id": "dad",
+      "name": "Dad",
+      "initial": "D"
+    }
+  ],
+  "scenes": [
+    {
+      "contactId": "mama",
+      "turns": [
+        {
+          "speaker": "victim",
+          "text": "Hi mom, can you roast me for a twitter post",
+          "durationSeconds": 1.60,
+          "audio": {
+            "file": "assets/audio/mama_01.wav",
+            "authorized": true,
+            "provenance": "Victim text audio"
+          }
+        },
+        {
+          "speaker": "mama",
+          "text": "roast you? what",
+          "durationSeconds": 0.74,
+          "audio": {
+            "file": "assets/audio/mama_02.wav",
+            "authorized": true,
+            "provenance": "Mama reaction audio"
+          }
+        },
+        {
+          "speaker": "victim",
+          "text": "like insult me using good wordplay",
+          "durationSeconds": 0.90,
+          "audio": {
+            "file": "assets/audio/mama_03.wav",
+            "authorized": true,
+            "provenance": "Victim clarifying audio"
+          }
+        },
+        {
+          "speaker": "mama",
+          "text": "i don't know what you mean",
+          "durationSeconds": 1.00,
+          "audio": {
+            "file": "assets/audio/mama_04.wav",
+            "authorized": true,
+            "provenance": "Mama reply audio"
+          }
+        },
+        {
+          "speaker": "victim",
+          "text": "just insult me",
+          "durationSeconds": 0.80,
+          "audio": {
+            "file": "assets/audio/mama_05.wav",
+            "authorized": true,
+            "provenance": "Victim prompting audio"
+          }
+        },
+        {
+          "speaker": "mama",
+          "text": "okay, the only thing special about you is the fact that you drink 4 cups of coffee a day",
+          "durationSeconds": 3.40,
+          "audio": {
+            "file": "assets/audio/mama_06.wav",
+            "authorized": true,
+            "provenance": "Mama punchline 1 audio"
+          }
+        },
+        {
+          "speaker": "victim",
+          "text": "okay wow",
+          "durationSeconds": 0.60,
+          "audio": {
+            "file": "assets/audio/mama_07.wav",
+            "authorized": true,
+            "provenance": "Victim response audio"
+          }
+        },
+        {
+          "speaker": "mama",
+          "text": "and you spend like elon musk except you have none of the money",
+          "durationSeconds": 2.30,
+          "audio": {
+            "file": "assets/audio/mama_08.wav",
+            "authorized": true,
+            "provenance": "Mama punchline 2 audio"
+          }
+        },
+        {
+          "speaker": "victim",
+          "text": "damn also you are a failure okay relax",
+          "durationSeconds": 2.00,
+          "audio": {
+            "file": "assets/audio/mama_09.wav",
+            "authorized": true,
+            "provenance": "Victim closing reaction audio"
+          }
+        }
+      ]
+    },
+    {
+      "contactId": "ben",
+      "turns": [
+        {
+          "speaker": "victim",
+          "text": "ben, roast me",
+          "durationSeconds": 0.90,
+          "audio": {
+            "file": "assets/audio/ben_01.wav",
+            "authorized": true,
+            "provenance": "Victim prompting Ben"
+          }
+        },
+        {
+          "speaker": "ben",
+          "text": "you have the beauty of the ocean with the personality of unfiltered sewer water",
+          "durationSeconds": 3.40,
+          "audio": {
+            "file": "assets/audio/ben_02.wav",
+            "authorized": true,
+            "provenance": "Ben punchline 1 audio"
+          }
+        },
+        {
+          "speaker": "victim",
+          "text": "ok wow that was harsh",
+          "durationSeconds": 0.80,
+          "audio": {
+            "file": "assets/audio/ben_03.wav",
+            "authorized": true,
+            "provenance": "Victim reaction audio"
+          }
+        },
+        {
+          "speaker": "ben",
+          "text": "can i go again",
+          "durationSeconds": 0.80,
+          "audio": {
+            "file": "assets/audio/ben_04.wav",
+            "authorized": true,
+            "provenance": "Ben setup 2 audio"
+          }
+        },
+        {
+          "speaker": "victim",
+          "text": "okay one more",
+          "durationSeconds": 0.60,
+          "audio": {
+            "file": "assets/audio/ben_05.wav",
+            "authorized": true,
+            "provenance": "Victim permission audio"
+          }
+        },
+        {
+          "speaker": "ben",
+          "text": "mom and i tried to convince dad to go grocery shopping for years. thankfully you showed up and he finally ended up going. unfortunately he never came back",
+          "durationSeconds": 6.50,
+          "audio": {
+            "file": "assets/audio/ben_06.wav",
+            "authorized": true,
+            "provenance": "Ben savage punchline audio"
+          }
+        },
+        {
+          "speaker": "victim",
+          "text": "BRUH okay too far",
+          "durationSeconds": 2.00,
+          "audio": {
+            "file": "assets/audio/ben_07.wav",
+            "authorized": true,
+            "provenance": "Victim final reaction audio"
+          }
+        }
+      ]
+    },
+    {
+      "contactId": "dad",
+      "turns": [
+        {
+          "speaker": "victim",
+          "text": "hey dad, roast me for a post",
+          "durationSeconds": 1.30,
+          "audio": {
+            "file": "assets/audio/dad_01.wav",
+            "authorized": true,
+            "provenance": "Victim asking Dad"
+          }
+        },
+        {
+          "speaker": "dad",
+          "text": "roast you?",
+          "durationSeconds": 0.40,
+          "audio": {
+            "file": "assets/audio/dad_02.wav",
+            "authorized": true,
+            "provenance": "Dad reaction audio"
+          }
+        },
+        {
+          "speaker": "victim",
+          "text": "insult me",
+          "durationSeconds": 0.50,
+          "audio": {
+            "file": "assets/audio/dad_03.wav",
+            "authorized": true,
+            "provenance": "Victim prompting audio"
+          }
+        },
+        {
+          "speaker": "dad",
+          "text": "you could never be a fitness influencer. because you only burn calories when you decide to overheat food",
+          "durationSeconds": 4.50,
+          "audio": {
+            "file": "assets/audio/dad_04.wav",
+            "authorized": true,
+            "provenance": "Dad roast punchline audio"
+          }
+        },
+        {
+          "speaker": "victim",
+          "text": "that actually hurt my soul",
+          "durationSeconds": 0.97,
+          "audio": {
+            "file": "assets/audio/dad_05.wav",
+            "authorized": true,
+            "provenance": "Victim soul hurt audio"
+          }
+        }
+      ]
+    }
+  ]
+}

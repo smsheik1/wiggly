@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "kind": "format-render-receipt",
+  "inputSha256": "336a5cedd489a207e49a5e4511a578214e4b176c92cfcea00fafb4bb14c4d632",
+  "runtimeSha256": "075d465e6e10efb9a9570e1aa36daa0583efa4c245b1b32542125c1a145b3958",
+  "outputFile": "family-friends-roast-0.1.0.mp4",
+  "outputSha256": "c91388878985439d75cda2ae3fa2d672722b38339ce527f3517b7321d9f1a4ba",
+  "totalDurationSeconds": 39.17,
+  "width": 1080,
+  "height": 1920,
+  "fps": 25,
+  "videoCodec": "h264",
+  "audioCodec": "aac",
+  "turnsCount": 21,
+  "scenesCount": 3,
+  "renderedAt": "2026-09-08T06:45:48.660Z"
+}
