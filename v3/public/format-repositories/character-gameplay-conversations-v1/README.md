@@ -1,4 +1,4 @@
-# Character Gameplay Conversations
+# Batman Arkham Conversations
 
 Public baseline **0.2.0**, for **9:16 Shorts at 1080 × 1920**. Choose your characters and topic, and generate an end-to-end voiced conversation over gameplay with one command, or supply your own custom audio clips and gameplay video.
 
