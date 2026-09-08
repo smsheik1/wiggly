@@ -1,5 +1,5 @@
 {
-  "progress": "Research → Pattern → Caption → Render → Deliver",
+  "progress": "Research → Pattern → Caption → Render → Deliver → Distribute",
   "stages": [
     {
       "id": "research",
@@ -29,6 +29,12 @@
     {
       "id": "deliver",
       "output": "Inspected MP4 and provenance",
+      "paid": false,
+      "approvalRequired": true
+    },
+    {
+      "id": "distribute",
+      "output": "Simultaneous multi-platform publishing receipt (YouTube Shorts, Instagram Reels, TikTok, X) with zero secret leakage",
       "paid": false,
       "approvalRequired": true
     }

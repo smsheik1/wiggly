@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "fixtures/bear-secret.json",
+  "media": "goldens/bear-secret.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "When you accidentally commit to main 💀🐻 #Shorts",
+      "description": "This bear sniffs someone who pushed directly to production on a Friday.\n\n#Shorts #Memes #CodingHumor #DevLife #TechMemes #Relatable",
+      "categoryId": "23",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "This bear sniffs someone who pushed straight to main at 4:59 PM on a Friday. 🐻💀\n.\n.\n#memes #relatable #devhumor #workhumor #reels #funny"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "This bear sniffs someone who bypassed CI/CD checks to \"deploy real quick\" 😭💀 #CodingMemes #DevLife"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "The bear knows what you did on production 💀🐻 #memes #workhumor #tech #relatable #fyp",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}

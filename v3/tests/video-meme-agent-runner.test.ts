@@ -98,7 +98,15 @@ assert.match(skill, /Which caption should I use\? Say 1, 2, 3, or pick for me\./
 assert.match(skill, /do it for me.*Turbo/i);
 assert.match(skill, /No API key|required.*no API key/i);
 assert.deepEqual(requirements.environment, {});
-assert.deepEqual(requirements.providers, []);
+assert.deepEqual(requirements.providers, [
+  {
+    name: "Social Publisher (Buffer MCP or API)",
+    purpose: "Simultaneous multi-platform publishing to YouTube Shorts, Instagram Reels, TikTok, and X.",
+    optional: true,
+    environmentVariables: ["BUFFER_API_KEY"],
+    pricingSource: "https://buffer.com/pricing",
+  },
+]);
 assert.equal(kitPackage.dependencies.tailwindcss, "4.3.3");
 assert.doesNotMatch(runner, /\bfetch\s*\(|callNvidiaNim|generateImage|generateVideo|generateVoice/i);
 assert.match(runner, /No provider was called/);

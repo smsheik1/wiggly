@@ -163,3 +163,21 @@ Total: $0 Wiggly provider cost
 - The clip length is correct.
 - Source audio is kept when it exists.
 - The user watches the full result before approval.
+
+## Multi-Platform Social Distribution (Optional)
+
+When a video meme is finalized and approved, the agent can distribute it across YouTube Shorts, Instagram Reels, TikTok, and X via the packaged `runtime/publish.mjs` CLI or connected Buffer MCP tools:
+
+1. **Author platform-tailored copy in `inputs/distribution.json`:**
+   - **YouTube Shorts:** Punchy title (≤100 chars), categoryId (`23` for Comedy), duration ≤60s.
+   - **Twitter/X:** Strong relatable meme hook (≤280 chars total).
+   - **Instagram Reels:** Engaging caption with tags (4:5 / vertical).
+   - **TikTok:** Engaging caption with trending tags (≤2200 chars).
+2. **Dry-run validation:**
+   ```sh
+   node runtime/publish.mjs --dry-run inputs/distribution.json goldens/bear-secret.mp4
+   ```
+3. **Live dispatch requires explicit human sign-off:**
+   - Confirm target channels and copy with the user (`approvalRequired: true`).
+   - Execute with connected Buffer MCP tools or `node runtime/publish.mjs inputs/distribution.json outputs/final.mp4`.
+   - Generates a verified distribution receipt (`<video>.distribution.json`) with zero secret leakage.
