@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "localTools": [
+    "Node.js >=22",
+    "npm (for pinned Sharp 0.34.5 dependencies)",
+    "FFmpeg with libx264, AAC, overlay, scale, crop, pad, concat, afade, amix and alimiter filters",
+    "FFprobe"
+  ],
+  "providers": [],
+  "paidApprovalRequired": true,
+  "automaticInstallation": false,
+  "notes": [
+    "Run npm ci --ignore-scripts --no-audit --no-fund once to install pinned Sharp 0.34.5 dependencies; setup requires network access but rendering does not.",
+    "Arial/Helvetica/sans-serif fonts are resolved on the host; inspect typography on each new platform. No external font download is required.",
+    "All real gameplay, avatars, and dialogue audio must be explicitly authorized; no voice cloning is implemented.",
+    "Bundled diagnostic video patterns and sine tones are original mechanical fixtures only.",
+    "Only the available macOS environment was tested."
+  ]
+}

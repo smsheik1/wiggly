@@ -1,0 +1,38 @@
+{
+  "fixed": [
+    {
+      "path": "assets/sfx/pop.wav",
+      "label": "iOS message pop sound effect",
+      "purpose": "Clean synthesized message bubble arrival SFX triggered at each turn reveal."
+    },
+    {
+      "path": "assets/sfx/sent.wav",
+      "label": "iOS message sent sound effect",
+      "purpose": "Clean synthesized outgoing message SFX triggered on victim message turns."
+    },
+    {
+      "path": "assets/gameplay/minecraft-parkour.mp4",
+      "label": "Minecraft parkour gameplay loop",
+      "purpose": "Authorized vertical parkour gameplay loop providing continuous visual retention behind floating cards."
+    },
+    {
+      "path": "inputs/smoke.json",
+      "label": "Offline smoke input",
+      "purpose": "Deterministic test input utilizing mechanical patterns and tone fixtures for fast offline verification."
+    },
+    {
+      "path": "inputs/family-friends-roast.json",
+      "label": "Canonical roast proof input",
+      "purpose": "Full 39-second canonical episode with tweet hook and 3 contacts (Mom, Ben, Dad)."
+    },
+    {
+      "path": "inputs/startup-pitch-roast.json",
+      "label": "Startup pitch deck roast proof input",
+      "purpose": "Full 36-second domain-transfer episode with tweet hook and 2 contacts (Marc, Alex)."
+    }
+  ],
+  "sourceReference": {
+    "verification": "The release package contains original sound effects, parkour gameplay footage, avatar fixtures, audio turns, and two rendered proofs with inspections.",
+    "referenceNote": "Modeled from the viral Roast Me YouTube Short (https://www.youtube.com/shorts/nCVTDHdV7gA). Implements faithful vector recreations of Twitter/X social post cards and dynamic iOS iMessage cards over continuous gameplay."
+  }
+}

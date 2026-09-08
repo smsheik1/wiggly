@@ -2150,6 +2150,23 @@ export const discoveryCatalog: DiscoveryEntry[] = [
     format: { slug: "character-gameplay-conversations", name: "Character Gameplay Conversations", version: "0.2.0", owner: "Wiggly Studio" },
   },
   {
+    id: "roast-me-family-friends",
+    status: "published",
+    order: 99,
+    brand: "Wiggly Format Repo · 9:16 Shorts",
+    title: "Family & Friends Roast Me",
+    curatorNote: "Faithfully modeled from viral social roasts (r/RoastMe). Floating Twitter/X prompt card over continuous Minecraft parkour transitions into dynamically expanding iMessage roast exchanges from Mom, Brother Ben, and Dad with audio and pop sound effects.",
+    goal: "entertain",
+    media: {
+      kind: "video",
+      src: "/format-repositories/roast-me-conversations-v1/examples/roast-me-canonical.mp4",
+      poster: "/format-repositories/roast-me-conversations-v1/examples/roast-me-poster.jpg",
+      durationLabel: "39 sec",
+      aspectRatio: "9:16",
+    },
+    format: { slug: "roast-me-conversations", name: "Roast Me Conversations", version: "0.1.0", owner: "Wiggly Studio" },
+  },
+  {
     id: "repo-builder-overview",
     status: "published",
     order: 100,
@@ -2865,6 +2882,12 @@ export const discoveryShelfDefinitions = [
     title: "Character Gameplay Conversations",
     description: "Same-universe banter and dream crossovers over real gameplay. Bring your clips; the Repo assembles the conversation.",
     formats: ["character-gameplay-conversations"],
+  },
+  {
+    id: "roast-me-conversations",
+    title: "Roast Me Conversations",
+    description: "Viral social roasts opening with a Twitter prompt over vertical gameplay and expanding into brutal iMessage exchanges.",
+    formats: ["roast-me-conversations"],
   },
   {
     id: "video-memes",

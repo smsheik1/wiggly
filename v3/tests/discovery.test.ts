@@ -400,6 +400,7 @@ const approvedRepoOrder = [
   ["brand-jingles", "Brand Jingle"],
   ["brainrot", "Minecraft Brainrot"],
   ["character-gameplay-conversations", "Character Gameplay Conversations"],
+  ["roast-me-conversations", "Roast Me Conversations"],
   ["video-memes", "Video Meme"],
   ["skai-generated", "Image Filters"],
   ["audio-visualizer", "Audio Visualizer"],

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.0",
+  "request": "can we turn this video into our next wiggly repo? I like this format alot -> https://www.youtube.com/shorts/nCVTDHdV7gA",
+  "publicationAuthorized": true,
+  "authorizationContext": "User requested turning the YouTube Short format into an official Wiggly Repo. Official runtime and two distinct proofs rendered and inspected.",
+  "detailedCreativeReview": "not-provided",
+  "userAcceptance": {
+    "quote": "can we turn this video into our next wiggly repo? I like this format alot -> https://www.youtube.com/shorts/nCVTDHdV7gA",
+    "context": "User provided reference short and asked for format implementation. Two distinct proofs rendered and verified using same official runtime.",
+    "proofsVerified": [
+      "proofs/family-friends-roast-0.1.0.mp4",
+      "proofs/startup-pitch-roast-0.1.0.mp4"
+    ]
+  },
+  "layoutRequest": "1080x1920 (9:16) vertical Shorts layout with floating Twitter/X and iMessage cards over continuous Minecraft parkour gameplay.",
+  "excludedFromDownload": [
+    "node_modules",
+    "private run evidence and intermediate working files",
+    "credentials"
+  ],
+  "paidGenerationsForPublication": 0
+}
