@@ -1,16 +1,28 @@
 # Character Gameplay Conversations
 
-Public baseline **0.1.4**, for **9:16 Shorts at 1080 × 1920**. Choose your characters and topic, then supply gameplay and one voice clip per line. Your coding agent prepares the timing and assembles the conversation, with optional background music underneath. No media-provider account is required for this supplied-media workflow.
+Public baseline **0.2.0**, for **9:16 Shorts at 1080 × 1920**. Choose your characters and topic, and generate an end-to-end voiced conversation over gameplay with one command, or supply your own custom audio clips and gameplay video.
 
-Run `npm ci --ignore-scripts --no-audit --no-fund`, `npm test`, and `npm run smoke` from this extracted folder. Smoke creates a fresh evidence folder each time and never calls a provider. Then follow `SKILL.md` to create a real episode.
+Run `npm ci --ignore-scripts --no-audit --no-fund`, `npm test`, and `npm run smoke` from this folder to verify offline baseline contracts.
 
-The user requested background music after the 9:16 revision, then accepted the music preview: “cool looks good to me.” Its gameplay, six voice clips, captions and 16.76-second timing are unchanged. Version 0.1.4 adds an optional music input to the same compositor. This is qualitative user acceptance, not an agent claim of direct hearing or a numerical voice-fidelity score. See `PUBLICATION.json`. The original blueprint is historical: its no-install, bitmap, 3:4 and dialogue-only descriptions are not the current output contract.
+## Autonomous Generation & 4 Sub-Formats
 
-A small standalone compositor for fictional-character conversations over supplied gameplay, with a persistent title/question header and timed captions. One Node.js runtime handles same-universe casts and crossovers.
+This format kit supports 4 distinct viral sub-formats detailed in `SKILL.md`:
+1. **Physiology & Human Reality Q&A** (e.g. *Robin Asked Bruce How He Survives on No Sleep* [5.2M peak views], *Where He Keeps Batarangs*, *How He Recovers*, *How He Pees*)
+2. **Multi-Universe Crossovers** with dynamic gameplay cutting and digital glitch whoosh transitions (e.g. *Batman vs. Spider-Man* [767K views], *Batman vs. Goku*, *Destroy Gojo*)
+3. **Top 5 Countdown Rankings** with left-side number ladder and card reveals (e.g. *Top 5 Villains Batman Respects* [648K views], *5 Villains That Actually Scare Him*)
+4. **1v1 Debates / Moral Clashes** (e.g. *Batman vs. The Joker* [451K views], *Batman vs. Jason Todd*)
 
-The user clarified the creative hook: fan-favorite fictional characters having cloned-voice conversations over Batman Arkham Knight or Spider-Man 2 gameplay. The initial independent analysis identified only header/gameplay/captions/dialogue and missed that hook. This package consumes supplied authorized gameplay and per-turn audio; it does not generate or verify recognizable character voices.
+To automatically resolve community voice models, script the fan debate, cut gameplay, and render the complete Short:
 
-The included inputs use original fictional test characters, generated diagnostic video and audible tone WAVs. These are mechanical tests, not finished examples of the intended creative format. No reference footage, extracted frames/audio, transcript, character performance or voice model is distributed.
+```sh
+node runtime/generate.mjs \
+  --character1="Batman" \
+  --character2="The Joker" \
+  --topic="Why does Batman keep Joker alive?" \
+  --output="outputs/batman-vs-joker.mp4"
+```
+
+Use `--dry-run` to validate the plan, voice model resolution, and timings without synthesis. Voice generation utilizes Fish Audio (`s2.1-pro-free`). Single-command wrapper: `npm run generate -- --character1="Batman" --character2="Jason Todd"`.
 
 ## Setup and quick proof
 

@@ -1,0 +1,458 @@
+{
+  "schemaVersion": 1,
+  "topic": "Why Batman DESTROYS Spider-Man without prep time",
+  "header": {
+    "title": "WHY BATMAN DESTROYS",
+    "question": "SPIDER-MAN - NO PREP TIME"
+  },
+  "castMode": "crossover",
+  "cast": [
+    {
+      "id": "robin",
+      "name": "ROBIN",
+      "universe": "DC",
+      "color": "#38bdf8"
+    },
+    {
+      "id": "spiderman",
+      "name": "SPIDER-MAN",
+      "universe": "MARVEL",
+      "color": "#ef4444"
+    },
+    {
+      "id": "batman",
+      "name": "BATMAN",
+      "universe": "DC",
+      "color": "#ffffff"
+    }
+  ],
+  "gameplays": {
+    "batman": {
+      "file": "assets/gameplay/batman-top-5-pro-gliding.mp4",
+      "authorized": true,
+      "provenance": "pro gliding gotham night off wayne tower"
+    },
+    "spiderman": {
+      "file": "assets/gameplay/spiderman-2-swinging-pro.mp4",
+      "authorized": true,
+      "provenance": "pro sunny daytime web swinging manhattan ps5"
+    }
+  },
+  "music": {
+    "file": "assets/audio/yeat-if-we-being-real.mp3",
+    "authorized": true,
+    "provenance": "Yeat - If We Being Real (Instrumental starting at 0:28)",
+    "volume": 0.12,
+    "attribution": "Instrumental bed: Yeat - If We Being Real (used for pacing under dialogue)"
+  },
+  "turns": [
+    {
+      "speaker": "robin",
+      "gameplay": "batman",
+      "text": "Bruce, serious question. Spider-Man still is not convinced you could beat him without prep time.",
+      "durationSeconds": 4.72,
+      "audio": {
+        "file": "assets/audio/crossover-turn-01.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (ROBIN)"
+      },
+      "captions": [
+        {
+          "text": "Bruce, serious question.",
+          "start": 0,
+          "end": 1.2
+        },
+        {
+          "text": "Spider-Man still is",
+          "start": 1.2,
+          "end": 2.16
+        },
+        {
+          "text": "not convinced you could",
+          "start": 2.16,
+          "end": 3.32
+        },
+        {
+          "text": "beat him without prep time.",
+          "start": 3.32,
+          "end": 4.72
+        }
+      ]
+    },
+    {
+      "speaker": "spiderman",
+      "gameplay": "spiderman",
+      "text": "I am just being realistic. The second you reach for your belt, I web your hands to the wall. Fight over.",
+      "durationSeconds": 5.04,
+      "audio": {
+        "file": "assets/audio/crossover-turn-02.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (SPIDERMAN)"
+      },
+      "captions": [
+        {
+          "text": "I am just being realistic.",
+          "start": 0,
+          "end": 1.32
+        },
+        {
+          "text": "The second you reach",
+          "start": 1.32,
+          "end": 2.32
+        },
+        {
+          "text": "for your belt,",
+          "start": 2.32,
+          "end": 3.04
+        },
+        {
+          "text": "I web your hands to the wall.",
+          "start": 3.04,
+          "end": 4.52
+        },
+        {
+          "text": "Fight over.",
+          "start": 4.52,
+          "end": 5.04
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "gameplay": "batman",
+      "text": "You are right. If I tried to deploy a weapon, your precognition would warn you. Which is why I would let you web me.",
+      "durationSeconds": 6.32,
+      "audio": {
+        "file": "assets/audio/crossover-turn-03.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN)"
+      },
+      "captions": [
+        {
+          "text": "You are right.",
+          "start": 0,
+          "end": 0.8
+        },
+        {
+          "text": "If I tried to deploy",
+          "start": 0.8,
+          "end": 1.96
+        },
+        {
+          "text": "a weapon,",
+          "start": 1.96,
+          "end": 2.48
+        },
+        {
+          "text": "your precognition would",
+          "start": 2.48,
+          "end": 3.8
+        },
+        {
+          "text": "warn you.",
+          "start": 3.8,
+          "end": 4.32
+        },
+        {
+          "text": "Which is why I would",
+          "start": 4.32,
+          "end": 5.48
+        },
+        {
+          "text": "let you web me.",
+          "start": 5.48,
+          "end": 6.32
+        }
+      ]
+    },
+    {
+      "speaker": "spiderman",
+      "gameplay": "spiderman",
+      "text": "Okay, so you just lose. My webs can hold a city bus. You are not breaking out of that.",
+      "durationSeconds": 4.88,
+      "audio": {
+        "file": "assets/audio/crossover-turn-04.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (SPIDERMAN)"
+      },
+      "captions": [
+        {
+          "text": "Okay, so you just lose.",
+          "start": 0,
+          "end": 1.32
+        },
+        {
+          "text": "My webs can hold a city bus.",
+          "start": 1.32,
+          "end": 2.96
+        },
+        {
+          "text": "You are not breaking",
+          "start": 2.96,
+          "end": 3.92
+        },
+        {
+          "text": "out of that.",
+          "start": 3.92,
+          "end": 4.88
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "gameplay": "batman",
+      "text": "I do not need to. Your webbing is an extruded synthetic polymer. For the first 0.4 seconds, it retains its liquid solvent base.",
+      "durationSeconds": 7.88,
+      "audio": {
+        "file": "assets/audio/crossover-turn-05.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN)"
+      },
+      "captions": [
+        {
+          "text": "I do not need to.",
+          "start": 0,
+          "end": 1.08
+        },
+        {
+          "text": "Your webbing is an extruded",
+          "start": 1.08,
+          "end": 2.84
+        },
+        {
+          "text": "synthetic polymer.",
+          "start": 2.84,
+          "end": 4
+        },
+        {
+          "text": "For the first 0.4 seconds,",
+          "start": 4,
+          "end": 5.68
+        },
+        {
+          "text": "it retains its liquid",
+          "start": 5.68,
+          "end": 7.04
+        },
+        {
+          "text": "solvent base.",
+          "start": 7.04,
+          "end": 7.88
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "gameplay": "batman",
+      "text": "Wait! That solvent base makes the webbing highly conductive before it solidifies!",
+      "durationSeconds": 4.44,
+      "audio": {
+        "file": "assets/audio/crossover-turn-06.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (ROBIN)"
+      },
+      "captions": [
+        {
+          "text": "Wait!",
+          "start": 0,
+          "end": 0.28
+        },
+        {
+          "text": "That solvent base makes",
+          "start": 0.28,
+          "end": 1.6
+        },
+        {
+          "text": "the webbing highly conductive",
+          "start": 1.6,
+          "end": 3.24
+        },
+        {
+          "text": "before it solidifies!",
+          "start": 3.24,
+          "end": 4.44
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "gameplay": "batman",
+      "text": "Exactly. The microsecond your web connects, my suit discharges 300,000 volts directly back up the line.",
+      "durationSeconds": 6.68,
+      "audio": {
+        "file": "assets/audio/crossover-turn-07.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN)"
+      },
+      "captions": [
+        {
+          "text": "Exactly.",
+          "start": 0,
+          "end": 0.56
+        },
+        {
+          "text": "The microsecond your web",
+          "start": 0.56,
+          "end": 2.2
+        },
+        {
+          "text": "connects,",
+          "start": 2.2,
+          "end": 2.8
+        },
+        {
+          "text": "my suit discharges",
+          "start": 2.8,
+          "end": 4.04
+        },
+        {
+          "text": "300,000 volts",
+          "start": 4.04,
+          "end": 4.92
+        },
+        {
+          "text": "directly back up the line.",
+          "start": 4.92,
+          "end": 6.68
+        }
+      ]
+    },
+    {
+      "speaker": "spiderman",
+      "gameplay": "spiderman",
+      "text": "Wait... my spider-sense would-",
+      "durationSeconds": 2.16,
+      "audio": {
+        "file": "assets/audio/crossover-turn-08.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (SPIDERMAN)"
+      },
+      "captions": [
+        {
+          "text": "Wait...",
+          "start": 0,
+          "end": 0.52
+        },
+        {
+          "text": "my spider-sense would-",
+          "start": 0.52,
+          "end": 2.16
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "gameplay": "batman",
+      "text": "It warns you of danger, but you initiated the contact. By the time the current reaches your wrists, it is too late.",
+      "durationSeconds": 6.16,
+      "audio": {
+        "file": "assets/audio/crossover-turn-09.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN)"
+      },
+      "captions": [
+        {
+          "text": "It warns you of danger,",
+          "start": 0,
+          "end": 1.28
+        },
+        {
+          "text": "but you initiated",
+          "start": 1.28,
+          "end": 2.24
+        },
+        {
+          "text": "the contact.",
+          "start": 2.24,
+          "end": 2.92
+        },
+        {
+          "text": "By the time the current",
+          "start": 2.92,
+          "end": 4.2
+        },
+        {
+          "text": "reaches your wrists,",
+          "start": 4.2,
+          "end": 5.32
+        },
+        {
+          "text": "it is too late.",
+          "start": 5.32,
+          "end": 6.16
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "gameplay": "batman",
+      "text": "His muscles lock up instantly! He literally tases himself!",
+      "durationSeconds": 3.56,
+      "audio": {
+        "file": "assets/audio/crossover-turn-10.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (ROBIN)"
+      },
+      "captions": [
+        {
+          "text": "His muscles lock up",
+          "start": 0,
+          "end": 1.24
+        },
+        {
+          "text": "instantly!",
+          "start": 1.24,
+          "end": 1.88
+        },
+        {
+          "text": "He literally tases",
+          "start": 1.88,
+          "end": 3.04
+        },
+        {
+          "text": "himself!",
+          "start": 3.04,
+          "end": 3.56
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "gameplay": "batman",
+      "text": "He drops to the floor completely paralyzed. The fight is over, and I did not even have to move a muscle.",
+      "durationSeconds": 5.76,
+      "audio": {
+        "file": "assets/audio/crossover-turn-11.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN)"
+      },
+      "captions": [
+        {
+          "text": "He drops to the floor",
+          "start": 0,
+          "end": 1.2
+        },
+        {
+          "text": "completely paralyzed.",
+          "start": 1.2,
+          "end": 2.4
+        },
+        {
+          "text": "The fight is over,",
+          "start": 2.4,
+          "end": 3.44
+        },
+        {
+          "text": "and I did not even have to",
+          "start": 3.44,
+          "end": 4.92
+        },
+        {
+          "text": "move a muscle.",
+          "start": 4.92,
+          "end": 5.76
+        }
+      ]
+    }
+  ]
+}

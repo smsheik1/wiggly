@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "header": {
+    "title": "BATMAN AND THE JOKER",
+    "question": "WHY DOES BATMAN KEEP JOKER ALIVE?"
+  },
+  "topic": "Why does Batman keep Joker alive?",
+  "castMode": "same-universe",
+  "cast": [
+    {
+      "id": "batman",
+      "name": "BATMAN",
+      "universe": "DC"
+    },
+    {
+      "id": "the-joker",
+      "name": "THE JOKER",
+      "universe": "DC"
+    }
+  ],
+  "gameplay": {
+    "file": "assets/gameplay/batman-vs-the-joker-cut.mp4",
+    "authorized": true,
+    "provenance": "Curated 1080p gameplay loop"
+  },
+  "turns": [
+    {
+      "speaker": "the-joker",
+      "text": "WHY SO SERIOUS, BATS? YOU COULD HAVE ENDED THIS YEARS AGO.",
+      "durationSeconds": 4.4,
+      "audio": {
+        "file": "assets/audio/batman-vs-the-joker/turn-1.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (THE JOKER voice 9fbad48d836748c5ab748abe7ac523b1)"
+      },
+      "captions": [
+        {
+          "text": "WHY SO SERIOUS, BATS? YOU COULD",
+          "start": 0,
+          "end": 2.4
+        },
+        {
+          "text": "HAVE ENDED THIS YEARS AGO.",
+          "start": 2.4,
+          "end": 4.4
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "I WILL NEVER BE LIKE YOU, JOKER. NEVER.",
+      "durationSeconds": 3.92,
+      "audio": {
+        "file": "assets/audio/batman-vs-the-joker/turn-2.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN voice ef549174cea246468ce32b00afa6affa)"
+      },
+      "captions": [
+        {
+          "text": "I WILL NEVER BE LIKE YOU, JOKER.",
+          "start": 0,
+          "end": 3.44
+        },
+        {
+          "text": "NEVER.",
+          "start": 3.44,
+          "end": 3.92
+        }
+      ]
+    },
+    {
+      "speaker": "the-joker",
+      "text": "OH, BUT YOU ARE JUST LIKE ME! YOU CANNOT ADMIT IT.",
+      "durationSeconds": 4.2,
+      "audio": {
+        "file": "assets/audio/batman-vs-the-joker/turn-3.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (THE JOKER voice 9fbad48d836748c5ab748abe7ac523b1)"
+      },
+      "captions": [
+        {
+          "text": "OH, BUT YOU ARE JUST LIKE ME! YOU",
+          "start": 0,
+          "end": 3.04
+        },
+        {
+          "text": "CANNOT ADMIT IT.",
+          "start": 3.04,
+          "end": 4.2
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "I PROTECT GOTHAM. YOU ONLY DESTROY IT.",
+      "durationSeconds": 2.84,
+      "audio": {
+        "file": "assets/audio/batman-vs-the-joker/turn-4.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN voice ef549174cea246468ce32b00afa6affa)"
+      },
+      "captions": [
+        {
+          "text": "I PROTECT GOTHAM. YOU ONLY DESTROY",
+          "start": 0,
+          "end": 2.44
+        },
+        {
+          "text": "IT.",
+          "start": 2.44,
+          "end": 2.84
+        }
+      ]
+    },
+    {
+      "speaker": "the-joker",
+      "text": "AND YET YOU KEEP ME ALIVE. SEE YOU IN ARKHAM!",
+      "durationSeconds": 3.96,
+      "audio": {
+        "file": "assets/audio/batman-vs-the-joker/turn-5.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (THE JOKER voice 9fbad48d836748c5ab748abe7ac523b1)"
+      },
+      "captions": [
+        {
+          "text": "AND YET YOU KEEP ME ALIVE. SEE YOU",
+          "start": 0,
+          "end": 3.16
+        },
+        {
+          "text": "IN ARKHAM!",
+          "start": 3.16,
+          "end": 3.96
+        }
+      ]
+    }
+  ],
+  "music": {
+    "file": "assets/dark-fog-excerpt.mp3",
+    "authorized": true,
+    "provenance": "Dark Fog by Kevin MacLeod, CC BY 4.0; see MUSIC-CREDITS.md.",
+    "volume": 0.12,
+    "attribution": "Dark Fog by Kevin MacLeod (incompetech.com), CC BY 4.0"
+  }
+}
