@@ -156,9 +156,13 @@ export function FormatRepoPackageAssets({ format, data }: Props) {
   // Keep the complete inventory in Repo files, not a second gallery of rig textures.
   if (format.slug === "squilliam-news") return null;
   const visualAssets = data?.assets.filter((asset) => asset.image) ?? [];
+  const gridCols =
+    visualAssets.length % 4 === 0
+      ? "sm:grid-cols-2 lg:grid-cols-4"
+      : "sm:grid-cols-2 lg:grid-cols-3";
   function assetGrid(assets: typeof visualAssets) {
     return (
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={`mt-6 grid gap-4 ${gridCols}`}>
         {assets.map((asset) => (
           <article key={asset.href} className={`${card} overflow-hidden`}>
             <a
@@ -187,6 +191,7 @@ export function FormatRepoPackageAssets({ format, data }: Props) {
       </div>
     );
   }
+  const initialLimit = visualAssets.length <= 8 ? visualAssets.length : 6;
   return (
     <Section
       id="included-assets"
@@ -208,13 +213,13 @@ export function FormatRepoPackageAssets({ format, data }: Props) {
           input.
         </p>
       ) : null}
-      {assetGrid(visualAssets.slice(0, 6))}
-      {visualAssets.length > 6 ? (
+      {assetGrid(visualAssets.slice(0, initialLimit))}
+      {visualAssets.length > initialLimit ? (
         <details className="mt-6">
           <summary className="cursor-pointer text-sm font-black">
             View all {visualAssets.length} asset references
           </summary>
-          {assetGrid(visualAssets.slice(6))}
+          {assetGrid(visualAssets.slice(initialLimit))}
         </details>
       ) : null}
       <div className="mt-7 grid gap-5 sm:grid-cols-2">

@@ -56,6 +56,21 @@ for (const text of [
   assert.ok(html.includes(text), text);
 }
 
+const assetsHtml = renderToStaticMarkup(createElement(FormatRepoPackageAssets, { format: profile, data }));
+assert.ok(!assetsHtml.includes("<details"), "All 8 character poses must render directly without collapsing into details");
+for (const pose of [
+  "Male character presenter neutral pose",
+  "Male character presenter laugh pose",
+  "Male character presenter talk pose",
+  "Male character presenter shock pose",
+  "Female character presenter neutral pose",
+  "Female character presenter laugh pose",
+  "Female character presenter talk pose",
+  "Female character presenter shock pose"
+]) {
+  assert.ok(assetsHtml.includes(pose), `Pose rendered directly: ${pose}`);
+}
+
 const prompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
 assert.ok(prompt.includes("/downloads/roast-me-conversations-0.2.0.zip"));
 
