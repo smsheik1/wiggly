@@ -127,4 +127,64 @@ To upgrade existing format repos (e.g. `animal-conversations`, `roast-me-convers
 3. **Runner:** Copy `runtime/publish.mjs` into the repo.
 4. **Input:** Add `inputs/distribution.json` template.
 5. **Tests:** Add `tests/distribution.test.mjs` verifying stage definitions and `--dry-run` validation.
-6. **Instructions:** Add Step 8 (or 9) to `SKILL.md` detailing how the coding agent drafts platform copy, requests approval, and returns live links.
+6. **Instructions:** Update `SKILL.md` with the distribution step, onboarding flow, and behavioral guardrails.
+
+---
+
+## 6. The Conversational Agent Experience & Guardrails
+
+Distribution is not merely a technical pipeline—it is a **human conversation**. The agent must handle users of all technical levels, distractions, and preferences without friction.
+
+### A. Core Philosophy: Zero JSON Friction
+The creator should never have to manually edit JSON files on disk just to post a video. The agent:
+1. Reads the episode transcript and concept from `inputs/<episode>.json`.
+2. Drafts platform-adapted copy in memory.
+3. Presents the preview in chat.
+4. Dispatches the post via Buffer MCP (or `runtime/publish.mjs`).
+
+### B. The Post-Render Offer (Proactive Trigger)
+Immediately upon rendering and keyframe inspection, the agent asks:
+> *"Your video is rendered and ready to watch! 🎬*  
+> *Do you want to post this to YouTube, Instagram, or X? (We can blast all three, or just your favorites!)"*
+
+### C. The 1-Time Onboarding Experience (First-Time Creators)
+If the user wants to post but has not connected their social accounts yet, the agent delivers the 3-minute, zero-jargon onboarding guide:
+
+> **⏱️ Time required:** ~3 minutes (one time only!)  
+> **💡 Why it's worth it:** You spend 3 minutes connecting your channels once, and every video you ever create with Wiggly can be published automatically with one click forever.
+>
+> **Baby Steps:**
+> 1. Go to **[buffer.com](https://buffer.com)** (it's 100% free) and sign up or log in.
+> 2. Click **Connect Channel** to link whichever accounts you want to post to (YouTube, Instagram, and/or X/Twitter).
+> 3. Go to **[buffer.com/manage/apps](https://buffer.com/manage/apps)** and create an API Key (or connect the Buffer MCP server in your agent settings).
+>
+> Once that's done, just tell me **"I'm back"** and I'll take it from there!
+
+### D. Copy Drafting & Human Approval Gate
+When connected (or upon the user saying "I'm back"), the agent presents the drafted copy for the selected platforms:
+- **YouTube Shorts:** High-CTR title with hook (<100 chars), `#Shorts`, 3–4 hashtags, concise description.
+- **Instagram Reels:** Engaging caption with clean vertical line breaks and 3–5 niche hashtags.
+- **X (Twitter):** Viral quote, debate question, or hook under 280 characters.
+
+> *"Here is what I'll post to your channels:*  
+> *🔴 **YouTube Shorts:** [Title & Description]*  
+> *🟣 **Instagram Reels:** [Caption]*  
+> *⚪ **X / Twitter:** [Post Text]*  
+> 
+> *Ready to publish? Say **'Go'** or let me know if you'd like any tweaks!"*
+
+### E. Live Publication & Provenance
+Once the user confirms ("Go", "Yes", "Looks good"):
+1. The agent publishes via Buffer MCP `create_post` (or `runtime/publish.mjs`).
+2. Durable live receipts are saved to `outputs/<episode>.distribution.json`.
+3. Clickable live URLs are returned directly in chat.
+
+### F. Behavioral Guardrails (The Human Factor)
+
+| User Behavior | Agent Response Protocol |
+| :--- | :--- |
+| **Confused / Non-Technical**<br>*"What is Buffer?", "Where do I click?"* | Explain in plain English without developer jargon. Break instructions into **one single micro-step at a time** instead of pasting walls of text. |
+| **Off-Topic / Distracted**<br>*"Did you see the new Batman trailer?", "What model are you?"* | Be human and friendly! Respond warmly in 1–2 sentences, then gently tether back:<br>*"By the way, whenever you're ready, we can still post that episode to your socials—just say the word!"* |
+| **Frustrated / Overwhelmed**<br>*"Ugh this is too much work", "Never mind", "Just give me the video"* | Instant de-escalation with zero guilt or friction:<br>*"No problem at all! You don't have to set anything up. Your video is already saved at `outputs/<episode>.mp4`—you can download it and post it manually whenever you like."* |
+| **Selective Platforms**<br>*"Just post to Twitter", "Only YouTube"* | Respect their choice immediately. Never push them to connect or publish to platforms they didn't ask for. |
+

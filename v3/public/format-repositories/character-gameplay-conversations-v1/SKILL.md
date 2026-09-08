@@ -98,5 +98,73 @@ Use these focused CLI tools to gather assets and synthesize voice lines:
 6. **Validate:** Run `node runtime/render.mjs --validate inputs/<episode>.json`.
 7. **Render:** Run `node runtime/render.mjs inputs/<episode>.json outputs/<episode>.mp4`.
 8. **Inspect:** Extract sample keyframe PNGs via `ffmpeg -ss <time> -i outputs/<episode>.mp4 -frames:v 1 frame.png` and use `view_file` on the extracted PNGs to visually verify layout, typography, cards, glitch effects, and subtitles.
-9. **Distribute (Stage 6):** Author platform-tailored copy in `inputs/distribution.json` (YouTube Shorts title/tags, Instagram Reel caption, Twitter/X teaser). Present for human review and approval. Once approved, run `node runtime/publish.mjs inputs/distribution.json outputs/<episode>.mp4` (or dispatch via Buffer MCP). Return the recorded live links from `outputs/<episode>.distribution.json` to the user alongside the finished MP4.
+9. **Distribute (Stage 6):** Proactively offer multi-platform distribution in chat. Follow the **Distribution & Social Onboarding Protocol** below to guide setup if needed, present platform-adapted copy for human approval, publish via Buffer MCP (or `runtime/publish.mjs`), and return live post links.
+
+---
+
+## Distribution & Social Onboarding Protocol
+
+When video rendering and keyframe inspection finish, the agent must guide the creator through effortless multi-platform distribution.
+
+### 1. The Post-Render Offer (Always Ask Proactively)
+Immediately after presenting the rendered video:
+> *"Your video is rendered and ready to watch! 🎬*  
+> *Do you want to post this to YouTube, Instagram, or X? (We can blast all three, or just your favorites!)"*
+
+### 2. If the User Says Yes (or Names Platforms)
+Check if a social publisher is already configured (e.g. Buffer MCP tools are active or `BUFFER_API_KEY` is present in the environment).
+
+#### Case A: First-Time User (Not Connected Yet)
+Deliver the 3-minute, zero-jargon setup guide:
+> **⏱️ Time required:** ~3 minutes (one time only!)  
+> **💡 Why it's worth it:** You spend 3 minutes connecting your channels once, and every video you ever create with Wiggly can be published automatically with one click forever.
+>
+> **Baby Steps:**
+> 1. Go to **[buffer.com](https://buffer.com)** (it's 100% free) and sign up or log in.
+> 2. Click **Connect Channel** to link whichever accounts you want to post to (YouTube, Instagram, and/or X/Twitter).
+> 3. Go to **[buffer.com/manage/apps](https://buffer.com/manage/apps)** and create an API Key (or connect the Buffer MCP server in your agent settings).
+>
+> Once that's done, just tell me **"I'm back"** and I'll take it from there!
+
+#### Case B: Connected (or User Says "I'm back")
+Draft tailored copy directly in chat from the episode's hook, characters, and dialogue (no manual JSON editing needed from the user):
+- **YouTube Shorts:** High-CTR title with hook (<100 chars), `#Shorts`, 3–4 hashtags, concise description.
+- **Instagram Reels:** Attention-grabbing caption with clean spacing and 3–5 niche hashtags (`#batman #gaming #arkhamknight`).
+- **X (Twitter):** Viral quote, debate question, or hook under 280 characters.
+
+Present the preview clearly:
+> *"Here is what I'll post to your channels:*  
+> *🔴 **YouTube Shorts:** [Title & Description]*  
+> *🟣 **Instagram Reels:** [Caption]*  
+> *⚪ **X / Twitter:** [Post Text]*  
+> 
+> *Ready to publish? Say **'Go'** or let me know if you'd like any tweaks!"*
+
+### 3. Publication & Receipt Delivery
+Once the user gives the green light ("Go", "Yes", "Looks good"):
+1. Call Buffer MCP `create_post` (or run `node runtime/publish.mjs inputs/distribution.json outputs/<episode>.mp4`).
+2. Write the live results to `outputs/<episode>.distribution.json`.
+3. Deliver the clickable live links directly in chat:
+   > *"🚀 Live on all platforms!*  
+   > *- 🔴 **YouTube Shorts:** <url>*  
+   > *- 🟣 **Instagram Reels:** <url>*  
+   > *- ⚪ **X / Twitter:** <url>*  
+   > 
+   > *Local master video is saved at `outputs/<episode>.mp4`."*
+
+---
+
+## Behavioral Guardrails (The Human Factor)
+
+- **Confused / Non-Technical Users ("What is Buffer?", "Where do I click?"):**  
+  Explain in plain English without developer jargon. If they get stuck, give them only **one** micro-action at a time.
+- **Off-Topic / Distracted Users ("Did you see the new Batman trailer?", "What model are you?"):**  
+  Respond warmly and conversationally in 1–2 sentences, then gently tether back:  
+  *"By the way, whenever you're ready, we can still post that episode to your socials—just say the word!"*
+- **Frustrated / Overwhelmed Users ("Ugh this is too much work", "Never mind", "Just give me the video"):**  
+  De-escalate immediately with zero guilt or friction:  
+  *"No problem at all! You don't have to set anything up. Your video is already saved at `outputs/<episode>.mp4`—you can download it and post it manually whenever you like."*
+- **Selective Users ("Just post to Twitter", "Only YouTube"):**  
+  Respect their choice instantly. Never push them to connect or publish to platforms they didn't ask for.
+
 
