@@ -3,7 +3,7 @@
   "purpose": "Two editorially distinct first-run cuts exercise the same local tutorial runtime.",
   "canonicalContactSheet": "examples/animal-conversations-first-run/contact-sheet.jpg",
   "examples": [
-    {"id": "animal-conversations-first-run", "title": "Animal Conversations · canonical first run", "role": "canonical", "whyItWorks": ["Proof-first opening", "real coding-agent handoff", "explicit approval and local render"], "knownWeaknesses": ["The source master is accelerated to fit the 90-second package contract."]},
-    {"id": "animal-conversations-variant", "title": "Animal Conversations · alternate editorial run", "role": "replay", "whyItWorks": ["Same runner accepts a separately declared editorial master", "captions and audio stay attached to the master"], "knownWeaknesses": ["Both examples use the Animal Conversations format; add a licensed cross-format master for a broader benchmark."]}
+    {"id": "animal-conversations-first-run", "title": "Animal Conversations · canonical first run", "role": "canonical", "whyItWorks": ["Proof-first opening", "real coding-agent handoff", "explicit approval and local render", "natural source pacing is preserved"], "knownWeaknesses": ["The source master is an operator-supplied recovered tutorial asset."]},
+    {"id": "animal-conversations-variant", "title": "Animal Conversations · alternate editorial run", "role": "replay", "whyItWorks": ["Same runner accepts a separately declared editorial master", "captions and audio stay attached to the master", "natural source pacing is preserved"], "knownWeaknesses": ["Both examples use the Animal Conversations format; add a licensed cross-format master for a broader benchmark."]}
   ]
 }

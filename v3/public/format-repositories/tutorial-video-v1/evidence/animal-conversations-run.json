@@ -12,7 +12,7 @@
   ],
   "limitations": [
     "The packaged runner does not download URLs or call paid providers.",
-    "The 90-second example is a deterministic speed-fit of the 148.8-second reviewed master.",
+    "The example preserves the reviewed master's natural 148.8-second duration; no speed-fit or trim is applied.",
     "Direct human playback remains required."
   ]
 }

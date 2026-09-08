@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "0.1.0",
-  "archive": "downloads/wiggly-tutorial-video-format-kit-0.1.0.zip",
+  "version": "0.2.0",
+  "archive": "downloads/wiggly-tutorial-video-format-kit-0.2.0.zip",
   "include": ["README.md", "SKILL.md", "*.json", "runner.mjs", "build-kit.mjs", "scripts/", "references/", "evidence/", "goldens/", "assets/", "examples/"],
   "exclude": ["downloads/", "node_modules/", "secrets.env", "raw third-party source media"]
 }

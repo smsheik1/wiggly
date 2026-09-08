@@ -131,7 +131,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Turn one real Wiggly Format run into a clear, proof-first 16:9 tutorial a beginner can follow.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/tutorial-video-v1/format.json",
-    repositoryHref: "/format-repositories/tutorial-video-v1/downloads/wiggly-tutorial-video-format-kit-0.1.0.zip",
+    repositoryHref: "/format-repositories/tutorial-video-v1/downloads/wiggly-tutorial-video-format-kit-0.2.0.zip",
     technicalHref: "/format-repositories/tutorial-video-v1/PROOF-REPORT.md",
     whatStays: [
       "The finished Wiggly result appears before the explanation",
@@ -169,7 +169,7 @@ const formatConfigs: FormatProfileConfig[] = [
         { label: "Local render + inspection", cost: "$0 provider cost", time: "about 1–3 min on a modern Mac" },
       ],
       totalEstimate: "$0 provider cost with supplied media; coding-agent usage is separate. Paid calls require an estimate and approval.",
-      output: "One narrated, captioned 1920 × 1080 MP4 (16:9), exactly 90 seconds",
+      output: "One narrated, captioned 1920 × 1080 MP4 (16:9) preserving the supplied tutorial master's natural duration",
       firstQuestion: "Which Wiggly Format should the tutorial teach, and what finished result should a new user reach?",
     },
   },

@@ -1,6 +1,6 @@
 {
   "name": "wiggly-tutorial-video-format-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {"test": "node scripts/verify.mjs", "smoke": "node runner.mjs smoke", "build": "node build-kit.mjs"}

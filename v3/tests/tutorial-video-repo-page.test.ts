@@ -10,8 +10,8 @@ import { buildDiscoveryHandoffPrompt } from "../features/discovery/handoff";
 const profile = getDiscoveryFormatProfile("tutorial-video");
 assert.ok(profile);
 assert.equal(profile.name, "Tutorial Video");
-assert.equal(profile.version, "0.1.0");
-assert.equal(profile.repositoryHref, "/format-repositories/tutorial-video-v1/downloads/wiggly-tutorial-video-format-kit-0.1.0.zip");
+assert.equal(profile.version, "0.2.0");
+assert.equal(profile.repositoryHref, "/format-repositories/tutorial-video-v1/downloads/wiggly-tutorial-video-format-kit-0.2.0.zip");
 assert.equal(getDiscoveryEntriesByFormat("tutorial-video").length, 1, "One tutorial Repo, not one card per source master.");
 assert.deepEqual(discoveryShelfDefinitions.find((shelf) => shelf.id === "tutorial-video")?.formats, ["tutorial-video"]);
 
@@ -24,6 +24,7 @@ assert.ok(presentation.package.optionalTools.includes("yt-dlp"));
 assert.ok(presentation.package.optionalTools.includes("whisper.cpp"));
 assert.ok(presentation.package.workflow.length >= 4);
 assert.ok(presentation.package.quality.length > 0);
+assert.ok(presentation.package.files.some((candidate) => candidate.name === "format.json" && /natural duration/i.test(candidate.content)));
 assert.ok(presentation.package.proof.contactSheet?.endsWith("contact-sheet.jpg"));
 assert.ok(presentation.package.assets.some((asset) => asset.href.endsWith("final.mp4")));
 for (const file of ["README.md", "SKILL.md", "requirements.json", "quality.json"])
