@@ -21,6 +21,11 @@
       "id": "render-and-inspect",
       "output": "Use the unchanged official compositor, inspect the MP4 and receipt, then watch and listen before accepting the result.",
       "approvalRequired": true
+    },
+    {
+      "id": "distribute-episode",
+      "output": "Author platform-tailored copy for YouTube Shorts, Instagram Reels, TikTok, and X, present for review, and dispatch to connected channels via runtime/publish.mjs. Writes live receipts to outputs/episode.distribution.json.",
+      "approvalRequired": true
     }
   ]
 }

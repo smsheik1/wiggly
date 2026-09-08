@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kit": "character-gameplay-conversations",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "runtime": "runtime/render.mjs",
   "runtimeSha256": "bb19667f291641111eb07388aab9be887ef365a4a84c0d0543d60b65f4b396b1",
   "publication": "user-requested-public-baseline",

@@ -6,7 +6,14 @@
     "FFmpeg with libx264, AAC, overlay, scale, crop, pad, concat, afade, sidechaincompress, amix and alimiter filters",
     "FFprobe"
   ],
-  "providers": [],
+  "providers": [
+    {
+      "name": "Social Publisher (Buffer MCP or API)",
+      "environmentVariables": ["BUFFER_API_KEY"],
+      "optional": true,
+      "purpose": "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
+    }
+  ],
   "paidApprovalRequired": true,
   "automaticInstallation": false,
   "notes": [

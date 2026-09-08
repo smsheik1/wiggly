@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 1,
+  "topic": "Robin asked Bruce how much money he actually has",
+  "header": {
+    "title": "ROBIN ASKED BRUCE",
+    "question": "HOW MUCH MONEY HE HAS"
+  },
+  "castMode": "same-universe",
+  "cast": [
+    {
+      "id": "robin",
+      "name": "ROBIN",
+      "universe": "DC",
+      "color": "#38bdf8"
+    },
+    {
+      "id": "batman",
+      "name": "BATMAN",
+      "universe": "DC",
+      "color": "#ffffff"
+    }
+  ],
+  "gameplay": {
+    "file": "assets/gameplay/batman-arkham-gliding-65s.mp4",
+    "authorized": true,
+    "provenance": "Batman Arkham Knight Gotham night gliding gameplay"
+  },
+  "music": {
+    "file": "assets/audio/yeat-if-we-being-real.mp3",
+    "authorized": true,
+    "provenance": "Yeat - If We Being Real (Instrumental starting at 0:28)",
+    "volume": 0.12,
+    "attribution": "Instrumental bed: Yeat - If We Being Real (used for pacing under dialogue)"
+  },
+  "turns": [
+    {
+      "speaker": "robin",
+      "text": "Bruce, serious question. How much money do you actually have?",
+      "durationSeconds": 3.4,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-01.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "BRUCE, SERIOUS QUESTION. HOW",
+          "start": 0,
+          "end": 1.7
+        },
+        {
+          "text": "MUCH MONEY DO YOU ACTUALLY HAVE?",
+          "start": 1.7,
+          "end": 3.4
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "I have enough.",
+      "durationSeconds": 1.6,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-02.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "I HAVE ENOUGH.",
+          "start": 0,
+          "end": 1.6
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "text": "That's not a number. People say you're a billionaire, but you crashed three Batwings this year alone. Those have to be, what, a hundred million dollars each?",
+      "durationSeconds": 8.2,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-03.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "THAT'S NOT A NUMBER. YOU",
+          "start": 0,
+          "end": 2.0
+        },
+        {
+          "text": "CRASHED THREE BATWINGS THIS YEAR.",
+          "start": 2.0,
+          "end": 4.1
+        },
+        {
+          "text": "THOSE HAVE TO BE WHAT, A",
+          "start": 4.1,
+          "end": 6.1
+        },
+        {
+          "text": "HUNDRED MILLION DOLLARS EACH?",
+          "start": 6.1,
+          "end": 8.2
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "85 million, but the manufacturing costs are heavily subsidized by Wayne Aerospace military contracts. It is an acceptable loss margin.",
+      "durationSeconds": 7.6,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-04.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "85 MILLION. MANUFACTURING COSTS",
+          "start": 0,
+          "end": 2.5
+        },
+        {
+          "text": "ARE SUBSIDIZED BY WAYNE AERO.",
+          "start": 2.5,
+          "end": 5.0
+        },
+        {
+          "text": "IT'S AN ACCEPTABLE LOSS MARGIN.",
+          "start": 5.0,
+          "end": 7.6
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "text": "Acceptable loss? Bruce, you basically burn the GDP of a small country every weekend. Just practically speaking, could you buy Gotham?",
+      "durationSeconds": 7.2,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-05.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "ACCEPTABLE LOSS? YOU BURN",
+          "start": 0,
+          "end": 2.4
+        },
+        {
+          "text": "THE GDP OF A SMALL COUNTRY.",
+          "start": 2.4,
+          "end": 4.8
+        },
+        {
+          "text": "COULD YOU JUST BUY GOTHAM?",
+          "start": 4.8,
+          "end": 7.2
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "I already own 38% of the commercial real estate in the city.",
+      "durationSeconds": 4.2,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-06.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "I ALREADY OWN 38 PERCENT",
+          "start": 0,
+          "end": 2.1
+        },
+        {
+          "text": "OF GOTHAM'S COMMERCIAL REALTY.",
+          "start": 2.1,
+          "end": 4.2
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "text": "Wait, seriously? You're telling me you just casually buy up skyscrapers? Why? To make a profit?",
+      "durationSeconds": 5.8,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-07.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "WAIT, SERIOUSLY? YOU CASUALLY",
+          "start": 0,
+          "end": 2.9
+        },
+        {
+          "text": "BUY UP SKYSCRAPERS FOR PROFIT?",
+          "start": 2.9,
+          "end": 5.8
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "No, it's a tactical necessity. Owning the buildings bypasses city zoning laws. It allows me to install reinforced grappling points, hidden server hubs, and automated Batmobile repair base without municipal oversight.",
+      "durationSeconds": 10.4,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-08.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "NO. IT BYPASSES ZONING LAWS.",
+          "start": 0,
+          "end": 2.6
+        },
+        {
+          "text": "ALLOWS REINFORCED GRAPPLE POINTS,",
+          "start": 2.6,
+          "end": 5.2
+        },
+        {
+          "text": "HIDDEN SERVER HUBS, AND",
+          "start": 5.2,
+          "end": 7.8
+        },
+        {
+          "text": "REPAIR BAYS WITHOUT OVERSIGHT.",
+          "start": 7.8,
+          "end": 10.4
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "text": "So, while the rest of the world is investing in stocks, you're buying hundred million dollar high-rises just to glue stone gargoyles onto them so you can swing around easier.",
+      "durationSeconds": 8.4,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-09.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "SO YOU BUY HIGH-RISES JUST",
+          "start": 0,
+          "end": 2.8
+        },
+        {
+          "text": "TO GLUE STONE GARGOYLES ON THEM",
+          "start": 2.8,
+          "end": 5.6
+        },
+        {
+          "text": "SO YOU CAN SWING AROUND EASIER?!",
+          "start": 5.6,
+          "end": 8.4
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "Modern architecture is tactically inefficient, Tim. Someone had to fix it.",
+      "durationSeconds": 4.6,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-10.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "MODERN ARCHITECTURE IS",
+          "start": 0,
+          "end": 2.3
+        },
+        {
+          "text": "INEFFICIENT. SOMEONE HAD TO FIX IT.",
+          "start": 2.3,
+          "end": 4.6
+        }
+      ]
+    }
+  ]
+}

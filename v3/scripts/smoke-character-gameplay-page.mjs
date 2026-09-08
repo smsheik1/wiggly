@@ -8,7 +8,7 @@ import { chromium } from "playwright";
 const origin = process.env.REPO_SMOKE_BASE_URL || "http://localhost:3020";
 const slug = "character-gameplay-conversations";
 const root = "/format-repositories/character-gameplay-conversations-v1";
-const archive = `${root}/downloads/${slug}-0.2.0.zip`;
+const archive = `${root}/downloads/${slug}-0.3.0.zip`;
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
 const expectedHash = hash(readFileSync(`public${archive}`));
 const screenshots = mkdtempSync(path.join(tmpdir(), "wiggly-character-page-"));

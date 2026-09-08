@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "topic": "Robin asked Bruce about Jason Todd's armory",
+  "header": {
+    "title": "ROBIN ASKED BRUCE",
+    "question": "ABOUT RED HOOD'S WEAPONS"
+  },
+  "castMode": "same-universe",
+  "cast": [
+    {
+      "id": "robin",
+      "name": "ROBIN",
+      "universe": "DC",
+      "color": "#38bdf8"
+    },
+    {
+      "id": "batman",
+      "name": "BATMAN",
+      "universe": "DC",
+      "color": "#ffffff"
+    }
+  ],
+  "gameplay": {
+    "file": "assets/gameplay/batman-arkham-gliding-65s.mp4",
+    "authorized": true,
+    "provenance": "Batman Arkham Knight Gotham night gliding gameplay"
+  },
+  "music": {
+    "file": "assets/audio/yeat-if-we-being-real.mp3",
+    "authorized": true,
+    "provenance": "Yeat - If We Being Real (Instrumental starting at 0:28)",
+    "volume": 0.12,
+    "attribution": "Instrumental bed: Yeat - If We Being Real (used for pacing under dialogue)"
+  },
+  "turns": [
+    {
+      "speaker": "robin",
+      "text": "Bruce, serious question. Jason Todd is running around Crime Alley with dual military pistols, ceramic armor, and Wayne Tech titanium grappling hooks. Where is he getting this stuff?",
+      "durationSeconds": 6.8,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-01.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "BRUCE, SERIOUS QUESTION. JASON",
+          "start": 0,
+          "end": 1.7
+        },
+        {
+          "text": "HAS DUAL MILITARY PISTOLS AND",
+          "start": 1.7,
+          "end": 3.4
+        },
+        {
+          "text": "WAYNE TECH TITANIUM GRAPPLES.",
+          "start": 3.4,
+          "end": 5.1
+        },
+        {
+          "text": "WHERE IS HE GETTING THIS STUFF?",
+          "start": 5.1,
+          "end": 6.8
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "He's raiding secondary tactical caches I established in 2018.",
+      "durationSeconds": 3.6,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-02.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "HE'S RAIDING SECONDARY CACHES",
+          "start": 0,
+          "end": 1.8
+        },
+        {
+          "text": "I ESTABLISHED IN 2018.",
+          "start": 1.8,
+          "end": 3.6
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "text": "Wait. You're telling me Red Hood is literally using your own old gear to execute mobsters?",
+      "durationSeconds": 4.8,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-03.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "WAIT. RED HOOD IS USING YOUR",
+          "start": 0,
+          "end": 2.4
+        },
+        {
+          "text": "OLD GEAR TO EXECUTE MOBSTERS?",
+          "start": 2.4,
+          "end": 4.8
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "When Jason was Robin, he memorized the 24-character cryptographic cypher for my emergency armories. I chose not to change the master password.",
+      "durationSeconds": 7.4,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-04.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "HE MEMORIZED THE 24-CHAR",
+          "start": 0,
+          "end": 2.4
+        },
+        {
+          "text": "CYPHER FOR MY ARMORIES. I DID",
+          "start": 2.4,
+          "end": 4.8
+        },
+        {
+          "text": "NOT CHANGE THE PASSWORD.",
+          "start": 4.8,
+          "end": 7.4
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "text": "You didn't change the password?! Bruce, you have biometric voice encryption on your toaster, but you left weapons caches on default settings for your rogue son?",
+      "durationSeconds": 7.8,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-05.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "YOU HAVE BIOMETRICS ON YOUR",
+          "start": 0,
+          "end": 2.6
+        },
+        {
+          "text": "TOASTER, BUT LEFT WEAPONS ON",
+          "start": 2.6,
+          "end": 5.2
+        },
+        {
+          "text": "DEFAULT SETTINGS FOR JASON?!",
+          "start": 5.2,
+          "end": 7.8
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "If I locked him out, he would resort to buying unstable black-market ordnance from the Russian mob. Sub-standard munitions have a 14% higher collateral casualty rate among civilians.",
+      "durationSeconds": 8.6,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-06.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "HE WOULD BUY UNSTABLE AMMO",
+          "start": 0,
+          "end": 2.8
+        },
+        {
+          "text": "FROM THE RUSSIAN MOB. BAD AMMO",
+          "start": 2.8,
+          "end": 5.6
+        },
+        {
+          "text": "HAS A 14% HIGHER CASUALTY RATE.",
+          "start": 5.6,
+          "end": 8.6
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "text": "So you're subsidizing his vigilante rampage with high-grade Kevlar and precision ammunition so he doesn't accidentally blow up a city block?!",
+      "durationSeconds": 6.8,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-07.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "SO YOU'RE SUBSIDIZING HIM WITH",
+          "start": 0,
+          "end": 2.2
+        },
+        {
+          "text": "PRECISION AMMO SO HE DOESN'T",
+          "start": 2.2,
+          "end": 4.5
+        },
+        {
+          "text": "BLOW UP A CITY BLOCK?!",
+          "start": 4.5,
+          "end": 6.8
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "It's risk mitigation, Tim. Parenting a dead Robin requires tactical compromises.",
+      "durationSeconds": 4.8,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-08.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "IT'S RISK MITIGATION, TIM.",
+          "start": 0,
+          "end": 2.4
+        },
+        {
+          "text": "PARENTING REQUIRES COMPROMISES.",
+          "start": 2.4,
+          "end": 4.8
+        }
+      ]
+    }
+  ]
+}

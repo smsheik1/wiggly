@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "inputs/crossover.json",
+  "media": "outputs/crossover.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "Batman vs Spider-Man: Gotham's Not Big Enough #Shorts",
+      "description": "Peter Parker took a wrong turn and ended up in Arkham City. Who walks away from this standoff?\n\n#Shorts #BatmanArkham #SpiderMan #Gaming",
+      "categoryId": "20",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "Peter Parker ended up in the wrong city 💀\n.\n.\n#batman #spiderman #arkham #reels #gamingcommunity"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "Batman vs Spider-Man in Arkham City. Who walks away from this standoff? 🦇🕷️ #Batman #SpiderMan #Gaming"
+    },
+    "tiktok": {
+      "enabled": false,
+      "caption": "Peter Parker in Gotham hits different 💀 #batman #gaming #fyp",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}
