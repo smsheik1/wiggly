@@ -24,7 +24,7 @@ type FormatProfileConfig = {
 const formatConfigs: FormatProfileConfig[] = [
   {
     slug: "character-gameplay-conversations",
-    promise: "Fan-favorite characters. Conversations fans wish existed. Real gameplay, character dialogue, timed captions and optional background music—assembled into vertical 9:16 Shorts.",
+    promise: "Fan-favorite characters trade lines over Arkham Knight and Spider-Man 2 gameplay with timed captions and ducked music—assembled into vertical 9:16 Shorts.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/character-gameplay-conversations-v1/format.json",
     repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.2.0.zip",

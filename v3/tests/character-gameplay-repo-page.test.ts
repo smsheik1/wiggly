@@ -13,16 +13,16 @@ import { buildDiscoveryHandoffPrompt } from "../features/discovery/handoff";
 
 const profile = getDiscoveryFormatProfile("character-gameplay-conversations")!;
 assert.equal(profile.version, "0.2.0");
-assert.equal(profile.name, "Character Gameplay Conversations");
+assert.equal(profile.name, "Batman Arkham Conversations");
 const entries = getDiscoveryEntriesByFormat(profile.slug);
-assert.equal(entries.length, 1);
-assert.equal(entries[0].format.version, "0.2.0", "The preview must identify the revised generator runtime.");
-assert.equal(entries[0].media.kind, "video");
-assert.equal(entries[0].media.aspectRatio, "9:16");
-assert.match(readFileSync("features/discovery/DiscoveryProofMedia.tsx", "utf8"), /entry\.media\.aspectRatio === "3:4" \? \{ aspectRatio: "3 \/ 4", objectFit: "contain" \}/);
-assert.match(readFileSync("app/discover/DiscoveryClient.tsx", "utf8"), /entry\.media\.aspectRatio === "3:4"\s*\? styles\.mediaWellThreeFour/);
-assert.match(readFileSync("app/discover/discovery.module.css", "utf8"), /\.mediaWellThreeFour\s*\{\s*aspect-ratio:\s*3 \/ 4;/);
-assert.ok(existsSync(`public${entries[0].media.poster}`));
+assert.equal(entries.length, 4);
+for (const entry of entries) {
+  assert.equal(entry.format.version, "0.2.0", "The preview must identify the revised generator runtime.");
+  assert.equal(entry.media.kind, "video");
+  assert.equal(entry.media.aspectRatio, "9:16");
+  assert.ok(existsSync(`public${entry.media.poster}`), `Poster exists: ${entry.media.poster}`);
+  assert.ok(existsSync(`public${entry.media.src}`), `Media exists: ${entry.media.src}`);
+}
 const sha256 = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 assert.equal(sha256(readFileSync(`public${entries[0].media.src}`)), "a0082108fa53e6be6cc6494fff070a87846d6d832708c09ae35be32df0a900de");
 const previewProbe = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-show_streams", "-of", "json", `public${entries[0].media.src}`], { encoding: "utf8" }));

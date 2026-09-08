@@ -399,7 +399,7 @@ const approvedRepoOrder = [
   ["mugsy-explains", "Mugsy Explains"],
   ["brand-jingles", "Brand Jingle"],
   ["brainrot", "Minecraft Brainrot"],
-  ["character-gameplay-conversations", "Character Gameplay Conversations"],
+  ["character-gameplay-conversations", "Batman Arkham Conversations"],
   ["roast-me-conversations", "Roast Me Conversations"],
   ["video-memes", "Video Meme"],
   ["skai-generated", "Image Filters"],

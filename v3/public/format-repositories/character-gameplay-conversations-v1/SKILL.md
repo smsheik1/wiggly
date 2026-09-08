@@ -3,7 +3,7 @@ name: character-gameplay-conversations
 description: Compose gameplay footage and per-turn character dialogue into vertical Shorts (1080x1920) across three supported sub-formats: 1v1 Debates, Top 5 Countdown Rankings, and Hypothetical Matchup Breakdowns.
 ---
 
-# Character Gameplay Conversations (v0.2.0)
+# Batman Arkham Conversations (v0.2.0)
 
 This Format Kit is built for autonomous AI agents to write, voice, and render high-retention character dialogue Shorts over continuous gameplay footage.
 

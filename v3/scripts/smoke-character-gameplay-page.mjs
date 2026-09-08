@@ -18,9 +18,9 @@ try {
   const page = await context.newPage();
   // A cold production load can expose the server-rendered input before its client handlers initialize.
   await page.goto(`${origin}/discover`, { waitUntil: "networkidle" });
-  await page.getByRole("searchbox", { name: "Search finished ads" }).fill("Character Gameplay Conversations");
-  await page.waitForFunction(() => document.querySelectorAll("article").length === 1);
-  assert.equal(await page.locator('h3[id^="shelf-"]').innerText(), "Character Gameplay Conversations");
+  await page.getByRole("searchbox", { name: "Search finished ads" }).fill("Batman Arkham Conversations");
+  await page.waitForFunction(() => document.querySelectorAll("article").length === 4);
+  assert.equal(await page.locator('h3[id^="shelf-"]').innerText(), "Batman Arkham Conversations");
   const cardVideo = page.locator("article video");
   const cardDimensions = await cardVideo.evaluate(video => ({ width: video.clientWidth, height: video.clientHeight }));
   assert.ok(Math.abs(cardDimensions.width / cardDimensions.height - 9 / 16) < 0.01);
