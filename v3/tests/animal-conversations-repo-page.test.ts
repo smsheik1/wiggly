@@ -116,7 +116,7 @@ assert.match(
 assert.ok(existsSync(download), "The stable public Repo download must exist.");
 assert.equal(
   createHash("sha256").update(readFileSync(download)).digest("hex"),
-  "2d75c05367255f5aa4ebb92fd9e402a096c42f2677f79a84b1087141515dbe76",
+  "9f1f11a666b7f29e8d1a72963c7d55216d98455af1453beb00d66576798d3b80",
   "The public download must match the exact tested v0.17.0 kit.",
 );
 const historical0162 = `${repositoryRoot}/downloads/wiggly-animal-conversations-format-kit-0.16.2.zip`;
