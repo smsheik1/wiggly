@@ -29,7 +29,7 @@ try {
   await page.waitForFunction(() => { const v = document.querySelector("article video"); return v && !v.paused && !v.muted && v.currentTime > 0.1; });
   assert.ok(Math.abs(await cardVideo.evaluate(v => v.duration) - 16.76) < 0.1);
   assert.deepEqual(await cardVideo.evaluate(v => [v.videoWidth, v.videoHeight]), [1080, 1920]);
-  await page.getByRole("link", { name: "Open format", exact: true }).click();
+  await page.getByRole("link", { name: "Open format", exact: true }).first().click();
   await page.waitForURL(`**/formats/${slug}`);
   for (const id of ["accounts-youll-connect", "included-assets", "examples", "workflow", "proof-quality", "repo-files", "run-with-agent"]) assert.equal(await page.locator(`#${id}`).count(), 1, id);
   assert.match(await page.locator("#proof-quality").innerText(), /User accepted the preview/);
