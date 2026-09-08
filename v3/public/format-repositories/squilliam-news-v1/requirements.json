@@ -13,6 +13,13 @@
       "pricingCheckedAt": "2026-08-04",
       "pricingSource": "https://fish.audio/blog/s2-1-pro-free-api/",
       "approval": "Validate first. Ask once before any provider call that may charge or consume a limited quota. Pass --approve-provider to record approval."
+    },
+    {
+      "name": "Social Publisher (Buffer MCP or API)",
+      "purpose": "Simultaneous multi-platform publishing to YouTube Shorts, Instagram Reels, TikTok, and X.",
+      "optional": true,
+      "environmentVariables": ["BUFFER_API_KEY"],
+      "pricingSource": "https://buffer.com/pricing"
     }
   ],
   "paidImageOrVideoProviders": [],
