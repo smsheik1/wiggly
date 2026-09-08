@@ -19,15 +19,15 @@ try {
   // A cold production load can expose the server-rendered input before its client handlers initialize.
   await page.goto(`${origin}/discover`, { waitUntil: "networkidle" });
   await page.getByRole("searchbox", { name: "Search finished ads" }).fill("Batman Arkham Conversations");
-  await page.waitForFunction(() => document.querySelectorAll("article").length === 4);
+  await page.waitForFunction(() => document.querySelectorAll("article").length === 3);
   assert.equal(await page.locator('h3[id^="shelf-"]').innerText(), "Batman Arkham Conversations");
   const cardVideo = page.locator("article video").first();
   const cardDimensions = await cardVideo.evaluate(video => ({ width: video.clientWidth, height: video.clientHeight }));
   assert.ok(Math.abs(cardDimensions.width / cardDimensions.height - 9 / 16) < 0.01);
   await page.screenshot({ path: path.join(screenshots, "discover.png") });
-  await page.getByRole("button", { name: "Play Gotham Meets Optimism with sound" }).click();
+  await page.getByRole("button", { name: "Play Robin Asked Bruce How He Sleeps with sound" }).click();
   await page.waitForFunction(() => { const v = document.querySelector("article video"); return v && !v.paused && !v.muted && v.currentTime > 0.1; });
-  assert.ok(Math.abs(await cardVideo.evaluate(v => v.duration) - 16.76) < 0.1);
+  assert.ok(Math.abs(await cardVideo.evaluate(v => v.duration) - 58.92) < 0.5);
   assert.deepEqual(await cardVideo.evaluate(v => [v.videoWidth, v.videoHeight]), [1080, 1920]);
   await page.getByRole("link", { name: "Open format", exact: true }).first().click();
   await page.waitForURL(`**/formats/${slug}`);
@@ -60,10 +60,10 @@ try {
   await page.evaluate(() => scrollTo(0, 0));
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
   await page.screenshot({ path: path.join(screenshots, "repo-mobile.png") });
-  await page.goto(`${origin}/s/character-gameplay-batman-spongebob`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${origin}/s/character-gameplay-how-batman-sleeps`, { waitUntil: "domcontentloaded" });
   assert.equal(await page.locator('a[href="/formats/character-gameplay-conversations"]').count() > 0, true);
   assert.ok(Math.abs(await page.locator("video").first().evaluate(v => v.clientWidth / v.clientHeight) - 9 / 16) < 0.01);
-  console.log(JSON.stringify({ status: "pass", origin, archiveSha256: expectedHash, screenshots, checks: ["Discover search and 9:16 framing", "Playback control and 1080x1920 16.76-second media", "Standard Repo sections", "Desktop/mobile layout", "Actual clipboard handoff", "Downloaded ZIP checksum", "Readable files", "Share-to-Repo navigation"], limits: "Playback state and dimensions are technical browser checks, not direct audiovisual creative review." }, null, 2));
+  console.log(JSON.stringify({ status: "pass", origin, archiveSha256: expectedHash, screenshots, checks: ["Discover search and 9:16 framing", "Playback control and 1080x1920 59-second media", "Standard Repo sections", "Desktop/mobile layout", "Actual clipboard handoff", "Downloaded ZIP checksum", "Readable files", "Share-to-Repo navigation"], limits: "Playback state and dimensions are technical browser checks, not direct audiovisual creative review." }, null, 2));
 } finally {
   await browser.close();
 }

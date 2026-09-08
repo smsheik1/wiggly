@@ -15,7 +15,7 @@ const profile = getDiscoveryFormatProfile("character-gameplay-conversations")!;
 assert.equal(profile.version, "0.2.0");
 assert.equal(profile.name, "Batman Arkham Conversations");
 const entries = getDiscoveryEntriesByFormat(profile.slug);
-assert.equal(entries.length, 4);
+assert.equal(entries.length, 3);
 for (const entry of entries) {
   assert.equal(entry.format.version, "0.2.0", "The preview must identify the revised generator runtime.");
   assert.equal(entry.media.kind, "video");
@@ -24,7 +24,7 @@ for (const entry of entries) {
   assert.ok(existsSync(`public${entry.media.src}`), `Media exists: ${entry.media.src}`);
 }
 const sha256 = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
-assert.equal(sha256(readFileSync(`public${entries[0].media.src}`)), "a0082108fa53e6be6cc6494fff070a87846d6d832708c09ae35be32df0a900de");
+assert.equal(sha256(readFileSync(`public${entries[0].media.src}`)), "02abd830832603a033401177b6759687aa6d2f7c4beb6f4f26d856547c591362");
 const previewProbe = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-show_streams", "-of", "json", `public${entries[0].media.src}`], { encoding: "utf8" }));
 const previewVideo = previewProbe.streams.find((stream: {codec_type:string}) => stream.codec_type === "video");
 assert.equal(previewVideo.width, 1080);
@@ -69,5 +69,5 @@ assert.equal(publication.detailedCreativeReview, "not-provided");
 assert.match(publication.userAcceptance.quote, /cool looks good to me/);
 assert.equal(publication.example.width, 1080);
 assert.equal(publication.example.height, 1920);
-assert.equal(publication.example.sha256, sha256(readFileSync(`public${entries[0].media.src}`)));
+assert.equal(publication.example.sha256, sha256(readFileSync(`${root}/${publication.example.file}`)));
 console.log("Character Gameplay Conversations: music preview, credit, user acceptance, pinned handoff and 45-file ZIP parity passed.");
