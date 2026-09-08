@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "topic": "Robin asked Bruce why he won't kill the Joker",
+  "header": {
+    "title": "ROBIN ASKED BRUCE",
+    "question": "WHY HE WON'T KILL JOKER"
+  },
+  "castMode": "same-universe",
+  "cast": [
+    {
+      "id": "robin",
+      "name": "ROBIN",
+      "universe": "DC",
+      "color": "#38bdf8"
+    },
+    {
+      "id": "batman",
+      "name": "BATMAN",
+      "universe": "DC",
+      "color": "#ffffff"
+    }
+  ],
+  "gameplay": {
+    "file": "assets/gameplay/batman-arkham-gliding-65s.mp4",
+    "authorized": true,
+    "provenance": "Batman Arkham Knight Gotham night gliding gameplay"
+  },
+  "music": {
+    "file": "assets/audio/yeat-if-we-being-real.mp3",
+    "authorized": true,
+    "provenance": "Yeat - If We Being Real (Instrumental starting at 0:28)",
+    "volume": 0.12,
+    "attribution": "Instrumental bed: Yeat - If We Being Real (used for pacing under dialogue)"
+  },
+  "turns": [
+    {
+      "speaker": "robin",
+      "text": "Bruce, serious question. Why won't you just kill the Joker? The guy has broken out of Arkham 34 times and poisoned half the city. At this point, you're practically his getaway driver.",
+      "durationSeconds": 6.8,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-01.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "BRUCE, SERIOUS QUESTION. WHY",
+          "start": 0,
+          "end": 1.7
+        },
+        {
+          "text": "WON'T YOU JUST KILL JOKER?",
+          "start": 1.7,
+          "end": 3.4
+        },
+        {
+          "text": "HE BROKE OUT 34 TIMES. YOU'RE",
+          "start": 3.4,
+          "end": 5.1
+        },
+        {
+          "text": "PRACTICALLY HIS GETAWAY DRIVER.",
+          "start": 5.1,
+          "end": 6.8
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "Think about the legal framework, Tim. If I execute him, what happens to Gotham's judicial system?",
+      "durationSeconds": 4.2,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-02.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "THINK ABOUT THE LAW, TIM. IF I",
+          "start": 0,
+          "end": 2.1
+        },
+        {
+          "text": "KILL HIM, WHAT HAPPENS TO COURT?",
+          "start": 2.1,
+          "end": 4.2
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "text": "I don't know, a parade? People get to breathe without wearing gas masks?",
+      "durationSeconds": 3.6,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-03.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "I DON'T KNOW, A PARADE? PEOPLE",
+          "start": 0,
+          "end": 1.8
+        },
+        {
+          "text": "BREATHE WITHOUT GAS MASKS?",
+          "start": 1.8,
+          "end": 3.6
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "No. Under New Jersey penal law, an extrajudicial execution by an un-deputized vigilante taints every active municipal indictment. His defense attorneys would file immediate chain-of-custody violations across every prosecution.",
+      "durationSeconds": 9.4,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-04.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "NO. AN ILLEGAL EXECUTION TAINTS",
+          "start": 0,
+          "end": 2.35
+        },
+        {
+          "text": "EVERY ACTIVE INDICTMENT.",
+          "start": 2.35,
+          "end": 4.7
+        },
+        {
+          "text": "HIS LAWYERS FILE IMMEDIATE",
+          "start": 4.7,
+          "end": 7.05
+        },
+        {
+          "text": "CHAIN OF CUSTODY VIOLATIONS.",
+          "start": 7.05,
+          "end": 9.4
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "text": "Wait. So if you snap his neck, his lawyers get hundreds of other inmates released on technicalities?",
+      "durationSeconds": 5.2,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-05.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "WAIT. SO IF YOU SNAP HIS NECK,",
+          "start": 0,
+          "end": 2.6
+        },
+        {
+          "text": "HUNDREDS OF INMATES WALK FREE?",
+          "start": 2.6,
+          "end": 5.2
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "Exactly. Two-Face, Penguin, and Zsasz walk free within 48 hours. The Joker becomes a constitutional martyr for police brutality.",
+      "durationSeconds": 6.4,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-06.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "EXACTLY. TWO-FACE AND PENGUIN",
+          "start": 0,
+          "end": 2.1
+        },
+        {
+          "text": "WALK FREE WITHIN 48 HOURS.",
+          "start": 2.1,
+          "end": 4.2
+        },
+        {
+          "text": "JOKER BECOMES A CONSTITUTIONAL",
+          "start": 4.2,
+          "end": 5.3
+        },
+        {
+          "text": "MARTYR FOR POLICE BRUTALITY.",
+          "start": 5.3,
+          "end": 6.4
+        }
+      ]
+    },
+    {
+      "speaker": "robin",
+      "text": "So you keep him alive not because of your moral code, but because Gotham's court paperwork is an absolute nightmare.",
+      "durationSeconds": 5.8,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-07.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "SO YOU KEEP HIM ALIVE BECAUSE",
+          "start": 0,
+          "end": 2.9
+        },
+        {
+          "text": "GOTHAM COURT PAPERWORK SUCKS.",
+          "start": 2.9,
+          "end": 5.8
+        }
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "Bureaucracy is Gotham's real villain, Tim. Even the Batmobile can't run over a municipal injunction.",
+      "durationSeconds": 5.2,
+      "audio": {
+        "file": "assets/audio/how-batman-sleeps/turn-08.wav",
+        "authorized": true,
+        "provenance": "Fish Audio voice model"
+      },
+      "captions": [
+        {
+          "text": "BUREAUCRACY IS THE REAL VILLAIN.",
+          "start": 0,
+          "end": 2.6
+        },
+        {
+          "text": "BATMOBILE CAN'T RUN OVER COURT.",
+          "start": 2.6,
+          "end": 5.2
+        }
+      ]
+    }
+  ]
+}
