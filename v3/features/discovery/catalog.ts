@@ -2133,23 +2133,6 @@ const fortniteFilterDiscoveryEntries: DiscoveryEntry[] = [
 
 export const discoveryCatalog: DiscoveryEntry[] = [
   {
-    id: "character-gameplay-batman-spongebob",
-    status: "published",
-    order: 15,
-    brand: "Batman × SpongeBob",
-    title: "Gotham Meets Optimism",
-    curatorNote: "User-accepted 9:16 revision of the original blind-agent episode, retaining Arkham footage, six voices and timing with a quiet music bed. Music: Dark Fog by Kevin MacLeod (incompetech.com), CC BY 4.0 — trimmed, ducked and faded; full credit and license in the Repo. This is a selected alternative, not the original song. The Repo takes supplied media, without downloading gameplay or generating voices.",
-    goal: "entertain",
-    media: {
-      kind: "video",
-      src: "/format-repositories/character-gameplay-conversations-v1/examples/batman-spongebob-music.mp4",
-      poster: "/format-repositories/character-gameplay-conversations-v1/examples/batman-spongebob-shorts-poster.jpg",
-      durationLabel: "17 sec",
-      aspectRatio: "9:16",
-    },
-    format: { slug: "character-gameplay-conversations", name: "Batman Arkham Conversations", version: "0.2.0", owner: "Wiggly Studio" },
-  },
-  {
     id: "character-gameplay-how-batman-sleeps",
     status: "published",
     order: 16,
