@@ -21,7 +21,7 @@ try {
   await page.getByRole("searchbox", { name: "Search finished ads" }).fill("Batman Arkham Conversations");
   await page.waitForFunction(() => document.querySelectorAll("article").length === 4);
   assert.equal(await page.locator('h3[id^="shelf-"]').innerText(), "Batman Arkham Conversations");
-  const cardVideo = page.locator("article video");
+  const cardVideo = page.locator("article video").first();
   const cardDimensions = await cardVideo.evaluate(video => ({ width: video.clientWidth, height: video.clientHeight }));
   assert.ok(Math.abs(cardDimensions.width / cardDimensions.height - 9 / 16) < 0.01);
   await page.screenshot({ path: path.join(screenshots, "discover.png") });
