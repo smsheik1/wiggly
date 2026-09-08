@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "wiggly-format",
   "slug": "roast-me-conversations",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "status": "ready-for-review",
   "runtime": "runtime/render.mjs",
   "releaseFiles": [
@@ -94,7 +94,10 @@
     "quality.json",
     "requirements.json",
     "runtime/render.mjs",
+    "runtime/publish.mjs",
+    "inputs/distribution.json",
     "tests/contract.test.mjs",
+    "tests/distribution.test.mjs",
     "tests/smoke.mjs",
     "tests/verify-proofs.mjs"
   ],

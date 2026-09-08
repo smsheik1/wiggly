@@ -12,12 +12,12 @@ import { FormatRepoPackageConnections, FormatRepoPackageAssets, FormatRepoPackag
 import { buildDiscoveryHandoffPrompt } from "../features/discovery/handoff";
 
 const profile = getDiscoveryFormatProfile("roast-me-conversations")!;
-assert.equal(profile.version, "0.2.0");
+assert.equal(profile.version, "0.3.0");
 assert.equal(profile.name, "Roast Me Conversations");
 
 const entries = getDiscoveryEntriesByFormat(profile.slug);
 assert.equal(entries.length, 1);
-assert.equal(entries[0].format.version, "0.2.0", "The preview must identify the generator runtime version.");
+assert.equal(entries[0].format.version, "0.3.0", "The preview must identify the generator runtime version.");
 assert.equal(entries[0].media.kind, "video");
 assert.equal(entries[0].media.aspectRatio, "9:16");
 assert.ok(existsSync(`public${entries[0].media.poster}`));
@@ -37,8 +37,15 @@ assert.equal(presentation.kind, "shared");
 if (presentation.kind !== "shared") throw new Error("Use the standard shared page.");
 
 const data = presentation.package!;
-assert.deepEqual(data.services, [], "No external provider accounts required for baseline execution.");
-assert.equal(data.workflow.length, 5);
+assert.deepEqual(data.services, [
+  {
+    name: "Social Publisher (Buffer MCP or API)",
+    purpose: "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X.",
+    keys: ["BUFFER_API_KEY"],
+    model: "",
+  },
+], "Optional social publisher declared for distribution; composition requires no provider account.");
+assert.equal(data.workflow.length, 6);
 assert.equal(data.proof.examples.length, 2);
 
 const html = [FormatRepoPackageConnections, FormatRepoPackageAssets, FormatRepoPackageEvidence]
@@ -55,7 +62,7 @@ for (const text of [
 }
 
 const prompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
-assert.ok(prompt.includes("/downloads/roast-me-conversations-0.2.0.zip"));
+assert.ok(prompt.includes("/downloads/roast-me-conversations-0.3.0.zip"));
 
 const root = `public/${profile.packagePath}`;
 const zip = await JSZip.loadAsync(readFileSync(`public${profile.repositoryHref}`));
@@ -65,7 +72,7 @@ for (const name of ["format.json", "KIT-MANIFEST.json", "FORMAT-REPO.json", "pac
 }
 
 const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
-assert.equal(inventory.files.length, 91);
+assert.equal(inventory.files.length, 94);
 assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((entry: { file: string }) => entry.file), "RELEASE-CONTENTS.json"].sort());
 
 for (const item of inventory.files) {
@@ -76,10 +83,11 @@ for (const item of inventory.files) {
 }
 
 assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "8f6b3aff46a978d1bda7144f563679c0805c716aff460c4cd3b537c964e993a4");
+assert.equal(sha256(readFileSync(`${root}/downloads/roast-me-conversations-0.2.0.zip`)), "79563c3eec469305d780b0562fa08e8905b88332a0c8c6ee3f8b7690a80babc9", "Preserve prior 0.2.0 release.");
 assert.equal(JSON.parse(await zip.file("FORMAT-REPO.json")!.async("string")).review.reviewer, "User");
 
 const publication = JSON.parse(await zip.file("PUBLICATION.json")!.async("string"));
 assert.equal(publication.publicationAuthorized, true);
 assert.equal(publication.paidGenerationsForPublication, 0);
 
-console.log("Roast Me Conversations: format presentation, public parity, handoff, and 91-file ZIP verified.");
+console.log("Roast Me Conversations: format presentation, public parity, handoff, and 94-file ZIP verified.");

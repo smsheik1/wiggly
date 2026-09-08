@@ -89,7 +89,7 @@ export async function getFormatRepoPagePresentation(
           "Send a supported video link or local clip. Your coding agent extracts the audio, prepares the dialogue for your approval, and makes the video. No timestamps to write.",
         examplesTitle: "Finished Conversations.",
         examplesDescription:
-          "These examples were made with v0.15.1. The current download is v0.16.2, with easier setup and a guided approval-to-export workflow.",
+          "These examples were made with v0.15.1. The current download is v0.17.0, with multi-platform social distribution, easier setup, and a guided approval-to-export workflow.",
       },
     };
   }

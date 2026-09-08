@@ -40,3 +40,23 @@ This Format Kit enables autonomous AI agents to script, format, and render viral
    - Run `node runtime/render.mjs inputs/<episode>.json outputs/<episode>.mp4`.
 5. **Inspect:**
    - Run `node tests/verify-proofs.mjs outputs/<episode>.mp4` and inspect frames to confirm layout, character animation, text fitting, and audio synchronization.
+6. **Distribute (Optional Multi-Platform Publishing):**
+   - Proactively prompt the user: *"Do you want to post this to YouTube, Instagram, or X? (We can blast all three, or just your favorites!)"*
+   - Author tailored platform copies:
+     - **YouTube Shorts:** Title $\le 100$ characters with `#Shorts #RoastMe` + category ID 23 (Comedy).
+     - **Instagram Reels:** Engaging hook caption $\le 2200$ characters + relevant hashtags.
+     - **Twitter / X:** Snappy punchline tweet $\le 280$ characters.
+     - **TikTok:** Punchy comment-bait caption $\le 2200$ characters.
+   - Run preflight validation with `--dry-run`:
+     ```bash
+     node runtime/publish.mjs inputs/distribution.json outputs/<episode>.mp4 --dry-run
+     ```
+   - Present the copy and platforms to the user for explicit approval (`approvalRequired: true`).
+   - On approval, dispatch to connected social accounts via Buffer MCP or `BUFFER_API_KEY`.
+   - Durable receipt is written to `outputs/<episode>.mp4.distribution.json`.
+
+## Conversational Onboarding & Behavioral Guardrails
+
+- **Zero Jargon:** Never show raw JSON payloads, API endpoints, or developer terminology to users in chat.
+- **Selective Platforms:** If a user only wants 1 or 2 platforms (e.g. "just post to Twitter"), set `enabled: false` on the others and proceed.
+- **Graceful Fallback:** If `BUFFER_API_KEY` is not present, report the saved video and explain how to connect Buffer in 1 simple step without failing the render.

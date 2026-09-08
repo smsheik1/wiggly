@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "examples/i-made-a-mistake/input.json",
+  "media": "examples/i-made-a-mistake/evidence/final.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "When you have to confess to your best friend... 🐶🐰 #Shorts",
+      "description": "Dog made a mistake, Bunny tries to reassure him, and the panic sets in.\n\n#Shorts #AnimalConversations #Animation #Wholesome #Cartoons",
+      "categoryId": "15",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "We all make mistakes... it's about who you tell first 🥺❤️\n.\n.\n#animalconversations #animation #wholesome #cartoons #reels #viral"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "When you have to confess to your best friend that you made a mistake 🥺🐰🐶\n\n#AnimalConversations #Animation #Wholesome"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "When you make a mistake and need to tell your bestie 🥺❤️ #animals #wholesome #animation #fyp",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}

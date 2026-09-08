@@ -52,9 +52,9 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "A viral social roast format. Opens with a floating Twitter/X card over continuous vertical gameplay, transitioning into rapid iMessage roast exchanges that expand downward with audio and pop sound effects.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/roast-me-conversations-v1/format.json",
-    repositoryHref: "/format-repositories/roast-me-conversations-v1/downloads/roast-me-conversations-0.2.0.zip",
+    repositoryHref: "/format-repositories/roast-me-conversations-v1/downloads/roast-me-conversations-0.3.0.zip",
     technicalHref: "/format-repositories/roast-me-conversations-v1/BENCHMARK.md",
-    historicalProofVersions: ["0.1.0"],
+    historicalProofVersions: ["0.1.0", "0.2.0"],
     whatStays: [
       "Centered floating cards over continuous vertical gameplay",
       "Scene 0 Twitter/X prompt card with avatar and selfie photo",
@@ -553,7 +553,7 @@ const formatConfigs: FormatProfileConfig[] = [
     lastUpdated: "September 2026",
     repositoryHref: "/format-repositories/animal-conversations-v1/downloads/wiggly-animal-conversations-format-kit.zip",
     manifestPath: "format-repositories/animal-conversations-v1/format.json",
-    historicalProofVersions: ["0.15.1"],
+    historicalProofVersions: ["0.15.1", "0.16.2"],
     whatStays: [
       "The complete colored cat and bunny character rigs",
       "Two-shot, cat-close, and bunny-close camera grammar",

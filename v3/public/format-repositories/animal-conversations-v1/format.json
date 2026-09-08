@@ -2,7 +2,7 @@
   "id": "animal-conversations",
   "title": "Animal Conversations",
   "name": "Animal Conversations",
-  "version": "0.16.2",
+  "version": "0.17.0",
   "description": "Give your coding agent a supported accessible video link or local file. It extracts the audio locally, drafts the Dog/Bunny script for your approval, and uses the packaged characters and backgrounds to render, review and export a vertical animation. No user-authored timestamps or AI image/video credits are required.",
   "runtime": "runner.mjs",
   "renderer": "runtime/render.mjs",

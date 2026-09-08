@@ -10,8 +10,16 @@
     "cargo",
     "python3"
   ],
-  "formatRepoDependencies": [],
-  "providers": [],
+  "providers": [
+    {
+      "name": "Social Publisher (Buffer MCP or API)",
+      "environmentVariables": [
+        "BUFFER_API_KEY"
+      ],
+      "optional": true,
+      "purpose": "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
+    }
+  ],
   "environmentVariables": [
     "FFMPEG",
     "FFPROBE",

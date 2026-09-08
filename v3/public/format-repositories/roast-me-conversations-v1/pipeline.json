@@ -21,6 +21,11 @@
       "id": "render-and-inspect",
       "output": "Use the unchanged official compositor runtime/render.mjs to render the 1080x1920 MP4, then inspect receipt and media before accepting.",
       "approvalRequired": true
+    },
+    {
+      "id": "distribute-episode",
+      "output": "Author platform-tailored copy for YouTube Shorts, Instagram Reels, TikTok, and X, present for review, and dispatch to connected channels via runtime/publish.mjs. Writes live receipts to outputs/episode.distribution.json.",
+      "approvalRequired": true
     }
   ]
 }

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "inputs/specular-commentary-proof.json",
+  "media": "outputs/specular-commentary-proof.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "When Founder Tweets Go Horribly Wrong #Shorts",
+      "description": "AI startup founder thought this pitch deck slide would impress investors... Twitter had other plans.\n\n#Shorts #Roast #Startup #TechRoast #TwitterMemes",
+      "categoryId": "23",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "Nobody is safe in the quote tweets 💀\n.\n.\n#roastme #techhumor #startupmemes #reels #viral"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "He thought this slide deck would raise $10M. The replies had other ideas 💀 #RoastMe #StartupHumor"
+    },
+    "tiktok": {
+      "enabled": false,
+      "caption": "The comments violated him 💀 #roastme #fyp #tech",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}
