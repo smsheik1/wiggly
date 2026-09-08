@@ -27,9 +27,9 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Fan-favorite characters. Conversations fans wish existed. Real gameplay, character dialogue, timed captions and optional background music—assembled into vertical 9:16 Shorts.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/character-gameplay-conversations-v1/format.json",
-    repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.1.4.zip",
+    repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.2.0.zip",
     technicalHref: "/format-repositories/character-gameplay-conversations-v1/BENCHMARK.md",
-    historicalProofVersions: ["0.1.1", "0.1.2", "0.1.3"],
+    historicalProofVersions: ["0.1.1", "0.1.2", "0.1.3", "0.1.4"],
     whatStays: ["A persistent title and question", "Real gameplay beneath the conversation", "Speaker labels and timed dialogue captions", "One local renderer for same-universe casts and crossovers"],
     whatChanges: ["The characters and their universes", "The topic, script and question", "The supplied gameplay, voices and optional music", "Caption phrasing and timing"],
     handoff: {

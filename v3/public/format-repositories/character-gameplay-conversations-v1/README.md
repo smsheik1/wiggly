@@ -1,16 +1,22 @@
 # Character Gameplay Conversations
 
-Public baseline **0.1.4**, for **9:16 Shorts at 1080 × 1920**. Choose your characters and topic, then supply gameplay and one voice clip per line. Your coding agent prepares the timing and assembles the conversation, with optional background music underneath. No media-provider account is required for this supplied-media workflow.
+Public baseline **0.2.0**, for **9:16 Shorts at 1080 × 1920**. Choose your characters and topic, and generate an end-to-end voiced conversation over gameplay with one command, or supply your own custom audio clips and gameplay video.
 
-Run `npm ci --ignore-scripts --no-audit --no-fund`, `npm test`, and `npm run smoke` from this extracted folder. Smoke creates a fresh evidence folder each time and never calls a provider. Then follow `SKILL.md` to create a real episode.
+Run `npm ci --ignore-scripts --no-audit --no-fund`, `npm test`, and `npm run smoke` from this folder to verify offline baseline contracts.
 
-The user requested background music after the 9:16 revision, then accepted the music preview: “cool looks good to me.” Its gameplay, six voice clips, captions and 16.76-second timing are unchanged. Version 0.1.4 adds an optional music input to the same compositor. This is qualitative user acceptance, not an agent claim of direct hearing or a numerical voice-fidelity score. See `PUBLICATION.json`. The original blueprint is historical: its no-install, bitmap, 3:4 and dialogue-only descriptions are not the current output contract.
+## Autonomous Generation
 
-A small standalone compositor for fictional-character conversations over supplied gameplay, with a persistent title/question header and timed captions. One Node.js runtime handles same-universe casts and crossovers.
+To automatically resolve community voice models, script the fan debate, cut gameplay, and render the complete Short:
 
-The user clarified the creative hook: fan-favorite fictional characters having cloned-voice conversations over Batman Arkham Knight or Spider-Man 2 gameplay. The initial independent analysis identified only header/gameplay/captions/dialogue and missed that hook. This package consumes supplied authorized gameplay and per-turn audio; it does not generate or verify recognizable character voices.
+```sh
+node runtime/generate.mjs \
+  --character1="Batman" \
+  --character2="The Joker" \
+  --topic="Why does Batman keep Joker alive?" \
+  --output="outputs/batman-vs-joker.mp4"
+```
 
-The included inputs use original fictional test characters, generated diagnostic video and audible tone WAVs. These are mechanical tests, not finished examples of the intended creative format. No reference footage, extracted frames/audio, transcript, character performance or voice model is distributed.
+Use `--dry-run` to validate the plan, voice model resolution, and timings without synthesis. Voice generation utilizes Fish Audio (`s2.1-pro-free`). Single-command wrapper: `npm run generate -- --character1="Batman" --character2="Jason Todd"`.
 
 ## Setup and quick proof
 

@@ -1,3 +1,5 @@
 node_modules/
 outputs/
 .smoke-*/
+assets/audio/
+assets/gameplay/*-cut.mp4

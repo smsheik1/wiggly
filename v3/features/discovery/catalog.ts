@@ -2147,7 +2147,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
       durationLabel: "17 sec",
       aspectRatio: "9:16",
     },
-    format: { slug: "character-gameplay-conversations", name: "Character Gameplay Conversations", version: "0.1.4", owner: "Wiggly Studio" },
+    format: { slug: "character-gameplay-conversations", name: "Character Gameplay Conversations", version: "0.2.0", owner: "Wiggly Studio" },
   },
   {
     id: "repo-builder-overview",
