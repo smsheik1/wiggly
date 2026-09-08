@@ -34,7 +34,9 @@ try {
   assert.equal(inspected.video.height, 1080);
   assert.equal(inspected.video.codec_name, "h264");
   assert.equal(inspected.audio.codec_name, "aac");
-  assert.ok(Math.abs(inspected.durationSeconds - 90) <= 0.15);
+  const source = JSON.parse(readFileSync(path.join(root, "examples/animal-conversations-first-run/input.json"), "utf8")).sourceVideo;
+  const sourceMeta = JSON.parse(execFileSync(process.execPath, ["runner.mjs", "inspect", `--input=${path.join(root, "examples/animal-conversations-first-run", source)}`], { cwd: root, encoding: "utf8" }));
+  assert.ok(Math.abs(inspected.durationSeconds - sourceMeta.durationSeconds) <= 0.15);
 } finally {
   if (existsSync(verificationOutput)) await import("node:fs/promises").then(({ unlink }) => unlink(verificationOutput));
 }
@@ -50,7 +52,9 @@ try {
   assert.equal(inspected.video.height, 1080);
   assert.equal(inspected.video.codec_name, "h264");
   assert.equal(inspected.audio.codec_name, "aac");
-  assert.ok(Math.abs(inspected.durationSeconds - 90) <= 0.15);
+  const variantInput = JSON.parse(readFileSync(path.join(root, "examples/animal-conversations-variant/input.json"), "utf8"));
+  const variantSourceMeta = JSON.parse(execFileSync(process.execPath, ["runner.mjs", "inspect", `--input=${path.join(root, "examples/animal-conversations-variant", variantInput.sourceVideo)}`], { cwd: root, encoding: "utf8" }));
+  assert.ok(Math.abs(inspected.durationSeconds - variantSourceMeta.durationSeconds) <= 0.15);
 } finally {
   if (existsSync(variantVerificationOutput)) await import("node:fs/promises").then(({ unlink }) => unlink(variantVerificationOutput));
 }

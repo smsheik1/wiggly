@@ -5,8 +5,8 @@
   workflow. It contains the narrated walkthrough, real coding-agent handoff,
   captions, and finished-format proof.
 - `examples/animal-conversations-first-run/final.mp4` is produced by this kit's
-  `runner.mjs`; it is not a hand-edited copy. The runner speed-fits the supplied
-  master to the declared 90-second delivery contract.
+  `runner.mjs`; it is not a hand-edited copy. The runner preserves the supplied
+  master's natural duration and only re-encodes it to the output contract.
 - Raw creator posts, private screen captures, cookies, source URLs, API keys,
   and provider outputs are intentionally excluded. Only include the supplied
   master in a public release when its operator has distribution permission.

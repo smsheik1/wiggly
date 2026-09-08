@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "automatic": {"width": 1920, "height": 1080, "fps": 30, "durationSeconds": 90, "durationToleranceSeconds": 0.15, "videoCodec": "h264", "audioCodec": "aac", "audioRequired": true},
-  "technicalGates": ["input-contract", "16:9 dimensions", "90-second duration", "H.264/AAC streams", "non-silent audio", "burned-in captions declared", "output hash recorded", "no paid providers"],
+  "automatic": {"width": 1920, "height": 1080, "fps": 30, "durationSeconds": "same as sourceVideo", "durationToleranceSeconds": 0.15, "videoCodec": "h264", "audioCodec": "aac", "audioRequired": true},
+  "technicalGates": ["input-contract", "16:9 dimensions", "source duration preserved", "H.264/AAC streams", "non-silent audio", "burned-in captions declared", "output hash recorded", "no paid providers"],
   "blindReview": {"requiredPlayback": {"completedPasses": 1, "perceptionMode": "best-available-with-explicit-disclosure"}, "criteria": ["proof appears before explanation", "real agent handoff is understandable", "approval gate is visible", "captions remain readable", "complete output plays without interruption"]}
 }

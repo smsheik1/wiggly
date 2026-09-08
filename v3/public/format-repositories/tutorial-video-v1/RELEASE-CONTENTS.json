@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "kit": "wiggly-tutorial-video-format-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "files": [
     {
       "file": "KIT-MANIFEST.json",
-      "sha256": "db38ac647bfd07a1b33f729b2cb3cbf9384ddca522a5e31210b0556681382596",
+      "sha256": "7e2fc9c490aae1575f97aeda01e3ffcac04c83024596e8e9d0a569d615dbc855",
       "sizeBytes": 520
     },
     {
@@ -15,13 +15,13 @@
     },
     {
       "file": "PROVENANCE.md",
-      "sha256": "ea01f9f05b2dbdadcd0117294a3a45b88687fd7e9ad985db9eceee3b8e09c019",
-      "sizeBytes": 981
+      "sha256": "ddd62534ade3326f8715eca5a664dbe67c170c9d3441fc7582118b9878c73637",
+      "sizeBytes": 1001
     },
     {
       "file": "README.md",
-      "sha256": "fc2558fa303596a8d7e9e3d1891e678f81b8049344e3e274edc87e406384c5ab",
-      "sizeBytes": 2629
+      "sha256": "14a74cf8056d2b4de6ee03e9639fbc28821fd056711f85bbf7196735ec832db5",
+      "sizeBytes": 2694
     },
     {
       "file": "SKILL.md",
@@ -45,7 +45,7 @@
     },
     {
       "file": "build-kit.mjs",
-      "sha256": "634ae10dd9c107318ce8fe94119fba7ab1340dd05dfa811799c93bf1bb0d8ef9",
+      "sha256": "52e1d657ce81260a232323739b7a186ae7a40467617f2f34fc2c5010f1d4e040",
       "sizeBytes": 2085
     },
     {
@@ -55,8 +55,8 @@
     },
     {
       "file": "evidence/animal-conversations-run.json",
-      "sha256": "18fb491a066b45953f3aec9b15fe02b0bdcf75d523478ab315c477ec63861731",
-      "sizeBytes": 709
+      "sha256": "96a25b65536bb6681d3ae05230893fba78699ec4ff6891b35f837e2d5a32ab07",
+      "sizeBytes": 729
     },
     {
       "file": "examples/animal-conversations-first-run/PROOF.md",
@@ -70,13 +70,13 @@
     },
     {
       "file": "examples/animal-conversations-first-run/final.mp4",
-      "sha256": "7125014facce22ba4e38266c3d1f0db064f3cb5d4af0f5be64232ac756277447",
-      "sizeBytes": 7398154
+      "sha256": "1c9293b3b8cfcc25d713f31625974ef339ffdbfa6ce9cb4b3c7e4f807c2734b6",
+      "sizeBytes": 9705841
     },
     {
       "file": "examples/animal-conversations-first-run/input.json",
-      "sha256": "0e8edd4f5cb7030640393cba7b6c845d75186ae4bd735b084ca3a913ba7fb420",
-      "sizeBytes": 780
+      "sha256": "820c20aad498f6126518786d0ddea145e97de11ac97db0c22b373e4ce8d9cf2f",
+      "sizeBytes": 783
     },
     {
       "file": "examples/animal-conversations-first-run/poster.jpg",
@@ -85,13 +85,13 @@
     },
     {
       "file": "examples/animal-conversations-first-run/quality-report.json",
-      "sha256": "9fbf4e458930c35f731cb513930fcd9555df8899bb8c8be559d01d898e03efff",
-      "sizeBytes": 653
+      "sha256": "679f583d50e55a24c5fa29027f3495aafa4f5776a126c524752f51ead98f79d0",
+      "sizeBytes": 626
     },
     {
       "file": "examples/animal-conversations-variant/PROOF.md",
-      "sha256": "3521245183dfbff9e6fa7f6df1c21770304dd9bb77318999cbc7b6ef1840c57f",
-      "sizeBytes": 274
+      "sha256": "50b39b15a79e0b62995f448011279f88ef359bda65d8e0fd7d1e212cd8ae4340",
+      "sizeBytes": 291
     },
     {
       "file": "examples/animal-conversations-variant/contact-sheet.jpg",
@@ -100,13 +100,13 @@
     },
     {
       "file": "examples/animal-conversations-variant/final.mp4",
-      "sha256": "1042b8b3770680e4675edbdd13da5ae25275783e1934914c33812634cbc8915a",
-      "sizeBytes": 11363170
+      "sha256": "46f0273578f93e8c04f4de1e7971a087f6b7422293c953406198bc4328876866",
+      "sizeBytes": 17234271
     },
     {
       "file": "examples/animal-conversations-variant/input.json",
-      "sha256": "badd30445f35e2f20c7c11a24ffac3265ddf58c4fff2b224aabd3d111f2012eb",
-      "sizeBytes": 795
+      "sha256": "024b4194ecb7f69710b0c3fac64d2912ea0c4cdcbad33d02bb72cdc3c3cad3e7",
+      "sizeBytes": 803
     },
     {
       "file": "examples/animal-conversations-variant/poster.jpg",
@@ -115,37 +115,37 @@
     },
     {
       "file": "examples/animal-conversations-variant/quality-report.json",
-      "sha256": "6fb41e38700518825fe3c8e20ca5ab261c4b212975a5e59597c055091fde7380",
-      "sizeBytes": 657
+      "sha256": "cf89ecd0ba93249642bdd4846c7d7247edf323abc369a2882221b6c8d13174b5",
+      "sizeBytes": 636
     },
     {
       "file": "format.json",
-      "sha256": "23dd789fbe721605e94d00516f0f993e03d4f15e52e0a7baaea2eb9725ba1124",
-      "sizeBytes": 543
+      "sha256": "c62224cda25e9ad28acb4358ab685a1b7b2eb5e65c80ef5c13e99aa4dce26b7e",
+      "sizeBytes": 586
     },
     {
       "file": "goldens.json",
-      "sha256": "e87a96b4019470e91114ded044b670775dc537ac504175faf192748088a56485",
-      "sizeBytes": 941
+      "sha256": "5f8d514a36756c24d8fe4c49f7a1eabad8264ee66078236ee9d4dc5ad20da144",
+      "sizeBytes": 1013
     },
     {
       "file": "input-contract.json",
-      "sha256": "97cbd8abd2bd13c0ac0f9ba1103d2dc2c25b695869f8a6de2e7cbb0ec6a262f6",
-      "sizeBytes": 722
+      "sha256": "ec68856e01246806ef031a40741ae13ab5a6160c6e4705da10b0179aaefb94cd",
+      "sizeBytes": 819
     },
     {
       "file": "output-contract.json",
-      "sha256": "b542ce1f3bf6bf83506adab182d9dd081ab34f1108f0caf4a1bbccc1a4addfe4",
-      "sizeBytes": 430
+      "sha256": "90ffb394272cb8f6ccf62a5ebbbfc4434b63bb7438c3d43d3ba3466c7d4151a7",
+      "sizeBytes": 442
     },
     {
       "file": "package-lock.json",
-      "sha256": "5da8e0722334d4f5b894a97cd92126a53b4305054e09a16213464cb8311d1d06",
+      "sha256": "960b7b83d0f63b1e5e6f67a41776aa6cee5ed818894febe9e610bea67fbf446b",
       "sizeBytes": 201
     },
     {
       "file": "package.json",
-      "sha256": "e7faa81f245eea8442265f64106404df0df25bd94c30a2c754e377cb83246181",
+      "sha256": "3a94c80b42d88d6c2832ad0491aaf1f9a467355c21d947bcec546eb1b68c25ba",
       "sizeBytes": 225
     },
     {
@@ -155,8 +155,8 @@
     },
     {
       "file": "quality.json",
-      "sha256": "1e8724c8bab37c3e5739189c440be11dbd8dfd3257be16ee09c760427e1cf18b",
-      "sizeBytes": 721
+      "sha256": "28e633458628bd5df85a547b98c5f2e5260689c6973e1991cd31e49ae42b9253",
+      "sizeBytes": 747
     },
     {
       "file": "references/tutorial-grammar.md",
@@ -165,7 +165,7 @@
     },
     {
       "file": "release-files.json",
-      "sha256": "f9c125adb57d1da811ab6a9294181ca22a1a5eba546773ee34a299810826d5a8",
+      "sha256": "f9d6e92db196a06ab1b973895a55f7692639c4dc96d7256ff2e78a65df82de05",
       "sizeBytes": 366
     },
     {
@@ -175,13 +175,13 @@
     },
     {
       "file": "runner.mjs",
-      "sha256": "df9c764ca2a605374f682e882a9b712f41c78a6cf2939e1bdf3b90ff812af02d",
-      "sizeBytes": 7094
+      "sha256": "6f6b421e757110fd44819b052c49c703a5a20c00ee86cb0100858e0ef488489f",
+      "sizeBytes": 6474
     },
     {
       "file": "scripts/verify.mjs",
-      "sha256": "29fde834ce339bea099db2770552373f8d7f05d1e7fb0e17b2f66da2651c11b0",
-      "sizeBytes": 4172
+      "sha256": "f0d8b507edbb97d3caa8ca127d5793f2ad08d180cb864ebb701bd9d411e812f8",
+      "sizeBytes": 4922
     }
   ]
 }

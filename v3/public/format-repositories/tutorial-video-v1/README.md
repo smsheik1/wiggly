@@ -21,10 +21,11 @@ node runner.mjs render --input examples/animal-conversations-first-run/input.jso
 node runner.mjs inspect --input /tmp/tutorial-video.mp4
 ```
 
-`render` fits the supplied tutorial master to the declared 90-second delivery
-by preserving the complete source arc and applying a deterministic local speed
-fit. Captions are expected to be burned into the supplied master; the runner
-does not create captions from unreviewed speech.
+`render` preserves the supplied tutorial master's natural duration. If
+`durationSeconds` is included in the input, it is checked against the probed
+source duration; the runner never accelerates, trims, or stretches the master.
+Captions are expected to be burned into the supplied master; the runner does
+not create captions from unreviewed speech.
 
 ## The agent loop
 

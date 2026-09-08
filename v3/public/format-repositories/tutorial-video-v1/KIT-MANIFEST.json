@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kit": "wiggly-tutorial-video-format-kit",
-  "formatVersion": "0.1.0",
+  "formatVersion": "0.2.0",
   "officialFormat": ".",
   "canonicalSkill": "SKILL.md",
   "install": "npm ci",

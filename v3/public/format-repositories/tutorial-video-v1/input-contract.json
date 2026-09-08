@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "required": ["title", "sourceFormat", "sourceVideo", "durationSeconds", "aspectRatio", "captionStrategy", "steps"],
+  "required": ["title", "sourceFormat", "sourceVideo", "aspectRatio", "captionStrategy", "steps"],
   "properties": {
     "title": {"type": "string", "minLength": 1},
     "sourceFormat": {"type": "string", "minLength": 1},
     "sourceVideo": {"type": "string", "description": "A permitted local tutorial master, relative to the kit root."},
-    "durationSeconds": {"type": "number", "minimum": 1, "maximum": 90},
+    "durationSeconds": {"type": "number", "minimum": 1, "description": "Optional expected source duration in seconds; when supplied it must match the probed source within 0.15 seconds."},
     "aspectRatio": {"const": "16:9"},
     "captionStrategy": {"enum": ["burned-in", "sidecar-reviewed"]},
     "narration": {"type": "object"},

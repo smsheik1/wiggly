@@ -2228,10 +2228,10 @@ export const discoveryCatalog: DiscoveryEntry[] = [
       kind: "video",
       src: "/format-repositories/tutorial-video-v1/examples/animal-conversations-first-run/final.mp4",
       poster: "/format-repositories/tutorial-video-v1/examples/animal-conversations-first-run/poster.jpg",
-      durationLabel: "90 sec",
+      durationLabel: "2 min 29 sec",
       aspectRatio: "16:9",
     },
-    format: { slug: "tutorial-video", name: "Tutorial Video", version: "0.1.0", owner: "Wiggly Studio" },
+    format: { slug: "tutorial-video", name: "Tutorial Video", version: "0.2.0", owner: "Wiggly Studio" },
   },
   ...(["cheesecake", "cookies"] as const).map((example, index): DiscoveryEntry => ({
     id: `lego-music-video-${example}`,

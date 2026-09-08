@@ -6,7 +6,7 @@ import path from "node:path";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname));
 const downloads = path.join(root, "downloads");
-const zipName = "wiggly-tutorial-video-format-kit-0.1.0.zip";
+const zipName = "wiggly-tutorial-video-format-kit-0.2.0.zip";
 const zipPath = path.join(downloads, zipName);
 const ignored = new Set([".DS_Store", ".git"]);
 function files(dir, prefix = "") {
@@ -19,7 +19,7 @@ function files(dir, prefix = "") {
 }
 // Keep the permitted source masters and produced examples in the kit; downloads are release outputs.
 const include = files(root).filter((file) => !file.startsWith("downloads/") && file !== "RELEASE-CONTENTS.json").sort();
-const inventory = { schemaVersion: 1, kit: "wiggly-tutorial-video-format-kit", version: "0.1.0", files: include.map((file) => ({ file: file.split(path.sep).join("/"), sha256: createHash("sha256").update(readFileSync(path.join(root, file))).digest("hex"), sizeBytes: statSync(path.join(root, file)).size })) };
+const inventory = { schemaVersion: 1, kit: "wiggly-tutorial-video-format-kit", version: "0.2.0", files: include.map((file) => ({ file: file.split(path.sep).join("/"), sha256: createHash("sha256").update(readFileSync(path.join(root, file))).digest("hex"), sizeBytes: statSync(path.join(root, file)).size })) };
 writeFileSync(path.join(root, "RELEASE-CONTENTS.json"), JSON.stringify(inventory, null, 2) + "\n");
 if (existsSync(zipPath)) unlinkSync(zipPath);
 execFileSync("zip", ["-X", "-q", "-r", zipPath, ...include, "RELEASE-CONTENTS.json"], { cwd: root, stdio: "inherit" });
