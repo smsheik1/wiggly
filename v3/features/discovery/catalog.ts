@@ -2147,7 +2147,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
       durationLabel: "59 sec",
       aspectRatio: "9:16",
     },
-    format: { slug: "character-gameplay-conversations", name: "Batman Arkham Conversations", version: "0.2.0", owner: "Wiggly Studio" },
+    format: { slug: "character-gameplay-conversations", name: "Batman Arkham Conversations", version: "0.3.0", owner: "Wiggly Studio" },
   },
   {
     id: "character-gameplay-batman-spiderman",
@@ -2164,7 +2164,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
       durationLabel: "43 sec",
       aspectRatio: "9:16",
     },
-    format: { slug: "character-gameplay-conversations", name: "Batman Arkham Conversations", version: "0.2.0", owner: "Wiggly Studio" },
+    format: { slug: "character-gameplay-conversations", name: "Batman Arkham Conversations", version: "0.3.0", owner: "Wiggly Studio" },
   },
   {
     id: "character-gameplay-top-5-villains",
@@ -2181,7 +2181,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
       durationLabel: "59 sec",
       aspectRatio: "9:16",
     },
-    format: { slug: "character-gameplay-conversations", name: "Batman Arkham Conversations", version: "0.2.0", owner: "Wiggly Studio" },
+    format: { slug: "character-gameplay-conversations", name: "Batman Arkham Conversations", version: "0.3.0", owner: "Wiggly Studio" },
   },
   {
     id: "roast-me-family-friends",

@@ -9,7 +9,7 @@
   "providers": [
     {
       "name": "Social Publisher (Buffer MCP or API)",
-      "env": ["BUFFER_API_KEY"],
+      "environmentVariables": ["BUFFER_API_KEY"],
       "optional": true,
       "purpose": "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
     }

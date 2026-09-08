@@ -1,13 +1,14 @@
 {
   "name": "character-gameplay-conversations",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "engines": {"node": ">=22"},
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "smoke": "node tests/smoke.mjs",
-    "generate": "node runtime/generate.mjs"
+    "generate": "node runtime/generate.mjs",
+    "publish": "node runtime/publish.mjs"
   },
   "dependencies": {"sharp": "0.34.5"}
 }

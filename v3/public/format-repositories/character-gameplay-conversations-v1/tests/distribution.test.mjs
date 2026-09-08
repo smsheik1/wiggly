@@ -20,7 +20,8 @@ test('requirements.json declares social publisher provider without secrets', asy
   const provider = reqs.providers.find(p => p.name.includes('Social Publisher'));
   assert.ok(provider, 'Social Publisher must be declared under providers');
   assert.equal(provider.optional, true, 'Publisher should be optional for local renders');
-  assert.ok(provider.env.includes('BUFFER_API_KEY'));
+  const envVars = provider.environmentVariables || (provider.environmentVariable ? [provider.environmentVariable] : []) || provider.env || [];
+  assert.ok(envVars.includes('BUFFER_API_KEY'));
 });
 
 test('publish.mjs validates inputs and executes cleanly in --dry-run mode', () => {

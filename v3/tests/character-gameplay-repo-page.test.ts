@@ -12,12 +12,12 @@ import { FormatRepoPackageConnections, FormatRepoPackageAssets, FormatRepoPackag
 import { buildDiscoveryHandoffPrompt } from "../features/discovery/handoff";
 
 const profile = getDiscoveryFormatProfile("character-gameplay-conversations")!;
-assert.equal(profile.version, "0.2.0");
+assert.equal(profile.version, "0.3.0");
 assert.equal(profile.name, "Batman Arkham Conversations");
 const entries = getDiscoveryEntriesByFormat(profile.slug);
 assert.equal(entries.length, 3);
 for (const entry of entries) {
-  assert.equal(entry.format.version, "0.2.0", "The preview must identify the revised generator runtime.");
+  assert.equal(entry.format.version, "0.3.0", "The preview must identify the revised generator runtime.");
   assert.equal(entry.media.kind, "video");
   assert.equal(entry.media.aspectRatio, "9:16");
   assert.ok(existsSync(`public${entry.media.poster}`), `Poster exists: ${entry.media.poster}`);
@@ -35,20 +35,27 @@ const presentation = await getFormatRepoPagePresentation(profile.slug);
 assert.equal(presentation.kind, "shared");
 if (presentation.kind !== "shared") throw new Error("Use the standard shared page.");
 const data = presentation.package!;
-assert.deepEqual(data.services, [], "No provider account is required for supplied-media composition.");
-assert.equal(data.workflow.length, 5);
+assert.deepEqual(data.services, [
+  {
+    name: "Social Publisher (Buffer MCP or API)",
+    purpose: "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X.",
+    keys: ["BUFFER_API_KEY"],
+    model: "",
+  },
+], "Optional social publisher declared for distribution; composition requires no provider account.");
+assert.equal(data.workflow.length, 6);
 assert.equal(data.proof.examples.length, 2);
 const html = [FormatRepoPackageConnections, FormatRepoPackageAssets, FormatRepoPackageEvidence]
   .map(component => renderToStaticMarkup(createElement(component, { format: profile, data }))).join("");
 for (const text of ["Same-universe starter", "Crossover starter", "not in this release", "User accepted the preview", "Dark Fog", "CC BY 4.0", "Readable Repo files."]) assert.ok(html.includes(text), text);
 const prompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
-assert.ok(prompt.includes("/downloads/character-gameplay-conversations-0.2.0.zip"));
+assert.ok(prompt.includes("/downloads/character-gameplay-conversations-0.3.0.zip"));
 assert.match(prompt, /Never use a paid provider without my explicit approval/);
 const root = `public/${profile.packagePath}`;
 const zip = await JSZip.loadAsync(readFileSync(`public${profile.repositoryHref}`));
 for (const name of ["format.json", "KIT-MANIFEST.json", "FORMAT-REPO.json", "package.json", "package-lock.json", "RELEASE-CONTENTS.json"]) assert.equal(JSON.parse(await zip.file(name)!.async("string")).version, profile.version, name);
 const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
-assert.equal(inventory.files.length, 45);
+assert.equal(inventory.files.length, 51);
 assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((entry: {file:string}) => entry.file), "RELEASE-CONTENTS.json"].sort());
 for (const item of inventory.files) {
   const bytes = await zip.file(item.file)!.async("nodebuffer");
@@ -57,6 +64,7 @@ for (const item of inventory.files) {
   assert.deepEqual(bytes, readFileSync(`${root}/${item.file}`), `Public source / ZIP parity: ${item.file}`);
 }
 assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "c6df6b1276d3b9e92df5c3d18d965f84f57d6c937dcefecf27860c8d1af3c520", "Ship the exact compositor used by the music proof.");
+assert.equal(sha256(readFileSync(`${root}/downloads/character-gameplay-conversations-0.2.0.zip`)), "048eaaec91a57255d06c5c92d7225cb6f0fdc5f2485b9e93d63cfab3ec4f787c", "Preserve the prior 0.2.0 release.");
 assert.equal(sha256(readFileSync(`${root}/downloads/character-gameplay-conversations-0.1.4.zip`)), "03788884fdbf18ed052a6ddfe4d71528e9f6cd7f0e0232bf0aa1168f4f3a05ab", "Preserve the prior music release.");
 assert.ok(zip.file("assets/dark-fog-excerpt.mp3"));
 assert.match(await zip.file("MUSIC-CREDITS.md")!.async("string"), /creativecommons.org\/licenses\/by\/4.0/);
@@ -70,4 +78,4 @@ assert.match(publication.userAcceptance.quote, /cool looks good to me/);
 assert.equal(publication.example.width, 1080);
 assert.equal(publication.example.height, 1920);
 assert.equal(publication.example.sha256, sha256(readFileSync(`${root}/${publication.example.file}`)));
-console.log("Character Gameplay Conversations: music preview, credit, user acceptance, pinned handoff and 45-file ZIP parity passed.");
+console.log("Character Gameplay Conversations: music preview, credit, user acceptance, pinned handoff and 51-file ZIP parity passed.");
