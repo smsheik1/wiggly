@@ -2198,7 +2198,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
       durationLabel: "39 sec",
       aspectRatio: "9:16",
     },
-    format: { slug: "roast-me-conversations", name: "Roast Me Conversations", version: "0.2.0", owner: "Wiggly Studio" },
+    format: { slug: "roast-me-conversations", name: "Roast Me Conversations", version: "0.3.0", owner: "Wiggly Studio" },
   },
   {
     id: "repo-builder-overview",
