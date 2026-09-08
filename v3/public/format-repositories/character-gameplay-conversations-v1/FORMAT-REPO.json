@@ -25,6 +25,10 @@
     "FORMAT-REPO.json",
     "runtime/render.mjs",
     "runtime/generate.mjs",
+    "tools/fetch-card.mjs",
+    "tools/fetch-gameplay.mjs",
+    "tools/synthesize.mjs",
+    "assets/sfx/glitch-whoosh.wav",
     "tests/make-fixtures.mjs",
     "tests/contract.test.mjs",
     "tests/music.test.mjs",
@@ -49,6 +53,12 @@
     "package-lock.json"
   ],
   "assets": [
+    {
+      "path": "assets/sfx/glitch-whoosh.wav",
+      "source": "Synthesized digital glitch whoosh transition audio fixture",
+      "usage": "original",
+      "notes": "Short 0.16s digital whoosh SFX used for camera transitions and intro cuts."
+    },
     {
       "path": "assets/dark-fog-excerpt.mp3",
       "source": "Dark Fog by Kevin MacLeod, https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300031",

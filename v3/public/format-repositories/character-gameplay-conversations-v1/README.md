@@ -4,7 +4,12 @@ Public baseline **0.2.0**, for **9:16 Shorts at 1080 × 1920**. Choose your char
 
 Run `npm ci --ignore-scripts --no-audit --no-fund`, `npm test`, and `npm run smoke` from this folder to verify offline baseline contracts.
 
-## Autonomous Generation
+## Autonomous Generation & 3 Sub-Formats
+
+This format kit supports 3 distinct viral sub-formats detailed in `SKILL.md`:
+1. **1v1 Debates / Moral Clashes** (e.g. *Batman vs. The Joker*, *Batman vs. Jason Todd*)
+2. **Top 5 Countdown Rankings** with left-side number ladder and card reveals (e.g. *Top 5 Villains Batman Respects*)
+3. **Multi-Universe Crossovers** with dynamic gameplay cutting and digital glitch whoosh transitions (e.g. *Batman vs. Spider-Man*, *Batman vs. Goku*)
 
 To automatically resolve community voice models, script the fan debate, cut gameplay, and render the complete Short:
 

@@ -1,5 +1,4 @@
-#!/usr/bin/env node
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
@@ -16,6 +15,10 @@ const VOICE_PRESETS = {
   'red hood': { id: 'ecaac6caa8f14415aa02de57459b27c8', name: 'RED HOOD', universe: 'DC' },
   'joker': { id: '9fbad48d836748c5ab748abe7ac523b1', name: 'THE JOKER', universe: 'DC' },
   'the joker': { id: '9fbad48d836748c5ab748abe7ac523b1', name: 'THE JOKER', universe: 'DC' },
+  'spider-man': { id: 'ac7694a573a34ef08d63e2d00d6812f6', name: 'SPIDER-MAN', universe: 'MARVEL' },
+  'spiderman': { id: 'ac7694a573a34ef08d63e2d00d6812f6', name: 'SPIDER-MAN', universe: 'MARVEL' },
+  'peter parker': { id: 'ac7694a573a34ef08d63e2d00d6812f6', name: 'SPIDER-MAN', universe: 'MARVEL' },
+  'venom': { id: '785a8d3367b4431a9afb4bf6e5b2014e', name: 'VENOM', universe: 'MARVEL' },
   'spongebob': { id: '9845e056f37b470d9a1005e41c864e25', name: 'SPONGEBOB', universe: 'BIKINI BOTTOM' },
   'patrick': { id: 'd1520b60870b4e9aa01eab5bfefb1c45', name: 'PATRICK', universe: 'BIKINI BOTTOM' },
   'sonic': { id: '819bef35f241425291167f5ee794151c', name: 'SONIC', universe: 'SEGA' },
@@ -197,10 +200,68 @@ async function main() {
   console.log(`  - ${char1.name}: ${char1.id}`);
   console.log(`  - ${char2.name}: ${char2.id}`);
 
+async function ensureGameplay(requestedGameplay, char1, char2) {
+  if (requestedGameplay) {
+    let candidate = requestedGameplay;
+    if (!candidate.startsWith('assets/')) candidate = path.join('assets/gameplay', path.basename(candidate));
+    const full = path.join(repoRoot, candidate);
+    try {
+      await stat(full);
+      return candidate;
+    } catch {}
+  }
+
+  let searchTerm = requestedGameplay;
+  const combo = `${char1.name} ${char2.name}`.toLowerCase();
+  if (combo.includes('spider') || combo.includes('venom') || combo.includes('miles')) {
+    searchTerm = 'Spider-Man 2 PS5';
+  } else if (!searchTerm || searchTerm.includes('arkham') || combo.includes('batman') || combo.includes('joker') || combo.includes('jason')) {
+    searchTerm = 'Batman Arkham Knight';
+  }
+
+  const slug = searchTerm.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  const cachedRel = `assets/gameplay/${slug}.mp4`;
+  const cachedFull = path.join(repoRoot, cachedRel);
+
+  try {
+    await stat(cachedFull);
+    console.log(`[character-gameplay-generator] Found cached gameplay at ${cachedRel}`);
+    return cachedRel;
+  } catch {}
+
+  console.log(`[character-gameplay-generator] Auto-fetching gameplay for "${searchTerm}" via yt-dlp...`);
+  await mkdir(path.dirname(cachedFull), { recursive: true });
+
+  const query = `ytsearch1:${searchTerm} free roam swinging gameplay no commentary 4k 60fps`;
+  await execFileAsync('yt-dlp', [
+    '--download-sections', '*00:30-01:30',
+    '-f', 'bestvideo[height<=1080][ext=mp4]/bestvideo[height<=1080]',
+    '--force-keyframes-at-cuts',
+    query,
+    '-o', cachedFull
+  ]);
+
+  console.log(`[character-gameplay-generator] Downloaded and cached gameplay to ${cachedRel}`);
+  return cachedRel;
+}
+
   function getDialogue(c1, c2, topic) {
     const c1Name = c1.name.toUpperCase();
     const c2Name = c2.name.toUpperCase();
     const combo = `${c1Name}+${c2Name}`;
+
+    if (combo.includes('SPIDER') && combo.includes('VENOM')) {
+      return [
+        { speakerId: c1Name.includes('VENOM') ? 'char1' : 'char2', text: 'YOU CANNOT HIDE FROM US, PETER. WE ARE BOUND TOGETHER.' },
+        { speakerId: c1Name.includes('SPIDER') ? 'char1' : 'char2', text: 'I TOOK OFF THE SUIT, VENOM. YOU ARE NOTHING BUT A PARASITE.' },
+        { speakerId: c1Name.includes('VENOM') ? 'char1' : 'char2', text: 'WE GAVE YOU UNLIMITED POWER! WE MADE YOU STRONGER THAN EVER!' },
+        { speakerId: c1Name.includes('SPIDER') ? 'char1' : 'char2', text: 'YOU WERE TURNING ME INTO A MONSTER. YOU WERE DESTROYING MY LIFE.' },
+        { speakerId: c1Name.includes('VENOM') ? 'char1' : 'char2', text: 'WE REMOVED YOUR WEAKNESSES! TOGETHER, WE COULD HEAL THIS ENTIRE CITY!' },
+        { speakerId: c1Name.includes('SPIDER') ? 'char1' : 'char2', text: 'BY CONTROLLING EVERYONE? THAT IS NOT SAVING PEOPLE. THAT IS A PRISON.' },
+        { speakerId: c1Name.includes('VENOM') ? 'char1' : 'char2', text: 'THEN WE WILL BURY YOU, SPIDER-MAN. AND TAKE THIS CITY OURSELVES.' },
+        { speakerId: c1Name.includes('SPIDER') ? 'char1' : 'char2', text: 'OVER MY DEAD BODY.' }
+      ];
+    }
 
     if (combo.includes('JOKER')) {
       return [
@@ -208,7 +269,10 @@ async function main() {
         { speakerId: c1Name.includes('BATMAN') ? 'char1' : 'char2', text: 'I WILL NEVER BE LIKE YOU, JOKER. NEVER.' },
         { speakerId: c1Name.includes('JOKER') ? 'char1' : 'char2', text: 'OH, BUT YOU ARE JUST LIKE ME! YOU CANNOT ADMIT IT.' },
         { speakerId: c1Name.includes('BATMAN') ? 'char1' : 'char2', text: 'I PROTECT GOTHAM. YOU ONLY DESTROY IT.' },
-        { speakerId: c1Name.includes('JOKER') ? 'char1' : 'char2', text: 'AND YET YOU KEEP ME ALIVE. SEE YOU IN ARKHAM!' }
+        { speakerId: c1Name.includes('JOKER') ? 'char1' : 'char2', text: 'LOOK AROUND! GOTHAM IS ALREADY SICK, DARLING.' },
+        { speakerId: c1Name.includes('BATMAN') ? 'char1' : 'char2', text: 'AND I AM THE CURE.' },
+        { speakerId: c1Name.includes('JOKER') ? 'char1' : 'char2', text: 'NO, BATS. YOU ARE JUST THE ENTERTAINMENT.' },
+        { speakerId: c1Name.includes('BATMAN') ? 'char1' : 'char2', text: 'YOUR SHOW ENDS TONIGHT.' }
       ];
     }
 
@@ -228,7 +292,10 @@ async function main() {
         { speakerId: 'char2', text: 'IF I CROSS THAT LINE, JASON, I WILL NEVER COME BACK.' },
         { speakerId: 'char1', text: 'I AM NOT ASKING YOU TO KILL EVERYONE. JUST HIM.' },
         { speakerId: 'char2', text: 'IT DOES NOT STOP WITH ONE. IT NEVER DOES.' },
-        { speakerId: 'char1', text: 'THEN YOU CHOSE YOUR CODE OVER ME.' }
+        { speakerId: 'char1', text: 'HE BEAT ME HALF TO DEATH IN AN ABANDONED WAREHOUSE.' },
+        { speakerId: 'char2', text: 'AND NOT A DAY GOES BY THAT I DO NOT REGRET THAT NIGHT.' },
+        { speakerId: 'char1', text: 'REGRET DOES NOT CHANGE WHAT HE TOOK FROM US.' },
+        { speakerId: 'char2', text: 'THEN YOU CHOSE YOUR CODE OVER ME.' }
       ];
     }
 
@@ -284,11 +351,8 @@ async function main() {
 
   console.log(`[character-gameplay-generator] Total duration: ${totalDuration.toFixed(2)}s`);
 
-  // Gameplay verification and slicing
-  let gameplayPath = opts.gameplay;
-  if (!gameplayPath.startsWith('assets/')) {
-    gameplayPath = path.join('assets/gameplay', path.basename(gameplayPath));
-  }
+  // Gameplay acquisition and slicing
+  const gameplayPath = await ensureGameplay(opts.gameplay, char1, char2);
   const gameplayFull = path.join(repoRoot, gameplayPath);
   const trimmedGameplayRel = `assets/gameplay/${slug}-cut.mp4`;
   const trimmedGameplayFull = path.join(repoRoot, trimmedGameplayRel);

@@ -1,0 +1,417 @@
+{
+  "schemaVersion": 1,
+  "header": {
+    "title": "BATMAN TOP 5 VILLAINS",
+    "question": "WHO DOES BATMAN RESPECT?"
+  },
+  "topic": "Top 5 villains Batman actually respects in Gotham",
+  "castMode": "same-universe",
+  "cast": [
+    {
+      "id": "robin",
+      "name": "ROBIN",
+      "universe": "DC"
+    },
+    {
+      "id": "batman",
+      "name": "BATMAN",
+      "universe": "DC"
+    }
+  ],
+  "ranking": [
+    {
+      "rank": 1,
+      "label": "TWO-FACE",
+      "image": "assets/rankings/batman-villains/two-face.png"
+    },
+    {
+      "rank": 2,
+      "label": "THE RIDDLER",
+      "image": "assets/rankings/batman-villains/riddler.png"
+    },
+    {
+      "rank": 3,
+      "label": "BANE",
+      "image": "assets/rankings/batman-villains/bane.png"
+    },
+    {
+      "rank": 4,
+      "label": "RAS AL GHUL",
+      "image": "assets/rankings/batman-villains/ras.png"
+    },
+    {
+      "rank": 5,
+      "label": "MR FREEZE",
+      "image": "assets/rankings/batman-villains/freeze.png"
+    }
+  ],
+  "gameplay": {
+    "file": "assets/gameplay/batman-top-5-pro-gliding.mp4",
+    "authorized": true,
+    "provenance": "High-altitude continuous pro gliding across Gotham City skyline"
+  },
+  "turns": [
+    {
+      "speaker": "robin",
+      "text": "BATMAN, WHO ARE THE TOP FIVE VILLAINS YOU RESPECT IN GOTHAM?",
+      "durationSeconds": 3.52,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-1.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (ROBIN)"
+      },
+      "captions": [
+        {
+          "text": "BATMAN, WHO ARE THE TOP FIVE",
+          "start": 0,
+          "end": 1.92
+        },
+        {
+          "text": "VILLAINS YOU RESPECT IN GOTHAM?",
+          "start": 1.92,
+          "end": 3.52
+        }
+      ],
+      "revealedRanks": []
+    },
+    {
+      "speaker": "batman",
+      "text": "RESPECT IS EARNED THROUGH PURPOSE. NONE ARE INNOCENT, BUT FIVE STAND APART.",
+      "durationSeconds": 5.16,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-2.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN)"
+      },
+      "captions": [
+        {
+          "text": "RESPECT IS EARNED THROUGH PURPOSE.",
+          "start": 0,
+          "end": 2.16
+        },
+        {
+          "text": "NONE ARE INNOCENT, BUT FIVE STAND",
+          "start": 2.16,
+          "end": 4.72
+        },
+        {
+          "text": "APART.",
+          "start": 4.72,
+          "end": 5.16
+        }
+      ],
+      "revealedRanks": []
+    },
+    {
+      "speaker": "robin",
+      "text": "WHO TAKES THE NUMBER FIVE SPOT?",
+      "durationSeconds": 1.68,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-3.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (ROBIN)"
+      },
+      "captions": [
+        {
+          "text": "WHO TAKES THE NUMBER FIVE SPOT?",
+          "start": 0,
+          "end": 1.68
+        }
+      ],
+      "revealedRanks": []
+    },
+    {
+      "speaker": "batman",
+      "text": "NUMBER FIVE, MR FREEZE. VICTOR IS NOT EVIL. HE COMMITS CRIMES ONLY TO SAVE HIS DYING WIFE NORA.",
+      "durationSeconds": 7.76,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-4.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN)"
+      },
+      "captions": [
+        {
+          "text": "NUMBER FIVE, MR FREEZE. VICTOR IS",
+          "start": 0,
+          "end": 2.6
+        },
+        {
+          "text": "NOT EVIL. HE COMMITS CRIMES ONLY",
+          "start": 2.6,
+          "end": 5.16
+        },
+        {
+          "text": "TO SAVE HIS DYING WIFE NORA.",
+          "start": 5.16,
+          "end": 7.76
+        }
+      ],
+      "revealedRanks": [
+        5
+      ],
+      "featuredCard": {
+        "label": "MR FREEZE",
+        "image": "assets/rankings/batman-villains/freeze.png"
+      }
+    },
+    {
+      "speaker": "robin",
+      "text": "AND WHO IS NUMBER FOUR?",
+      "durationSeconds": 1.52,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-5.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (ROBIN)"
+      },
+      "captions": [
+        {
+          "text": "AND WHO IS NUMBER FOUR?",
+          "start": 0,
+          "end": 1.52
+        }
+      ],
+      "revealedRanks": [
+        5
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "NUMBER FOUR, RAS AL GHUL. AN IMMORTAL WARRIOR WITH A CODE WHO SEES ME AS HIS ONLY WORTHY HEIR.",
+      "durationSeconds": 7.24,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-6.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN)"
+      },
+      "captions": [
+        {
+          "text": "NUMBER FOUR, RAS AL GHUL. AN",
+          "start": 0,
+          "end": 2.28
+        },
+        {
+          "text": "IMMORTAL WARRIOR WITH A CODE WHO",
+          "start": 2.28,
+          "end": 4.56
+        },
+        {
+          "text": "SEES ME AS HIS ONLY WORTHY HEIR.",
+          "start": 4.56,
+          "end": 7.24
+        }
+      ],
+      "revealedRanks": [
+        5,
+        4
+      ],
+      "featuredCard": {
+        "label": "RAS AL GHUL",
+        "image": "assets/rankings/batman-villains/ras.png"
+      }
+    },
+    {
+      "speaker": "robin",
+      "text": "NUMBER THREE MUST BE BRUTAL.",
+      "durationSeconds": 1.92,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-7.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (ROBIN)"
+      },
+      "captions": [
+        {
+          "text": "NUMBER THREE MUST BE BRUTAL.",
+          "start": 0,
+          "end": 1.92
+        }
+      ],
+      "revealedRanks": [
+        5,
+        4
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "NUMBER THREE, BANE. HE DID NOT JUST BREAK MY BACK. HE OUTPLAYED ME TACTICALLY BEFORE THROWING A PUNCH.",
+      "durationSeconds": 7.12,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-8.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN)"
+      },
+      "captions": [
+        {
+          "text": "NUMBER THREE, BANE. HE DID NOT",
+          "start": 0,
+          "end": 2.36
+        },
+        {
+          "text": "JUST BREAK MY BACK. HE OUTPLAYED",
+          "start": 2.36,
+          "end": 4.76
+        },
+        {
+          "text": "ME TACTICALLY BEFORE THROWING A",
+          "start": 4.76,
+          "end": 6.72
+        },
+        {
+          "text": "PUNCH.",
+          "start": 6.72,
+          "end": 7.12
+        }
+      ],
+      "revealedRanks": [
+        5,
+        4,
+        3
+      ],
+      "featuredCard": {
+        "label": "BANE",
+        "image": "assets/rankings/batman-villains/bane.png"
+      }
+    },
+    {
+      "speaker": "robin",
+      "text": "WHO IS NUMBER TWO?",
+      "durationSeconds": 1.4,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-9.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (ROBIN)"
+      },
+      "captions": [
+        {
+          "text": "WHO IS NUMBER TWO?",
+          "start": 0,
+          "end": 1.4
+        }
+      ],
+      "revealedRanks": [
+        5,
+        4,
+        3
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "NUMBER TWO, THE RIDDLER. HIS EGO IS INFURIATING, BUT HIS DEADLY PUZZLES DEMAND TOTAL MENTAL PERFECTION.",
+      "durationSeconds": 7.64,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-10.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN)"
+      },
+      "captions": [
+        {
+          "text": "NUMBER TWO, THE RIDDLER. HIS EGO",
+          "start": 0,
+          "end": 2.88
+        },
+        {
+          "text": "IS INFURIATING, BUT HIS DEADLY",
+          "start": 2.88,
+          "end": 5.24
+        },
+        {
+          "text": "PUZZLES DEMAND TOTAL MENTAL",
+          "start": 5.24,
+          "end": 7.16
+        },
+        {
+          "text": "PERFECTION.",
+          "start": 7.16,
+          "end": 7.64
+        }
+      ],
+      "revealedRanks": [
+        5,
+        4,
+        3,
+        2
+      ],
+      "featuredCard": {
+        "label": "THE RIDDLER",
+        "image": "assets/rankings/batman-villains/riddler.png"
+      }
+    },
+    {
+      "speaker": "robin",
+      "text": "AND WHO COULD POSSIBLY BE NUMBER ONE?",
+      "durationSeconds": 1.8,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-11.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (ROBIN)"
+      },
+      "captions": [
+        {
+          "text": "AND WHO COULD POSSIBLY BE NUMBER",
+          "start": 0,
+          "end": 1.56
+        },
+        {
+          "text": "ONE?",
+          "start": 1.56,
+          "end": 1.8
+        }
+      ],
+      "revealedRanks": [
+        5,
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "speaker": "batman",
+      "text": "AND NUMBER ONE, HARVEY DENT. HE WAS GOTHAMS WHITE KNIGHT AND MY BEST FRIEND. I WILL NEVER STOP FIGHTING FOR HIM.",
+      "durationSeconds": 7.56,
+      "audio": {
+        "file": "assets/audio/top-5-batman-villains-60s/turn-12.wav",
+        "authorized": true,
+        "provenance": "Fish Audio s2.1-pro-free (BATMAN)"
+      },
+      "captions": [
+        {
+          "text": "AND NUMBER ONE, HARVEY DENT. HE",
+          "start": 0,
+          "end": 2.16
+        },
+        {
+          "text": "WAS GOTHAMS WHITE KNIGHT AND MY",
+          "start": 2.16,
+          "end": 4.32
+        },
+        {
+          "text": "BEST FRIEND. I WILL NEVER STOP",
+          "start": 4.32,
+          "end": 6.48
+        },
+        {
+          "text": "FIGHTING FOR HIM.",
+          "start": 6.48,
+          "end": 7.56
+        }
+      ],
+      "revealedRanks": [
+        5,
+        4,
+        3,
+        2,
+        1
+      ],
+      "featuredCard": {
+        "label": "TWO-FACE",
+        "image": "assets/rankings/batman-villains/two-face.png"
+      }
+    }
+  ],
+  "music": {
+    "file": "assets/audio/yeat-if-we-being-real.mp3",
+    "authorized": true,
+    "provenance": "Yeat - If We Being Real (Instrumental by Potmv beats)",
+    "volume": 0.14,
+    "attribution": "Yeat - If We Being Real (Instrumental by Potmv beats)"
+  }
+}
