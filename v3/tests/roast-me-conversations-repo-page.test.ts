@@ -16,20 +16,22 @@ assert.equal(profile.version, "0.2.0");
 assert.equal(profile.name, "Roast Me Conversations");
 
 const entries = getDiscoveryEntriesByFormat(profile.slug);
-assert.equal(entries.length, 1);
-assert.equal(entries[0].format.version, "0.2.0", "The preview must identify the generator runtime version.");
-assert.equal(entries[0].media.kind, "video");
-assert.equal(entries[0].media.aspectRatio, "9:16");
-assert.ok(existsSync(`public${entries[0].media.poster}`));
-assert.ok(existsSync(`public${entries[0].media.src}`));
+assert.equal(entries.length, 4);
+for (const entry of entries) {
+  assert.equal(entry.format.version, "0.2.0", "The preview must identify the generator runtime version.");
+  assert.equal(entry.media.kind, "video");
+  assert.equal(entry.media.aspectRatio, "9:16");
+  assert.ok(existsSync(`public${entry.media.poster}`), `Poster exists: ${entry.media.poster}`);
+  assert.ok(existsSync(`public${entry.media.src}`), `Video exists: ${entry.media.src}`);
+
+  const probe = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-show_streams", "-of", "json", `public${entry.media.src}`], { encoding: "utf8" }));
+  const video = probe.streams.find((stream: { codec_type: string }) => stream.codec_type === "video");
+  assert.equal(video.width, 1080, `Width 1080 for ${entry.id}`);
+  assert.equal(video.height, 1920, `Height 1920 for ${entry.id}`);
+  assert.equal(video.sample_aspect_ratio, "1:1");
+}
 
 const sha256 = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
-const previewProbe = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-show_streams", "-of", "json", `public${entries[0].media.src}`], { encoding: "utf8" }));
-const previewVideo = previewProbe.streams.find((stream: { codec_type: string }) => stream.codec_type === "video");
-assert.equal(previewVideo.width, 1080);
-assert.equal(previewVideo.height, 1920);
-assert.equal(previewVideo.sample_aspect_ratio, "1:1");
-
 assert.deepEqual(discoveryShelfDefinitions.find(s => s.id === profile.slug)!.formats, [profile.slug]);
 
 const presentation = await getFormatRepoPagePresentation(profile.slug);
