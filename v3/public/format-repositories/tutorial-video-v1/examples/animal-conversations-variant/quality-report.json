@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "runner": "runner.mjs render",
+  "source": "assets/source/animal-conversations-tutorial-v10.mp4",
+  "sourceDurationSeconds": 151.166667,
+  "speedFitFactor": 1.67963,
+  "output": {"file": "final.mp4", "width": 1920, "height": 1080, "fps": 30, "durationSeconds": 90, "videoCodec": "h264", "audioCodec": "aac", "sampleRate": 48000, "channels": 2},
+  "outputSha256": "1042b8b3770680e4675edbdd13da5ae25275783e1934914c33812634cbc8915a",
+  "captionStrategy": "burned-in supplied master",
+  "providerCalls": [],
+  "humanReview": "Required for narration intelligibility, caption readability, permissions, and perceived audiovisual sync."
+}

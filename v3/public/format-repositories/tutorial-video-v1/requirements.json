@@ -1,0 +1,13 @@
+{
+  "localTools": ["node", "npm", "ffmpeg", "ffprobe"],
+  "providers": [],
+  "optionalTools": ["yt-dlp", "whisper.cpp"],
+  "environmentVariables": ["FFMPEG", "FFPROBE"],
+  "runtime": {"node": ">=20", "binaries": ["ffmpeg", "ffprobe"]},
+  "notes": [
+    "The host coding agent resolves an authorized URL and may save a local WAV before this kit runs.",
+    "yt-dlp HTTP 403 means access was refused; use a permitted local file instead.",
+    "No AI speech, music, image, video, or transcription provider is called by this runtime.",
+    "A user must approve the storyboard, permissions, timing, captions, and any paid estimate before rendering."
+  ]
+}

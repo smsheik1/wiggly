@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "kit": "wiggly-tutorial-video-format-kit",
+  "version": "0.1.0",
+  "files": [
+    {
+      "file": "KIT-MANIFEST.json",
+      "sha256": "db38ac647bfd07a1b33f729b2cb3cbf9384ddca522a5e31210b0556681382596",
+      "sizeBytes": 520
+    },
+    {
+      "file": "PROOF-REPORT.md",
+      "sha256": "6aadf7aeb8273c540ed72f385094948f7e37528c17159153d29a903f589c9056",
+      "sizeBytes": 1728
+    },
+    {
+      "file": "PROVENANCE.md",
+      "sha256": "ea01f9f05b2dbdadcd0117294a3a45b88687fd7e9ad985db9eceee3b8e09c019",
+      "sizeBytes": 981
+    },
+    {
+      "file": "README.md",
+      "sha256": "fc2558fa303596a8d7e9e3d1891e678f81b8049344e3e274edc87e406384c5ab",
+      "sizeBytes": 2629
+    },
+    {
+      "file": "SKILL.md",
+      "sha256": "0b4cfaea305502923b5af208d4f188699e8a25bee745c41cabe4017aeb272ca1",
+      "sizeBytes": 2289
+    },
+    {
+      "file": "assets.json",
+      "sha256": "aeffc0009e472bd04d1de9c66e3d63a0ec73b9fe0bbf88e8f1f6f800537db104",
+      "sizeBytes": 892
+    },
+    {
+      "file": "assets/source/animal-conversations-tutorial-v10.mp4",
+      "sha256": "b5fbba030d643b8a51ee13a72184b2586948ccd1fc02ebbcd7a7232c9ada0bce",
+      "sizeBytes": 22795535
+    },
+    {
+      "file": "assets/source/animal-conversations-tutorial-v11.mp4",
+      "sha256": "66a8f1d5cf0fb23d6d0327144804eb764bf8ef547e75ceb670befd856ec398fc",
+      "sizeBytes": 13070157
+    },
+    {
+      "file": "build-kit.mjs",
+      "sha256": "634ae10dd9c107318ce8fe94119fba7ab1340dd05dfa811799c93bf1bb0d8ef9",
+      "sizeBytes": 2085
+    },
+    {
+      "file": "composition-contract.json",
+      "sha256": "a0b137ecc2dbb66b812e62ea73d902ec0a35d4ca4807733b74be0ac126b66f56",
+      "sizeBytes": 537
+    },
+    {
+      "file": "evidence/animal-conversations-run.json",
+      "sha256": "18fb491a066b45953f3aec9b15fe02b0bdcf75d523478ab315c477ec63861731",
+      "sizeBytes": 709
+    },
+    {
+      "file": "examples/animal-conversations-first-run/PROOF.md",
+      "sha256": "d4ba46d66cc1eb90965b8a06e9d9fcb75f5e7c8817e034dbe91a3d1c5699006d",
+      "sizeBytes": 561
+    },
+    {
+      "file": "examples/animal-conversations-first-run/contact-sheet.jpg",
+      "sha256": "17778a49896b399874101bd2a302a176a0b2afe50ed40b5e64486a9d992a4aae",
+      "sizeBytes": 81517
+    },
+    {
+      "file": "examples/animal-conversations-first-run/final.mp4",
+      "sha256": "7125014facce22ba4e38266c3d1f0db064f3cb5d4af0f5be64232ac756277447",
+      "sizeBytes": 7398154
+    },
+    {
+      "file": "examples/animal-conversations-first-run/input.json",
+      "sha256": "0e8edd4f5cb7030640393cba7b6c845d75186ae4bd735b084ca3a913ba7fb420",
+      "sizeBytes": 780
+    },
+    {
+      "file": "examples/animal-conversations-first-run/poster.jpg",
+      "sha256": "ea9c1ed1420311e0149ea0c86ffc388f0c1734131222627c4f20dc999b012eae",
+      "sizeBytes": 138319
+    },
+    {
+      "file": "examples/animal-conversations-first-run/quality-report.json",
+      "sha256": "9fbf4e458930c35f731cb513930fcd9555df8899bb8c8be559d01d898e03efff",
+      "sizeBytes": 653
+    },
+    {
+      "file": "examples/animal-conversations-variant/PROOF.md",
+      "sha256": "3521245183dfbff9e6fa7f6df1c21770304dd9bb77318999cbc7b6ef1840c57f",
+      "sizeBytes": 274
+    },
+    {
+      "file": "examples/animal-conversations-variant/contact-sheet.jpg",
+      "sha256": "f5bb8b40c4211939501692a565288f838a7161859c0f2fa3bf5f31a828e100e3",
+      "sizeBytes": 121777
+    },
+    {
+      "file": "examples/animal-conversations-variant/final.mp4",
+      "sha256": "1042b8b3770680e4675edbdd13da5ae25275783e1934914c33812634cbc8915a",
+      "sizeBytes": 11363170
+    },
+    {
+      "file": "examples/animal-conversations-variant/input.json",
+      "sha256": "badd30445f35e2f20c7c11a24ffac3265ddf58c4fff2b224aabd3d111f2012eb",
+      "sizeBytes": 795
+    },
+    {
+      "file": "examples/animal-conversations-variant/poster.jpg",
+      "sha256": "5036bbe8099fcf9810487ede8226f5a4484253ce86402d79c06faf06b1aabc1e",
+      "sizeBytes": 239558
+    },
+    {
+      "file": "examples/animal-conversations-variant/quality-report.json",
+      "sha256": "6fb41e38700518825fe3c8e20ca5ab261c4b212975a5e59597c055091fde7380",
+      "sizeBytes": 657
+    },
+    {
+      "file": "format.json",
+      "sha256": "23dd789fbe721605e94d00516f0f993e03d4f15e52e0a7baaea2eb9725ba1124",
+      "sizeBytes": 543
+    },
+    {
+      "file": "goldens.json",
+      "sha256": "e87a96b4019470e91114ded044b670775dc537ac504175faf192748088a56485",
+      "sizeBytes": 941
+    },
+    {
+      "file": "input-contract.json",
+      "sha256": "97cbd8abd2bd13c0ac0f9ba1103d2dc2c25b695869f8a6de2e7cbb0ec6a262f6",
+      "sizeBytes": 722
+    },
+    {
+      "file": "output-contract.json",
+      "sha256": "b542ce1f3bf6bf83506adab182d9dd081ab34f1108f0caf4a1bbccc1a4addfe4",
+      "sizeBytes": 430
+    },
+    {
+      "file": "package-lock.json",
+      "sha256": "5da8e0722334d4f5b894a97cd92126a53b4305054e09a16213464cb8311d1d06",
+      "sizeBytes": 201
+    },
+    {
+      "file": "package.json",
+      "sha256": "e7faa81f245eea8442265f64106404df0df25bd94c30a2c754e377cb83246181",
+      "sizeBytes": 225
+    },
+    {
+      "file": "pipeline.json",
+      "sha256": "0a18ab1da7ef16412318a67c303689c16398506e7aee23fd6ee4925000724699",
+      "sizeBytes": 712
+    },
+    {
+      "file": "quality.json",
+      "sha256": "1e8724c8bab37c3e5739189c440be11dbd8dfd3257be16ee09c760427e1cf18b",
+      "sizeBytes": 721
+    },
+    {
+      "file": "references/tutorial-grammar.md",
+      "sha256": "6869d1009e729155f324fbe5d800203b8f32ab943010495d2da14dfe6785ac55",
+      "sizeBytes": 1451
+    },
+    {
+      "file": "release-files.json",
+      "sha256": "f9c125adb57d1da811ab6a9294181ca22a1a5eba546773ee34a299810826d5a8",
+      "sizeBytes": 366
+    },
+    {
+      "file": "requirements.json",
+      "sha256": "0bf7e5095b1e94425f8b66c036666c9e6314caf01e913d9c86684355356f6165",
+      "sizeBytes": 651
+    },
+    {
+      "file": "runner.mjs",
+      "sha256": "df9c764ca2a605374f682e882a9b712f41c78a6cf2939e1bdf3b90ff812af02d",
+      "sizeBytes": 7094
+    },
+    {
+      "file": "scripts/verify.mjs",
+      "sha256": "29fde834ce339bea099db2770552373f8d7f05d1e7fb0e17b2f66da2651c11b0",
+      "sizeBytes": 4172
+    }
+  ]
+}

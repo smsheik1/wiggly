@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "format": "Animal Conversations",
+  "input": "examples/animal-conversations-first-run/input.json",
+  "output": "examples/animal-conversations-first-run/final.mp4",
+  "proof": [
+    "finished result shown before explanation",
+    "real Send to Coding Agent handoff",
+    "yt-dlp/FFmpeg/local transcription described as host-agent preparation",
+    "speaker timing and approvals shown",
+    "local render and complete MP4 inspection shown"
+  ],
+  "limitations": [
+    "The packaged runner does not download URLs or call paid providers.",
+    "The 90-second example is a deterministic speed-fit of the 148.8-second reviewed master.",
+    "Direct human playback remains required."
+  ]
+}

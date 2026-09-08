@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "tutorial-video",
+  "slug": "tutorial-video",
+  "title": "Tutorial Video",
+  "name": "Tutorial Video",
+  "version": "0.1.0",
+  "owner": "Wiggly Studio",
+  "status": "published",
+  "summary": "A proof-first 16:9 tutorial that takes a new user from choosing a Wiggly Format to sending it to a coding agent and receiving a finished video.",
+  "output": "One narrated, captioned 1920 × 1080 MP4, exactly 90 seconds.",
+  "runtime": "Local FFmpeg assembly; no paid provider calls.",
+  "canonicalSkill": "SKILL.md"
+}
