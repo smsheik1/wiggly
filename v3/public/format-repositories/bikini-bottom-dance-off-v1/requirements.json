@@ -10,6 +10,13 @@
       "estimatedCost": "S2.1 Pro Free is $0 through August 31, 2026 under Fish Audio's published fair-use window. S2-Pro private-Olaf calls are pay-as-you-go at $15 per million UTF-8 bytes; recheck both before later use.",
       "pricingSource": "https://fish.audio/blog/s2-1-pro-free-api/",
       "paidPricingSource": "https://docs.fish.audio/developer-guide/models-pricing/pricing-and-rate-limits"
+    },
+    {
+      "name": "Social Publisher (Buffer MCP or API)",
+      "purpose": "Distribute rendered and approved dance-off episodes across YouTube Shorts, Instagram Reels, TikTok, and X.",
+      "optional": true,
+      "environmentVariables": ["BUFFER_API_KEY"],
+      "pricingSource": "https://buffer.com/pricing"
     }
   ],
   "environmentVariables": ["FISH_STUDIO_APIKEY"],

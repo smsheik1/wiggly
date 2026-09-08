@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "fixtures/smoke/input.json",
+  "media": "examples/wiggle-proof/evidence/final.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "Bikini Bottom Dance Battle Goes Unreasonably Hard 🔥🕺 #Shorts",
+      "description": "SpongeBob, Patrick, Mr. Krabs, and Squilliam face off in a 47-second vertical dance battle!\n\n#Shorts #SpongeBob #DanceOff #Animation #GamingMemes #Viral",
+      "categoryId": "23",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "Who took the crown in this dance battle? Drop your votes in the comments! 🍍🫧\n.\n.\n#spongebob #danceoff #bikinibottom #patrick #animation #reels"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "Bikini Bottom dance battle goes unreasonably hard 😭💀 Who won? #SpongeBob #Animation"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "The Bikini Bottom dance battle we all needed 😭 Patrick wasn't playing #spongebob #dance #bikinibottom #fyp #animation",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}
