@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "input": "outputs/mugsy-explains-tutorial.mp4",
+  "inputSha256": "78e4d05a4379b8808b81651a730af6b0d04639dc1f632a5cbcecba272d410cf4",
+  "passed": true,
+  "checks": {
+    "h264": true,
+    "aac": true,
+    "dimensions": true,
+    "frameRate": true,
+    "hasAudio": true,
+    "duration": true
+  },
+  "metadata": {
+    "durationSeconds": 31.189333,
+    "video": {
+      "codec_name": "h264",
+      "codec_type": "video",
+      "width": 1920,
+      "height": 1080,
+      "r_frame_rate": "30/1",
+      "side_data_list": [
+        {}
+      ]
+    },
+    "audio": {
+      "codec_name": "aac",
+      "codec_type": "audio",
+      "sample_rate": "48000",
+      "channels": 2,
+      "r_frame_rate": "0/0"
+    }
+  },
+  "contactSheet": "outputs/mugsy-explains-tutorial.mp4.quality-report-contact-sheet.jpg",
+  "sampling": {
+    "mode": "ingredient-step-midpoints",
+    "stepIds": [
+      "proof-first",
+      "choose-format",
+      "run-agent",
+      "finished-output",
+      "next-step"
+    ]
+  },
+  "creativeReview": "required before finalize"
+}

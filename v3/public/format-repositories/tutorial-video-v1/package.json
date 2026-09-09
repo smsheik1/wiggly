@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "test": "node scripts/verify.mjs",
+    "critique": "node runtime/critique.mjs",
+    "harvest": "node runtime/harvest.mjs",
+    "voice": "node runtime/voice.mjs",
+    "make": "node runner.mjs make",
     "smoke": "node runner.mjs smoke",
     "build": "node build-kit.mjs"
   },
@@ -13,6 +17,7 @@
     "@remotion/renderer": "4.0.473",
     "react": "19.0.1",
     "react-dom": "19.0.1",
-    "remotion": "4.0.473"
+    "remotion": "4.0.473",
+    "sharp": "^0.33.5"
   }
 }

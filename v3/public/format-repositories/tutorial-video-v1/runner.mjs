@@ -8,6 +8,9 @@ import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
 import { loadAndValidateInput, probeMedia, VIDEO } from "./runtime/contract.mjs";
+import { critiqueTutorialScript, formatCritiqueReport } from "./runtime/critique.mjs";
+import { harvestTargetAssets } from "./runtime/harvest.mjs";
+import { buildNarratedTutorialStep } from "./runtime/voice.mjs";
 
 export const ROOT = path.dirname(fileURLToPath(import.meta.url));
 export const MEDIA_ROOT = path.join(ROOT, "media");
@@ -229,6 +232,173 @@ export async function smoke() {
   return { output, report };
 }
 
+export async function make(options = {}) {
+  const targetSlug = options.target || argument("target", "mugsy-explains");
+  const audience = options.audience || argument("audience", "creator");
+  const skipRender = options.skipRender ?? (process.argv.includes("--skip-render") || process.argv.includes("--dry-run"));
+  const outputFile = options.output || argument("output", path.join(ROOT, "outputs", `${targetSlug}-tutorial.mp4`));
+  const recipeOption = options.recipe || argument("recipe");
+
+  console.log(`[make] Starting autonomous 1-click tutorial generator for: ${targetSlug} (audience: ${audience})`);
+
+  // 1. Harvest Visual Assets
+  console.log(`[make] [1/5] Harvesting assets for ${targetSlug}...`);
+  const harvested = await harvestTargetAssets({ targetSlug, repoRoot: ROOT });
+
+  // 2. Synthesize Audio & Build Narrated Steps
+  console.log(`[make] [2/5] Synthesizing voiceover and calculating microsecond caption timings...`);
+  const audioOutputDir = path.join(MEDIA_ROOT, targetSlug);
+  mkdirSync(audioOutputDir, { recursive: true });
+
+  const step2Text = audience === "developer"
+    ? `Inspect the ${harvested.format.name} repo contracts, schemas, and verification tests on Wiggly.`
+    : `On Wiggly, choose Copy for another coding agent to grab the ${harvested.format.name} prompt.`;
+
+  const step3Text = audience === "developer"
+    ? `Run the local runner command. The agent validates contracts and renders the video with zero providers.`
+    : `Paste the prompt into your coding agent. The agent reads the package and sets it up automatically.`;
+
+  const step5Text = `Check the captions and verify the receipt. To try your own format, the Wiggly link is below.`;
+
+  const step2Result = await buildNarratedTutorialStep({
+    id: "choose-format",
+    number: 2,
+    label: audience === "developer" ? "Inspect the format repository" : "Choose and copy a format",
+    kind: "browser",
+    windowTitle: `Wiggly — ${harvested.format.name}`,
+    background: "lime",
+    mediaPath: harvested.media.browserStill.file,
+    narrationText: step2Text,
+    audioRelPath: `${targetSlug}/step-02.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-02.wav"),
+    voice: "zach",
+    minStepDuration: 4.5
+  });
+
+  const step3Result = await buildNarratedTutorialStep({
+    id: "run-agent",
+    number: 3,
+    label: audience === "developer" ? "Execute the local composition" : "Paste it into your agent",
+    kind: "terminal",
+    windowTitle: `Coding agent — ${harvested.format.name}`,
+    background: "blue",
+    mediaPath: harvested.media.terminalStill.file,
+    narrationText: step3Text,
+    audioRelPath: `${targetSlug}/step-03.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-03.wav"),
+    voice: "zach",
+    minStepDuration: 6.0
+  });
+
+  // Attach checkpoint to step 3
+  step3Result.step.checkpoint = {
+    eyebrow: "Your checkpoint",
+    headline: "The agent is using the packaged compositor—not inventing a slideshow.",
+    badge: "Then render"
+  };
+
+  const step5Result = await buildNarratedTutorialStep({
+    id: "next-step",
+    number: 5,
+    label: "Try your own format",
+    kind: "end",
+    background: "cream",
+    narrationText: step5Text,
+    audioRelPath: `${targetSlug}/step-05.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-05.wav"),
+    voice: "zach",
+    minStepDuration: 5.5
+  });
+
+  const inputJson = {
+    schemaVersion: 2,
+    title: `Make a ${harvested.format.name} video with Wiggly`,
+    audience: audience === "developer"
+      ? "An engineer or operator deploying autonomous Wiggly format agents"
+      : "A first-time creator who wants to generate videos without writing code",
+    format: {
+      name: harvested.format.name,
+      slug: harvested.format.slug,
+      promise: harvested.format.promise,
+      url: harvested.format.url,
+      outputLabel: harvested.format.outputLabel
+    },
+    steps: [
+      {
+        id: "proof-first",
+        kind: "hero",
+        number: "1",
+        label: "See the finished result",
+        background: "lime",
+        durationSeconds: 5.0,
+        nativeAudio: true,
+        media: {
+          type: "video",
+          file: harvested.media.proofVideo.file,
+          fit: "contain",
+          authorized: true,
+          provenance: harvested.media.proofVideo.provenance
+        }
+      },
+      step2Result.step,
+      step3Result.step,
+      {
+        id: "finished-output",
+        kind: "final",
+        number: "4",
+        label: "Watch the finished result",
+        background: "lime",
+        durationSeconds: 7.0,
+        nativeAudio: true,
+        media: {
+          type: "video",
+          file: harvested.media.proofVideo.file,
+          fit: "contain",
+          authorized: true,
+          provenance: harvested.media.proofVideo.provenance
+        }
+      },
+      step5Result.step
+    ]
+  };
+
+  const inputDir = path.join(ROOT, "inputs");
+  mkdirSync(inputDir, { recursive: true });
+  const inputFilePath = recipeOption ? path.resolve(recipeOption) : path.join(inputDir, `${targetSlug}.json`);
+  writeFileSync(inputFilePath, JSON.stringify(inputJson, null, 2) + "\n");
+  console.log(`[make] Wrote generated tutorial recipe to ${path.relative(ROOT, inputFilePath)}`);
+
+  // 3. Critique Script
+  console.log(`[make] [3/5] Running 5-law script critique linter...`);
+  const critique = critiqueTutorialScript(inputJson);
+  console.log(formatCritiqueReport(critique));
+  if (critique.verdict !== "PASS") {
+    throw new Error(`Script critique failed with score ${critique.score}/100. Resolve revisions.`);
+  }
+
+  // 4. Validate Contract
+  console.log(`[make] [4/5] Validating timeline and ingredient contracts...`);
+  const validated = validateInput(inputFilePath);
+
+  if (skipRender) {
+    console.log(`[make] [5/5] Skipped render (--skip-render or --dry-run active). Recipe and assets ready!`);
+    return { status: "ready", input: inputFilePath, critique, validated };
+  }
+
+  // 5. Render & Inspect
+  console.log(`[make] [5/5] Rendering official 1080p composition...`);
+  const renderResult = await render(inputFilePath, outputFile);
+  const inspection = inspect(outputFile);
+
+  return {
+    status: "completed",
+    video: outputFile,
+    input: inputFilePath,
+    receipt: renderResult.receipt,
+    inspection
+  };
+}
+
 const command = process.argv[2] || "doctor";
 if (path.resolve(process.argv[1] || "") === fileURLToPath(import.meta.url)) {
   try {
@@ -243,6 +413,7 @@ if (path.resolve(process.argv[1] || "") === fileURLToPath(import.meta.url)) {
     else if (command === "inspect") inspect(requiredArgument("input"), argument("report"));
     else if (command === "finalize") finalize(requiredArgument("input"), requiredArgument("report"), requiredArgument("review"), argument("output"));
     else if (command === "smoke") await smoke();
+    else if (command === "make") await make();
     else throw new Error(`Unknown command: ${command}`);
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);

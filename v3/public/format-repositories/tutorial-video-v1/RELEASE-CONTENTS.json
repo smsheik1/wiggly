@@ -25,8 +25,8 @@
     },
     {
       "file": "SKILL.md",
-      "sha256": "bfd59c15eaacad4796bf2519698e1fda1b47ecd8133b768488dc744a44ab9f32",
-      "sizeBytes": 4957
+      "sha256": "6554d111e9643801ea41f8cecea22a30cc0ac243179f723f201e232e74ef1dce",
+      "sizeBytes": 7865
     },
     {
       "file": "assets.json",
@@ -144,6 +144,11 @@
       "sizeBytes": 1344
     },
     {
+      "file": "inputs/mugsy-explains.json",
+      "sha256": "d29c2f416124734aa6c02782f3f7433f35d3c9fb9eb5a3f614e7c0bb6c7006b4",
+      "sizeBytes": 4511
+    },
+    {
       "file": "media/examples/animal-conversations/06-copy.wav",
       "sha256": "df671c3b7a350845522ac5cfd43e2ccd682da4a620fe4c0bc9028ad8d4233078",
       "sizeBytes": 929298
@@ -219,6 +224,36 @@
       "sizeBytes": 934154
     },
     {
+      "file": "media/mugsy-explains/final-result.mp4",
+      "sha256": "2e978f8873a5ef32a30d1378fd3e9ccaeade9d39a3bb3d91d9a850725f4eebf2",
+      "sizeBytes": 1436612
+    },
+    {
+      "file": "media/mugsy-explains/format-page.png",
+      "sha256": "3ff351b7ef369a7b5683e343e6f8479be7994f341412ec49efc5a8100930d4be",
+      "sizeBytes": 114791
+    },
+    {
+      "file": "media/mugsy-explains/runtime-receipt.png",
+      "sha256": "00210c66706de20bbcaf6717a926d70649a9b23d43e7404e2103537ae0a48f9c",
+      "sizeBytes": 154984
+    },
+    {
+      "file": "media/mugsy-explains/step-02.wav",
+      "sha256": "cbcac677003bcec1ae775364bc48556240bc5689109ce7dd2016ccaaa884cd3e",
+      "sizeBytes": 508564
+    },
+    {
+      "file": "media/mugsy-explains/step-03.wav",
+      "sha256": "0c8b2a15b7515ccb756496df4bb7f7f8f4ed6bae67b23255db7cbd126e0fbad6",
+      "sizeBytes": 570980
+    },
+    {
+      "file": "media/mugsy-explains/step-05.wav",
+      "sha256": "4e32c53ffc371c292afe115aae047d47a432d7f09a148df976dba1e35c230e39",
+      "sizeBytes": 504662
+    },
+    {
       "file": "media/smoke/browser-narration.wav",
       "sha256": "14542df96292023a58c5a4b039cb3a30d92c30605051908ce87062424ab6788c",
       "sizeBytes": 230478
@@ -249,19 +284,39 @@
       "sizeBytes": 597
     },
     {
+      "file": "outputs/mugsy-explains-tutorial.mp4",
+      "sha256": "78e4d05a4379b8808b81651a730af6b0d04639dc1f632a5cbcecba272d410cf4",
+      "sizeBytes": 6151067
+    },
+    {
+      "file": "outputs/mugsy-explains-tutorial.mp4.quality-report-contact-sheet.jpg",
+      "sha256": "00155841df6dde386aaf0e41c92763f35394f1fa069abc4a7c30f566db129101",
+      "sizeBytes": 83851
+    },
+    {
+      "file": "outputs/mugsy-explains-tutorial.mp4.quality-report.json",
+      "sha256": "8a35c9884850f48d44930f92bfa2d76498685a924b937344f785aecb2b983a35",
+      "sizeBytes": 1059
+    },
+    {
+      "file": "outputs/mugsy-explains-tutorial.mp4.receipt.json",
+      "sha256": "dca730856a5df7b19cd75f1e6f7b7dc053bb38060d2061d59dec64069dcef47d",
+      "sizeBytes": 680
+    },
+    {
       "file": "package-lock.json",
       "sha256": "f0f4e8854295a2c26a974f6b8548355fc6930aca1ca0f16b6b3a32cabd6b9fff",
       "sizeBytes": 96609
     },
     {
       "file": "package.json",
-      "sha256": "6cddff100d2d58ec90ee06cc4942d224370f9adad112b775e1c38720305e60bf",
-      "sizeBytes": 415
+      "sha256": "d1b23640255177c6c44742b44176077fc84be64363b5f2646389e151a1847627",
+      "sizeBytes": 602
     },
     {
       "file": "pipeline.json",
-      "sha256": "c8bbca749b787dc155f689f14b0b712a871ace6f0caa86c765cbcf2b9dce4d4d",
-      "sizeBytes": 1013
+      "sha256": "59a33e81732fea1ae8eee5969abfcaed6672effbad00c5b51ceaadd1217a1f7b",
+      "sizeBytes": 1187
     },
     {
       "file": "quality.json",
@@ -285,13 +340,23 @@
     },
     {
       "file": "runner.mjs",
-      "sha256": "7c3761d4e62aec0cb539ae1198e4a2b69fae885e2fcde8a6ae460ba62baf7b15",
-      "sizeBytes": 11666
+      "sha256": "855205bdec41260dfcfcf655301a41d70192d4a920e21d0f5ab59f7de6d72568",
+      "sizeBytes": 18166
     },
     {
       "file": "runtime/contract.mjs",
       "sha256": "2089412ed4454a7cb53441e9a45fe4fa008dddc3523af0dc3e6fc8542a0f9ff6",
       "sizeBytes": 11017
+    },
+    {
+      "file": "runtime/critique.mjs",
+      "sha256": "28155ea586c1f6cb36c4bb2470295d54dd2efa4abfeebeccfd4ea8bc466c78f6",
+      "sizeBytes": 12444
+    },
+    {
+      "file": "runtime/harvest.mjs",
+      "sha256": "360c7d8e7546e38f939ed3f5723d96fddeb3226e5053565ec5ce323d9909897c",
+      "sizeBytes": 16038
     },
     {
       "file": "runtime/index.jsx",
@@ -314,14 +379,39 @@
       "sizeBytes": 12033
     },
     {
+      "file": "runtime/voice.mjs",
+      "sha256": "14dbe64d38f8980e1c2ceeafca71a19bb51650412d78c67029e6adcd1bc91589",
+      "sizeBytes": 8273
+    },
+    {
       "file": "scripts/verify.mjs",
-      "sha256": "947015b8927c1c893a5f98830638b2f5c5e3394b268d72f569eff7ad20c90215",
-      "sizeBytes": 4908
+      "sha256": "c36b6961d46eb2850e9cd0e0a113eb129af888e93c423c0061fb8ecec211b642",
+      "sizeBytes": 5384
+    },
+    {
+      "file": "tests/critique.test.mjs",
+      "sha256": "53bae4a142768a20dcb5cd3f655e971f8d7c741a3abe63efd03da855416606e4",
+      "sizeBytes": 6769
     },
     {
       "file": "tests/distribution.test.mjs",
       "sha256": "5e605fcf532258776c0dfd86e8a9fc401a6156d9881db6045906717105cfe0a9",
       "sizeBytes": 4208
+    },
+    {
+      "file": "tests/harvest.test.mjs",
+      "sha256": "dcf00c36db848c4e34263a01e1955638c2f510958bcd2dc630a9c7e4b27766c0",
+      "sizeBytes": 2259
+    },
+    {
+      "file": "tests/make.test.mjs",
+      "sha256": "62094014e217007a6a8406f4aacc9af68123782fa6e5f770cc01021f801b51bb",
+      "sizeBytes": 2058
+    },
+    {
+      "file": "tests/voice.test.mjs",
+      "sha256": "669e7c59aa6c0129a76f5180ebd90a7df2a473ed5747867b7c927e069167bae4",
+      "sizeBytes": 2850
     }
   ]
 }
