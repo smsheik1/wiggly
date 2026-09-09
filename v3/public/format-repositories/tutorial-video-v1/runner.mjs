@@ -254,15 +254,15 @@ export async function make(options = {}) {
   // Step 1 Hook: Take opening punchline beat (4.0-5.5s), aligned to 30 fps
   const hookDuration = Math.round(Math.min(5.0, Math.max(3.5, proofFullDuration / 4)) * 30) / 30;
 
-  // Step 2 Formula & Prompt Text: Explain the format's actual creative premise and copy action
+  // Step 2 Formula & Prompt Text: Explain navigating to the format and copying the agent prompt
   const step2Text = audience === "developer"
     ? `Inspect the ${harvested.format.name} repo contracts and copy the prompt on Wiggly.`
-    : `Inspect the ${harvested.format.name} repo on Wiggly. It ${harvested.format.formula || "packages creative rules into an autonomous agent"}. Choose Copy for another coding agent.`;
+    : `On Wiggly, open the ${harvested.format.name} format and copy the prompt for your coding agent.`;
 
   // Step 3 Execution Text: Pasting into agent and verifying zero providers
   const step3Text = audience === "developer"
-    ? `Run the local runner command. The agent validates contracts and renders the video with zero providers.`
-    : `Paste the prompt into your coding agent. The agent validates contracts and renders the video locally with zero providers.`;
+    ? `Paste the prompt into your coding agent. The agent validates contracts and renders the video locally.`
+    : `Paste the prompt into your coding agent. It validates contracts and renders the video locally.`;
 
   // Step 5 Closing Text
   const step5Text = `Check the captions and verify the receipt. To try your own format, the Wiggly link is below.`;
@@ -272,7 +272,7 @@ export async function make(options = {}) {
   const step2Result = await buildNarratedTutorialStep({
     id: "choose-format",
     number: 2,
-    label: audience === "developer" ? "Inspect the format repository" : "Choose and copy the format",
+    label: "Copy the coding agent prompt",
     kind: "browser",
     windowTitle: `Wiggly — ${harvested.format.name}`,
     background: "lime",
@@ -282,7 +282,7 @@ export async function make(options = {}) {
     audioRelPath: `${targetSlug}/step-02.wav`,
     audioFullPath: path.join(audioOutputDir, "step-02.wav"),
     voice: "zach",
-    minStepDuration: 5.0
+    minStepDuration: 7.5
   });
 
   // Step 3: Run the Local Composition (Terminal + Checkpoint)
@@ -290,9 +290,9 @@ export async function make(options = {}) {
   const step3Result = await buildNarratedTutorialStep({
     id: "run-agent",
     number: 3,
-    label: audience === "developer" ? "Execute the local composition" : "Run the local composition",
+    label: "Paste into your coding agent",
     kind: "terminal",
-    windowTitle: `Coding agent — ${harvested.format.name}`,
+    windowTitle: `Coding Agent (Antigravity / Claude Code) — ${harvested.format.name}`,
     background: "blue",
     mediaPath: terminalMedia.file,
     mediaType: terminalMedia.type,
@@ -300,7 +300,7 @@ export async function make(options = {}) {
     audioRelPath: `${targetSlug}/step-03.wav`,
     audioFullPath: path.join(audioOutputDir, "step-03.wav"),
     voice: "zach",
-    minStepDuration: 6.0
+    minStepDuration: 8.0
   });
 
   step3Result.step.checkpoint = {
@@ -309,17 +309,16 @@ export async function make(options = {}) {
     badge: "Verified 0 providers"
   };
 
-  // Step 4: The Full Uncut Payoff
-  // Plays from hookDuration through to the natural end of the video
+  // Step 4: The Finished Result Proof Excerpt (tight 5.0s, not 20+ second cartoon dump)
   const payoffStart = hookDuration;
   const rawPayoffDuration = proofFullDuration - payoffStart;
-  const payoffDuration = Math.round(Math.min(30.0, rawPayoffDuration) * 30) / 30;
+  const payoffDuration = Math.round(Math.min(5.0, Math.max(3.5, rawPayoffDuration)) * 30) / 30;
 
   const step4Proof = {
     id: "finished-output",
     kind: "final",
     number: "4",
-    label: "Watch the finished result",
+    label: "Watch the finished output",
     background: "lime",
     durationSeconds: payoffDuration,
     nativeAudio: true,
@@ -344,8 +343,16 @@ export async function make(options = {}) {
     audioRelPath: `${targetSlug}/step-05.wav`,
     audioFullPath: path.join(audioOutputDir, "step-05.wav"),
     voice: "zach",
-    minStepDuration: 5.0
+    minStepDuration: 4.5
   });
+
+  const defaultMusic = {
+    file: "fixed/cancun-sega-genesis.mp3",
+    authorized: true,
+    provenance: "If Playboi Carti's \"Cancun\" was on the Sega Genesis (INSTRUMENTAL) — https://www.youtube.com/watch?v=-zdI0S0Vuzs",
+    volume: 0.20,
+    attribution: "Background music: Playboi Carti - Cancun (Sega Genesis Instrumental)"
+  };
 
   const inputJson = {
     schemaVersion: 2,
@@ -360,6 +367,7 @@ export async function make(options = {}) {
       url: harvested.format.url,
       outputLabel: harvested.format.outputLabel
     },
+    music: defaultMusic,
     steps: [
       {
         id: "proof-first",

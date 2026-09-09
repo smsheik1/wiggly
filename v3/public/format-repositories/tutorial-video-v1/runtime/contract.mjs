@@ -198,8 +198,8 @@ export function validateTutorialInput(input, { mediaRoot }) {
   let music = null;
   if (input.music) {
     music = validateAuthorizedAsset(input.music, "music", mediaRoot, "audio");
-    const volume = input.music.volume ?? 0.12;
-    assert(Number.isFinite(volume) && volume > 0 && volume <= 0.2, "music.volume must be > 0 and <= 0.2.");
+    const volume = input.music.volume ?? 0.20;
+    assert(Number.isFinite(volume) && volume > 0 && volume <= 0.35, "music.volume must be > 0 and <= 0.35.");
     assert(music.metadata.durationSeconds + 0.06 >= startFrame / VIDEO.fps, "Music must cover the full tutorial; the runtime does not silently loop it.");
     music = { ...music, volume };
   }

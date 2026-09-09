@@ -40,8 +40,8 @@
     },
     {
       "file": "composition-contract.json",
-      "sha256": "df3f996929566998a5ae99ba5e96aedf6e553fad5287b80dd3d07b199acf7216",
-      "sizeBytes": 999
+      "sha256": "ac91a7ab7c842e293839e171bf79c594bf5b1ae3460e046b3a2b62e1fce7ad70",
+      "sizeBytes": 1000
     },
     {
       "file": "evidence/blind-agent-run.json",
@@ -135,8 +135,8 @@
     },
     {
       "file": "input-contract.json",
-      "sha256": "9672520aac54bf3ec10d995a0a0242c5fb58796c9a34d4d7b7a639b74ebf8ec5",
-      "sizeBytes": 1994
+      "sha256": "871151edc2939d728f3545994f18d2f21eea43098415d51a88aadb4c560232af",
+      "sizeBytes": 1995
     },
     {
       "file": "inputs/distribution.json",
@@ -145,8 +145,8 @@
     },
     {
       "file": "inputs/mugsy-explains.json",
-      "sha256": "abe79e13f51178a1f2ce958fe9989daaea3462a975409f2f7af57e068e7fd213",
-      "sizeBytes": 4965
+      "sha256": "23e9f5b95fe7492e6338201c31cbe90fc07ffcf6f3894fda57748f807e4b065c",
+      "sizeBytes": 5088
     },
     {
       "file": "media/examples/animal-conversations/06-copy.wav",
@@ -209,6 +209,11 @@
       "sizeBytes": 79921
     },
     {
+      "file": "media/fixed/cancun-sega-genesis.mp3",
+      "sha256": "8b543c6d4be110df1aabbe39a91da08550da56434cbdfc2a3ea741d93c643c92",
+      "sizeBytes": 2281028
+    },
+    {
       "file": "media/fixed/grid-acid-lime-v1.png",
       "sha256": "8d691ffbdcd0ff1297bdc7c86984d2e1a57134d067ae1ab02890d34ab9fe7005",
       "sizeBytes": 953898
@@ -225,8 +230,8 @@
     },
     {
       "file": "media/mugsy-explains/browser-interaction.mp4",
-      "sha256": "3eeef61058dd66629174eb290ee7b49d4da413e8b7cc19311a86e64ca2345869",
-      "sizeBytes": 576420
+      "sha256": "3c122d5be9a23f1a4c56caf1613b1963a1b13a7280066e9512f837864031dab9",
+      "sizeBytes": 593529
     },
     {
       "file": "media/mugsy-explains/final-result.mp4",
@@ -235,33 +240,33 @@
     },
     {
       "file": "media/mugsy-explains/format-page.png",
-      "sha256": "5b6be73d26163087adcdea9439b3874c6fc1e37b82717d82cd8daf8ba84dc3ac",
-      "sizeBytes": 124585
+      "sha256": "b40446978e6ccd6d00bd7f28d3c7d7e9103db0b0529b63128535bc0ad2698266",
+      "sizeBytes": 124169
     },
     {
       "file": "media/mugsy-explains/runtime-receipt.png",
-      "sha256": "aa16dce0f55e75902fb5133e809628ccbd7dd70ac3562a79caccca048a485f2e",
-      "sizeBytes": 109030
+      "sha256": "e266e1fd755c8e565d255ca3f8dfe8c1c497adb58c747907b9c34ec44d3921ef",
+      "sizeBytes": 181116
     },
     {
       "file": "media/mugsy-explains/step-02.wav",
-      "sha256": "c249cc19a256b60f1537015790f4d55e8adc8cbdcc5324a9ab8606b025dfb49f",
-      "sizeBytes": 403238
+      "sha256": "91e28009710bb00bbeb96a7ec60432f35ef7e9c5f2dedbb6120ec823538c649b",
+      "sizeBytes": 477356
     },
     {
       "file": "media/mugsy-explains/step-03.wav",
-      "sha256": "7616dba2fb8267bbf064e243760c5a820e4b4032774ca4b6547d363660f2a330",
-      "sizeBytes": 563178
+      "sha256": "7667ad0186ef8185e9ac38b6fdc7c9270f313ca1708ece461ec2245d5a45d9ba",
+      "sizeBytes": 496860
     },
     {
       "file": "media/mugsy-explains/step-05.wav",
-      "sha256": "7545d0861d0821be611f9b296f9d01b585c9aa6b3d9446bffcbb70a8030efd8f",
-      "sizeBytes": 524168
+      "sha256": "84ad5db72454002d241e0746616238c825e5312d187ed2baf53e7463d0942aad",
+      "sizeBytes": 508564
     },
     {
       "file": "media/mugsy-explains/terminal-execution.mp4",
-      "sha256": "2640baf6d41df72261963b6ace61d401697c5e6e75c8b73551d5e4688b6fe1e1",
-      "sizeBytes": 261949
+      "sha256": "a7d2243427b18f2176ba555b1b836e4666dd6d8cb48519e259337452cbd3805a",
+      "sizeBytes": 421131
     },
     {
       "file": "media/smoke/browser-narration.wav",
@@ -295,22 +300,22 @@
     },
     {
       "file": "outputs/mugsy-explains-tutorial.mp4",
-      "sha256": "3cb42d3a935e5e70eccec748940e9ad45b996b38ee1dabcb260a3894bb740769",
-      "sizeBytes": 7888979
+      "sha256": "8b7627ebfc27935e0f00683b9f7d60170a3aefe606bd7261a6e0dd5bb8ee186b",
+      "sizeBytes": 7287044
     },
     {
       "file": "outputs/mugsy-explains-tutorial.mp4.quality-report-contact-sheet.jpg",
-      "sha256": "f83a24d2d43f24320af7cccae00924beab18b8aec28e8a862c76fa265c9f5c49",
-      "sizeBytes": 85794
+      "sha256": "043e2d644e5d83baa6a080f53f1e1fa8514b3568d8c63d94d99a9a3da2a2bb5f",
+      "sizeBytes": 86689
     },
     {
       "file": "outputs/mugsy-explains-tutorial.mp4.quality-report.json",
-      "sha256": "2d8bab3ae53d33a9be54e7b215a2d17533927667d5b563d33082a350df266803",
+      "sha256": "85ad0e371259984e7498f8d0d6d1bfc7fd7cd33bc450c045f9a1355c06bf4d62",
       "sizeBytes": 1055
     },
     {
       "file": "outputs/mugsy-explains-tutorial.mp4.receipt.json",
-      "sha256": "583e4912c0a4b0cc8cfb7f3df7e75f9186fc8a45d747d36ffdd8722c60cb4d92",
+      "sha256": "6f4e1d4371303916f25094dc4f26d1df9d9dea2b2eb8deb190f5d08bd29c1737",
       "sizeBytes": 676
     },
     {
@@ -350,13 +355,13 @@
     },
     {
       "file": "runner.mjs",
-      "sha256": "e2bbadeee384e303c3cc546b986b2c35f8403e4ad48d596a1cc6f594681b40fe",
-      "sizeBytes": 19389
+      "sha256": "5a9802f959183626e9c8dd212783c413ba57ec8a91acd34a3926fe8eeb5c1bbd",
+      "sizeBytes": 19553
     },
     {
       "file": "runtime/contract.mjs",
-      "sha256": "2089412ed4454a7cb53441e9a45fe4fa008dddc3523af0dc3e6fc8542a0f9ff6",
-      "sizeBytes": 11017
+      "sha256": "d77b849caca5a102dd7a3b0748d801bb1d0e7e0f93a4599a70b651c88335e642",
+      "sizeBytes": 11019
     },
     {
       "file": "runtime/critique.mjs",
@@ -365,8 +370,8 @@
     },
     {
       "file": "runtime/harvest.mjs",
-      "sha256": "607d13175583e5e888cdc14824daec79343d60fb801a874e23759e9ddc1b8424",
-      "sizeBytes": 32777
+      "sha256": "a0336deb6add6277c541575e853ce1d82228bd449b3dca7cbc57ca7d26bc7c18",
+      "sizeBytes": 36371
     },
     {
       "file": "runtime/index.jsx",
@@ -415,8 +420,8 @@
     },
     {
       "file": "tests/make.test.mjs",
-      "sha256": "62094014e217007a6a8406f4aacc9af68123782fa6e5f770cc01021f801b51bb",
-      "sizeBytes": 2058
+      "sha256": "8dafabb186f4b6688967dcef066c880c25b2d965a5b41b4ee33b4a7fa97d6f93",
+      "sizeBytes": 2245
     },
     {
       "file": "tests/voice.test.mjs",

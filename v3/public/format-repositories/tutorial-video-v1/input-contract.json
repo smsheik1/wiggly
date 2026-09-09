@@ -24,7 +24,7 @@
         "nativeAudio": "Allowed only for hero/final video; required for the single final step."
       }
     },
-    "music": "Optional authorized local audio under media/, long enough for the entire timeline; volume > 0 and <= 0.2."
+    "music": "Optional authorized local audio under media/, long enough for the entire timeline; volume > 0 and <= 0.35."
   },
   "crossFieldRules": [
     "sourceVideo is rejected: users supply editable ingredients, never a pre-rendered tutorial master.",

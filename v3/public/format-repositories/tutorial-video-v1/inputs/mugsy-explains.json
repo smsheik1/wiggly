@@ -9,6 +9,13 @@
     "url": "https://wiggly.agentenamel.com/formats/mugsy-explains",
     "outputLabel": "mugsy-explains.mp4"
   },
+  "music": {
+    "file": "fixed/cancun-sega-genesis.mp3",
+    "authorized": true,
+    "provenance": "If Playboi Carti's \"Cancun\" was on the Sega Genesis (INSTRUMENTAL) — https://www.youtube.com/watch?v=-zdI0S0Vuzs",
+    "volume": 0.2,
+    "attribution": "Background music: Playboi Carti - Cancun (Sega Genesis Instrumental)"
+  },
   "steps": [
     {
       "id": "proof-first",
@@ -31,10 +38,10 @@
       "id": "choose-format",
       "kind": "browser",
       "number": "2",
-      "label": "Choose and copy the format",
+      "label": "Copy the coding agent prompt",
       "windowTitle": "Wiggly — Mugsy Explains",
       "background": "lime",
-      "durationSeconds": 12.066666666666666,
+      "durationSeconds": 7.5,
       "narration": {
         "file": "mugsy-explains/step-02.wav",
         "startSeconds": 0.2,
@@ -44,23 +51,18 @@
       "captions": [
         {
           "start": 0.2,
-          "end": 3.181,
-          "text": "Inspect the Mugsy Explains repo on Wiggly."
+          "end": 2.725,
+          "text": "On Wiggly, open the Mugsy Explains format"
         },
         {
-          "start": 3.181,
-          "end": 6.162,
-          "text": "It breaks down 3 A-versus-B lessons with"
+          "start": 2.725,
+          "end": 5.25,
+          "text": "and copy the prompt for your coding"
         },
         {
-          "start": 6.162,
-          "end": 8.717,
-          "text": "recurring cartoon poses and handwritten captions."
-        },
-        {
-          "start": 8.717,
-          "end": 11.273,
-          "text": "Choose Copy for another coding agent."
+          "start": 5.25,
+          "end": 5.612,
+          "text": "agent."
         }
       ],
       "media": {
@@ -76,10 +78,10 @@
       "id": "run-agent",
       "kind": "terminal",
       "number": "3",
-      "label": "Run the local composition",
-      "windowTitle": "Coding agent — Mugsy Explains",
+      "label": "Paste into your coding agent",
+      "windowTitle": "Coding Agent (Antigravity / Claude Code) — Mugsy Explains",
       "background": "blue",
-      "durationSeconds": 8.133333333333333,
+      "durationSeconds": 8,
       "narration": {
         "file": "mugsy-explains/step-03.wav",
         "startSeconds": 0.2,
@@ -95,12 +97,12 @@
         {
           "start": 2.829,
           "end": 5.458,
-          "text": "The agent validates contracts and renders the"
+          "text": "It validates contracts and renders the video"
         },
         {
           "start": 5.458,
-          "end": 7.337,
-          "text": "video locally with zero providers."
+          "end": 5.833,
+          "text": "locally."
         }
       ],
       "media": {
@@ -121,9 +123,9 @@
       "id": "finished-output",
       "kind": "final",
       "number": "4",
-      "label": "Watch the finished result",
+      "label": "Watch the finished output",
       "background": "lime",
-      "durationSeconds": 20.2,
+      "durationSeconds": 5,
       "nativeAudio": true,
       "media": {
         "type": "video",
@@ -141,7 +143,7 @@
       "label": "Try your own format",
       "windowTitle": "Terminal — Try your own format",
       "background": "cream",
-      "durationSeconds": 7.033333333333333,
+      "durationSeconds": 6.766666666666667,
       "narration": {
         "file": "mugsy-explains/step-05.wav",
         "startSeconds": 0.2,
@@ -151,17 +153,17 @@
       "captions": [
         {
           "start": 0.2,
-          "end": 2.683,
+          "end": 2.574,
           "text": "Check the captions and verify the receipt."
         },
         {
-          "start": 2.683,
-          "end": 4.457,
+          "start": 2.574,
+          "end": 4.27,
           "text": "To try your own format,"
         },
         {
-          "start": 4.457,
-          "end": 6.231,
+          "start": 4.27,
+          "end": 5.966,
           "text": "the Wiggly link is below."
         }
       ]
