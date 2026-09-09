@@ -1,13 +1,15 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "kit": "wiggly-tutorial-video-format-kit",
-  "formatVersion": "0.2.0",
+  "formatVersion": "0.3.0",
   "officialFormat": ".",
   "canonicalSkill": "SKILL.md",
-  "install": "npm ci",
+  "officialRuntime": "runtime/tutorial-video.jsx",
+  "validator": "runtime/contract.mjs",
+  "install": "npm ci --ignore-scripts --no-audit --no-fund",
   "check": "npm test",
-  "smoke": "npm run smoke",
+  "smoke": "npm run smoke (standalone only; npm test already includes this smoke and commands must run sequentially)",
   "render": "node runner.mjs render --input=<input.json> --output=<output.mp4>",
-  "releaseAcceptance": "Offline package and produced evidence pass; direct human playback remains required.",
-  "excluded": ["secrets", "node_modules", "raw third-party source media", "paid provider outputs"]
+  "releaseAcceptance": "Two ingredient inputs use one runtime, package smoke passes, blind-agent run passes, and direct human audiovisual review remains explicit.",
+  "excluded": ["secrets", "node_modules", "raw unapproved third-party media", "paid provider outputs"]
 }

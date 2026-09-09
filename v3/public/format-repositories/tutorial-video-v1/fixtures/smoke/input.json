@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 2,
+  "title": "Tutorial compositor smoke",
+  "audience": "A first-time Wiggly user",
+  "format": {
+    "name": "Smoke Format",
+    "slug": "smoke-format",
+    "promise": "Prove the real tutorial compositor works from separate ingredients.",
+    "url": "https://wiggly.agentenamel.com/discover",
+    "outputLabel": "smoke-final.mp4"
+  },
+  "steps": [
+    {
+      "id": "proof-first",
+      "kind": "hero",
+      "number": "1",
+      "label": "See the finished result",
+      "background": "lime",
+      "durationSeconds": 3,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "smoke/result.mp4",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Generated locally by the smoke fixture with FFmpeg testsrc2 and a sine tone."
+      }
+    },
+    {
+      "id": "open-format",
+      "kind": "browser",
+      "number": "2",
+      "label": "Open the format page",
+      "windowTitle": "Wiggly — Smoke Format",
+      "background": "lime",
+      "durationSeconds": 3,
+      "media": {
+        "type": "image",
+        "file": "smoke/browser.jpg",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Operator-supplied local test still from the recovered tutorial workspace."
+      },
+      "narration": {
+        "file": "smoke/browser-narration.wav",
+        "authorized": true,
+        "provenance": "Generated locally with FFmpeg sine for the zero-provider smoke test."
+      },
+      "captions": [
+        {"start": 0, "end": 2.4, "text": "Open the real format page."}
+      ]
+    },
+    {
+      "id": "run-locally",
+      "kind": "terminal",
+      "number": "3",
+      "label": "Run the packaged compositor",
+      "windowTitle": "Terminal — node runner.mjs render",
+      "background": "blue",
+      "durationSeconds": 3,
+      "media": {
+        "type": "image",
+        "file": "smoke/terminal.png",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Operator-supplied local coding-agent still from the recovered tutorial workspace."
+      },
+      "narration": {
+        "file": "smoke/terminal-narration.wav",
+        "authorized": true,
+        "provenance": "Generated locally with FFmpeg sine for the zero-provider smoke test."
+      },
+      "captions": [
+        {"start": 0, "end": 2.4, "text": "The package renders the complete format."}
+      ],
+      "checkpoint": {
+        "eyebrow": "Runtime checkpoint",
+        "headline": "The compositor—not a slideshow—is doing the work.",
+        "badge": "Local render"
+      }
+    },
+    {
+      "id": "finished-output",
+      "kind": "final",
+      "number": "4",
+      "label": "Watch the finished output",
+      "background": "lime",
+      "durationSeconds": 3,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "smoke/result.mp4",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Generated locally by the smoke fixture with FFmpeg testsrc2 and a sine tone."
+      }
+    }
+  ]
+}

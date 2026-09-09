@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 2,
+  "title": "Your Wiggly tutorial",
+  "audience": "First-time users",
+  "format": {
+    "name": "Your Format",
+    "slug": "your-format",
+    "promise": "The clear result this format creates.",
+    "url": "https://wiggly.agentenamel.com/formats/your-format",
+    "outputLabel": "final.mp4"
+  },
+  "steps": [
+    {
+      "id": "proof-first",
+      "kind": "hero",
+      "number": "1",
+      "label": "See the finished result",
+      "background": "lime",
+      "durationSeconds": 6,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "runs/your-tutorial/final-result.mp4",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Replace with the source and permission for this supplied result."
+      }
+    },
+    {
+      "id": "open-format",
+      "kind": "browser",
+      "number": "2",
+      "label": "Open the format page",
+      "windowTitle": "Wiggly — Your Format",
+      "background": "lime",
+      "durationSeconds": 7,
+      "media": {
+        "type": "video",
+        "file": "runs/your-tutorial/format-page.mp4",
+        "fit": "cover",
+        "authorized": true,
+        "provenance": "Replace with the capture source and permission."
+      },
+      "narration": {
+        "file": "runs/your-tutorial/02-open-format.wav",
+        "authorized": true,
+        "provenance": "Replace with the narration source and permission."
+      },
+      "captions": [
+        {"start": 0.2, "end": 3.4, "text": "Open the format page on Wiggly."},
+        {"start": 3.5, "end": 6.4, "text": "This is the package we're using."}
+      ]
+    },
+    {
+      "id": "agent-handoff",
+      "kind": "terminal",
+      "number": "3",
+      "label": "Send it to your coding agent",
+      "windowTitle": "Coding agent — local workspace",
+      "background": "blue",
+      "durationSeconds": 8,
+      "media": {
+        "type": "video",
+        "file": "runs/your-tutorial/agent-handoff.mp4",
+        "fit": "cover",
+        "authorized": true,
+        "provenance": "Replace with the capture source and permission."
+      },
+      "narration": {
+        "file": "runs/your-tutorial/03-agent-handoff.wav",
+        "authorized": true,
+        "provenance": "Replace with the narration source and permission."
+      },
+      "captions": [
+        {"start": 0.2, "end": 4, "text": "Paste the launcher into a coding agent."},
+        {"start": 4.1, "end": 7.4, "text": "The agent reads and runs the package."}
+      ],
+      "checkpoint": {
+        "eyebrow": "Your checkpoint",
+        "headline": "Review the plan before the render starts.",
+        "badge": "Then approve"
+      }
+    },
+    {
+      "id": "finished-output",
+      "kind": "final",
+      "number": "4",
+      "label": "Watch the finished output",
+      "background": "lime",
+      "durationSeconds": 12,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "runs/your-tutorial/final-result.mp4",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Replace with the source and permission for this supplied result."
+      }
+    }
+  ]
+}

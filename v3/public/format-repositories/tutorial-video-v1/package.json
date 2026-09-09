@@ -1,7 +1,18 @@
 {
   "name": "wiggly-tutorial-video-format-kit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "scripts": {"test": "node scripts/verify.mjs", "smoke": "node runner.mjs smoke", "build": "node build-kit.mjs"}
+  "scripts": {
+    "test": "node scripts/verify.mjs",
+    "smoke": "node runner.mjs smoke",
+    "build": "node build-kit.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.473",
+    "@remotion/renderer": "4.0.473",
+    "react": "19.0.1",
+    "react-dom": "19.0.1",
+    "remotion": "4.0.473"
+  }
 }

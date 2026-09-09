@@ -1,60 +1,99 @@
 # Tutorial Video v1
 
-Tutorial Video turns one real Wiggly Format run into a proof-first, narrated,
-captioned 16:9 walkthrough for a new user. The canonical example teaches the
-Animal Conversations workflow: choose a format, send it to a coding agent,
-approve the plan, and receive a finished video.
+Tutorial Video is an executable 16:9 compositor, not a wrapper around a
+finished master. Give it the editable ingredients of a first-run walkthrough:
+format metadata, permitted browser and coding-agent captures, supplied
+narration tracks, timed captions, checkpoint copy, and the format's finished
+video. The packaged Remotion runtime directly renders the Wiggly tutorial look:
 
-This is a local assembly kit, not an automatic video-understanding model. The
-coding agent may use `yt-dlp` and local transcription before invoking the kit,
-but the packaged runtime makes no paid provider calls and never invents source
-audio, permissions, or character assignments.
+- acid-lime, electric-blue, and warm-cream retro grid backgrounds;
+- macOS-style browser and terminal windows;
+- numbered step badges and a bottom progress rail;
+- neon checkpoint cards;
+- bold, timed subtitles; and
+- native-audio result playback before and after the walkthrough.
+
+The runtime rejects `sourceVideo`. A fresh agent cannot hand it a pre-rendered
+tutorial or replace the format with a generic slideshow.
 
 ## Quick start
 
 ```bash
-npm ci
+npm ci --ignore-scripts --no-audit --no-fund
 npm test
-npm run smoke
-node runner.mjs render --input examples/animal-conversations-first-run/input.json \
-  --output /tmp/tutorial-video.mp4
-node runner.mjs inspect --input /tmp/tutorial-video.mp4
+node runner.mjs init --output=my-tutorial.json
+node runner.mjs validate --input=my-tutorial.json
+node runner.mjs render --input=my-tutorial.json --output=my-tutorial.mp4
+node runner.mjs inspect --input=my-tutorial.mp4 --report=quality-report.json
 ```
 
-`render` preserves the supplied tutorial master's natural duration. If
-`durationSeconds` is included in the input, it is checked against the probed
-source duration; the runner never accelerates, trims, or stretches the master.
-Captions are expected to be burned into the supplied master; the runner does
-not create captions from unreviewed speech.
+Run those commands **one at a time**. `npm test` already performs the official
+smoke render; do not run `npm run smoke` beside it or immediately repeat the
+same preflight. Use `npm run smoke` only when you want the smoke by itself.
+Remotion also needs to bind a temporary localhost port. In a sandboxed coding
+agent, grant that local browser/port permission before the first `npm test` or
+`render` command. This is local process access—not internet or a provider call.
+`doctor` reports `localhostPort: true` when the permission is ready.
 
-## The agent loop
+Use `examples/batman-arkham-first-run/input.json` and
+`examples/animal-conversations-compositor/input.json` as complete examples.
+All media paths are relative to `media/`, even when the input JSON lives in a
+different directory.
 
-1. Confirm the user owns or is permitted to remix the reference and tutorial
-   media.
-2. Inspect the reference and write an evidence-backed blueprint, separating
-   observations from assumptions.
-3. Choose the format, send the exact Wiggly handoff to a computer-capable
-   coding agent, and let it acquire local media with `yt-dlp`/FFmpeg when
-   needed. A regular chat cannot run this local workflow.
-4. Show the source, result, package contents, cost/time receipt, and proposed
-   step list. Ask one short question at a time.
-5. Require explicit approval of speaker assignments, captions, timing, and
-   permissions before rendering. Transcription and diarization are proposals,
-   never approval.
-6. Render locally through the official runner, inspect the complete MP4 and
-   contact sheet, and deliver the exact file plus hashes.
+The bundled examples are immutable proofs and may be rendered unchanged when a
+user asks to reproduce them. For a new tutorial, run `init`, copy new assets
+under `media/runs/<name>/`, and edit the new input—not an example in place.
 
-## Paid-call gate
+## What you provide
 
-There are no providers in this kit. If a fresh run would call a paid model or
-media service, stop and show the user the estimate; continue only after their
-explicit approval. Supplied media and local rendering remain the zero-provider
-proof path.
+1. Format name, promise, public URL, and output label.
+2. Four to fourteen tutorial steps totaling 12–240 seconds.
+3. At least one permitted browser capture and one permitted terminal/coding-
+   agent capture, with provenance.
+4. At least two supplied narration audio tracks and their reviewed timed
+   caption phrases.
+5. At least one neon checkpoint and exactly one final-result step that keeps
+   the result video's native audio.
+6. Optional supplied music long enough for the full tutorial. Music is muted
+   during native-result sections.
 
-## What is proven here
+Copy files beneath `media/`, declare `authorized: true`, and write meaningful
+`provenance` for each one. The validator refuses missing, external, symlinked,
+oversized, or too-short media; it never silently loops or freezes a clip.
 
-The included example is the recovered Animal Conversations tutorial master,
-produced from the real Wiggly workflow and its QA receipts. The package proves
-repeatable local assembly, 16:9 H.264/AAC output, captions carried by the
-master, and the beginner-friendly handoff grammar. It does not claim that the
-runtime itself downloads a URL, performs diarization, or generates voices.
+## Agent workflow
+
+1. Read `SKILL.md`, the contracts, and a complete example. Run commands one at
+   a time; concurrent Remotion commands can contend for local browser ports.
+2. Confirm permission and provenance for every capture, audio file, and result.
+3. Draft the tutorial as ingredient steps. Show the result first; use plain
+   verbs such as choose, copy, send, render, inspect, and watch.
+4. Put the media under `media/` and validate before spending render time. If
+   `npm test` passed, do not run a redundant standalone smoke before the target.
+5. Render through `runner.mjs`; do not duplicate or rewrite the compositor.
+6. Inspect the output and contact sheet. A human must still watch and hear the
+   entire output before finalization.
+
+`inspect` reads the adjacent render receipt and samples the midpoint of every
+declared ingredient step, so short browser or terminal steps cannot disappear
+between evenly spaced screenshots. After complete playback, copy
+`fixtures/creative-review.example.json`, record the reviewer decision, and run:
+
+```bash
+node runner.mjs finalize --input=my-tutorial.mp4 --report=quality-report.json \
+  --review=creative-review.json --output=delivery.json
+```
+
+## Cost and boundaries
+
+The format runtime makes **zero provider calls**. Local dependency setup and
+rendering do not consume media-model credits. Coding-agent usage is separate.
+If an agent wants to generate narration, music, images, or video with a paid
+service, it must first show a per-provider estimate and receive explicit user
+approval. URL downloading, transcription, screen capture, and narration
+generation are host-agent preparation—not hidden capabilities of this Repo.
+
+The two bundled proofs were rendered by this same runtime from different JSON
+inputs. The Batman proof demonstrates the recovered visual identity against the
+exact format that exposed the old shell; the Animal Conversations proof shows
+that the compositor generalizes without code changes.

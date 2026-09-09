@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "input": "examples/animal-conversations-compositor/final.mp4",
+  "inputSha256": "49ed3faccfaae97015acea2aa692efd866a8db11c0a69df8472c2515190787e9",
+  "passed": true,
+  "checks": {
+    "h264": true,
+    "aac": true,
+    "dimensions": true,
+    "frameRate": true,
+    "hasAudio": true,
+    "duration": true
+  },
+  "metadata": {
+    "durationSeconds": 23.786667,
+    "video": {
+      "codec_name": "h264",
+      "codec_type": "video",
+      "width": 1920,
+      "height": 1080,
+      "r_frame_rate": "30/1",
+      "side_data_list": [
+        {}
+      ]
+    },
+    "audio": {
+      "codec_name": "aac",
+      "codec_type": "audio",
+      "sample_rate": "48000",
+      "channels": 2,
+      "r_frame_rate": "0/0"
+    }
+  },
+  "contactSheet": "examples/animal-conversations-compositor/quality-report-contact-sheet.jpg",
+  "sampling": {
+    "mode": "ingredient-step-midpoints",
+    "stepIds": [
+      "proof-first",
+      "copy-format",
+      "paste-and-run",
+      "finished-output"
+    ]
+  },
+  "creativeReview": "required before finalize"
+}

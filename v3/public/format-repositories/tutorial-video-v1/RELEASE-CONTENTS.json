@@ -1,137 +1,142 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "kit": "wiggly-tutorial-video-format-kit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "files": [
     {
       "file": "KIT-MANIFEST.json",
-      "sha256": "7e2fc9c490aae1575f97aeda01e3ffcac04c83024596e8e9d0a569d615dbc855",
-      "sizeBytes": 520
+      "sha256": "d259e791534e21053cc0094f579e1933c1901576dd95cf60a5b937b4c74a6125",
+      "sizeBytes": 798
     },
     {
       "file": "PROOF-REPORT.md",
-      "sha256": "6aadf7aeb8273c540ed72f385094948f7e37528c17159153d29a903f589c9056",
-      "sizeBytes": 1728
+      "sha256": "e2aaa8d1870002336b8b9081606eef1cb50124285d96964f69cbf516135b5275",
+      "sizeBytes": 2382
     },
     {
       "file": "PROVENANCE.md",
-      "sha256": "ddd62534ade3326f8715eca5a664dbe67c170c9d3441fc7582118b9878c73637",
-      "sizeBytes": 1001
+      "sha256": "023d03eb6e43470bcec6f4d84bc3d506715c3555508721b2be804e2b1107b1e2",
+      "sizeBytes": 1226
     },
     {
       "file": "README.md",
-      "sha256": "14a74cf8056d2b4de6ee03e9639fbc28821fd056711f85bbf7196735ec832db5",
-      "sizeBytes": 2694
+      "sha256": "da40fe1d418f61500e7d408eaa6268775e720339886620d28c1521a993254891",
+      "sizeBytes": 4928
     },
     {
       "file": "SKILL.md",
-      "sha256": "4684182415a9224c01f4e0a148ded64bc0a6c23350847c3137a1e3e651fedc3e",
-      "sizeBytes": 3572
+      "sha256": "bfd59c15eaacad4796bf2519698e1fda1b47ecd8133b768488dc744a44ab9f32",
+      "sizeBytes": 4957
     },
     {
       "file": "assets.json",
-      "sha256": "aeffc0009e472bd04d1de9c66e3d63a0ec73b9fe0bbf88e8f1f6f800537db104",
-      "sizeBytes": 892
-    },
-    {
-      "file": "assets/source/animal-conversations-tutorial-v10.mp4",
-      "sha256": "b5fbba030d643b8a51ee13a72184b2586948ccd1fc02ebbcd7a7232c9ada0bce",
-      "sizeBytes": 22795535
-    },
-    {
-      "file": "assets/source/animal-conversations-tutorial-v11.mp4",
-      "sha256": "66a8f1d5cf0fb23d6d0327144804eb764bf8ef547e75ceb670befd856ec398fc",
-      "sizeBytes": 13070157
+      "sha256": "141a4be4c98e976b413d055a4db298b719802c13f730aba8143adda72ba5aff0",
+      "sizeBytes": 1565
     },
     {
       "file": "build-kit.mjs",
-      "sha256": "52e1d657ce81260a232323739b7a186ae7a40467617f2f34fc2c5010f1d4e040",
-      "sizeBytes": 2085
+      "sha256": "bbb283f9a8809cd3ab5d3e3f6900bf749d1e857dac8588949280659e31744122",
+      "sizeBytes": 2243
     },
     {
       "file": "composition-contract.json",
-      "sha256": "a0b137ecc2dbb66b812e62ea73d902ec0a35d4ca4807733b74be0ac126b66f56",
-      "sizeBytes": 537
+      "sha256": "df3f996929566998a5ae99ba5e96aedf6e553fad5287b80dd3d07b199acf7216",
+      "sizeBytes": 999
     },
     {
-      "file": "evidence/animal-conversations-run.json",
-      "sha256": "96a25b65536bb6681d3ae05230893fba78699ec4ff6891b35f837e2d5a32ab07",
-      "sizeBytes": 729
+      "file": "evidence/blind-agent-run.json",
+      "sha256": "9b38570dbc46ca442bfdb907f0cdfe207121b2228f30179760208b191669954f",
+      "sizeBytes": 1421
     },
     {
-      "file": "examples/animal-conversations-first-run/PROOF.md",
-      "sha256": "d4ba46d66cc1eb90965b8a06e9d9fcb75f5e7c8817e034dbe91a3d1c5699006d",
-      "sizeBytes": 561
+      "file": "evidence/compositor-runs.json",
+      "sha256": "d572936ee3c104f1ddc4a90eb3f9cf1c33295b90e18b4853bd9b135c87d186a1",
+      "sizeBytes": 1195
     },
     {
-      "file": "examples/animal-conversations-first-run/contact-sheet.jpg",
-      "sha256": "17778a49896b399874101bd2a302a176a0b2afe50ed40b5e64486a9d992a4aae",
-      "sizeBytes": 81517
+      "file": "examples/animal-conversations-compositor/final.mp4",
+      "sha256": "49ed3faccfaae97015acea2aa692efd866a8db11c0a69df8472c2515190787e9",
+      "sizeBytes": 4481759
     },
     {
-      "file": "examples/animal-conversations-first-run/final.mp4",
-      "sha256": "1c9293b3b8cfcc25d713f31625974ef339ffdbfa6ce9cb4b3c7e4f807c2734b6",
-      "sizeBytes": 9705841
+      "file": "examples/animal-conversations-compositor/final.mp4.receipt.json",
+      "sha256": "d007ef8775ec6211f4136cd23e4f8f71698f5a6e095aba6b88b49e319821a4f0",
+      "sizeBytes": 720
     },
     {
-      "file": "examples/animal-conversations-first-run/input.json",
-      "sha256": "820c20aad498f6126518786d0ddea145e97de11ac97db0c22b373e4ce8d9cf2f",
-      "sizeBytes": 783
+      "file": "examples/animal-conversations-compositor/input.json",
+      "sha256": "f8b76b3384c1fadac7444bb4240c2b834fe8f40d48cc4d6bfef4f302fa5386a6",
+      "sizeBytes": 3808
     },
     {
-      "file": "examples/animal-conversations-first-run/poster.jpg",
-      "sha256": "ea9c1ed1420311e0149ea0c86ffc388f0c1734131222627c4f20dc999b012eae",
-      "sizeBytes": 138319
+      "file": "examples/animal-conversations-compositor/quality-report-contact-sheet.jpg",
+      "sha256": "eb2605446a39a050297b2e428f2209d1a60dab42a8492b25e9014bbfa4f52fd0",
+      "sizeBytes": 72930
     },
     {
-      "file": "examples/animal-conversations-first-run/quality-report.json",
-      "sha256": "679f583d50e55a24c5fa29027f3495aafa4f5776a126c524752f51ead98f79d0",
-      "sizeBytes": 626
+      "file": "examples/animal-conversations-compositor/quality-report.json",
+      "sha256": "d91e83708d72750202e195d6b3874321f694bd48be531218df04a4563bdbef43",
+      "sizeBytes": 1062
     },
     {
-      "file": "examples/animal-conversations-variant/PROOF.md",
-      "sha256": "50b39b15a79e0b62995f448011279f88ef359bda65d8e0fd7d1e212cd8ae4340",
-      "sizeBytes": 291
+      "file": "examples/batman-arkham-first-run/final.mp4",
+      "sha256": "3a24911245135050f976ce3eff5f7f112dba93e6cfdd4318adbdc9a4f900f6ac",
+      "sizeBytes": 13308376
     },
     {
-      "file": "examples/animal-conversations-variant/contact-sheet.jpg",
-      "sha256": "f5bb8b40c4211939501692a565288f838a7161859c0f2fa3bf5f31a828e100e3",
-      "sizeBytes": 121777
+      "file": "examples/batman-arkham-first-run/final.mp4.receipt.json",
+      "sha256": "46d595d5297ea340c7f4a1c657bc9f8e0cdfda7e4321a64718ddcc9e429fe1d1",
+      "sizeBytes": 704
     },
     {
-      "file": "examples/animal-conversations-variant/final.mp4",
-      "sha256": "46f0273578f93e8c04f4de1e7971a087f6b7422293c953406198bc4328876866",
-      "sizeBytes": 17234271
+      "file": "examples/batman-arkham-first-run/input.json",
+      "sha256": "c31bc6ad434ffe4e5a5fb4ddf8e385ebf667360b52b08e63dbb7a035a209cee0",
+      "sizeBytes": 5779
     },
     {
-      "file": "examples/animal-conversations-variant/input.json",
-      "sha256": "024b4194ecb7f69710b0c3fac64d2912ea0c4cdcbad33d02bb72cdc3c3cad3e7",
-      "sizeBytes": 803
+      "file": "examples/batman-arkham-first-run/poster.jpg",
+      "sha256": "60faf9b1a8cee2f1f3d9757522b7fe8139affab21bb89a051695f69bd3f39d25",
+      "sizeBytes": 208726
     },
     {
-      "file": "examples/animal-conversations-variant/poster.jpg",
-      "sha256": "5036bbe8099fcf9810487ede8226f5a4484253ce86402d79c06faf06b1aabc1e",
-      "sizeBytes": 239558
+      "file": "examples/batman-arkham-first-run/quality-report-contact-sheet.jpg",
+      "sha256": "b497a0514a07fe8827a1e631eb9581ecb7298883ed3b494ceedb501e46307b99",
+      "sizeBytes": 106123
     },
     {
-      "file": "examples/animal-conversations-variant/quality-report.json",
-      "sha256": "cf89ecd0ba93249642bdd4846c7d7247edf323abc369a2882221b6c8d13174b5",
-      "sizeBytes": 636
+      "file": "examples/batman-arkham-first-run/quality-report.json",
+      "sha256": "f6f09faf449e8e62bf04763924faa8679938ffab46246d90b549b715bf30048b",
+      "sizeBytes": 1087
+    },
+    {
+      "file": "fixtures/creative-review.example.json",
+      "sha256": "4d59d073f19ae4f3124b991c23ea17af977298c5b40e503644dbd59ae9973765",
+      "sizeBytes": 383
+    },
+    {
+      "file": "fixtures/smoke/input.json",
+      "sha256": "fda777ab55c0fa88a0cc28c48863aceb054c7a4f0d8d7e4f646ebfdda83c057c",
+      "sizeBytes": 3038
+    },
+    {
+      "file": "fixtures/template/input.json",
+      "sha256": "4aec0cf52db44b63c476c14859d673b8f5ba0908a69f567760f9788ac390b540",
+      "sizeBytes": 3122
     },
     {
       "file": "format.json",
-      "sha256": "c62224cda25e9ad28acb4358ab685a1b7b2eb5e65c80ef5c13e99aa4dce26b7e",
-      "sizeBytes": 586
+      "sha256": "222ea86949f1f64f72474732b9719410aa9239580204a72081d542401cfbd977",
+      "sizeBytes": 640
     },
     {
       "file": "goldens.json",
-      "sha256": "5f8d514a36756c24d8fe4c49f7a1eabad8264ee66078236ee9d4dc5ad20da144",
-      "sizeBytes": 1013
+      "sha256": "3b8ab052a754fca78a0229825f56d4b4f392cb90e3ca42d82710c48102b8d9af",
+      "sizeBytes": 1075
     },
     {
       "file": "input-contract.json",
-      "sha256": "ec68856e01246806ef031a40741ae13ab5a6160c6e4705da10b0179aaefb94cd",
-      "sizeBytes": 819
+      "sha256": "9672520aac54bf3ec10d995a0a0242c5fb58796c9a34d4d7b7a639b74ebf8ec5",
+      "sizeBytes": 1994
     },
     {
       "file": "inputs/distribution.json",
@@ -139,29 +144,129 @@
       "sizeBytes": 1344
     },
     {
+      "file": "media/examples/animal-conversations/06-copy.wav",
+      "sha256": "df671c3b7a350845522ac5cfd43e2ccd682da4a620fe4c0bc9028ad8d4233078",
+      "sizeBytes": 929298
+    },
+    {
+      "file": "media/examples/animal-conversations/07-paste.wav",
+      "sha256": "5238cbf2aa98b1d0dfee42768d0e90326dd59ddd295caa47a4a37a2979ba24bc",
+      "sizeBytes": 1804734
+    },
+    {
+      "file": "media/examples/animal-conversations/final-result.mp4",
+      "sha256": "888860f5a2e4ee3eb4c66661ea4b122a1015d19938b20037702410350cfdea63",
+      "sizeBytes": 2132866
+    },
+    {
+      "file": "media/examples/animal-conversations/format-page.mp4",
+      "sha256": "32710f244042881b02bbf1ee15bdaffecef1814c2952840f10136d353b6b93fc",
+      "sizeBytes": 246675
+    },
+    {
+      "file": "media/examples/animal-conversations/paste-focused.mp4",
+      "sha256": "24bfe8cc8512d1fe6a7a527944782ca69da3dd23dd77c4d5d58cac2e00b4ff7f",
+      "sizeBytes": 263021
+    },
+    {
+      "file": "media/examples/batman-arkham/02-agent.wav",
+      "sha256": "75b7ce27454785fda66c9ad90b781141f3358601d7b6aa0c28cd4c9fe5213be4",
+      "sizeBytes": 1756098
+    },
+    {
+      "file": "media/examples/batman-arkham/03-copy.wav",
+      "sha256": "df671c3b7a350845522ac5cfd43e2ccd682da4a620fe4c0bc9028ad8d4233078",
+      "sizeBytes": 929298
+    },
+    {
+      "file": "media/examples/batman-arkham/04-paste.wav",
+      "sha256": "5238cbf2aa98b1d0dfee42768d0e90326dd59ddd295caa47a4a37a2979ba24bc",
+      "sizeBytes": 1804734
+    },
+    {
+      "file": "media/examples/batman-arkham/06-close.wav",
+      "sha256": "3bf3dcb467bdaf1756c96501afcd6f3f3036b3666e4ef5cccbd0dce7561070c5",
+      "sizeBytes": 1707462
+    },
+    {
+      "file": "media/examples/batman-arkham/final-result.mp4",
+      "sha256": "02abd830832603a033401177b6759687aa6d2f7c4beb6f4f26d856547c591362",
+      "sizeBytes": 24039535
+    },
+    {
+      "file": "media/examples/batman-arkham/format-page.png",
+      "sha256": "2e16a9efe0f1a67c85f1c1abd611fa19926ca5f169a77adccdd7e8c902aa67bb",
+      "sizeBytes": 246231
+    },
+    {
+      "file": "media/examples/batman-arkham/runtime-receipt.png",
+      "sha256": "df0916570e237166e210b4422d95cf9693508e2b38fdb498f6b546cb7c07f27e",
+      "sizeBytes": 79921
+    },
+    {
+      "file": "media/fixed/grid-acid-lime-v1.png",
+      "sha256": "8d691ffbdcd0ff1297bdc7c86984d2e1a57134d067ae1ab02890d34ab9fe7005",
+      "sizeBytes": 953898
+    },
+    {
+      "file": "media/fixed/grid-electric-blue-v1.png",
+      "sha256": "fa1eed1a8e640f01309aa07f218274556c0cacb6807262360680aecb4e102a58",
+      "sizeBytes": 1122993
+    },
+    {
+      "file": "media/fixed/grid-warm-cream-v1.png",
+      "sha256": "e0152ed7e377428579c22a4c8f885d28d357c112369f20534825c0b3b50df405",
+      "sizeBytes": 934154
+    },
+    {
+      "file": "media/smoke/browser-narration.wav",
+      "sha256": "14542df96292023a58c5a4b039cb3a30d92c30605051908ce87062424ab6788c",
+      "sizeBytes": 230478
+    },
+    {
+      "file": "media/smoke/browser.jpg",
+      "sha256": "41905db0a94262d478238849bf1d1bd0914b7d58c676ac93be245b5d0e6c3607",
+      "sizeBytes": 27951
+    },
+    {
+      "file": "media/smoke/result.mp4",
+      "sha256": "0ad7f81d3e6f5da08005d8f0b304d0b869ac14b36f1967acc099db339434752d",
+      "sizeBytes": 5875160
+    },
+    {
+      "file": "media/smoke/terminal-narration.wav",
+      "sha256": "72f208b94c5e7668eeb5e976533ecbc041bd9d3bec3dc1d67aa5027c19bee8e7",
+      "sizeBytes": 230478
+    },
+    {
+      "file": "media/smoke/terminal.png",
+      "sha256": "108448318fea3ab78b311ebb533bbea98386cb91d68912cc491d342d123efd6e",
+      "sizeBytes": 119249
+    },
+    {
       "file": "output-contract.json",
-      "sha256": "90ffb394272cb8f6ccf62a5ebbbfc4434b63bb7438c3d43d3ba3466c7d4151a7",
-      "sizeBytes": 442
+      "sha256": "12060438fbb9d8e46392dcab7c914887765c982809ca85c6c8286ad29ff8b651",
+      "sizeBytes": 597
     },
     {
       "file": "package-lock.json",
-      "sha256": "960b7b83d0f63b1e5e6f67a41776aa6cee5ed818894febe9e610bea67fbf446b",
-      "sizeBytes": 201
+      "sha256": "f0f4e8854295a2c26a974f6b8548355fc6930aca1ca0f16b6b3a32cabd6b9fff",
+      "sizeBytes": 96609
     },
     {
       "file": "package.json",
-      "sha256": "3a94c80b42d88d6c2832ad0491aaf1f9a467355c21d947bcec546eb1b68c25ba",
-      "sizeBytes": 225
+      "sha256": "6cddff100d2d58ec90ee06cc4942d224370f9adad112b775e1c38720305e60bf",
+      "sizeBytes": 415
     },
     {
       "file": "pipeline.json",
-      "sha256": "86c7afbacc71561aaf43e4551f4c8ef420484ee62b0f3785f8c58600c0b05c05",
-      "sizeBytes": 919
+      "sha256": "c8bbca749b787dc155f689f14b0b712a871ace6f0caa86c765cbcf2b9dce4d4d",
+      "sizeBytes": 1013
     },
     {
       "file": "quality.json",
-      "sha256": "28e633458628bd5df85a547b98c5f2e5260689c6973e1991cd31e49ae42b9253",
-      "sizeBytes": 747
+      "sha256": "869369346f264e81e176f57fcc9961622c572790dc2ba060b963fcaccf7d8316",
+      "sizeBytes": 1129
     },
     {
       "file": "references/tutorial-grammar.md",
@@ -170,18 +275,28 @@
     },
     {
       "file": "release-files.json",
-      "sha256": "f9d6e92db196a06ab1b973895a55f7692639c4dc96d7256ff2e78a65df82de05",
-      "sizeBytes": 366
+      "sha256": "f3d70cb371dff51e03ef4ce8d6ed531b0c6c43202a6fc1a9c526b66cfd55bae0",
+      "sizeBytes": 450
     },
     {
       "file": "requirements.json",
-      "sha256": "4381d0bf51f52b8f9027d103fecd11b43001d7a173337dc2a60971f2088ab5f3",
-      "sizeBytes": 943
+      "sha256": "d996e6caf7ca6e8285eae2e8eab8c3efb05ac92eb689e8bf9c33a23dfadf300c",
+      "sizeBytes": 1605
     },
     {
       "file": "runner.mjs",
-      "sha256": "6f6b421e757110fd44819b052c49c703a5a20c00ee86cb0100858e0ef488489f",
-      "sizeBytes": 6474
+      "sha256": "7c3761d4e62aec0cb539ae1198e4a2b69fae885e2fcde8a6ae460ba62baf7b15",
+      "sizeBytes": 11666
+    },
+    {
+      "file": "runtime/contract.mjs",
+      "sha256": "2089412ed4454a7cb53441e9a45fe4fa008dddc3523af0dc3e6fc8542a0f9ff6",
+      "sizeBytes": 11017
+    },
+    {
+      "file": "runtime/index.jsx",
+      "sha256": "9c10aeb19a9e36ed5b361bda6562fbf96a2b95165bab1c75bd70c3834dcb5695",
+      "sizeBytes": 113
     },
     {
       "file": "runtime/publish.mjs",
@@ -189,9 +304,19 @@
       "sizeBytes": 6578
     },
     {
+      "file": "runtime/root.jsx",
+      "sha256": "4c58eb5daf507ad66762c98bb7e67318f4db426812f03ae6ec61de3d95aa286a",
+      "sizeBytes": 849
+    },
+    {
+      "file": "runtime/tutorial-video.jsx",
+      "sha256": "3999ca04d215ea4036e42d4a7d6a648023b597c4f3fb506bed303fc76be5b04b",
+      "sizeBytes": 12033
+    },
+    {
       "file": "scripts/verify.mjs",
-      "sha256": "d97c726472b80241c79a17b86adb9eed136d3c4cc91681d2b4e5ff2e0845a3a6",
-      "sizeBytes": 5093
+      "sha256": "947015b8927c1c893a5f98830638b2f5c5e3394b268d72f569eff7ad20c90215",
+      "sizeBytes": 4908
     },
     {
       "file": "tests/distribution.test.mjs",

@@ -1,6 +1,15 @@
 {
-  "schemaVersion": 1,
-  "automatic": {"width": 1920, "height": 1080, "fps": 30, "durationSeconds": "same as sourceVideo", "durationToleranceSeconds": 0.15, "videoCodec": "h264", "audioCodec": "aac", "audioRequired": true},
-  "technicalGates": ["input-contract", "16:9 dimensions", "source duration preserved", "H.264/AAC streams", "non-silent audio", "burned-in captions declared", "output hash recorded", "no paid providers"],
-  "blindReview": {"requiredPlayback": {"completedPasses": 1, "perceptionMode": "best-available-with-explicit-disclosure"}, "criteria": ["proof appears before explanation", "real agent handoff is understandable", "approval gate is visible", "captions remain readable", "complete output plays without interruption"]}
+  "schemaVersion": 2,
+  "automatic": {"width": 1920, "height": 1080, "fps": 30, "durationSeconds": "sum of ingredient steps", "durationToleranceSeconds": 0.12, "videoCodec": "h264", "audioCodec": "aac", "audioRequired": true},
+  "technicalGates": [
+    "schemaVersion 2 ingredient contract passes",
+    "sourceVideo master is rejected",
+    "required browser, terminal, narration, caption, checkpoint, and final ingredients exist",
+    "authorized local media remains inside media/ and is long enough",
+    "1920x1080 H.264/AAC output matches the ingredient timeline",
+    "receipt binds input, runtime, and output hashes",
+    "providerCalls equals zero"
+  ],
+  "visualGates": ["retro grid visible", "macOS window chrome visible", "numbered step badge visible", "neon checkpoint readable", "captions readable", "progress rail visible", "native result is framed without distortion"],
+  "humanReview": {"required": true, "criteria": ["watch and hear the entire video", "narration is intelligible", "captions match speech", "native result audio is preserved", "pacing feels intentional", "no generic slide-deck substitution"]}
 }

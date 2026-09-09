@@ -1,12 +1,19 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "fixed": [
-    {"localPath": "assets/source/animal-conversations-tutorial-v11.mp4", "label": "Approved tutorial master · v11", "purpose": "Operator-supplied Animal Conversations tutorial with narrated captions, real handoff, local render, and final proof."},
-    {"localPath": "assets/source/animal-conversations-tutorial-v10.mp4", "label": "Approved tutorial master · v10", "purpose": "Separately authored editorial master used to exercise a second input through the same runner."}
+    {"localPath": "media/fixed/grid-acid-lime-v1.png", "label": "Acid-lime retro grid", "purpose": "Signature proof-first and browser-step background."},
+    {"localPath": "media/fixed/grid-electric-blue-v1.png", "label": "Electric-blue retro grid", "purpose": "Signature coding-agent and terminal-step background."},
+    {"localPath": "media/fixed/grid-warm-cream-v1.png", "label": "Warm-cream retro grid", "purpose": "Signature closing and final-result background."}
+  ],
+  "proofInputs": [
+    {"input": "examples/batman-arkham-first-run/input.json", "output": "examples/batman-arkham-first-run/final.mp4", "purpose": "Cross-format proof that directly addresses the failed blind-agent Batman run."},
+    {"input": "examples/animal-conversations-compositor/input.json", "output": "examples/animal-conversations-compositor/final.mp4", "purpose": "Second distinct input through the same compositor."}
   ],
   "sourceReference": {
-    "exampleOutput": "examples/animal-conversations-first-run/final.mp4",
-    "referenceNote": "Produced by the packaged runner from the approved tutorial master; no paid generation was used.",
-    "verification": "The source master is a recovered QA-passed Animal Conversations tutorial asset; raw creator media is not redistributed separately."
-  }
+    "exampleOutput": "examples/batman-arkham-first-run/final.mp4",
+    "referenceInput": "examples/batman-arkham-first-run/poster.jpg",
+    "referenceNote": "Both public proof videos are direct outputs of runtime/tutorial-video.jsx from editable ingredient JSON; the Batman proof is the canonical regression target.",
+    "verification": "Receipts bind input, runtime, and output hashes; contact sheets show the packaged signature features."
+  },
+  "policy": "All variable media is explicitly authorized with provenance in its input JSON. No provider-generated assets are created by the runtime."
 }

@@ -1,21 +1,26 @@
 {
-  "localTools": ["node", "npm", "ffmpeg", "ffprobe"],
+  "schemaVersion": 2,
+  "localTools": ["Node.js >=22", "npm", "FFmpeg", "FFprobe", "Chrome/Chromium or Remotion-managed browser"],
   "providers": [
     {
       "name": "Social Publisher (Buffer MCP or API)",
-      "purpose": "Simultaneous multi-platform publishing to YouTube, Instagram, TikTok, and X.",
+      "purpose": "Optional simultaneous publishing to YouTube, Instagram, TikTok, and X after the finished tutorial is approved.",
       "optional": true,
       "environmentVariables": ["BUFFER_API_KEY"],
       "pricingSource": "https://buffer.com/pricing"
     }
   ],
   "optionalTools": ["yt-dlp", "whisper.cpp"],
-  "environmentVariables": ["FFMPEG", "FFPROBE"],
-  "runtime": {"node": ">=20", "binaries": ["ffmpeg", "ffprobe"]},
+  "paidApprovalRequired": true,
+  "automaticInstallation": false,
+  "environmentVariables": ["FFMPEG (optional)", "FFPROBE (optional)", "REMOTION_BROWSER_EXECUTABLE (optional)"],
+  "runtime": {"node": ">=22", "binaries": ["ffmpeg", "ffprobe"]},
   "notes": [
-    "The host coding agent resolves an authorized URL and may save a local WAV before this kit runs.",
-    "yt-dlp HTTP 403 means access was refused; use a permitted local file instead.",
-    "No AI speech, music, image, video, or transcription provider is called by this runtime.",
-    "A user must approve the storyboard, permissions, timing, captions, and any paid estimate before rendering."
+    "npm ci installs the pinned local Remotion runtime; this is dependency setup, not a paid media/model call.",
+    "The compositor makes zero provider calls and works entirely from authorized local ingredients.",
+    "Remotion binds a temporary localhost port for its local browser. Sandboxed agents must request that local permission before the first test or render; this is not internet access.",
+    "A host agent may optionally use yt-dlp or whisper.cpp during permitted ingredient preparation; URL downloading and transcription are not hidden runtime capabilities.",
+    "Social publishing is optional, requires explicit approval of channels and copy, and is never called by render, smoke, or verification.",
+    "Never invoke a paid provider without showing an estimate and receiving explicit user approval."
   ]
 }

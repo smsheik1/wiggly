@@ -1,16 +1,20 @@
 # Provenance
 
-- `assets/source/animal-conversations-tutorial-v11.mp4` is an operator-supplied,
-  QA-passed tutorial master recovered from the Animal Conversations tutorial
-  workflow. It contains the narrated walkthrough, real coding-agent handoff,
-  captions, and finished-format proof.
-- `examples/animal-conversations-first-run/final.mp4` is produced by this kit's
-  `runner.mjs`; it is not a hand-edited copy. The runner preserves the supplied
-  master's natural duration and only re-encodes it to the output contract.
-- Raw creator posts, private screen captures, cookies, source URLs, API keys,
-  and provider outputs are intentionally excluded. Only include the supplied
-  master in a public release when its operator has distribution permission.
-- All claims about extraction, transcription, approvals, and the Animal
-  Conversations runtime come from the recovered tutorial script, production
-  tracker, and QA receipts; the kit does not upgrade those claims into new
-  runtime capabilities.
+- `media/fixed/grid-*.png` are Wiggly-owned background assets recovered from
+  the original Animal Conversations tutorial production workspace and now
+  shipped as fixed format assets.
+- Batman proof media comes from the public Wiggly Batman Arkham Conversations
+  page, its published example video, a locally rasterized real runtime receipt,
+  and operator-approved human narration recovered from the original tutorial
+  production. Each input entry records its specific provenance.
+- Animal Conversations proof media and narration are operator-approved assets
+  recovered from the original tutorial production workspace. They are consumed
+  as separate editable ingredients, not as a tutorial master.
+- `examples/*/final.mp4` are direct outputs of the packaged
+  `runtime/tutorial-video.jsx` compositor. Adjacent receipts bind each input,
+  runtime, and output SHA-256.
+- Smoke images, tones, and video under `media/smoke/` are locally generated
+  mechanical fixtures and are never represented as creative proof.
+- No provider call, paid generation, secret, cookie, or private URL is required
+  or included. Authorization statements describe the supplied evidence only;
+  the runtime does not infer ownership.
