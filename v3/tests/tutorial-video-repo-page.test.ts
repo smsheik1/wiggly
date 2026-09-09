@@ -18,6 +18,7 @@ assert.deepEqual(discoveryShelfDefinitions.find((shelf) => shelf.id === "tutoria
 const presentation = await getFormatRepoPagePresentation("tutorial-video");
 assert.equal(presentation.kind, "shared");
 if (presentation.kind !== "shared") throw new Error("Tutorial Video uses the shared Repo presentation.");
+if (!presentation.package) throw new Error("Tutorial Video missing package data.");
 assert.deepEqual(
   presentation.package.services.map((s) => s.name),
   ["Social Publisher (Buffer MCP or API)"],
