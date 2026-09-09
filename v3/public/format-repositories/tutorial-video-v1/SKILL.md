@@ -35,6 +35,22 @@ The critique engine deterministically enforces the **5 Inviolable Tutorial Laws*
 
 A score $\ge 85$ (`PASS`) is required for release.
 
+### 0.2 Autonomous 1-Click Pipeline (`node runner.mjs make`)
+
+To autonomously build a complete tutorial without manual screen recording or manual voiceover typing:
+```bash
+node runner.mjs make --target=<format-slug> [--audience=creator|developer] [--skip-render]
+# Example:
+node runner.mjs make --target=mugsy-explains
+```
+
+This automated pipeline executes 5 discrete stages:
+1. **Harvests** the target format's official proof MP4, renders a 16:9 format page still, and generates a dark-mode macOS terminal graphic (`runtime/harvest.mjs`).
+2. **Synthesizes voiceover** audio and computes proportional microsecond subtitle timestamps (`runtime/voice.mjs`).
+3. **Writes** `inputs/<target-slug>.json`.
+4. **Lints** the script against the 5 Inviolable Tutorial Laws (`runtime/critique.mjs`).
+5. **Renders** the official 1920x1080 MP4 through Remotion and generates a step contact-sheet inspection report (`outputs/<target-slug>-tutorial.mp4`).
+
 ## Required loop
 
 1. Run `node runner.mjs doctor` and stop if a required local tool is missing.

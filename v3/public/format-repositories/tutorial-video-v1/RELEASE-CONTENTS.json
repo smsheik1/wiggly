@@ -25,8 +25,8 @@
     },
     {
       "file": "SKILL.md",
-      "sha256": "82666c79a96ea663d459ac6b8831e0e9e704af21b6baba88bbdd905f83f3b137",
-      "sizeBytes": 6924
+      "sha256": "6554d111e9643801ea41f8cecea22a30cc0ac243179f723f201e232e74ef1dce",
+      "sizeBytes": 7865
     },
     {
       "file": "assets.json",
@@ -144,6 +144,11 @@
       "sizeBytes": 1344
     },
     {
+      "file": "inputs/mugsy-explains.json",
+      "sha256": "c774e20987ac3205aef9369846f7f06d10d345f7087d4ee135cbf26f7b9f3d60",
+      "sizeBytes": 4417
+    },
+    {
       "file": "media/examples/animal-conversations/06-copy.wav",
       "sha256": "df671c3b7a350845522ac5cfd43e2ccd682da4a620fe4c0bc9028ad8d4233078",
       "sizeBytes": 929298
@@ -234,6 +239,21 @@
       "sizeBytes": 154984
     },
     {
+      "file": "media/mugsy-explains/step-02.wav",
+      "sha256": "b7a01edf8a9131da9585d73f68a739ef6b3f39309d59a1bca35362521a9616c7",
+      "sizeBytes": 548154
+    },
+    {
+      "file": "media/mugsy-explains/step-03.wav",
+      "sha256": "927fb2549a91d14b376f1e15cb05d7ffcb5fccff3958e1d88568f6cf462f6c9d",
+      "sizeBytes": 548006
+    },
+    {
+      "file": "media/mugsy-explains/step-05.wav",
+      "sha256": "ae1e5f74c420451c832238dd69af95f647ca3ed0559440ecaba46ce8bc9d4311",
+      "sizeBytes": 529306
+    },
+    {
       "file": "media/smoke/browser-narration.wav",
       "sha256": "14542df96292023a58c5a4b039cb3a30d92c30605051908ce87062424ab6788c",
       "sizeBytes": 230478
@@ -264,14 +284,34 @@
       "sizeBytes": 597
     },
     {
+      "file": "outputs/mugsy-explains-tutorial.mp4",
+      "sha256": "1c44a6cbe658fd0c05bb922dcd9c761759a6ef6cc19e3d6924f6fef118c3b1b0",
+      "sizeBytes": 5842046
+    },
+    {
+      "file": "outputs/mugsy-explains-tutorial.mp4.quality-report-contact-sheet.jpg",
+      "sha256": "8a07b040ea185d132a93e562fa59aa15f4c5ae189ee638d863f5ae4b7ba87020",
+      "sizeBytes": 83845
+    },
+    {
+      "file": "outputs/mugsy-explains-tutorial.mp4.quality-report.json",
+      "sha256": "b6e30b0825d940e9d858a3d041e7f4879d5401eadd7e9414d6f2c1c27040635b",
+      "sizeBytes": 1056
+    },
+    {
+      "file": "outputs/mugsy-explains-tutorial.mp4.receipt.json",
+      "sha256": "3493694bdb3cc2b5e07c1622980c4ef1a73df18d1e77d521dd4913378a0f8fca",
+      "sizeBytes": 677
+    },
+    {
       "file": "package-lock.json",
       "sha256": "f0f4e8854295a2c26a974f6b8548355fc6930aca1ca0f16b6b3a32cabd6b9fff",
       "sizeBytes": 96609
     },
     {
       "file": "package.json",
-      "sha256": "eb401e22efa81cd65b57a68e15c6dd63ed8c0a22377c27f5c8b7fb81485ac30a",
-      "sizeBytes": 542
+      "sha256": "26ba0c5641b6a8179276222de75cffea58f5d633c23e804b91206042417cbee7",
+      "sizeBytes": 578
     },
     {
       "file": "pipeline.json",
@@ -300,8 +340,8 @@
     },
     {
       "file": "runner.mjs",
-      "sha256": "7c3761d4e62aec0cb539ae1198e4a2b69fae885e2fcde8a6ae460ba62baf7b15",
-      "sizeBytes": 11666
+      "sha256": "d382a6576d0ecab89460e0ebd08364e69ce0a2264367060db4c90a62d70128a3",
+      "sizeBytes": 17974
     },
     {
       "file": "runtime/contract.mjs",
@@ -340,13 +380,13 @@
     },
     {
       "file": "runtime/voice.mjs",
-      "sha256": "bebd833c54d354b3f1a69170c61b2a7631019554f7bafc5d3648bec4e29618cd",
-      "sizeBytes": 6060
+      "sha256": "76317b4f2baa7556ee0f909dd0f2b8e6823e6069916e9d2a974a0e23b8f7cf1d",
+      "sizeBytes": 6062
     },
     {
       "file": "scripts/verify.mjs",
-      "sha256": "85dbd588b802c73c154847096a3c0588217f3ab922c637b607b345b64509ab8a",
-      "sizeBytes": 5284
+      "sha256": "c36b6961d46eb2850e9cd0e0a113eb129af888e93c423c0061fb8ecec211b642",
+      "sizeBytes": 5384
     },
     {
       "file": "tests/critique.test.mjs",
@@ -362,6 +402,11 @@
       "file": "tests/harvest.test.mjs",
       "sha256": "dcf00c36db848c4e34263a01e1955638c2f510958bcd2dc630a9c7e4b27766c0",
       "sizeBytes": 2259
+    },
+    {
+      "file": "tests/make.test.mjs",
+      "sha256": "c05486d9f48af4954c810f00fe4b6eb0378bf56bb92116e4302e50ec2640bcda",
+      "sizeBytes": 1670
     },
     {
       "file": "tests/voice.test.mjs",

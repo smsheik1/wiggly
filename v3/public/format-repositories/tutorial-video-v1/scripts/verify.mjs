@@ -40,6 +40,7 @@ execFileSync(process.execPath, ["--test", "tests/distribution.test.mjs"], { cwd:
 execFileSync(process.execPath, ["--test", "tests/critique.test.mjs"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["--test", "tests/harvest.test.mjs"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["--test", "tests/voice.test.mjs"], { cwd: root, stdio: "inherit" });
+execFileSync(process.execPath, ["--test", "tests/make.test.mjs"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["runner.mjs", "doctor"], { cwd: root, stdio: "inherit" });
 const inputs = [
   "examples/batman-arkham-first-run/input.json",

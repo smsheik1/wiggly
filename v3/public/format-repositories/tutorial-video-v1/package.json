@@ -8,6 +8,7 @@
     "critique": "node runtime/critique.mjs",
     "harvest": "node runtime/harvest.mjs",
     "voice": "node runtime/voice.mjs",
+    "make": "node runner.mjs make",
     "smoke": "node runner.mjs smoke",
     "build": "node build-kit.mjs"
   },

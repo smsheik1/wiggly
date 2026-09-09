@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "formatVersion": "0.3.0",
+  "input": "inputs/mugsy-explains.json",
+  "inputSha256": "2ee979155dcccf136c3c270d607855404e9b18205dcda3b6292d12028085d6e6",
+  "runtimeSha256": "3999ca04d215ea4036e42d4a7d6a648023b597c4f3fb506bed303fc76be5b04b",
+  "output": "outputs/mugsy-explains-tutorial.mp4",
+  "outputSha256": "1c44a6cbe658fd0c05bb922dcd9c761759a6ef6cc19e3d6924f6fef118c3b1b0",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "durationSeconds": 29.952,
+  "providerCalls": 0,
+  "signatureFeatures": [
+    "retro-grid",
+    "macos-window-chrome",
+    "numbered-step-badges",
+    "neon-checkpoint-cards",
+    "styled-subtitles",
+    "progress-bar"
+  ]
+}

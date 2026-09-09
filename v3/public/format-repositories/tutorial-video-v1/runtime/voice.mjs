@@ -155,30 +155,35 @@ export function buildNarratedTutorialStep({
   // Reserve at least 0.6s breathing room before step transition
   const calculatedDuration = Number(Math.max(minStepDuration, lastCapEnd + 0.6).toFixed(3));
 
-  return {
-    step: {
-      id,
-      kind,
-      number: String(number),
-      label,
-      windowTitle: windowTitle || `${kind === 'browser' ? 'Wiggly — ' : 'Terminal — '}${label}`,
-      background,
-      durationSeconds: calculatedDuration,
-      media: {
-        type: mediaType,
-        file: mediaPath,
-        fit: mediaFit,
-        authorized: true,
-        provenance
-      },
-      narration: {
-        file: audioRelPath,
-        startSeconds: 0.2,
-        authorized: true,
-        provenance: 'Locally synthesized tutorial speech.'
-      },
-      captions
+  const step = {
+    id,
+    kind,
+    number: String(number),
+    label,
+    windowTitle: windowTitle || `${kind === 'browser' ? 'Wiggly — ' : 'Terminal — '}${label}`,
+    background,
+    durationSeconds: calculatedDuration,
+    narration: {
+      file: audioRelPath,
+      startSeconds: 0.2,
+      authorized: true,
+      provenance: 'Locally synthesized tutorial speech.'
     },
+    captions
+  };
+
+  if (mediaPath) {
+    step.media = {
+      type: mediaType,
+      file: mediaPath,
+      fit: mediaFit,
+      authorized: true,
+      provenance
+    };
+  }
+
+  return {
+    step,
     audioDuration
   };
 }

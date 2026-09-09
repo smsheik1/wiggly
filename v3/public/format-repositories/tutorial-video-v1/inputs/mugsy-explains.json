@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 2,
+  "title": "Make a Mugsy Explains video with Wiggly",
+  "audience": "An engineer or operator deploying autonomous Wiggly format agents",
+  "format": {
+    "name": "Mugsy Explains",
+    "slug": "mugsy-explains",
+    "promise": "Turn three A-versus-B lessons into a fast vertical explainer with recurring character poses, visual proof, and handwritten captions.",
+    "url": "https://wiggly.agentenamel.com/formats/mugsy-explains",
+    "outputLabel": "mugsy-explains.mp4"
+  },
+  "steps": [
+    {
+      "id": "proof-first",
+      "kind": "hero",
+      "number": "1",
+      "label": "See the finished result",
+      "background": "lime",
+      "durationSeconds": 5,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "mugsy-explains/final-result.mp4",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Official proof media sourced from wiggly-proof.mp4."
+      }
+    },
+    {
+      "id": "choose-format",
+      "kind": "browser",
+      "number": "2",
+      "label": "Inspect the format repository",
+      "windowTitle": "Wiggly — Mugsy Explains",
+      "background": "lime",
+      "durationSeconds": 6.509,
+      "narration": {
+        "file": "mugsy-explains/step-02.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Locally synthesized tutorial speech."
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 3.055,
+          "text": "Inspect the Mugsy Explains repo contracts,"
+        },
+        {
+          "start": 3.055,
+          "end": 5.909,
+          "text": "schemas, and verification tests on Wiggly."
+        }
+      ],
+      "media": {
+        "type": "image",
+        "file": "mugsy-explains/format-page.png",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover"
+      }
+    },
+    {
+      "id": "run-agent",
+      "kind": "terminal",
+      "number": "3",
+      "label": "Execute the local composition",
+      "windowTitle": "Coding agent — Mugsy Explains",
+      "background": "blue",
+      "durationSeconds": 6.508,
+      "narration": {
+        "file": "mugsy-explains/step-03.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Locally synthesized tutorial speech."
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.984,
+          "text": "Run the local runner command."
+        },
+        {
+          "start": 1.984,
+          "end": 4.481,
+          "text": "The agent validates contracts and renders the"
+        },
+        {
+          "start": 4.481,
+          "end": 5.908,
+          "text": "video with zero providers."
+        }
+      ],
+      "media": {
+        "type": "image",
+        "file": "mugsy-explains/runtime-receipt.png",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover"
+      },
+      "checkpoint": {
+        "eyebrow": "Your checkpoint",
+        "headline": "The agent is using the packaged compositor—not inventing a slideshow.",
+        "badge": "Then render"
+      }
+    },
+    {
+      "id": "finished-output",
+      "kind": "final",
+      "number": "4",
+      "label": "Watch the finished result",
+      "background": "lime",
+      "durationSeconds": 7,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "mugsy-explains/final-result.mp4",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Official proof media sourced from wiggly-proof.mp4."
+      }
+    },
+    {
+      "id": "next-step",
+      "kind": "end",
+      "number": "5",
+      "label": "Try your own format",
+      "windowTitle": "Terminal — Try your own format",
+      "background": "cream",
+      "durationSeconds": 6.313,
+      "narration": {
+        "file": "mugsy-explains/step-05.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Locally synthesized tutorial speech."
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.47,
+          "text": "Check the captions and verify the receipt."
+        },
+        {
+          "start": 2.47,
+          "end": 4.091,
+          "text": "To try your own format,"
+        },
+        {
+          "start": 4.091,
+          "end": 5.713,
+          "text": "the Wiggly link is below."
+        }
+      ]
+    }
+  ]
+}
