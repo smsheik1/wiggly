@@ -1,8 +1,9 @@
 {
   "schemaVersion": 2,
   "stages": [
-    {"id": "ingredients", "output": "Authorized format metadata, browser/terminal captures, narration, captions, checkpoints, and native result", "approvalRequired": true, "providerCall": false, "paid": false},
+    {"id": "ingredients", "output": "Agent asks which format, finds its real result, scripts the walkthrough, and captures actual browser/terminal actions", "approvalRequired": true, "providerCall": false, "paid": false},
     {"id": "critique-script", "output": "Deterministic 5-law retention & proof-first script linter report", "approvalRequired": false, "providerCall": false, "paid": false},
+    {"id": "narration", "output": "Fish s2.1-pro-free narration and measured phrase captions; supplied-audio replay also supported", "approvalRequired": false, "providerCall": true, "paid": false},
     {"id": "validation", "output": "Validated editable timeline; pre-rendered source masters rejected", "approvalRequired": false, "providerCall": false, "paid": false},
     {"id": "official-composition", "output": "Signature Wiggly tutorial rendered by runtime/tutorial-video.jsx", "approvalRequired": false, "providerCall": false, "paid": false},
     {"id": "inspection", "output": "Metadata, hashes, every-step contact sheet, and explicit audiovisual review record", "approvalRequired": true, "providerCall": false, "paid": false},

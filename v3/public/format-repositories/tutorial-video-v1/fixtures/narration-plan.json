@@ -1,0 +1,11 @@
+{
+  "model": "s2.1-pro-free",
+  "voiceId": "0327fdb5da9e4fd782899a8058c8ae2b",
+  "voiceProvenance": "Fish Audio public Narrator voice; selected for the offline contract fixture",
+  "authorized": true,
+  "runId": "fixture-narration",
+  "steps": [
+    {"id": "open-format", "phrases": ["Open the Wiggly Format page.", "See the finished result first."]},
+    {"id": "run-agent", "phrases": ["Copy the launcher into your coding agent.", "Run the packaged Repo and inspect the result."]}
+  ]
+}

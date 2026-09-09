@@ -1,10 +1,11 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, unlinkSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // Default Zach D. Films narrator voice model (0873499c22e24d13b074fa76d27562e5)
 export const ZACH_VOICE_ID = '0873499c22e24d13b074fa76d27562e5';
+export const FISH_MODEL = 's2.1-pro-free';
 
 export async function loadFishApiKey(repoRoot) {
   if (process.env.FISH_STUDIO_APIKEY?.trim()) {
@@ -17,19 +18,14 @@ export async function loadFishApiKey(repoRoot) {
     path.join(root, '../secrets.env'),
     path.join(root, '../../secrets.env'),
     path.join(root, '../../../secrets.env'),
-    path.join(root, '../../../../secrets.env'),
-    path.join(root, '.env.local'),
-    path.join(root, '../.env.local'),
-    path.join(root, '../../.env.local'),
-    path.join(root, '../../../.env.local'),
-    path.join(root, '../../../../v3/.env.local')
+    path.join(root, '../../../../secrets.env')
   ];
 
   for (const candidate of candidatePaths) {
     if (existsSync(candidate)) {
       try {
         const content = readFileSync(candidate, 'utf8');
-        const match = content.match(/FISH_STUDIO_APIKEY=([^\r\n]+)/);
+        const match = content.match(/(?:FISH_STUDIO_APIKEY|FISH_API_KEY)=([^\r\n]+)/);
         if (match && match[1].trim()) return match[1].trim();
       } catch {}
     }
@@ -116,84 +112,56 @@ export async function synthesizeSpeechFile({
   voice = 'zach',
   rate = 175,
   apiKey: explicitApiKey,
-  repoRoot
+  repoRoot,
+  offlineFixture = false
 }) {
   const dir = path.dirname(outputPath);
   mkdirSync(dir, { recursive: true });
 
-  const ffmpeg = process.env.FFMPEG || 'ffmpeg';
-  const words = text.split(/\s+/).filter(Boolean).length;
-  const apiKey = explicitApiKey || await loadFishApiKey(repoRoot);
+  const apiKey = explicitApiKey !== undefined ? explicitApiKey : await loadFishApiKey(repoRoot);
 
-  // 1. Primary path: Fish Audio with Zach D. Films voice model
-  const voiceId = (voice === 'zach' || !voice) ? ZACH_VOICE_ID : voice;
-  if (apiKey && voiceId) {
-    try {
-      const res = await fetch('https://api.fish.audio/v1/tts', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          model: 's2.1-pro-free'
-        },
-        body: JSON.stringify({
-          text,
-          reference_id: voiceId,
-          format: 'wav',
-          normalize: true,
-          prosody: { speed: 1.05 }
-        })
-      });
-
-      if (res.ok) {
-        const buf = Buffer.from(await res.arrayBuffer());
-        writeFileSync(outputPath, buf);
-        return probeAudioDuration(outputPath);
-      }
-    } catch {
-      // Fall through to offline fallback
-    }
-  }
-
-  // 2. Offline fallback: macOS native `say`
-  let sayAvailable = false;
-  try {
-    execFileSync('which', ['say'], { stdio: 'ignore' });
-    sayAvailable = true;
-  } catch {
-    sayAvailable = false;
-  }
-
-  if (sayAvailable) {
-    const tempAiff = `${outputPath}.temp.aiff`;
-    try {
-      execFileSync('say', ['-v', 'Samantha', '-r', String(rate), text, '-o', tempAiff], { stdio: 'ignore' });
-      execFileSync(
-        ffmpeg,
-        ['-y', '-v', 'error', '-i', tempAiff, '-ar', '48000', '-ac', '1', '-c:a', 'pcm_s16le', outputPath],
-        { stdio: 'ignore' }
-      );
-      if (existsSync(tempAiff)) unlinkSync(tempAiff);
-      return probeAudioDuration(outputPath);
-    } catch {
-      if (existsSync(tempAiff)) unlinkSync(tempAiff);
-    }
-  }
-
-  // 3. Ultra-offline fallback for Linux CI runners
-  const estimatedDuration = Math.max(1.2, (words / 2.3) + 0.4);
-  execFileSync(
-    ffmpeg,
-    [
-      '-y', '-v', 'error',
-      '-f', 'lavfi', '-i', `sine=frequency=440:duration=${estimatedDuration.toFixed(2)}`,
+  if (offlineFixture) {
+    const ffmpeg = process.env.FFMPEG || 'ffmpeg';
+    const words = text.split(/\s+/).filter(Boolean).length;
+    const estimatedDuration = Math.max(1.2, (words / 2.3) + 0.4);
+    execFileSync(ffmpeg, [
+      '-y', '-v', 'error', '-f', 'lavfi', '-i', `sine=frequency=440:duration=${estimatedDuration.toFixed(2)}`,
       '-af', 'volume=0.05,afade=t=in:d=0.05,afade=t=out:st=' + (estimatedDuration - 0.1).toFixed(2) + ':d=0.1',
-      '-ar', '48000', '-ac', '1', '-c:a', 'pcm_s16le',
-      outputPath
-    ],
-    { stdio: 'ignore' }
-  );
-  return probeAudioDuration(outputPath);
+      '-ar', '48000', '-ac', '1', '-c:a', 'pcm_s16le', outputPath
+    ], { stdio: 'ignore' });
+    return probeAudioDuration(outputPath);
+  }
+
+  if (!apiKey) throw new Error('Fish Audio is required for new narration. Set FISH_STUDIO_APIKEY or FISH_API_KEY in the process environment; no offline or paid fallback is enabled.');
+
+  // Fish Audio is the only real narration path. The model is pinned to the free tier.
+  const voiceId = (voice === 'zach' || !voice) ? ZACH_VOICE_ID : voice;
+  if (!voiceId) throw new Error('A Fish Audio voice ID is required for new narration.');
+  try {
+    const res = await fetch('https://api.fish.audio/v1/tts', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        model: FISH_MODEL
+      },
+      body: JSON.stringify({
+        text,
+        reference_id: voiceId,
+        format: 'wav',
+        normalize: true,
+        prosody: { speed: 1.05 }
+      })
+    });
+    if (!res.ok) throw new Error(`Fish Audio narration failed with HTTP ${res.status}; stopped without retry or paid fallback.`);
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length < 64) throw new Error('Fish Audio returned an empty or invalid audio payload.');
+    writeFileSync(outputPath, buf);
+    return probeAudioDuration(outputPath);
+  } catch (error) {
+    if (error instanceof Error && /stopped without retry|empty or invalid|Fish Audio is required|voice ID is required/.test(error.message)) throw error;
+    throw new Error(`Fish Audio narration request failed; stopped without retry or paid fallback: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 export async function buildNarratedTutorialStep({
@@ -211,12 +179,14 @@ export async function buildNarratedTutorialStep({
   audioFullPath,
   voice = 'zach',
   minStepDuration = 4.5,
-  provenance = 'Synthesized tutorial voiceover (Zach D. Films style)'
+  provenance = 'Synthesized tutorial voiceover (Zach D. Films style)',
+  offlineFixture = false
 }) {
   const audioDuration = await synthesizeSpeechFile({
     text: narrationText,
     outputPath: audioFullPath,
-    voice
+    voice,
+    offlineFixture
   });
 
   const captions = generateTimedCaptions({

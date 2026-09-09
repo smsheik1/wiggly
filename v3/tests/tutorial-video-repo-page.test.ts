@@ -10,11 +10,11 @@ import { buildDiscoveryHandoffPrompt } from "../features/discovery/handoff";
 const profile = getDiscoveryFormatProfile("tutorial-video");
 assert.ok(profile);
 assert.equal(profile.name, "Tutorial Video");
-assert.equal(profile.version, "0.3.0");
-assert.equal(profile.repositoryHref, "/format-repositories/tutorial-video-v1/downloads/wiggly-tutorial-video-format-kit-0.3.0.zip");
+assert.equal(profile.version, "0.4.0");
+assert.equal(profile.repositoryHref, "/format-repositories/tutorial-video-v1/downloads/wiggly-tutorial-video-format-kit-0.4.0.zip");
 const entries = getDiscoveryEntriesByFormat("tutorial-video");
 assert.equal(entries.length, 1, "One tutorial Repo, not one card per proof input.");
-assert.equal(entries[0].format.version, "0.3.0");
+assert.equal(entries[0].format.version, "0.4.0");
 assert.ok(entries[0].media.src.endsWith("examples/animal-conversations-first-run/final.mp4"));
 assert.ok(existsSync(`public${entries[0].media.src}`));
 assert.ok(existsSync(`public${entries[0].media.poster}`));
@@ -24,7 +24,7 @@ const presentation = await getFormatRepoPagePresentation("tutorial-video");
 assert.equal(presentation.kind, "shared");
 if (presentation.kind !== "shared") throw new Error("Tutorial Video uses the shared Repo presentation.");
 if (!presentation.package) throw new Error("Tutorial Video missing package data.");
-assert.deepEqual(presentation.package.services.map((service) => service.name), ["Social Publisher (Buffer MCP or API)"]);
+assert.deepEqual(presentation.package.services.map((service) => service.name), ["Fish Audio", "Social Publisher (Buffer MCP or API)"]);
 assert.ok(presentation.package.optionalTools.includes("yt-dlp"));
 assert.ok(presentation.package.optionalTools.includes("whisper.cpp"));
 assert.ok(presentation.package.workflow.length >= 5);
@@ -44,7 +44,7 @@ const archiveBytes = readFileSync(`public${profile.repositoryHref}`);
 const zip = await JSZip.loadAsync(archiveBytes);
 const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
 assert.equal(inventory.version, profile.version);
-for (const required of ["runtime/tutorial-video.jsx", "runtime/contract.mjs", "runtime/publish.mjs", "media/fixed/grid-acid-lime-v1.png", "fixtures/template/input.json", "tests/distribution.test.mjs"]) {
+for (const required of ["runtime/tutorial-video.jsx", "runtime/contract.mjs", "runtime/narrate.mjs", "references/preparation.md", "fixtures/narration-plan.json", "tests/narrate.test.mjs", "runtime/publish.mjs", "media/fixed/grid-acid-lime-v1.png", "fixtures/template/input.json", "tests/distribution.test.mjs"]) {
   assert.ok(zip.file(required), `Archive must include ${required}`);
 }
 assert.equal(zip.file("assets/source/animal-conversations-tutorial-v11.mp4"), null, "The obsolete source-master wrapper must not ship.");

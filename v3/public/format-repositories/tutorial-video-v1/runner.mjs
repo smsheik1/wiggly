@@ -123,7 +123,7 @@ export async function render(inputFile, outputFile) {
   if (Math.abs(metadata.durationSeconds - prepared.durationSeconds) > 0.12) throw new Error(`Rendered duration ${metadata.durationSeconds.toFixed(3)}s does not match the ingredient timeline ${prepared.durationSeconds.toFixed(3)}s.`);
   const receipt = {
     schemaVersion: 1,
-    formatVersion: "0.3.0",
+    formatVersion: "0.4.0",
     input: path.relative(ROOT, inputPath),
     inputSha256: sha256(inputPath),
     runtimeSha256: sha256(path.join(ROOT, "runtime", "tutorial-video.jsx")),
@@ -247,6 +247,8 @@ export async function make(options = {}) {
 
   // 2. Synthesize Audio & Build Narrated Steps with Content-Driven Boundaries
   console.log(`[make] [2/5] Synthesizing voiceover and calculating microsecond caption timings...`);
+  const offlineFixture = Boolean(skipRender);
+  if (offlineFixture) console.log('[make] Dry run: using the local audio fixture; a real run requires Fish Audio credentials.');
   const audioOutputDir = path.join(MEDIA_ROOT, targetSlug);
   mkdirSync(audioOutputDir, { recursive: true });
 
@@ -261,8 +263,8 @@ export async function make(options = {}) {
 
   // Step 3 Execution Text: Pasting into agent and verifying zero providers
   const step3Text = audience === "developer"
-    ? `Run the local runner command. The agent validates contracts and renders the video with zero providers.`
-    : `Paste the prompt into your coding agent. The agent validates contracts and renders the video locally with zero providers.`;
+    ? `Run the local runner command. The agent validates contracts and renders the video with measured free narration.`
+    : `Paste the prompt into your coding agent. The agent validates contracts and renders the video locally with measured free narration.`;
 
   // Step 5 Closing Text
   const step5Text = `Check the captions and verify the receipt. To try your own format, the Wiggly link is below.`;
@@ -282,7 +284,8 @@ export async function make(options = {}) {
     audioRelPath: `${targetSlug}/step-02.wav`,
     audioFullPath: path.join(audioOutputDir, "step-02.wav"),
     voice: "zach",
-    minStepDuration: 5.0
+    minStepDuration: 5.0,
+    offlineFixture
   });
 
   // Step 3: Run the Local Composition (Terminal + Checkpoint)
@@ -300,7 +303,8 @@ export async function make(options = {}) {
     audioRelPath: `${targetSlug}/step-03.wav`,
     audioFullPath: path.join(audioOutputDir, "step-03.wav"),
     voice: "zach",
-    minStepDuration: 6.0
+    minStepDuration: 6.0,
+    offlineFixture
   });
 
   step3Result.step.checkpoint = {
@@ -313,7 +317,7 @@ export async function make(options = {}) {
   // Plays from hookDuration through to the natural end of the video
   const payoffStart = hookDuration;
   const rawPayoffDuration = proofFullDuration - payoffStart;
-  const payoffDuration = Math.round(Math.min(30.0, rawPayoffDuration) * 30) / 30;
+  const payoffDuration = Math.round(Math.max(0.5, rawPayoffDuration) * 30) / 30;
 
   const step4Proof = {
     id: "finished-output",
@@ -344,7 +348,8 @@ export async function make(options = {}) {
     audioRelPath: `${targetSlug}/step-05.wav`,
     audioFullPath: path.join(audioOutputDir, "step-05.wav"),
     voice: "zach",
-    minStepDuration: 5.0
+    minStepDuration: 5.0,
+    offlineFixture
   });
 
   const inputJson = {

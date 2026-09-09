@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "formatVersion": "0.3.0",
+  "formatVersion": "0.4.0",
   "testedAt": "2026-09-08",
   "testMode": "Fresh agent received only a clean extracted Repo and the request to create a Batman Arkham Conversations tutorial from bundled authorized media.",
   "constraints": ["No parent/source checkout", "No prior conversation", "No network", "No provider calls", "No paid generation", "One target render attempt"],

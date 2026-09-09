@@ -3,20 +3,34 @@ name: tutorial-video
 description: Render a proof-first Wiggly tutorial from editable browser, terminal, narration, caption, checkpoint, and finished-result ingredients using the packaged 16:9 compositor.
 ---
 
-# Tutorial Video Wiggly Repo (v0.3.0)
+# Tutorial Video Wiggly Repo (v0.4.0)
 
 Use this skill when a user wants a polished first-run tutorial for a Wiggly
 Format. The official renderer is `runner.mjs` plus `runtime/tutorial-video.jsx`.
 Never replace it with slides, a second renderer, or a pre-rendered master.
 
-## 0. Intake & Script Critique Protocol
+## Conversation: keep it easy
 
-Before composing, conduct a brief 2-to-3 question intake if parameters are unspecified:
-1. **Target Format:** Which published Wiggly format are we teaching? (e.g. `character-gameplay-conversations`, `lego-music-video`, `mugsy-explains`).
-2. **Audience Angle:** First-Time Creator (zero-code, prompt-focused) vs Developer / Operator (contracts, commands, verification).
-3. **Voice Style:** Crisp Tech Walkthrough (Linear/Apple style) vs Casual Creator Walkthrough.
+Report the manifest version in one short sentence. If the target is unknown,
+ask only: “Which Wiggly format should this tutorial teach?” Wait for the answer.
+Ask one short question at a time only when a decision cannot be resolved from
+the target page, workspace, or available tools. Default to 16:9, a friendly
+narrator, and natural timing; do not force a 90-second length. Never ask the
+user for an asset checklist, JSON, captions, or technical setup up front.
+Keep progress updates to one sentence and ordinary replies under 60 words.
 
-Never ask the user for labor (screenshots, recordings, timestamps). Capture or synthesize them using the runtime tools.
+## Prepare the ingredients
+
+Follow `references/preparation.md` in order. The agent owns preparation:
+inspect the target Repo, locate its finished example, capture the real browser
+and terminal workflow, write concise narration, and generate it through the
+packaged Fish path using `s2.1-pro-free`. `runner.mjs make` uses
+`runtime/voice.mjs`; the lower-level measured helper is
+`node runtime/narrate.mjs narration-plan.json`.
+
+Fish is required for new narration; supplied audio still supports offline
+replay. Configure `FISH_STUDIO_APIKEY` or `FISH_API_KEY` locally. Never
+substitute an OS/robotic voice, a paid model, or another provider silently.
 
 ### 0.1 Retention & Proof-First Script Critique Engine (`runtime/critique.mjs`)
 
@@ -130,4 +144,3 @@ When a tutorial video is rendered and approved, the agent can distribute it acro
    - Confirm target channels and copy with the user (`approvalRequired: true`).
    - Execute with connected Buffer MCP tools or `node runtime/publish.mjs inputs/distribution.json /path/to/final.mp4`.
    - Generates a verified distribution receipt (`<video>.distribution.json`) with zero secret leakage.
-

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 2,
   "kit": "wiggly-tutorial-video-format-kit",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "files": [
     {
       "file": "KIT-MANIFEST.json",
-      "sha256": "d259e791534e21053cc0094f579e1933c1901576dd95cf60a5b937b4c74a6125",
+      "sha256": "5d158c21f74963ce8e3dd6448bec45f27e529289a2ac6f33d6c6279c4d73d852",
       "sizeBytes": 798
     },
     {
       "file": "PROOF-REPORT.md",
-      "sha256": "e2aaa8d1870002336b8b9081606eef1cb50124285d96964f69cbf516135b5275",
-      "sizeBytes": 2382
+      "sha256": "09f04145e7c28636bddaac46598571b94e6c14d6ed93db8ba877878664bda929",
+      "sizeBytes": 2867
     },
     {
       "file": "PROVENANCE.md",
@@ -20,13 +20,13 @@
     },
     {
       "file": "README.md",
-      "sha256": "da40fe1d418f61500e7d408eaa6268775e720339886620d28c1521a993254891",
-      "sizeBytes": 4928
+      "sha256": "f7bb27ae5092150c6ae6a0f1684bda010528084379142482fd76ae989d83cfbd",
+      "sizeBytes": 5917
     },
     {
       "file": "SKILL.md",
-      "sha256": "6554d111e9643801ea41f8cecea22a30cc0ac243179f723f201e232e74ef1dce",
-      "sizeBytes": 7865
+      "sha256": "bf47113d4bd971153e1e61e8079a542ac43a6d4e8c4830405e0050cacf91efdf",
+      "sizeBytes": 8460
     },
     {
       "file": "assets.json",
@@ -35,8 +35,8 @@
     },
     {
       "file": "build-kit.mjs",
-      "sha256": "bbb283f9a8809cd3ab5d3e3f6900bf749d1e857dac8588949280659e31744122",
-      "sizeBytes": 2243
+      "sha256": "c67f79c252d44507041c5afc0e769059ad05be7b2fd8ee69a45d88e2a81d2bde",
+      "sizeBytes": 2329
     },
     {
       "file": "composition-contract.json",
@@ -45,12 +45,12 @@
     },
     {
       "file": "evidence/blind-agent-run.json",
-      "sha256": "9b38570dbc46ca442bfdb907f0cdfe207121b2228f30179760208b191669954f",
+      "sha256": "95968b510bd3f563b0e69c8116595d942eec35d2cce5dd02621141cd02978533",
       "sizeBytes": 1421
     },
     {
       "file": "evidence/compositor-runs.json",
-      "sha256": "d572936ee3c104f1ddc4a90eb3f9cf1c33295b90e18b4853bd9b135c87d186a1",
+      "sha256": "499768451ab104c6cf3c2d40a24c57a20bb4c038486a1a8ca7689c80a3e3e33d",
       "sizeBytes": 1195
     },
     {
@@ -60,7 +60,7 @@
     },
     {
       "file": "examples/animal-conversations-compositor/final.mp4.receipt.json",
-      "sha256": "d007ef8775ec6211f4136cd23e4f8f71698f5a6e095aba6b88b49e319821a4f0",
+      "sha256": "e97f13d9bdbfe8436a6aa09da5871b39d76b75af8ddee2cba79cbf1a851cd479",
       "sizeBytes": 720
     },
     {
@@ -85,7 +85,7 @@
     },
     {
       "file": "examples/batman-arkham-first-run/final.mp4.receipt.json",
-      "sha256": "46d595d5297ea340c7f4a1c657bc9f8e0cdfda7e4321a64718ddcc9e429fe1d1",
+      "sha256": "d218cda951fdfc00102f43fb05dbcce8bfea5761758af2f0ea6131c5b5252c21",
       "sizeBytes": 704
     },
     {
@@ -114,6 +114,11 @@
       "sizeBytes": 383
     },
     {
+      "file": "fixtures/narration-plan.json",
+      "sha256": "ae57b17c351268131d75073c9a4a8ba42ee0a84ec72efb379762de784f11a382",
+      "sizeBytes": 489
+    },
+    {
       "file": "fixtures/smoke/input.json",
       "sha256": "fda777ab55c0fa88a0cc28c48863aceb054c7a4f0d8d7e4f646ebfdda83c057c",
       "sizeBytes": 3038
@@ -125,8 +130,8 @@
     },
     {
       "file": "format.json",
-      "sha256": "222ea86949f1f64f72474732b9719410aa9239580204a72081d542401cfbd977",
-      "sizeBytes": 640
+      "sha256": "c2361a8164b13d3d2dd429061f1c975184efe8a3fb33fd2299bf41d1c7cade4c",
+      "sizeBytes": 678
     },
     {
       "file": "goldens.json",
@@ -310,28 +315,33 @@
     },
     {
       "file": "outputs/mugsy-explains-tutorial.mp4.receipt.json",
-      "sha256": "583e4912c0a4b0cc8cfb7f3df7e75f9186fc8a45d747d36ffdd8722c60cb4d92",
+      "sha256": "bb101290799b34070647ab7ff8a4f012dcb7edfaf6dbb554c571834579748328",
       "sizeBytes": 676
     },
     {
       "file": "package-lock.json",
-      "sha256": "320bd87c8826783a3552614d93f5d13aebcd469f5254ce2e558d7f99e1612088",
+      "sha256": "2eaffbbef1535e172cdc8a014a716a227eb953100ce1f4a38f7e134f61b8ca27",
       "sizeBytes": 113676
     },
     {
       "file": "package.json",
-      "sha256": "dee3fa401e98b691cbaa072424d31f300ba8d119f5b0b5a6015f65c8c59b5a70",
+      "sha256": "a7ccfdcbdf6ac1407b5446a6d28e7b93319a082a27fe115b2e6734d013cdad8f",
       "sizeBytes": 636
     },
     {
       "file": "pipeline.json",
-      "sha256": "59a33e81732fea1ae8eee5969abfcaed6672effbad00c5b51ceaadd1217a1f7b",
-      "sizeBytes": 1187
+      "sha256": "14b897184f6f4ec9ead5cea2bc33cb6c053b5f28cf4d11280d5952e516aa6013",
+      "sizeBytes": 1396
     },
     {
       "file": "quality.json",
       "sha256": "869369346f264e81e176f57fcc9961622c572790dc2ba060b963fcaccf7d8316",
       "sizeBytes": 1129
+    },
+    {
+      "file": "references/preparation.md",
+      "sha256": "57f435b9691549a1f8137d411511bc3f8e65343423cd6c77192fc371bbf4a603",
+      "sizeBytes": 2116
     },
     {
       "file": "references/tutorial-grammar.md",
@@ -340,18 +350,18 @@
     },
     {
       "file": "release-files.json",
-      "sha256": "f3d70cb371dff51e03ef4ce8d6ed531b0c6c43202a6fc1a9c526b66cfd55bae0",
+      "sha256": "f489885ace77b0abd80b3b3c984c46eba650ab4148825201adf6fd51c059c7d3",
       "sizeBytes": 450
     },
     {
       "file": "requirements.json",
-      "sha256": "d996e6caf7ca6e8285eae2e8eab8c3efb05ac92eb689e8bf9c33a23dfadf300c",
-      "sizeBytes": 1605
+      "sha256": "e2d42b041b3ceb506e94219089f02d46b911a91fd88b60fe723eaea21248d2e6",
+      "sizeBytes": 2274
     },
     {
       "file": "runner.mjs",
-      "sha256": "e2bbadeee384e303c3cc546b986b2c35f8403e4ad48d596a1cc6f594681b40fe",
-      "sizeBytes": 19389
+      "sha256": "9a4363f5f83ed2f4929fe3d86e5d550ba2e10ce1ae09035cc7fcc2861fe23eb5",
+      "sizeBytes": 19641
     },
     {
       "file": "runtime/contract.mjs",
@@ -374,6 +384,11 @@
       "sizeBytes": 113
     },
     {
+      "file": "runtime/narrate.mjs",
+      "sha256": "7463bd777ee1ea62dbc575243819f2206dfa2f6d16f1083c7a7aa23cf2e0079f",
+      "sizeBytes": 6992
+    },
+    {
       "file": "runtime/publish.mjs",
       "sha256": "bb3a52033f126603bbf1af8253b1353ae5b1351c6e4cef730fa2699ab18cdcba",
       "sizeBytes": 6578
@@ -390,13 +405,13 @@
     },
     {
       "file": "runtime/voice.mjs",
-      "sha256": "4b65efa1f3e2c1b0973303bd69dfe517a9aa978aeb9c92e49d21bc14a3264f0e",
-      "sizeBytes": 8318
+      "sha256": "9ca6a749f428bcde335121d7e770a93312e6289e2dac9f214ff795c55479804a",
+      "sizeBytes": 8155
     },
     {
       "file": "scripts/verify.mjs",
-      "sha256": "c36b6961d46eb2850e9cd0e0a113eb129af888e93c423c0061fb8ecec211b642",
-      "sizeBytes": 5384
+      "sha256": "1648cde91331d629a74216282c9c7b3c14919330bb3191d136931049353deac7",
+      "sizeBytes": 5869
     },
     {
       "file": "tests/critique.test.mjs",
@@ -419,9 +434,14 @@
       "sizeBytes": 2058
     },
     {
+      "file": "tests/narrate.test.mjs",
+      "sha256": "83fead8007fa4c55cc0ae7dc6728ac1e6531a871a30a953d9dca19cc291cfa22",
+      "sizeBytes": 1610
+    },
+    {
       "file": "tests/voice.test.mjs",
-      "sha256": "669e7c59aa6c0129a76f5180ebd90a7df2a473ed5747867b7c927e069167bae4",
-      "sizeBytes": 2850
+      "sha256": "84584a70258c40accbc74e20a5001a35ea8472636a0e5f6ce4988e6f2d30e853",
+      "sizeBytes": 3895
     }
   ]
 }

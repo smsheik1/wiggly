@@ -15,7 +15,7 @@ const requiredFiles = [
   "format.json", "input-contract.json", "composition-contract.json", "output-contract.json",
   "requirements.json", "quality.json", "pipeline.json", "goldens.json", "assets.json",
   "release-files.json", "runner.mjs", "build-kit.mjs", "runtime/index.jsx", "runtime/root.jsx",
-  "runtime/tutorial-video.jsx", "runtime/contract.mjs", "runtime/critique.mjs", "runtime/harvest.mjs", "runtime/voice.mjs", "fixtures/smoke/input.json",
+  "runtime/tutorial-video.jsx", "runtime/contract.mjs", "runtime/critique.mjs", "runtime/harvest.mjs", "runtime/voice.mjs", "runtime/narrate.mjs", "references/preparation.md", "fixtures/narration-plan.json", "fixtures/smoke/input.json",
   "fixtures/creative-review.example.json", "evidence/blind-agent-run.json",
   "media/fixed/grid-acid-lime-v1.png", "media/fixed/grid-electric-blue-v1.png",
   "media/fixed/grid-warm-cream-v1.png"
@@ -25,13 +25,15 @@ for (const file of requiredFiles) assert.ok(existsSync(path.join(root, file)), `
 const manifest = readJson("KIT-MANIFEST.json");
 const format = readJson("format.json");
 const inputContract = readJson("input-contract.json");
-assert.equal(manifest.formatVersion, "0.3.0");
-assert.equal(format.version, "0.3.0");
+assert.equal(manifest.formatVersion, "0.4.0");
+assert.equal(format.version, "0.4.0");
 assert.equal(format.slug, "tutorial-video");
-assert.deepEqual(
-  readJson("requirements.json").providers.map((p) => p.name),
-  ["Social Publisher (Buffer MCP or API)"]
-);
+const requirements = readJson("requirements.json");
+assert.deepEqual(requirements.providers.map((p) => p.name), ["Fish Audio", "Social Publisher (Buffer MCP or API)"]);
+const fish = requirements.providers.find((p) => p.name === "Fish Audio");
+assert.equal(fish.optional, false);
+assert.equal(fish.model, "s2.1-pro-free");
+assert.ok(fish.environmentVariables.includes("FISH_STUDIO_APIKEY"));
 assert.equal(readJson("output-contract.json").video.aspectRatio, "16:9");
 assert.ok(inputContract.forbidden.includes("sourceVideo"));
 assert.match(readFileSync(path.join(root, "README.md"), "utf8"), /rejects `sourceVideo`/);
@@ -40,6 +42,7 @@ execFileSync(process.execPath, ["--test", "tests/distribution.test.mjs"], { cwd:
 execFileSync(process.execPath, ["--test", "tests/critique.test.mjs"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["--test", "tests/harvest.test.mjs"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["--test", "tests/voice.test.mjs"], { cwd: root, stdio: "inherit" });
+execFileSync(process.execPath, ["--test", "tests/narrate.test.mjs"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["--test", "tests/make.test.mjs"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["runner.mjs", "doctor"], { cwd: root, stdio: "inherit" });
 const inputs = [
@@ -86,4 +89,4 @@ assert.equal(blind.providerCalls, 0);
 assert.equal(blind.outputSha256, "66196f9f005cba7b2ae973b5f07842425a371f00aff894d835ec0dd88c6819fd");
 
 execFileSync(process.execPath, ["runner.mjs", "smoke"], { cwd: root, stdio: "inherit" });
-console.log("Tutorial Video 0.3.0 verification passed: real compositor, source-master rejection, two inputs, zero providers, receipts, and end-to-end smoke.");
+console.log("Tutorial Video 0.4.0 verification passed: strict free Fish narration, real compositor, source-master rejection, two inputs, zero-provider tests, receipts, and end-to-end smoke.");

@@ -44,13 +44,26 @@ The bundled examples are immutable proofs and may be rendered unchanged when a
 user asks to reproduce them. For a new tutorial, run `init`, copy new assets
 under `media/runs/<name>/`, and edit the new input—not an example in place.
 
-## What you provide
+## Start with a target
+
+Tell your agent which Wiggly Format to teach. It follows
+`references/preparation.md` to find the result, capture real actions, write the
+script, and generate narration using Fish Audio `s2.1-pro-free`. It asks one
+short question at a time when needed. Configure `FISH_STUDIO_APIKEY` or
+`FISH_API_KEY` locally for new narration; no paid model is selected.
+
+`runner.mjs make` uses the strict Fish path in `runtime/voice.mjs`; the
+lower-level `runtime/narrate.mjs` command takes a narration plan and produces
+measured narration/caption ingredients. Captures use your coding agent's
+browser or recording tools. Supplied audio still allows offline replay.
+
+## Ingredients the agent prepares
 
 1. Format name, promise, public URL, and output label.
 2. Four to fourteen tutorial steps totaling 12–240 seconds.
 3. At least one permitted browser capture and one permitted terminal/coding-
    agent capture, with provenance.
-4. At least two supplied narration audio tracks and their reviewed timed
+4. At least two generated or supplied narration audio tracks and their reviewed timed
    caption phrases.
 5. At least one neon checkpoint and exactly one final-result step that keeps
    the result video's native audio.
@@ -86,12 +99,16 @@ node runner.mjs finalize --input=my-tutorial.mp4 --report=quality-report.json \
 
 ## Cost and boundaries
 
-The format runtime makes **zero provider calls**. Local dependency setup and
-rendering do not consume media-model credits. Coding-agent usage is separate.
-If an agent wants to generate narration, music, images, or video with a paid
-service, it must first show a per-provider estimate and receive explicit user
-approval. URL downloading, transcription, screen capture, and narration
-generation are host-agent preparation—not hidden capabilities of this Repo.
+The compositor and offline tests make **zero provider calls**. New narration
+uses the packaged Fish path, pinned to `s2.1-pro-free`; $0 under the provider's
+fair-use limits. A key and selected voice are required. If Fish is unavailable,
+the real run stops with a clear error—there is no OS-voice, sine-wave, or paid
+fallback. Local dependency setup and rendering do not consume media-model
+credits. Coding-agent usage is separate.
+If an agent wants to generate music, images, or video with a paid service, it
+must first show a per-provider estimate and receive explicit user approval. URL
+downloading and screen capture use the host agent's tools and the preparation
+recipe; narration and measured caption assembly are implemented in the Repo.
 
 The two bundled proofs were rendered by this same runtime from different JSON
 inputs. The Batman proof demonstrates the recovered visual identity against the
