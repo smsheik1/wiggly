@@ -39,7 +39,6 @@
     "tests/scout.test.mjs",
     "tests/critique.test.mjs",
     "MUSIC-CREDITS.md",
-    "assets/dark-fog-excerpt.mp3",
     "tests/verify-proofs.mjs",
     "inputs/same-universe.json",
     "inputs/crossover.json",
@@ -68,12 +67,6 @@
       "source": "Synthesized digital glitch whoosh transition audio fixture",
       "usage": "original",
       "notes": "Short 0.16s digital whoosh SFX used for camera transitions and intro cuts."
-    },
-    {
-      "path": "assets/dark-fog-excerpt.mp3",
-      "source": "Dark Fog by Kevin MacLeod, https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300031",
-      "usage": "licensed",
-      "notes": "CC BY 4.0. A 60-second mono excerpt beginning at source time 00:35. Preserve the credit and license in MUSIC-CREDITS.md when using it. This is a chosen alternative, not the original reference song."
     },
     {
       "path": "assets/warm.mp4",

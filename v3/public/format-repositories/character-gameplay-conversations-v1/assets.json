@@ -1,11 +1,6 @@
 {
   "fixed": [
     {
-      "path": "assets/dark-fog-excerpt.mp3",
-      "label": "Optional background music · Dark Fog",
-      "purpose": "Kevin MacLeod (incompetech.com), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Trimmed mono excerpt; lowered, ducked and faded for the example. Keep MUSIC-CREDITS.md attribution when publishing. This is an alternative, not the original reference song."
-    },
-    {
       "path": "MUSIC-CREDITS.md",
       "label": "Music attribution and source",
       "purpose": "Full composer credit, source and license links, modification notes, and publishing requirements."
