@@ -226,8 +226,8 @@ export async function buildNarratedTutorialStep({
   });
 
   const lastCapEnd = captions.length ? captions[captions.length - 1].end : audioDuration;
-  // Reserve at least 0.6s breathing room before step transition
-  const calculatedDuration = Number(Math.max(minStepDuration, lastCapEnd + 0.6).toFixed(3));
+  // Reserve at least 0.8s breathing room before step transition, aligned to 30 fps
+  const calculatedDuration = Math.round(Math.max(minStepDuration, lastCapEnd + 0.8) * 30) / 30;
 
   const step = {
     id,
