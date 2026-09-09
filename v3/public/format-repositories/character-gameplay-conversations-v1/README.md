@@ -68,11 +68,11 @@ To use the bundled alternative, add this top-level object and preserve its publi
 
 ```json
 "music": {
-  "file": "assets/dark-fog-excerpt.mp3",
+  "file": "assets/audio/yeat-if-we-being-real.mp3",
   "authorized": true,
-  "provenance": "Dark Fog by Kevin MacLeod, CC BY 4.0; see MUSIC-CREDITS.md.",
-  "volume": 0.1,
-  "attribution": "Dark Fog by Kevin MacLeod (incompetech.com), https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300031, CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Trimmed, converted to mono, ducked, faded and mixed under dialogue."
+  "provenance": "Yeat - If We Being Real (Instrumental starting at 0:28)",
+  "volume": 0.12,
+  "attribution": "Instrumental bed: Yeat - If We Being Real (used for pacing under dialogue)"
 }
 ```
 

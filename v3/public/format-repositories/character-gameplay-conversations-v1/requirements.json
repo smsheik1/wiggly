@@ -21,7 +21,7 @@
     "Arial/Helvetica/sans-serif fonts are resolved on the host; inspect typography on each new platform. No model or font download is required.",
     "All real gameplay and per-turn audio must be explicitly supplied and authorized; no voice cloning is implemented.",
     "Bundled diagnostic video and sine tones are original mechanical fixtures only.",
-    "Optional music must be authorized and long enough for the episode. The bundled Dark Fog excerpt is CC BY 4.0 and requires the credit in MUSIC-CREDITS.md.",
+    "Optional music must be authorized and long enough for the episode. See MUSIC-CREDITS.md for details on the bundled Yeat instrumental bed.",
     "Only the available macOS environment was tested."
   ]
 }
