@@ -34,8 +34,7 @@ try {
   for (const id of ["accounts-youll-connect", "included-assets", "examples", "workflow", "proof-quality", "repo-files", "run-with-agent"]) assert.equal(await page.locator(`#${id}`).count(), 1, id);
   assert.match(await page.locator("#proof-quality").innerText(), /User accepted the preview/);
   await page.locator("#accounts-youll-connect summary").click();
-  assert.match(await page.locator("#accounts-youll-connect").innerText(), /Dark Fog/);
-  assert.match(await page.locator("#accounts-youll-connect").innerText(), /CC BY 4.0/);
+  assert.match(await page.locator("#accounts-youll-connect").innerText(), /Yeat/);
   const hero = page.locator("video").first();
   await hero.waitFor();
   const dimensions = await hero.evaluate(video => ({ width: video.clientWidth, height: video.clientHeight }));
@@ -55,7 +54,7 @@ try {
   await page.locator("#repo-files summary").filter({ hasText: /^README.md$/ }).click();
   assert.match(await page.locator("#repo-files details[open] pre").innerText(), /Public baseline/);
   await page.locator("#repo-files summary").filter({ hasText: /^MUSIC-CREDITS.md$/ }).click();
-  assert.match(await page.locator("#repo-files details[open] pre").last().innerText(), /Creative Commons Attribution 4.0/);
+  assert.match(await page.locator("#repo-files details[open] pre").last().innerText(), /Yeat/);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => scrollTo(0, 0));
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
