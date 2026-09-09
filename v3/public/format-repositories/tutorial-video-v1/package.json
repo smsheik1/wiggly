@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node scripts/verify.mjs",
+    "critique": "node runtime/critique.mjs",
     "smoke": "node runner.mjs smoke",
     "build": "node build-kit.mjs"
   },

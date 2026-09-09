@@ -25,8 +25,8 @@
     },
     {
       "file": "SKILL.md",
-      "sha256": "bfd59c15eaacad4796bf2519698e1fda1b47ecd8133b768488dc744a44ab9f32",
-      "sizeBytes": 4957
+      "sha256": "82666c79a96ea663d459ac6b8831e0e9e704af21b6baba88bbdd905f83f3b137",
+      "sizeBytes": 6924
     },
     {
       "file": "assets.json",
@@ -255,13 +255,13 @@
     },
     {
       "file": "package.json",
-      "sha256": "6cddff100d2d58ec90ee06cc4942d224370f9adad112b775e1c38720305e60bf",
-      "sizeBytes": 415
+      "sha256": "d02c16378bc3d300d5208479fb9bb9cab684dc6972fcfb934ba80f8b02365392",
+      "sizeBytes": 460
     },
     {
       "file": "pipeline.json",
-      "sha256": "c8bbca749b787dc155f689f14b0b712a871ace6f0caa86c765cbcf2b9dce4d4d",
-      "sizeBytes": 1013
+      "sha256": "59a33e81732fea1ae8eee5969abfcaed6672effbad00c5b51ceaadd1217a1f7b",
+      "sizeBytes": 1187
     },
     {
       "file": "quality.json",
@@ -294,6 +294,11 @@
       "sizeBytes": 11017
     },
     {
+      "file": "runtime/critique.mjs",
+      "sha256": "28155ea586c1f6cb36c4bb2470295d54dd2efa4abfeebeccfd4ea8bc466c78f6",
+      "sizeBytes": 12444
+    },
+    {
       "file": "runtime/index.jsx",
       "sha256": "9c10aeb19a9e36ed5b361bda6562fbf96a2b95165bab1c75bd70c3834dcb5695",
       "sizeBytes": 113
@@ -315,8 +320,13 @@
     },
     {
       "file": "scripts/verify.mjs",
-      "sha256": "947015b8927c1c893a5f98830638b2f5c5e3394b268d72f569eff7ad20c90215",
-      "sizeBytes": 4908
+      "sha256": "e2cd60a96f39c05166efa2934683a26cc291dae324c7f023c74afb0f147ed16b",
+      "sizeBytes": 5036
+    },
+    {
+      "file": "tests/critique.test.mjs",
+      "sha256": "53bae4a142768a20dcb5cd3f655e971f8d7c741a3abe63efd03da855416606e4",
+      "sizeBytes": 6769
     },
     {
       "file": "tests/distribution.test.mjs",

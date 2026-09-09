@@ -9,6 +9,32 @@ Use this skill when a user wants a polished first-run tutorial for a Wiggly
 Format. The official renderer is `runner.mjs` plus `runtime/tutorial-video.jsx`.
 Never replace it with slides, a second renderer, or a pre-rendered master.
 
+## 0. Intake & Script Critique Protocol
+
+Before composing, conduct a brief 2-to-3 question intake if parameters are unspecified:
+1. **Target Format:** Which published Wiggly format are we teaching? (e.g. `character-gameplay-conversations`, `lego-music-video`, `mugsy-explains`).
+2. **Audience Angle:** First-Time Creator (zero-code, prompt-focused) vs Developer / Operator (contracts, commands, verification).
+3. **Voice Style:** Crisp Tech Walkthrough (Linear/Apple style) vs Casual Creator Walkthrough.
+
+Never ask the user for labor (screenshots, recordings, timestamps). Capture or synthesize them using the runtime tools.
+
+### 0.1 Retention & Proof-First Script Critique Engine (`runtime/critique.mjs`)
+
+Before rendering, run the deterministic 5-law script linter:
+```bash
+npm run critique [path/to/input.json]
+# or: node runtime/critique.mjs [path/to/input.json] --json
+```
+
+The critique engine deterministically enforces the **5 Inviolable Tutorial Laws**:
+- **Law 1: Proof-First Opening (25 pts)** — Step 1 must be `kind: "hero"` or `"final"` with `nativeAudio: true` and no narrator voiceover (let the finished format speak for itself).
+- **Law 2: Imperative Action Titles (20 pts)** — Every step label must begin with a strong action verb (`See`, `Choose`, `Copy`, `Paste`, `Run`, `Inspect`, `Watch`, `Try`).
+- **Law 3: Zero Conversational Fluff (20 pts)** — Banned filler phrases (*"Hey guys"*, *"In this video"*, *"Without further ado"*, *"Simply click"*) are penalized. Requires concrete technical/action density.
+- **Law 4: Explicit Checkpoint Quality (15 pts)** — Must include at least one verified troubleshooting card (`headline`, `badge`, `eyebrow`) confirming what success looks like.
+- **Law 5: Narration-to-Screen Clock & Pacing (20 pts)** — Narration audio must finish within 85-90% of each step's `durationSeconds` to ensure clean transitions, with speech rate under 2.8 words/sec.
+
+A score $\ge 85$ (`PASS`) is required for release.
+
 ## Required loop
 
 1. Run `node runner.mjs doctor` and stop if a required local tool is missing.
