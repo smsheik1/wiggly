@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "formatVersion": "0.3.0",
+  "formatVersion": "0.4.0",
   "input": "examples/animal-conversations-compositor/input.json",
   "inputSha256": "f8b76b3384c1fadac7444bb4240c2b834fe8f40d48cc4d6bfef4f302fa5386a6",
   "runtimeSha256": "3999ca04d215ea4036e42d4a7d6a648023b597c4f3fb506bed303fc76be5b04b",

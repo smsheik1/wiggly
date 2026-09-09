@@ -3,6 +3,14 @@
   "localTools": ["Node.js >=22", "npm", "FFmpeg", "FFprobe", "Chrome/Chromium or Remotion-managed browser"],
   "providers": [
     {
+      "name": "Fish Audio",
+      "purpose": "Required for new tutorial narration; supplied audio supports offline replay. Uses only s2.1-pro-free, with measured phrase captions and no paid fallback.",
+      "optional": false,
+      "environmentVariables": ["FISH_STUDIO_APIKEY", "FISH_API_KEY"],
+      "model": "s2.1-pro-free",
+      "pricingSource": "https://docs.fish.audio/developer-guide/models-pricing/models-overview"
+    },
+    {
       "name": "Social Publisher (Buffer MCP or API)",
       "purpose": "Optional simultaneous publishing to YouTube, Instagram, TikTok, and X after the finished tutorial is approved.",
       "optional": true,
@@ -19,7 +27,8 @@
     "npm ci installs the pinned local Remotion runtime; this is dependency setup, not a paid media/model call.",
     "The compositor makes zero provider calls and works entirely from authorized local ingredients.",
     "Remotion binds a temporary localhost port for its local browser. Sandboxed agents must request that local permission before the first test or render; this is not internet access.",
-    "A host agent may optionally use yt-dlp or whisper.cpp during permitted ingredient preparation; URL downloading and transcription are not hidden runtime capabilities.",
+    "New narration uses runtime/voice.mjs or runtime/narrate.mjs with Fish s2.1-pro-free ($0 subject to fair-use limits). A configured key and selected voice ID are required. Errors stop without automatic retries or paid fallback.",
+    "The host agent captures the real browser/terminal workflow using the packaged instructions; optional yt-dlp or whisper.cpp can help prepare permitted source media.",
     "Social publishing is optional, requires explicit approval of channels and copy, and is never called by render, smoke, or verification.",
     "Never invoke a paid provider without showing an estimate and receiving explicit user approval."
   ]

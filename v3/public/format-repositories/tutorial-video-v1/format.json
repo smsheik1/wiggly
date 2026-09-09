@@ -4,11 +4,11 @@
   "slug": "tutorial-video",
   "title": "Tutorial Video",
   "name": "Tutorial Video",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "owner": "Wiggly Studio",
   "status": "published",
   "summary": "A real 16:9 tutorial compositor: supply format metadata, browser and agent captures, narration, captions, checkpoint copy, and the finished-format proof.",
   "output": "One narrated, captioned 1920 × 1080 MP4 composed from editable ingredients with the signature Wiggly tutorial design.",
-  "runtime": "Local Remotion compositor plus FFmpeg/FFprobe inspection; no provider calls.",
+  "runtime": "Local Remotion compositor plus Fish s2.1-pro-free narration and FFmpeg/FFprobe inspection; no paid provider calls.",
   "canonicalSkill": "SKILL.md"
 }

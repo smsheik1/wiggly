@@ -44,7 +44,8 @@ test('synthesizeSpeechFile produces audio with positive duration', async () => {
     const duration = await synthesizeSpeechFile({
       text: "Hello from Wiggly automated tutorial test.",
       outputPath: tmpWav,
-      voice: "zach"
+      voice: "zach",
+      offlineFixture: true
     });
     assert.ok(duration > 0.5);
     assert.ok(existsSync(tmpWav));
@@ -52,6 +53,41 @@ test('synthesizeSpeechFile produces audio with positive duration', async () => {
     assert.ok(Math.abs(probed - duration) < 0.05);
   } finally {
     if (existsSync(tmpWav)) unlinkSync(tmpWav);
+  }
+});
+
+test('real narration refuses missing Fish credentials instead of falling back', async () => {
+  await assert.rejects(
+    synthesizeSpeechFile({
+      text: 'This must use Fish Audio.',
+      outputPath: path.join(root, 'media', 'missing-key.wav'),
+      voice: 'zach',
+      apiKey: ''
+    }),
+    /Fish Audio is required.*no offline or paid fallback/
+  );
+});
+
+test('real narration stops on a Fish error without retrying or switching models', async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return { ok: false, status: 402 };
+  };
+  try {
+    await assert.rejects(
+      synthesizeSpeechFile({
+        text: 'This request must stop.',
+        outputPath: path.join(root, 'media', 'fish-error.wav'),
+        voice: 'zach',
+        apiKey: 'test-only-key'
+      }),
+      /stopped without retry or paid fallback/
+    );
+    assert.equal(calls, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
   }
 });
 
@@ -68,7 +104,8 @@ test('buildNarratedTutorialStep creates contract-compliant step with breathing r
       narrationText: "Use a coding agent that can run files on your computer.",
       audioRelPath: 'test-step.wav',
       audioFullPath: tmpWav,
-      voice: "zach"
+      voice: "zach",
+      offlineFixture: true
     });
 
     assert.equal(step.id, 'test-step');

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "formatVersion": "0.3.0",
+  "formatVersion": "0.4.0",
   "input": "inputs/mugsy-explains.json",
   "inputSha256": "abe79e13f51178a1f2ce958fe9989daaea3462a975409f2f7af57e068e7fd213",
   "runtimeSha256": "3999ca04d215ea4036e42d4a7d6a648023b597c4f3fb506bed303fc76be5b04b",

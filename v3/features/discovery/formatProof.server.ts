@@ -131,7 +131,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Compose a polished proof-first 16:9 Wiggly tutorial from real browser, coding-agent, narration, caption, checkpoint, and finished-result ingredients.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/tutorial-video-v1/format.json",
-    repositoryHref: "/format-repositories/tutorial-video-v1/downloads/wiggly-tutorial-video-format-kit-0.3.0.zip",
+    repositoryHref: "/format-repositories/tutorial-video-v1/downloads/wiggly-tutorial-video-format-kit-0.4.0.zip",
     technicalHref: "/format-repositories/tutorial-video-v1/PROOF-REPORT.md",
     whatStays: [
       "The finished Wiggly result appears before the explanation",
@@ -149,7 +149,8 @@ const formatConfigs: FormatProfileConfig[] = [
       requiredInputs: [
         "Permitted browser and coding-agent captures from the real workflow",
         "The Wiggly Format metadata, URL, and finished-result video",
-        "Supplied narration audio, reviewed caption timings, and checkpoint copy",
+        "A Fish Audio key and authorized voice ID for new narration, or supplied narration for offline replay",
+        "Reviewed caption timings and checkpoint copy",
         "A coding agent with terminal, filesystem, and media access",
       ],
       deliverables: [
@@ -161,17 +162,17 @@ const formatConfigs: FormatProfileConfig[] = [
       instructions: [
         "Read SKILL.md and run the free offline smoke test",
         "Put authorized editable ingredients under media/; never provide a finished tutorial master",
-        "Validate first and ask for approval before any paid asset generation",
+        "Ask one short target-format question, then validate before any paid asset generation",
         "Render, inspect, watch, and deliver the exact MP4 plus hashes",
       ],
       estimates: [
         { label: "Evidence + storyboard", cost: "$0 provider cost", time: "depends on source length" },
-        { label: "Narration + captions", cost: "$0 with supplied assets; paid calls require approval", time: "depends on script" },
+        { label: "Fish narration + measured captions", cost: "$0 with s2.1-pro-free; paid calls require approval", time: "depends on script" },
         { label: "Local render + inspection", cost: "$0 provider cost", time: "about 1–3 min on a modern Mac" },
       ],
-      totalEstimate: "$0 provider cost with supplied media; coding-agent usage is separate. Paid calls require an estimate and approval.",
+      totalEstimate: "$0 provider cost with supplied media or Fish s2.1-pro-free; coding-agent usage is separate. Paid calls require an estimate and approval.",
       output: "One narrated, captioned 1920 × 1080 MP4 (16:9) rendered directly from the editable ingredient timeline",
-      firstQuestion: "Which Wiggly Format should the tutorial teach, and what finished result should a new user reach?",
+      firstQuestion: "Which Wiggly Format should the tutorial teach?",
     },
   },
   {
