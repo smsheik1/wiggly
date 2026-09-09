@@ -8,7 +8,8 @@
     "test": "node --test tests/*.test.mjs",
     "smoke": "node tests/smoke.mjs",
     "generate": "node runtime/generate.mjs",
-    "publish": "node runtime/publish.mjs"
+    "publish": "node runtime/publish.mjs",
+    "scout": "node runtime/scout.mjs"
   },
   "dependencies": {"sharp": "0.34.5"}
 }

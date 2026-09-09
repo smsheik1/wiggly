@@ -43,7 +43,7 @@ assert.deepEqual(data.services, [
     model: "",
   },
 ], "Optional social publisher declared for distribution; composition requires no provider account.");
-assert.equal(data.workflow.length, 6);
+assert.equal(data.workflow.length, 7);
 assert.equal(data.proof.examples.length, 2);
 const html = [FormatRepoPackageConnections, FormatRepoPackageAssets, FormatRepoPackageEvidence]
   .map(component => renderToStaticMarkup(createElement(component, { format: profile, data }))).join("");
@@ -55,7 +55,7 @@ const root = `public/${profile.packagePath}`;
 const zip = await JSZip.loadAsync(readFileSync(`public${profile.repositoryHref}`));
 for (const name of ["format.json", "KIT-MANIFEST.json", "FORMAT-REPO.json", "package.json", "package-lock.json", "RELEASE-CONTENTS.json"]) assert.equal(JSON.parse(await zip.file(name)!.async("string")).version, profile.version, name);
 const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
-assert.equal(inventory.files.length, 51);
+assert.equal(inventory.files.length, 53);
 assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((entry: {file:string}) => entry.file), "RELEASE-CONTENTS.json"].sort());
 for (const item of inventory.files) {
   const bytes = await zip.file(item.file)!.async("nodebuffer");
@@ -78,4 +78,4 @@ assert.match(publication.userAcceptance.quote, /cool looks good to me/);
 assert.equal(publication.example.width, 1080);
 assert.equal(publication.example.height, 1920);
 assert.equal(publication.example.sha256, sha256(readFileSync(`${root}/${publication.example.file}`)));
-console.log("Character Gameplay Conversations: music preview, credit, user acceptance, pinned handoff and 51-file ZIP parity passed.");
+console.log(`Character Gameplay Conversations: music preview, credit, user acceptance, pinned handoff and ${inventory.files.length}-file ZIP parity passed.`);

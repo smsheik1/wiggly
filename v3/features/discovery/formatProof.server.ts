@@ -35,7 +35,7 @@ const formatConfigs: FormatProfileConfig[] = [
     handoff: {
       requiredInputs: ["Your characters, topic and dialogue", "An authorized local gameplay clip", "One authorized audio clip per dialogue turn", "Optional authorized background music"],
       deliverables: ["A validated episode input", "A captioned portrait MP4", "A receipt with media and runtime hashes"],
-      instructions: ["Read SKILL.md and run the free smoke", "Approve the script and supply gameplay and voice clips", "Use the packaged renderer without rebuilding it", "Watch and listen before accepting the final episode"],
+      instructions: ["Read SKILL.md and run npm run scout for live viral hooks", "Approve the script and supply gameplay and voice clips", "Use the packaged renderer without rebuilding it", "Watch and listen before accepting the final episode"],
       estimates: [
         { label: "Choose cast + script", cost: "Your coding agent usage", time: "depends on the conversation" },
         { label: "Gameplay + dialogue audio", cost: "$0 with supplied clips", time: "prepared before rendering" },
@@ -44,7 +44,7 @@ const formatConfigs: FormatProfileConfig[] = [
       ],
       totalEstimate: "$0 media-provider cost with supplied clips. Coding-agent usage is separate.",
       output: "One 1080 × 1920 vertical MP4 (9:16 Shorts), up to 60 seconds, with speaker labels, captions and optional music",
-      firstQuestion: "Which characters should talk, and what are they talking about?",
+      firstQuestion: "I probed real-time YouTube search trends—here are 3 viral Arkham hooks (Moral Dilemma, Sleep Biology, or Superman Matchup). Which one do you want to run with?",
     },
   },
   {
