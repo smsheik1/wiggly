@@ -5,6 +5,10 @@
       "output": "Check the local tools, install pinned dependencies, and run the free two-input smoke before starting an episode."
     },
     {
+      "id": "scout-topics",
+      "output": "Probe live YouTube search velocity and Google Trends for three pre-validated viral Socratic hooks with zero API keys."
+    },
+    {
       "id": "choose-the-conversation",
       "output": "Choose a same-universe cast or a crossover, then approve the script, title and question.",
       "approvalRequired": true

@@ -1,6 +1,6 @@
 # Batman Arkham Conversations
 
-Public baseline **0.2.0**, for **9:16 Shorts at 1080 × 1920**. Choose your characters and topic, and generate an end-to-end voiced conversation over gameplay with one command, or supply your own custom audio clips and gameplay video.
+Public baseline **0.3.0**, for **9:16 Shorts at 1080 × 1920**. Choose your characters and topic, and generate an end-to-end voiced conversation over gameplay with one command, or supply your own custom audio clips and gameplay video.
 
 Run `npm ci --ignore-scripts --no-audit --no-fund`, `npm test`, and `npm run smoke` from this folder to verify offline baseline contracts.
 
@@ -11,6 +11,16 @@ This format kit supports 4 distinct viral sub-formats detailed in `SKILL.md`:
 2. **Multi-Universe Crossovers** with dynamic gameplay cutting and digital glitch whoosh transitions (e.g. *Batman vs. Spider-Man* [767K views], *Batman vs. Goku*, *Destroy Gojo*)
 3. **Top 5 Countdown Rankings** with left-side number ladder and card reveals (e.g. *Top 5 Villains Batman Respects* [648K views], *5 Villains That Actually Scare Him*)
 4. **1v1 Debates / Moral Clashes** (e.g. *Batman vs. The Joker* [451K views], *Batman vs. Jason Todd*)
+
+### Autonomous Zero-Key Trend Scouting
+
+Discover real-time viral debates and search velocity with zero credentials or API keys:
+
+```sh
+npm run scout
+# Or scout by specific theme:
+npm run scout -- --theme="money"
+```
 
 To automatically resolve community voice models, script the fan debate, cut gameplay, and render the complete Short:
 

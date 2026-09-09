@@ -3,21 +3,32 @@ name: character-gameplay-conversations
 description: Compose gameplay footage and per-turn character dialogue into vertical Shorts (1080x1920) across three supported sub-formats: 1v1 Debates, Top 5 Countdown Rankings, and Hypothetical Matchup Breakdowns.
 ---
 
-# Batman Arkham Conversations (v0.2.0)
+# Batman Arkham Conversations (v0.3.0)
 
 This Format Kit is built for autonomous AI agents to write, voice, and render high-retention character dialogue Shorts over continuous gameplay footage.
 
 ## Official Runtime & Validation
 
 - **Official Renderer:** `runtime/render.mjs` (the passive compositor; never rewrite or duplicate it).
+- **Autonomous Topic Scout:** Run `npm run scout` (or `node runtime/scout.mjs [--theme=<keyword>]`) to probe live YouTube search velocity and propose 3 pre-validated Socratic episode hooks with zero API keys.
 - **Validation Gate:** Run `node runtime/render.mjs --validate inputs/<episode>.json` before rendering.
 - **Unit & Smoke Tests:** Run `npm test` and `npm run smoke` before authoring new episodes.
 
 ---
 
----
-
 ## Editorial Engine & Viral Ideation
+
+### 0. Cold-Start Scouting (`npm run scout`)
+Never start by asking the user an open-ended question like *"What should this episode be about?"*
+Instead, execute `npm run scout` (or `node runtime/scout.mjs`). It probes real-time YouTube search velocity in $< 250$ms and presents 3 pre-validated concepts across Moral Checkmate, Mundane Logistics, and Tactical Matchups.
+
+Present the 3 choices clearly to the user:
+> *"I probed real-time YouTube search velocity and fan debates. Here are the 3 highest-momentum episode concepts right now:*
+> 1. **[Concept 1 Title]** — *Hook: [Robin Hook Line]*
+> 2. **[Concept 2 Title]** — *Hook: [Robin Hook Line]*
+> 3. **[Concept 3 Title]** — *Hook: [Robin Hook Line]*
+>
+> *Type 1, 2, or 3 to proceed, or drop your own topic!"*
 
 Think like a viral Shorts creative director. An idea is defined by **1 Visual Layout**, **1 Creative Flavor**, and strict obedience to the **3 Inviolable Hook Laws**.
 
