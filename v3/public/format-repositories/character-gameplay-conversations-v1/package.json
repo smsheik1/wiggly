@@ -9,7 +9,8 @@
     "smoke": "node tests/smoke.mjs",
     "generate": "node runtime/generate.mjs",
     "publish": "node runtime/publish.mjs",
-    "scout": "node runtime/scout.mjs"
+    "scout": "node runtime/scout.mjs",
+    "critique": "node runtime/critique.mjs"
   },
   "dependencies": {"sharp": "0.34.5"}
 }

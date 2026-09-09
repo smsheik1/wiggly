@@ -14,6 +14,10 @@
       "approvalRequired": true
     },
     {
+      "id": "critique-script",
+      "output": "Run the deterministic 5-stage Socratic retention linter on drafted dialogue before voice synthesis to guarantee 85+ quality and eliminate pre-synthesis waste with zero API costs."
+    },
+    {
       "id": "supply-gameplay-and-voices",
       "output": "Provide one authorized gameplay file and one audio file per dialogue turn. Optionally choose the credited background bed or supply another authorized music file. This release does not download gameplay or generate voices."
     },
