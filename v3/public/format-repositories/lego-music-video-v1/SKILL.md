@@ -67,3 +67,21 @@ Use `collect --run=my-ad --stage=clip-1` to check a saved Replicate job. It neve
 The goldens are two distinct existing David's Cookies songs and Lego stories. Their final MP4s are new local exports of recovered media, not newly generated footage and not recovered historical final exports. Technical checks passed; direct audiovisual review remains unreviewed. Historical imagery used google/nano-banana-2; historical video model is unknown. Current defaults in requirements.json are not retroactive provenance and were not freshly paid-tested.
 
 Preserve the official renderer, local fonts, preparation logic, approval gates, attempt ledger and asset hashes. Replace content through input.json and local media only.
+
+## Multi-Platform Social Distribution (Optional)
+
+When a Lego music video is rendered and approved, the agent can distribute it across YouTube Shorts, Instagram Reels, TikTok, and X via the packaged `runtime/publish.mjs` CLI or connected Buffer MCP tools:
+
+1. **Author platform-tailored copy in `inputs/distribution.json`:**
+   - **YouTube Shorts:** Punchy music video title (≤100 chars), categoryId (`10` for Music or `24` for Entertainment), duration ≤60s.
+   - **Twitter/X:** Engaging hook (≤280 chars total).
+   - **Instagram Reels:** Engaging caption with tags, strictly vertical (9:16).
+   - **TikTok:** Engaging caption with trending tags (≤2200 chars).
+2. **Dry-run validation:**
+   ```sh
+   node runtime/publish.mjs --dry-run inputs/distribution.json goldens/cookies/final.mp4
+   ```
+3. **Live dispatch requires explicit human sign-off:**
+   - Confirm target channels and copy with the user (`approvalRequired: true`).
+   - Execute with connected Buffer MCP tools or `node runtime/publish.mjs inputs/distribution.json outputs/final.mp4`.
+   - Generates a verified distribution receipt (`<video>.distribution.json`) with zero secret leakage.

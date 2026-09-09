@@ -44,6 +44,11 @@
       "id": "direct-review-and-finalize",
       "approvalRequired": true,
       "output": "Watch the motion and hear the song; finalize only after an honest review of this exact render passes."
+    },
+    {
+      "id": "distribute",
+      "approvalRequired": true,
+      "output": "Simultaneous multi-platform publishing receipt (YouTube Shorts, Instagram Reels, TikTok, X) with zero secret leakage."
     }
   ]
 }
