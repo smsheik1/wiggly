@@ -347,6 +347,14 @@ export async function make(options = {}) {
     minStepDuration: 5.0
   });
 
+  const defaultMusic = {
+    file: "fixed/cancun-sega-genesis.mp3",
+    authorized: true,
+    provenance: "If Playboi Carti's \"Cancun\" was on the Sega Genesis (INSTRUMENTAL) — https://www.youtube.com/watch?v=-zdI0S0Vuzs",
+    volume: 0.08,
+    attribution: "Background music: Playboi Carti - Cancun (Sega Genesis Instrumental)"
+  };
+
   const inputJson = {
     schemaVersion: 2,
     title: `Make a ${harvested.format.name} video with Wiggly`,
@@ -360,6 +368,7 @@ export async function make(options = {}) {
       url: harvested.format.url,
       outputLabel: harvested.format.outputLabel
     },
+    music: defaultMusic,
     steps: [
       {
         id: "proof-first",

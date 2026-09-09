@@ -9,6 +9,13 @@
     "url": "https://wiggly.agentenamel.com/formats/mugsy-explains",
     "outputLabel": "mugsy-explains.mp4"
   },
+  "music": {
+    "file": "fixed/cancun-sega-genesis.mp3",
+    "authorized": true,
+    "provenance": "If Playboi Carti's \"Cancun\" was on the Sega Genesis (INSTRUMENTAL) — https://www.youtube.com/watch?v=-zdI0S0Vuzs",
+    "volume": 0.08,
+    "attribution": "Background music: Playboi Carti - Cancun (Sega Genesis Instrumental)"
+  },
   "steps": [
     {
       "id": "proof-first",
