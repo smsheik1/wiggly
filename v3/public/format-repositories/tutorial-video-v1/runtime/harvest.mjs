@@ -426,39 +426,63 @@ export async function recordLiveFormatInteraction(formatMeta, outputPath, option
       };
     });
 
-    const copyBtn = page.locator('button:has-text("Copy")').or(page.getByRole('button', { name: /copy/i })).first();
-    let targetX = 960, targetY = 540;
-    if (await copyBtn.count() > 0 && await copyBtn.isVisible()) {
-      const box = await copyBtn.boundingBox();
-      if (box) {
-        targetX = Math.round(box.x + box.width / 2);
-        targetY = Math.round(box.y + box.height / 2);
+    async function glideMouse(fromX, fromY, toX, toY, durationMs = 800) {
+      const steps = Math.max(10, Math.round(durationMs / 25));
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        const cx = Math.round(fromX + (toX - fromX) * ease);
+        const cy = Math.round(fromY + (toY - fromY) * ease);
+        await page.evaluate(({ x, y }) => window.__moveCursor(x, y), { x: cx, y: cy });
+        await page.waitForTimeout(25);
       }
     }
 
-    // Smooth cursor glide to target over 1.2s
-    const startX = 150, startY = 150;
-    const steps = 30;
-    for (let i = 1; i <= steps; i++) {
-      const t = i / steps;
-      const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-      const cx = Math.round(startX + (targetX - startX) * ease);
-      const cy = Math.round(startY + (targetY - startY) * ease);
-      await page.evaluate(({ x, y }) => window.__moveCursor(x, y), { x: cx, y: cy });
-      await page.waitForTimeout(35);
-    }
+    let curX = 200, curY = 200;
+    const sendBtn = page.getByRole('button', { name: /send to coding agent/i }).first()
+      .or(page.locator('button:has-text("Send to Coding Agent")'))
+      .or(page.locator('button:has-text("Copy")')).first();
 
-    // Hover & click
-    if (await copyBtn.count() > 0 && await copyBtn.isVisible()) {
-      await copyBtn.hover().catch(() => {});
-      await page.waitForTimeout(200);
-      await copyBtn.click().catch(() => {});
-      await page.waitForTimeout(500);
+    if (await sendBtn.count() > 0 && await sendBtn.isVisible()) {
+      const box = await sendBtn.boundingBox();
+      if (box) {
+        const targetX = Math.round(box.x + box.width / 2);
+        const targetY = Math.round(box.y + box.height / 2);
+        await glideMouse(curX, curY, targetX, targetY, 900);
+        curX = targetX;
+        curY = targetY;
+
+        // Hover & Click "Send to Coding Agent" to open dropdown menu
+        await sendBtn.hover().catch(() => {});
+        await page.waitForTimeout(200);
+        await sendBtn.click().catch(() => {});
+        await page.waitForTimeout(400);
+
+        // Locate "Copy for another coding agent" in the opened dropdown menu
+        const menuItem = page.getByRole('menuitem', { name: /copy for another coding agent/i })
+          .or(page.getByRole('menuitem', { name: /copy/i })).first();
+
+        if (await menuItem.count() > 0 && await menuItem.isVisible()) {
+          const menuBox = await menuItem.boundingBox();
+          if (menuBox) {
+            const menuTargetX = Math.round(menuBox.x + menuBox.width / 2);
+            const menuTargetY = Math.round(menuBox.y + menuBox.height / 2);
+            await glideMouse(curX, curY, menuTargetX, menuTargetY, 600);
+            curX = menuTargetX;
+            curY = menuTargetY;
+
+            // Hover & Click "Copy for another coding agent"
+            await menuItem.hover().catch(() => {});
+            await page.waitForTimeout(200);
+            await menuItem.click().catch(() => {});
+            await page.waitForTimeout(500);
+          }
+        }
+      }
     }
 
     // Hold on the page until target duration is met
-    const elapsedSec = 1.2 + 1.1 + 0.7; // ~3.0s
-    const remainingMs = Math.max(1000, Math.round((durationSeconds - elapsedSec) * 1000));
+    const remainingMs = Math.max(1000, Math.round(durationSeconds * 1000 - 4500));
     await page.waitForTimeout(remainingMs);
 
     await page.close();
@@ -488,7 +512,7 @@ export async function recordLiveFormatInteraction(formatMeta, outputPath, option
 
 export async function recordLiveTerminalExecution(formatMeta, outputPath, options = {}) {
   const ffmpeg = process.env.FFMPEG || 'ffmpeg';
-  const durationSeconds = options.durationSeconds || 12.0;
+  const durationSeconds = options.durationSeconds || 10.0;
   const screenshotPath = options.screenshotPath;
   try {
     const browser = await launchBrowser();
@@ -504,31 +528,45 @@ export async function recordLiveTerminalExecution(formatMeta, outputPath, option
     });
 
     const page = await context.newPage();
+    const handoffPrompt = `CODING AGENT REQUIRED: If you cannot access this computer's terminal, filesystem, and media files, do not analyze or simulate. Reply only: "Open this in Codex, Claude Code, Antigravity, Cursor, or Copilot CLI."
+
+Let's create this with the latest published Wiggly Format: ${formatMeta.name}.
+
+Format page: ${formatMeta.url}
+Runnable Repo: https://wiggly.agentenamel.com/format-repositories/${formatMeta.slug}-v1/downloads/wiggly-${formatMeta.slug}-format-kit-0.3.0.zip
+
+Download and extract into a new workspace. Follow the root agent instructions, SKILL.md, and contracts. Report the exact published Format version from KIT-MANIFEST.json or format.json before intake.
+
+Use the packaged runtime; do not rebuild it. Never use a paid provider without my explicit approval. Continue until the Format's validation and quality checks pass, then return its defined deliverables.`;
+
     const terminalHtml = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0a0c10; color: #f0f6fc; font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', Menlo, Monaco, Consolas, monospace; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-  .window { width: 1540px; height: 880px; background: #11141a; border: 1px solid #2a313c; border-radius: 16px; box-shadow: 0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06); overflow: hidden; display: flex; flex-direction: column; }
-  .titlebar { height: 50px; background: #181d24; border-bottom: 1px solid #2a313c; display: flex; align-items: center; padding: 0 22px; position: relative; }
+  body { background: #07090e; color: #f0f6fc; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Mono", Menlo, Consolas, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+  .window { width: 1560px; height: 900px; background: #0e1117; border: 1px solid #232a35; border-radius: 18px; box-shadow: 0 40px 120px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.08); overflow: hidden; display: flex; flex-direction: column; }
+  .titlebar { height: 52px; background: #141820; border-bottom: 1px solid #232a35; display: flex; align-items: center; padding: 0 22px; position: relative; }
   .dots { display: flex; gap: 8px; }
   .dot { width: 13px; height: 13px; border-radius: 50%; }
   .dot-red { background: #ff5f56; }
   .dot-yellow { background: #ffbd2e; }
   .dot-green { background: #27c93f; }
-  .title { position: absolute; left: 0; right: 0; text-align: center; font-size: 14px; font-weight: 600; color: #8b949e; letter-spacing: 0.02em; }
-  .terminal { flex: 1; padding: 36px 44px; font-size: 22px; line-height: 1.65; color: #e6edf3; font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace; }
-  .prompt { color: #58a6ff; font-weight: 600; }
-  .command { color: #7ee787; font-weight: 700; }
-  .log { color: #8b949e; margin-top: 6px; }
-  .log-ok { color: #7ee787; font-weight: 600; margin-top: 6px; }
-  .badge-card { margin-top: 36px; padding: 22px 30px; background: rgba(0,255,157,0.07); border: 1.5px solid #00ff9d; border-radius: 14px; box-shadow: 0 0 35px rgba(0,255,157,0.18); display: flex; align-items: center; justify-content: space-between; }
-  .badge-title { font-size: 18px; font-weight: 800; color: #00ff9d; letter-spacing: 0.06em; text-transform: uppercase; }
-  .badge-sub { font-size: 16px; color: #e6edf3; margin-top: 6px; font-weight: 500; }
+  .title { position: absolute; left: 0; right: 0; text-align: center; font-size: 14px; font-weight: 700; color: #94a3b8; letter-spacing: 0.03em; }
+  .content { flex: 1; padding: 36px 46px; font-family: "SF Mono", Menlo, Monaco, Consolas, monospace; display: flex; flex-direction: column; gap: 20px; }
+  .prompt-box { background: #161b24; border: 1.5px solid #388bfd; border-radius: 12px; padding: 18px 22px; box-shadow: 0 0 30px rgba(56,139,253,0.15); }
+  .prompt-label { font-size: 12px; font-weight: 800; color: #58a6ff; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .paste-pill { background: #238636; color: #fff; font-size: 11px; padding: 3px 12px; border-radius: 6px; font-weight: 800; display: none; }
+  .prompt-text { font-size: 15px; line-height: 1.55; color: #e6edf3; white-space: pre-wrap; word-break: break-word; min-height: 80px; }
+  .agent-response { background: #11141c; border: 1px solid #262e3d; border-radius: 12px; padding: 20px 24px; font-size: 16px; line-height: 1.7; color: #e6edf3; display: none; }
+  .agent-header { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 800; color: #7ee787; margin-bottom: 10px; }
+  .log-ok { color: #7ee787; font-weight: 600; }
+  .badge-card { padding: 18px 26px; background: rgba(0,255,157,0.08); border: 1.5px solid #00ff9d; border-radius: 14px; box-shadow: 0 0 35px rgba(0,255,157,0.2); display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .badge-title { font-size: 17px; font-weight: 800; color: #00ff9d; letter-spacing: 0.06em; text-transform: uppercase; }
+  .badge-sub { font-size: 15px; color: #e6edf3; margin-top: 4px; font-weight: 500; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
   .badge-pill { background: #00ff9d; color: #0c0e14; font-weight: 900; font-size: 14px; padding: 8px 18px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
-  .cursor { display: inline-block; width: 11px; height: 24px; background: #58a6ff; vertical-align: middle; margin-left: 2px; animation: blink 1s infinite; }
+  .cursor { display: inline-block; width: 10px; height: 20px; background: #58a6ff; vertical-align: middle; margin-left: 4px; animation: blink 1s infinite; }
   @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
 </style>
 </head>
@@ -536,11 +574,20 @@ export async function recordLiveTerminalExecution(formatMeta, outputPath, option
   <div class="window">
     <div class="titlebar">
       <div class="dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
-      <div class="title">Coding Agent — ${formatMeta.name}</div>
+      <div class="title">Coding Agent (Antigravity / Claude Code) — ${formatMeta.name}</div>
     </div>
-    <div class="terminal">
-      <div><span class="prompt">agent@wiggly % </span><span id="cmd" class="command"></span><span class="cursor" id="cur"></span></div>
-      <div id="logs" style="margin-top: 18px;"></div>
+    <div class="content">
+      <div class="prompt-box">
+        <div class="prompt-label">
+          <span>Pasted Handoff Prompt</span>
+          <span class="paste-pill" id="pastePill">Cmd + V [Pasted]</span>
+        </div>
+        <div class="prompt-text" id="promptText"><span style="color: #6e7681;">Paste coding agent prompt here...</span><span class="cursor" id="cur"></span></div>
+      </div>
+      <div class="agent-response" id="agentResp">
+        <div class="agent-header"><span>🤖 Antigravity Coding Agent</span><span style="color: #8b949e; font-weight: 400; font-size: 13px;">Executing handoff...</span></div>
+        <div id="logs"></div>
+      </div>
       <div id="badge" style="display: none;">
         <div class="badge-card">
           <div>
@@ -553,40 +600,44 @@ export async function recordLiveTerminalExecution(formatMeta, outputPath, option
     </div>
   </div>
   <script>
-    const cmdText = 'node runner.mjs make --target=${formatMeta.slug}';
-    const logs = [
-      '[make] [1/5] Introspecting target format: ${formatMeta.name}...',
-      '[make] [2/5] Synthesizing speech and generating microsecond subtitles...',
-      '[make] [3/5] Validating 5-Law Tutorial Script Critique... (Score: 100/100 PASS)',
-      '[make] [4/5] Rendering composition through Remotion... 100%',
-      '[make] [5/5] Quality inspection passed. Output: ${formatMeta.outputLabel}'
-    ];
-    let charIdx = 0;
-    const cmdEl = document.getElementById('cmd');
+    const fullPrompt = ${JSON.stringify(handoffPrompt)};
+    const promptEl = document.getElementById('promptText');
+    const pastePill = document.getElementById('pastePill');
+    const agentResp = document.getElementById('agentResp');
     const logsEl = document.getElementById('logs');
     const badgeEl = document.getElementById('badge');
-    
-    function typeCommand() {
-      if (charIdx < cmdText.length) {
-        cmdEl.textContent += cmdText[charIdx++];
-        setTimeout(typeCommand, 32);
-      } else {
-        setTimeout(streamLogs, 350);
+
+    const agentSteps = [
+      '✔ Downloaded & extracted format package: <span style="color: #58a6ff;">${formatMeta.name} (v0.3.0)</span>',
+      '✔ Validating SKILL.md, pipeline.json, and package contracts',
+      '✔ Executing packaged compositor (0 external paid API calls)',
+      '✔ 5-Law Retention Critique: <span class="log-ok">PASS (100/100)</span>',
+      '✔ Video rendered: <span style="color: #7ee787; font-weight: 700;">outputs/${formatMeta.slug}-tutorial.mp4</span>'
+    ];
+
+    // Step 1: Paste event at 800ms
+    setTimeout(() => {
+      pastePill.style.display = 'inline-block';
+      promptEl.textContent = fullPrompt;
+      promptEl.style.color = '#e6edf3';
+    }, 800);
+
+    // Step 2: Agent response at 1800ms
+    setTimeout(() => {
+      agentResp.style.display = 'block';
+      let idx = 0;
+      function streamStep() {
+        if (idx < agentSteps.length) {
+          const d = document.createElement('div');
+          d.innerHTML = agentSteps[idx++];
+          logsEl.appendChild(d);
+          setTimeout(streamStep, 350);
+        } else {
+          setTimeout(() => { badgeEl.style.display = 'block'; }, 400);
+        }
       }
-    }
-    let logIdx = 0;
-    function streamLogs() {
-      if (logIdx < logs.length) {
-        const d = document.createElement('div');
-        d.className = logIdx === 2 || logIdx === 4 ? 'log-ok' : 'log';
-        d.textContent = logs[logIdx++];
-        logsEl.appendChild(d);
-        setTimeout(streamLogs, 350);
-      } else {
-        setTimeout(() => { badgeEl.style.display = 'block'; }, 400);
-      }
-    }
-    setTimeout(typeCommand, 300);
+      streamStep();
+    }, 1800);
   </script>
 </body>
 </html>`;
