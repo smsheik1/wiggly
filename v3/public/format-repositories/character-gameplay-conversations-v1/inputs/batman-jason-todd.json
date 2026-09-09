@@ -136,10 +136,10 @@
     }
   ],
   "music": {
-    "file": "assets/dark-fog-excerpt.mp3",
+    "file": "assets/audio/yeat-if-we-being-real.mp3",
     "authorized": true,
-    "provenance": "Dark Fog by Kevin MacLeod, CC BY 4.0; see MUSIC-CREDITS.md.",
+    "provenance": "Yeat - If We Being Real (Instrumental starting at 0:28)",
     "volume": 0.12,
-    "attribution": "Dark Fog by Kevin MacLeod (incompetech.com), CC BY 4.0"
+    "attribution": "Instrumental bed: Yeat - If We Being Real (used for pacing under dialogue)"
   }
 }
