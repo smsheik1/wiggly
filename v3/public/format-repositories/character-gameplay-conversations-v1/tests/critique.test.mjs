@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { critiqueScript, formatCritiqueReport } from "../runtime/critique.mjs";
@@ -48,7 +49,7 @@ test("critiqueScript detects zero forensic density and requires concrete metrics
 
 test("critiqueScript approves golden benchmark: why-batman-wont-kill-joker", () => {
   const inputPath = path.join(repoRoot, "inputs/why-batman-wont-kill-joker.json");
-  const result = critiqueScript(JSON.parse(execFileSync("node", ["-e", `console.log(fs.readFileSync("${inputPath}", "utf8"))`])));
+  const result = critiqueScript(JSON.parse(readFileSync(inputPath, "utf8")));
 
   assert.ok(result.score >= 90, `Score must be >= 90, got ${result.score}`);
   assert.equal(result.verdict, "PASS");
@@ -58,9 +59,9 @@ test("critiqueScript approves golden benchmark: why-batman-wont-kill-joker", () 
   assert.equal(result.breakdown.punchlinePayoff.passed, true);
 });
 
-test("critiqueScript approves golden benchmark: how-batman-sleeps", () => {
-  const inputPath = path.join(repoRoot, "inputs/how-batman-sleeps.json");
-  const result = critiqueScript(JSON.parse(execFileSync("node", ["-e", `console.log(fs.readFileSync("${inputPath}", "utf8"))`])));
+test("critiqueScript approves golden benchmark: why-batman-subsidizes-red-hood", () => {
+  const inputPath = path.join(repoRoot, "inputs/why-batman-subsidizes-red-hood.json");
+  const result = critiqueScript(JSON.parse(readFileSync(inputPath, "utf8")));
 
   assert.ok(result.score >= 85, `Score must be >= 85, got ${result.score}`);
   assert.equal(result.verdict, "PASS");
