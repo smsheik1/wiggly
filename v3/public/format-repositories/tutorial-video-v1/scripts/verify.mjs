@@ -14,9 +14,13 @@ const manifest = readJson("KIT-MANIFEST.json");
 const format = readJson("format.json");
 assert.equal(manifest.formatVersion, format.version);
 assert.equal(format.slug, "tutorial-video");
-assert.deepEqual(readJson("requirements.json").providers, []);
+assert.deepEqual(
+  readJson("requirements.json").providers.map((p) => p.name),
+  ["Social Publisher (Buffer MCP or API)"]
+);
 assert.equal(readJson("output-contract.json").video.aspectRatio, "16:9");
 
+execFileSync(process.execPath, ["--test", "tests/distribution.test.mjs"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["runner.mjs", "doctor"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["runner.mjs", "check", "--input=examples/animal-conversations-first-run/input.json"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["runner.mjs", "check", "--input=examples/animal-conversations-variant/input.json"], { cwd: root, stdio: "inherit" });

@@ -44,3 +44,22 @@ node runner.mjs render --input examples/animal-conversations-first-run/input.jso
 node runner.mjs inspect --input /tmp/tutorial.mp4
 npm test
 ```
+
+## Multi-Platform Social Distribution (Optional)
+
+When a tutorial video is rendered and approved, the agent can distribute it across YouTube, Instagram, TikTok, and X via the packaged `runtime/publish.mjs` CLI or connected Buffer MCP tools:
+
+1. **Author platform-tailored copy in `inputs/distribution.json`:**
+   - **YouTube:** High-retention title (≤100 chars), categoryId (`27` for Education or `28` for Science & Technology). Handles standard 16:9 video or vertical Shorts automatically based on aspect ratio.
+   - **Twitter/X:** Engaging educational hook with key takeaways (≤280 chars total).
+   - **Instagram:** Informative caption with relevant hashtags (feed video or Reels).
+   - **TikTok:** Engaging caption with trending tutorial tags (≤2200 chars).
+2. **Dry-run validation:**
+   ```sh
+   node runtime/publish.mjs --dry-run inputs/distribution.json examples/animal-conversations-first-run/final.mp4
+   ```
+3. **Live dispatch requires explicit human sign-off:**
+   - Confirm target channels and copy with the user (`approvalRequired: true`).
+   - Execute with connected Buffer MCP tools or `node runtime/publish.mjs inputs/distribution.json /path/to/final.mp4`.
+   - Generates a verified distribution receipt (`<video>.distribution.json`) with zero secret leakage.
+

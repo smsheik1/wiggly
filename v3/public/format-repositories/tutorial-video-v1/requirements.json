@@ -1,6 +1,14 @@
 {
   "localTools": ["node", "npm", "ffmpeg", "ffprobe"],
-  "providers": [],
+  "providers": [
+    {
+      "name": "Social Publisher (Buffer MCP or API)",
+      "purpose": "Simultaneous multi-platform publishing to YouTube, Instagram, TikTok, and X.",
+      "optional": true,
+      "environmentVariables": ["BUFFER_API_KEY"],
+      "pricingSource": "https://buffer.com/pricing"
+    }
+  ],
   "optionalTools": ["yt-dlp", "whisper.cpp"],
   "environmentVariables": ["FFMPEG", "FFPROBE"],
   "runtime": {"node": ">=20", "binaries": ["ffmpeg", "ffprobe"]},

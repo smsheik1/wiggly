@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "examples/animal-conversations-first-run/input.json",
+  "media": "examples/animal-conversations-first-run/final.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "type": "video",
+      "title": "How to Build and Run Animal Conversations on Wiggly (Full Walkthrough)",
+      "description": "A complete step-by-step tutorial taking you from picking the Animal Conversations format to handing off to an AI coding agent and receiving a finished render.\n\n#Wiggly #Tutorial #AIAnimation #AnimalConversations #Automation",
+      "categoryId": "27",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "video",
+      "caption": "Step-by-step tutorial: How to operate the Animal Conversations Wiggly Repo with your AI coding agent 🎬🤖\n.\n.\n#wiggly #aiagents #tutorial #automation #coding #videocreator"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "Full walkthrough: How to go from format choice to AI agent handoff and finished render in Wiggly 🚀🎥 #AI #BuildInPublic"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "How to operate an agentic video format on Wiggly step by step 🎬🤖 #coding #aitools #tutorial #tech #fyp",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}
