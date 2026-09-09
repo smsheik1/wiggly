@@ -38,12 +38,13 @@ test('generateTimedCaptions calculates monotonic non-overlapping ranges', () => 
   assert.ok(Math.abs(last.end - 3.2) < 0.05);
 });
 
-test('synthesizeSpeechFile produces audio with positive duration', () => {
+test('synthesizeSpeechFile produces audio with positive duration', async () => {
   const tmpWav = path.join(root, 'media/test-speech.wav');
   try {
-    const duration = synthesizeSpeechFile({
+    const duration = await synthesizeSpeechFile({
       text: "Hello from Wiggly automated tutorial test.",
-      outputPath: tmpWav
+      outputPath: tmpWav,
+      voice: "zach"
     });
     assert.ok(duration > 0.5);
     assert.ok(existsSync(tmpWav));
@@ -54,10 +55,10 @@ test('synthesizeSpeechFile produces audio with positive duration', () => {
   }
 });
 
-test('buildNarratedTutorialStep creates contract-compliant step with breathing room', () => {
+test('buildNarratedTutorialStep creates contract-compliant step with breathing room', async () => {
   const tmpWav = path.join(root, 'media/test-step.wav');
   try {
-    const { step, audioDuration } = buildNarratedTutorialStep({
+    const { step, audioDuration } = await buildNarratedTutorialStep({
       id: 'test-step',
       number: 2,
       label: 'Choose a coding agent',
@@ -66,7 +67,8 @@ test('buildNarratedTutorialStep creates contract-compliant step with breathing r
       mediaPath: 'examples/batman-arkham/runtime-receipt.png',
       narrationText: "Use a coding agent that can run files on your computer.",
       audioRelPath: 'test-step.wav',
-      audioFullPath: tmpWav
+      audioFullPath: tmpWav,
+      voice: "zach"
     });
 
     assert.equal(step.id, 'test-step');

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "input": "outputs/mugsy-explains-tutorial.mp4",
-  "inputSha256": "1c44a6cbe658fd0c05bb922dcd9c761759a6ef6cc19e3d6924f6fef118c3b1b0",
+  "inputSha256": "78e4d05a4379b8808b81651a730af6b0d04639dc1f632a5cbcecba272d410cf4",
   "passed": true,
   "checks": {
     "h264": true,
@@ -12,7 +12,7 @@
     "duration": true
   },
   "metadata": {
-    "durationSeconds": 29.952,
+    "durationSeconds": 31.189333,
     "video": {
       "codec_name": "h264",
       "codec_type": "video",

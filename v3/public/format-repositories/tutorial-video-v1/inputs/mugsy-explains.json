@@ -33,22 +33,22 @@
       "label": "Inspect the format repository",
       "windowTitle": "Wiggly — Mugsy Explains",
       "background": "lime",
-      "durationSeconds": 6.509,
+      "durationSeconds": 6.831,
       "narration": {
         "file": "mugsy-explains/step-02.wav",
         "startSeconds": 0.2,
         "authorized": true,
-        "provenance": "Locally synthesized tutorial speech."
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
       },
       "captions": [
         {
           "start": 0.2,
-          "end": 3.055,
+          "end": 3.215,
           "text": "Inspect the Mugsy Explains repo contracts,"
         },
         {
-          "start": 3.055,
-          "end": 5.909,
+          "start": 3.215,
+          "end": 6.231,
           "text": "schemas, and verification tests on Wiggly."
         }
       ],
@@ -57,7 +57,7 @@
         "file": "mugsy-explains/format-page.png",
         "fit": "contain",
         "authorized": true,
-        "provenance": "Synthesized tutorial voiceover"
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
       }
     },
     {
@@ -67,27 +67,27 @@
       "label": "Execute the local composition",
       "windowTitle": "Coding agent — Mugsy Explains",
       "background": "blue",
-      "durationSeconds": 6.508,
+      "durationSeconds": 7.229,
       "narration": {
         "file": "mugsy-explains/step-03.wav",
         "startSeconds": 0.2,
         "authorized": true,
-        "provenance": "Locally synthesized tutorial speech."
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
       },
       "captions": [
         {
           "start": 0.2,
-          "end": 1.984,
+          "end": 2.209,
           "text": "Run the local runner command."
         },
         {
-          "start": 1.984,
-          "end": 4.481,
+          "start": 2.209,
+          "end": 5.022,
           "text": "The agent validates contracts and renders the"
         },
         {
-          "start": 4.481,
-          "end": 5.908,
+          "start": 5.022,
+          "end": 6.629,
           "text": "video with zero providers."
         }
       ],
@@ -96,7 +96,7 @@
         "file": "mugsy-explains/runtime-receipt.png",
         "fit": "contain",
         "authorized": true,
-        "provenance": "Synthesized tutorial voiceover"
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
       },
       "checkpoint": {
         "eyebrow": "Your checkpoint",
@@ -127,27 +127,27 @@
       "label": "Try your own format",
       "windowTitle": "Terminal — Try your own format",
       "background": "cream",
-      "durationSeconds": 6.313,
+      "durationSeconds": 6.433,
       "narration": {
         "file": "mugsy-explains/step-05.wav",
         "startSeconds": 0.2,
         "authorized": true,
-        "provenance": "Locally synthesized tutorial speech."
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
       },
       "captions": [
         {
           "start": 0.2,
-          "end": 2.47,
+          "end": 2.519,
           "text": "Check the captions and verify the receipt."
         },
         {
-          "start": 2.47,
-          "end": 4.091,
+          "start": 2.519,
+          "end": 4.176,
           "text": "To try your own format,"
         },
         {
-          "start": 4.091,
-          "end": 5.713,
+          "start": 4.176,
+          "end": 5.833,
           "text": "the Wiggly link is below."
         }
       ]

@@ -1,7 +1,42 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, unlinkSync, mkdirSync } from 'node:fs';
+import { existsSync, unlinkSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+// Default Zach D. Films narrator voice model (0873499c22e24d13b074fa76d27562e5)
+export const ZACH_VOICE_ID = '0873499c22e24d13b074fa76d27562e5';
+
+export async function loadFishApiKey(repoRoot) {
+  if (process.env.FISH_STUDIO_APIKEY?.trim()) {
+    return process.env.FISH_STUDIO_APIKEY.trim();
+  }
+
+  const root = repoRoot || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const candidatePaths = [
+    path.join(root, 'secrets.env'),
+    path.join(root, '../secrets.env'),
+    path.join(root, '../../secrets.env'),
+    path.join(root, '../../../secrets.env'),
+    path.join(root, '../../../../secrets.env'),
+    path.join(root, '.env.local'),
+    path.join(root, '../.env.local'),
+    path.join(root, '../../.env.local'),
+    path.join(root, '../../../.env.local'),
+    path.join(root, '../../../../v3/.env.local')
+  ];
+
+  for (const candidate of candidatePaths) {
+    if (existsSync(candidate)) {
+      try {
+        const content = readFileSync(candidate, 'utf8');
+        const match = content.match(/FISH_STUDIO_APIKEY=([^\r\n]+)/);
+        if (match && match[1].trim()) return match[1].trim();
+      } catch {}
+    }
+  }
+
+  return null;
+}
 
 export function probeAudioDuration(filePath, ffprobe = process.env.FFPROBE || 'ffprobe') {
   const raw = execFileSync(
@@ -75,14 +110,52 @@ export function generateTimedCaptions({ text, audioDurationSeconds, startOffsetS
   return captions;
 }
 
-export function synthesizeSpeechFile({ text, outputPath, voice = 'Samantha', rate = 175 }) {
+export async function synthesizeSpeechFile({
+  text,
+  outputPath,
+  voice = 'zach',
+  rate = 175,
+  apiKey: explicitApiKey,
+  repoRoot
+}) {
   const dir = path.dirname(outputPath);
   mkdirSync(dir, { recursive: true });
 
   const ffmpeg = process.env.FFMPEG || 'ffmpeg';
   const words = text.split(/\s+/).filter(Boolean).length;
+  const apiKey = explicitApiKey || await loadFishApiKey(repoRoot);
 
-  // Try macOS native `say` first
+  // 1. Primary path: Fish Audio with Zach D. Films voice model
+  const voiceId = (voice === 'zach' || !voice) ? ZACH_VOICE_ID : voice;
+  if (apiKey && voiceId) {
+    try {
+      const res = await fetch('https://api.fish.audio/v1/tts', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          model: 's2.1-pro-free'
+        },
+        body: JSON.stringify({
+          text,
+          reference_id: voiceId,
+          format: 'wav',
+          normalize: true,
+          prosody: { speed: 1.05 }
+        })
+      });
+
+      if (res.ok) {
+        const buf = Buffer.from(await res.arrayBuffer());
+        writeFileSync(outputPath, buf);
+        return probeAudioDuration(outputPath);
+      }
+    } catch {
+      // Fall through to offline fallback
+    }
+  }
+
+  // 2. Offline fallback: macOS native `say`
   let sayAvailable = false;
   try {
     execFileSync('which', ['say'], { stdio: 'ignore' });
@@ -94,7 +167,7 @@ export function synthesizeSpeechFile({ text, outputPath, voice = 'Samantha', rat
   if (sayAvailable) {
     const tempAiff = `${outputPath}.temp.aiff`;
     try {
-      execFileSync('say', ['-v', voice, '-r', String(rate), text, '-o', tempAiff], { stdio: 'ignore' });
+      execFileSync('say', ['-v', 'Samantha', '-r', String(rate), text, '-o', tempAiff], { stdio: 'ignore' });
       execFileSync(
         ffmpeg,
         ['-y', '-v', 'error', '-i', tempAiff, '-ar', '48000', '-ac', '1', '-c:a', 'pcm_s16le', outputPath],
@@ -104,11 +177,10 @@ export function synthesizeSpeechFile({ text, outputPath, voice = 'Samantha', rat
       return probeAudioDuration(outputPath);
     } catch {
       if (existsSync(tempAiff)) unlinkSync(tempAiff);
-      // fallback to ffmpeg synth below
     }
   }
 
-  // Robust offline fallback: generate clean audio stream with exact spoken cadence
+  // 3. Ultra-offline fallback for Linux CI runners
   const estimatedDuration = Math.max(1.2, (words / 2.3) + 0.4);
   execFileSync(
     ffmpeg,
@@ -124,7 +196,7 @@ export function synthesizeSpeechFile({ text, outputPath, voice = 'Samantha', rat
   return probeAudioDuration(outputPath);
 }
 
-export function buildNarratedTutorialStep({
+export async function buildNarratedTutorialStep({
   id,
   number,
   label,
@@ -137,12 +209,14 @@ export function buildNarratedTutorialStep({
   narrationText,
   audioRelPath,
   audioFullPath,
+  voice = 'zach',
   minStepDuration = 4.5,
-  provenance = 'Synthesized tutorial voiceover'
+  provenance = 'Synthesized tutorial voiceover (Zach D. Films style)'
 }) {
-  const audioDuration = synthesizeSpeechFile({
+  const audioDuration = await synthesizeSpeechFile({
     text: narrationText,
-    outputPath: audioFullPath
+    outputPath: audioFullPath,
+    voice
   });
 
   const captions = generateTimedCaptions({
@@ -167,7 +241,7 @@ export function buildNarratedTutorialStep({
       file: audioRelPath,
       startSeconds: 0.2,
       authorized: true,
-      provenance: 'Locally synthesized tutorial speech.'
+      provenance: provenance || 'Locally synthesized tutorial speech.'
     },
     captions
   };
@@ -192,8 +266,8 @@ export function buildNarratedTutorialStep({
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const text = 'On Wiggly, choose Copy for another coding agent.';
   const testWav = '/tmp/wiggly-test-voice.wav';
-  console.log('[voice] Synthesizing test narration...');
-  const dur = synthesizeSpeechFile({ text, outputPath: testWav });
+  console.log('[voice] Synthesizing Zach D. Films test narration...');
+  const dur = await synthesizeSpeechFile({ text, outputPath: testWav, voice: 'zach' });
   console.log(`[voice] Produced audio (${dur.toFixed(2)}s) at ${testWav}`);
   const caps = generateTimedCaptions({ text, audioDurationSeconds: dur });
   console.log('[voice] Generated caption chunks:', JSON.stringify(caps, null, 2));

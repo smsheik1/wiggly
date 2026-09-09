@@ -237,6 +237,7 @@ export async function make(options = {}) {
   const audience = options.audience || argument("audience", "creator");
   const skipRender = options.skipRender ?? (process.argv.includes("--skip-render") || process.argv.includes("--dry-run"));
   const outputFile = options.output || argument("output", path.join(ROOT, "outputs", `${targetSlug}-tutorial.mp4`));
+  const recipeOption = options.recipe || argument("recipe");
 
   console.log(`[make] Starting autonomous 1-click tutorial generator for: ${targetSlug} (audience: ${audience})`);
 
@@ -259,7 +260,7 @@ export async function make(options = {}) {
 
   const step5Text = `Check the captions and verify the receipt. To try your own format, the Wiggly link is below.`;
 
-  const step2Result = buildNarratedTutorialStep({
+  const step2Result = await buildNarratedTutorialStep({
     id: "choose-format",
     number: 2,
     label: audience === "developer" ? "Inspect the format repository" : "Choose and copy a format",
@@ -270,10 +271,11 @@ export async function make(options = {}) {
     narrationText: step2Text,
     audioRelPath: `${targetSlug}/step-02.wav`,
     audioFullPath: path.join(audioOutputDir, "step-02.wav"),
+    voice: "zach",
     minStepDuration: 4.5
   });
 
-  const step3Result = buildNarratedTutorialStep({
+  const step3Result = await buildNarratedTutorialStep({
     id: "run-agent",
     number: 3,
     label: audience === "developer" ? "Execute the local composition" : "Paste it into your agent",
@@ -284,6 +286,7 @@ export async function make(options = {}) {
     narrationText: step3Text,
     audioRelPath: `${targetSlug}/step-03.wav`,
     audioFullPath: path.join(audioOutputDir, "step-03.wav"),
+    voice: "zach",
     minStepDuration: 6.0
   });
 
@@ -294,7 +297,7 @@ export async function make(options = {}) {
     badge: "Then render"
   };
 
-  const step5Result = buildNarratedTutorialStep({
+  const step5Result = await buildNarratedTutorialStep({
     id: "next-step",
     number: 5,
     label: "Try your own format",
@@ -303,6 +306,7 @@ export async function make(options = {}) {
     narrationText: step5Text,
     audioRelPath: `${targetSlug}/step-05.wav`,
     audioFullPath: path.join(audioOutputDir, "step-05.wav"),
+    voice: "zach",
     minStepDuration: 5.5
   });
 
@@ -360,9 +364,9 @@ export async function make(options = {}) {
 
   const inputDir = path.join(ROOT, "inputs");
   mkdirSync(inputDir, { recursive: true });
-  const inputFilePath = path.join(inputDir, `${targetSlug}.json`);
+  const inputFilePath = recipeOption ? path.resolve(recipeOption) : path.join(inputDir, `${targetSlug}.json`);
   writeFileSync(inputFilePath, JSON.stringify(inputJson, null, 2) + "\n");
-  console.log(`[make] Wrote generated tutorial recipe to inputs/${targetSlug}.json`);
+  console.log(`[make] Wrote generated tutorial recipe to ${path.relative(ROOT, inputFilePath)}`);
 
   // 3. Critique Script
   console.log(`[make] [3/5] Running 5-law script critique linter...`);
