@@ -47,7 +47,7 @@ assert.equal(data.workflow.length, 8);
 assert.equal(data.proof.examples.length, 2);
 const html = [FormatRepoPackageConnections, FormatRepoPackageAssets, FormatRepoPackageEvidence]
   .map(component => renderToStaticMarkup(createElement(component, { format: profile, data }))).join("");
-for (const text of ["Same-universe starter", "Crossover starter", "not in this release", "User accepted the preview", "Dark Fog", "CC BY 4.0", "Readable Repo files."]) assert.ok(html.includes(text), text);
+for (const text of ["Same-universe starter", "Crossover starter", "not in this release", "User accepted the preview", "Readable Repo files."]) assert.ok(html.includes(text), text);
 const prompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
 assert.ok(prompt.includes("/downloads/character-gameplay-conversations-0.3.0.zip"));
 assert.match(prompt, /Never use a paid provider without my explicit approval/);
@@ -55,7 +55,7 @@ const root = `public/${profile.packagePath}`;
 const zip = await JSZip.loadAsync(readFileSync(`public${profile.repositoryHref}`));
 for (const name of ["format.json", "KIT-MANIFEST.json", "FORMAT-REPO.json", "package.json", "package-lock.json", "RELEASE-CONTENTS.json"]) assert.equal(JSON.parse(await zip.file(name)!.async("string")).version, profile.version, name);
 const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
-assert.equal(inventory.files.length, 55);
+assert.equal(inventory.files.length, 54);
 assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((entry: {file:string}) => entry.file), "RELEASE-CONTENTS.json"].sort());
 for (const item of inventory.files) {
   const bytes = await zip.file(item.file)!.async("nodebuffer");
@@ -66,8 +66,8 @@ for (const item of inventory.files) {
 assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "c6df6b1276d3b9e92df5c3d18d965f84f57d6c937dcefecf27860c8d1af3c520", "Ship the exact compositor used by the music proof.");
 assert.equal(sha256(readFileSync(`${root}/downloads/character-gameplay-conversations-0.2.0.zip`)), "048eaaec91a57255d06c5c92d7225cb6f0fdc5f2485b9e93d63cfab3ec4f787c", "Preserve the prior 0.2.0 release.");
 assert.equal(sha256(readFileSync(`${root}/downloads/character-gameplay-conversations-0.1.4.zip`)), "03788884fdbf18ed052a6ddfe4d71528e9f6cd7f0e0232bf0aa1168f4f3a05ab", "Preserve the prior music release.");
-assert.ok(zip.file("assets/dark-fog-excerpt.mp3"));
-assert.match(await zip.file("MUSIC-CREDITS.md")!.async("string"), /creativecommons.org\/licenses\/by\/4.0/);
+assert.ok(!zip.file("assets/dark-fog-excerpt.mp3"), "dark-fog must not be in the release ZIP.");
+assert.match(await zip.file("MUSIC-CREDITS.md")!.async("string"), /Yeat/);
 assert.equal(JSON.parse(await zip.file("FORMAT-REPO.json")!.async("string")).review.reviewer, "User");
 assert.equal(sha256(readFileSync(`${root}/downloads/character-gameplay-conversations-0.1.2.zip`)), "f4732bec6e967a0d52c41fee04a714b76344a05525ec056871c6ee5449f82a26", "Preserve the already-public prior version.");
 assert.ok(!Object.keys(zip.files).some(file => /node_modules|secrets\.env|private\/|examples\/|batman-spongebob\.mp4/.test(file)), "Keep display-only and raw private media outside the ZIP.");
