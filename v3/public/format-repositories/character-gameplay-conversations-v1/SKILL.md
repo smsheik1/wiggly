@@ -30,6 +30,26 @@ Present the 3 choices clearly to the user:
 >
 > *Type 1, 2, or 3 to proceed, or drop your own topic!"*
 
+### 0.1 Pre-Synthesis Script Critique (`npm run critique`)
+Never send drafted dialogue to voice synthesis or video rendering without testing it through the local Socratic Retention Critique Engine.
+Run:
+```bash
+npm run critique inputs/<episode>.json
+```
+or test with JSON output:
+```bash
+node runtime/critique.mjs inputs/<episode>.json --json
+```
+
+The engine grades drafted dialogue across the 5 Inviolable Retention Laws:
+1. **0–3s In-Media-Res Hook (25 pts):** Strict check for zero idle small talk, character direct address, and immediate conflict in Turn 1.
+2. **Forensic & Tactical Density (20 pts):** Enforces concrete metrics, dollar amounts, legal statutes, or biological parameters ($85M Batwings, 40 bpm bradycardia, New Jersey penal code, 14,000 Hz, etc.).
+3. **Pacing & 60s Clock Enforcer (20 pts):** Enforces 120–165 word economy (~45–55s) and blocks $>60$s scripts that break the YouTube Shorts limit.
+4. **Socratic Surrogate Disbelief (15 pts):** Verifies the audience surrogate vocalizes viewer disbelief at absurdly clinical reasoning (*"Wait, so you're telling me..."*).
+5. **Checkmate Punchline Payoff (20 pts):** Flags weak melodramatic closers and rewards deadpan tactical checkmates.
+
+**Quality Gate:** Minimum **85/100** required (`PASS`). Scripts with score $< 85$ (`NEEDS_REVISION` or `CRITICAL_FAIL`) are blocked before voice synthesis to eliminate pre-synthesis waste and API costs.
+
 Think like a viral Shorts creative director. An idea is defined by **1 Visual Layout**, **1 Creative Flavor**, and strict obedience to the **3 Inviolable Hook Laws**.
 
 ### 1. The 3 Visual Layouts (Technical Engine)

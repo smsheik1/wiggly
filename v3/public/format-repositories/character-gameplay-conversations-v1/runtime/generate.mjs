@@ -3,6 +3,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { critiqueScript, formatCritiqueReport } from './critique.mjs';
 
 const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -39,6 +40,7 @@ function parseArgs(args) {
     question: '',
     gameplay: 'assets/gameplay/arkham-knight.mp4',
     output: '',
+    input: '',
     music: true,
     approveProvider: false,
     dryRun: false
@@ -52,6 +54,8 @@ function parseArgs(args) {
     else if (arg.startsWith('--question=')) parsed.question = arg.slice(11);
     else if (arg.startsWith('--gameplay=')) parsed.gameplay = arg.slice(11);
     else if (arg.startsWith('--output=')) parsed.output = arg.slice(9);
+    else if (arg.startsWith('--input=')) parsed.input = arg.slice(8);
+    else if (arg.startsWith('--script=')) parsed.input = arg.slice(9);
     else if (arg === '--no-music') parsed.music = false;
     else if (arg === '--approve-provider' || arg === '--approve-paid') parsed.approveProvider = true;
     else if (arg === '--dry-run') parsed.dryRun = true;
@@ -254,10 +258,12 @@ async function ensureGameplay(requestedGameplay, char1, char2) {
     const combo = `${c1Name}+${c2Name}`;
     const topicLow = (topic || '').toLowerCase();
 
+    // 1. Robin & Batman Socratic Dialogues
     if (combo.includes('ROBIN') && combo.includes('BATMAN')) {
+      const rId = c1Name.includes('ROBIN') ? 'char1' : 'char2';
+      const bId = c1Name.includes('BATMAN') ? 'char1' : 'char2';
+
       if (topicLow.includes('sleep') || topicLow.includes('rest') || topicLow.includes('tired')) {
-        const rId = c1Name.includes('ROBIN') ? 'char1' : 'char2';
-        const bId = c1Name.includes('BATMAN') ? 'char1' : 'char2';
         return [
           { speakerId: rId, text: 'Bruce, serious question. How do you actually survive on no sleep? You patrol all night and work all day.' },
           { speakerId: bId, text: "I don't stay awake 24 hours a day, Tim." },
@@ -274,83 +280,174 @@ async function ensureGameplay(requestedGameplay, char1, char2) {
         ];
       }
 
-      if (topicLow.includes('batarang') || topicLow.includes('gadget') || topicLow.includes('pouch') || topicLow.includes('keep')) {
-        const rId = c1Name.includes('ROBIN') ? 'char1' : 'char2';
-        const bId = c1Name.includes('BATMAN') ? 'char1' : 'char2';
+      if (topicLow.includes('money') || topicLow.includes('billionaire') || topicLow.includes('cost') || topicLow.includes('buy') || topicLow.includes('real estate') || topicLow.includes('wealth')) {
         return [
-          { speakerId: rId, text: 'Bruce, where do you actually keep fifty batarangs? Your utility belt is like two inches wide.' },
-          { speakerId: bId, text: 'They are folded titanium micro-alloys, Tim. They compress flat until magnetic deployment.' },
-          { speakerId: rId, text: 'Okay, what about the smoke pellets, grapple gun, explosive gel, and cryptographic sequencer?' },
-          { speakerId: bId, text: 'Carbon-fiber compartmentalized pouches along the lumbar spine. Proper weight distribution.' },
-          { speakerId: rId, text: 'Right. So when you sit down in the Batmobile, are you just sitting on fifty pounds of metal?' },
-          { speakerId: bId, text: 'The driver seat is magnetically contoured to receive the belt.' },
-          { speakerId: rId, text: 'You customized a multi-million dollar tank seat just so your belt wouldn\'t poke you.' },
-          { speakerId: bId, text: 'Preparation is not optional.' }
+          { speakerId: rId, text: 'Bruce, serious question. How much money do you actually have?' },
+          { speakerId: bId, text: 'I have enough.' },
+          { speakerId: rId, text: 'That is not a number. People say you are a billionaire, but you crashed three Batwings this year alone. Those have to be, what, a hundred million dollars each?' },
+          { speakerId: bId, text: '85 million, but the manufacturing costs are heavily subsidized by Wayne Aerospace military contracts. It is an acceptable loss margin.' },
+          { speakerId: rId, text: 'Acceptable loss? Bruce, you basically burn the GDP of a small country every weekend. Just practically speaking, could you buy Gotham?' },
+          { speakerId: bId, text: 'I already own 38% of the commercial real estate in the city.' },
+          { speakerId: rId, text: 'Wait, seriously? You are telling me you just casually buy up skyscrapers? Why? To make a profit?' },
+          { speakerId: bId, text: 'No, it is a tactical necessity. Owning the buildings bypasses city zoning laws. It allows me to install reinforced grappling points, hidden server hubs, and automated Batmobile repair bays without municipal oversight.' },
+          { speakerId: rId, text: 'So, while the rest of the world is investing in stocks, you are buying hundred million dollar high-rises just to glue stone gargoyles onto them so you can swing around easier.' },
+          { speakerId: bId, text: 'Modern architecture is tactically inefficient, Tim. Someone had to fix it.' }
         ];
       }
-    }
 
-    if (combo.includes('SPIDER') && combo.includes('VENOM')) {
+      if (topicLow.includes('jason') || topicLow.includes('red hood') || topicLow.includes('todd') || topicLow.includes('cache') || topicLow.includes('weapons') || topicLow.includes('gear')) {
+        return [
+          { speakerId: rId, text: 'Bruce, serious question. Jason Todd is running around Crime Alley with dual military pistols, ceramic armor, and Wayne Tech titanium grappling hooks. Where is he getting this stuff?' },
+          { speakerId: bId, text: 'He is raiding secondary tactical caches I established in 2018.' },
+          { speakerId: rId, text: 'Wait. You are telling me Red Hood is literally using your own old gear to execute mobsters?' },
+          { speakerId: bId, text: 'When Jason was Robin, he memorized the 24-character cryptographic cypher for my emergency armories. I chose not to change the master password.' },
+          { speakerId: rId, text: 'You didn\'t change the password?! Bruce, you have biometric voice encryption on your toaster, but you left weapons caches on default settings for your rogue son?' },
+          { speakerId: bId, text: 'If I locked him out, he would resort to buying unstable black-market ordnance from the Russian mob. Sub-standard munitions have a 14% higher collateral casualty rate among civilians.' },
+          { speakerId: rId, text: 'So you are subsidizing his vigilante rampage with high-grade Kevlar and precision ammunition so he doesn\'t accidentally blow up a city block?!' },
+          { speakerId: bId, text: 'It is risk mitigation, Tim. Parenting a dead Robin requires tactical compromises.' }
+        ];
+      }
+
+      // Default Robin & Batman: Why Batman Won't Kill Joker
       return [
-        { speakerId: c1Name.includes('VENOM') ? 'char1' : 'char2', text: 'YOU CANNOT HIDE FROM US, PETER. WE ARE BOUND TOGETHER.' },
-        { speakerId: c1Name.includes('SPIDER') ? 'char1' : 'char2', text: 'I TOOK OFF THE SUIT, VENOM. YOU ARE NOTHING BUT A PARASITE.' },
-        { speakerId: c1Name.includes('VENOM') ? 'char1' : 'char2', text: 'WE GAVE YOU UNLIMITED POWER! WE MADE YOU STRONGER THAN EVER!' },
-        { speakerId: c1Name.includes('SPIDER') ? 'char1' : 'char2', text: 'YOU WERE TURNING ME INTO A MONSTER. YOU WERE DESTROYING MY LIFE.' },
-        { speakerId: c1Name.includes('VENOM') ? 'char1' : 'char2', text: 'WE REMOVED YOUR WEAKNESSES! TOGETHER, WE COULD HEAL THIS ENTIRE CITY!' },
-        { speakerId: c1Name.includes('SPIDER') ? 'char1' : 'char2', text: 'BY CONTROLLING EVERYONE? THAT IS NOT SAVING PEOPLE. THAT IS A PRISON.' },
-        { speakerId: c1Name.includes('VENOM') ? 'char1' : 'char2', text: 'THEN WE WILL BURY YOU, SPIDER-MAN. AND TAKE THIS CITY OURSELVES.' },
-        { speakerId: c1Name.includes('SPIDER') ? 'char1' : 'char2', text: 'OVER MY DEAD BODY.' }
+        { speakerId: rId, text: 'Bruce, serious question. Why won\'t you just kill the Joker? The guy has broken out of Arkham 34 times and poisoned half the city. At this point, you are practically his getaway driver.' },
+        { speakerId: bId, text: 'Think about the legal framework, Tim. If I execute him, what happens to Gotham\'s judicial system?' },
+        { speakerId: rId, text: 'I don\'t know, a parade? People get to breathe without wearing gas masks?' },
+        { speakerId: bId, text: 'No. Under New Jersey penal law, an extrajudicial execution by an un-deputized vigilante taints every active municipal indictment. His defense attorneys would file immediate chain-of-custody violations across every prosecution.' },
+        { speakerId: rId, text: 'Wait. So if you snap his neck, his lawyers get hundreds of other inmates released on technicalities?' },
+        { speakerId: bId, text: 'Exactly. Two-Face, Penguin, and Zsasz walk free within 48 hours. The Joker becomes a constitutional martyr for police brutality.' },
+        { speakerId: rId, text: 'So you keep him alive not because of your moral code, but because Gotham\'s court paperwork is an absolute nightmare.' },
+        { speakerId: bId, text: 'Bureaucracy is Gotham\'s real villain, Tim. Even the Batmobile can\'t run over a municipal injunction.' }
       ];
     }
 
-    if (combo.includes('JOKER')) {
-      return [
-        { speakerId: c1Name.includes('JOKER') ? 'char1' : 'char2', text: 'WHY SO SERIOUS, BATS? YOU COULD HAVE ENDED THIS YEARS AGO.' },
-        { speakerId: c1Name.includes('BATMAN') ? 'char1' : 'char2', text: 'I WILL NEVER BE LIKE YOU, JOKER. NEVER.' },
-        { speakerId: c1Name.includes('JOKER') ? 'char1' : 'char2', text: 'OH, BUT YOU ARE JUST LIKE ME! YOU CANNOT ADMIT IT.' },
-        { speakerId: c1Name.includes('BATMAN') ? 'char1' : 'char2', text: 'I PROTECT GOTHAM. YOU ONLY DESTROY IT.' },
-        { speakerId: c1Name.includes('JOKER') ? 'char1' : 'char2', text: 'LOOK AROUND! GOTHAM IS ALREADY SICK, DARLING.' },
-        { speakerId: c1Name.includes('BATMAN') ? 'char1' : 'char2', text: 'AND I AM THE CURE.' },
-        { speakerId: c1Name.includes('JOKER') ? 'char1' : 'char2', text: 'NO, BATS. YOU ARE JUST THE ENTERTAINMENT.' },
-        { speakerId: c1Name.includes('BATMAN') ? 'char1' : 'char2', text: 'YOUR SHOW ENDS TONIGHT.' }
-      ];
-    }
-
-    if (combo.includes('WALTER')) {
-      return [
-        { speakerId: c1Name.includes('WALTER') ? 'char1' : 'char2', text: 'YOU THINK I AM IN DANGER? I AM THE DANGER.' },
-        { speakerId: c1Name.includes('BATMAN') ? 'char1' : 'char2', text: 'NOT IN GOTHAM CITY, WHITE. YOUR OPERATION ENDS TONIGHT.' },
-        { speakerId: c1Name.includes('WALTER') ? 'char1' : 'char2', text: 'YOU HAVE NO IDEA WHAT I BUILT OR WHO I AM.' },
-        { speakerId: c1Name.includes('BATMAN') ? 'char1' : 'char2', text: 'I KNOW EXACTLY WHO YOU ARE. SAY MY NAME.' },
-        { speakerId: c1Name.includes('WALTER') ? 'char1' : 'char2', text: 'YOU ARE PLAYING WITH FIRE, BATMAN.' }
-      ];
-    }
-
+    // 2. Jason Todd vs Batman Direct Confrontation
     if (combo.includes('JASON') || combo.includes('RED HOOD')) {
+      const jId = (c1Name.includes('JASON') || c1Name.includes('RED HOOD')) ? 'char1' : 'char2';
+      const bId = (c1Name.includes('JASON') || c1Name.includes('RED HOOD')) ? 'char2' : 'char1';
       return [
-        { speakerId: 'char1', text: 'YOU LET HIM LIVE, BRUCE. AFTER EVERYTHING HE DID TO ME.' },
-        { speakerId: 'char2', text: 'IF I CROSS THAT LINE, JASON, I WILL NEVER COME BACK.' },
-        { speakerId: 'char1', text: 'I AM NOT ASKING YOU TO KILL EVERYONE. JUST HIM.' },
-        { speakerId: 'char2', text: 'IT DOES NOT STOP WITH ONE. IT NEVER DOES.' },
-        { speakerId: 'char1', text: 'HE BEAT ME HALF TO DEATH IN AN ABANDONED WAREHOUSE.' },
-        { speakerId: 'char2', text: 'AND NOT A DAY GOES BY THAT I DO NOT REGRET THAT NIGHT.' },
-        { speakerId: 'char1', text: 'REGRET DOES NOT CHANGE WHAT HE TOOK FROM US.' },
-        { speakerId: 'char2', text: 'THEN YOU CHOSE YOUR CODE OVER ME.' }
+        { speakerId: jId, text: 'You traced the serial numbers on my suppressors, Bruce? Wayne Enterprises batch 8-0-4.' },
+        { speakerId: bId, text: 'You are using my ceramic armor piercing rounds to hunt Maroni Lieutenants. 400 foot-pounds of muzzle energy.' },
+        { speakerId: jId, text: 'Because your non-lethal batarangs leave suspects with permanent neurological trauma. At least my 9mm is decisive.' },
+        { speakerId: bId, text: 'A bullet creates an irreversible endpoint. In 2021, Maroni accountant testified because he survived. Three cartel cells collapsed because of his testimony.' },
+        { speakerId: jId, text: 'And last month, that same accountant paid 50 grand to bail out the shooter who killed two patrol cops.' },
+        { speakerId: bId, text: 'If we execute suspects before trial, the GCPD adopts a shoot-to-kill mandate within six months. The rule of law is a containment system, Jason.' },
+        { speakerId: jId, text: 'Wait, so you are not a containment system, Bruce. You are just a billionaire in Kevlar running a revolving door.' },
+        { speakerId: bId, text: 'Then stop breaking into my secondary caches to borrow my Kevlar.' }
       ];
     }
 
+    // 3. Spider-Man vs Batman Crossover
+    if (combo.includes('SPIDER') && combo.includes('BATMAN')) {
+      const sId = c1Name.includes('SPIDER') ? 'char1' : 'char2';
+      const bId = c1Name.includes('BATMAN') ? 'char1' : 'char2';
+      return [
+        { speakerId: sId, text: 'Bruce, serious question: I still am not convinced you could beat me without prep time. The second you reach for your belt, I web your hands. Fight over.' },
+        { speakerId: bId, text: 'You are right. If I tried to deploy a weapon, your precognition would warn you, which is why I wouldn\'t reach for my belt. I\'d let you web me.' },
+        { speakerId: sId, text: 'Okay, so you just lose? My webs can hold a city bus. You are not breaking out of that.' },
+        { speakerId: bId, text: 'I don\'t need to. Your webbing is an extruded synthetic polymer. It cures on contact with air, but for the first 0.4 seconds, it retains its liquid solvent base.' },
+        { speakerId: sId, text: 'Wait, that solvent base... It makes the webbing highly conductive before it solidifies.' },
+        { speakerId: bId, text: 'Exactly. My suit is equipped with an automated electrostatic defense grid. The microsecond your web connects to my armor, the grid discharges 300,000 volts directly back up the line.' },
+        { speakerId: sId, text: 'My spider-sense would... Wait, but I initiated the contact!' },
+        { speakerId: bId, text: 'By the time the current travels up the web to your wrists, it is too late to let go. You drop to the floor paralyzed, and I didn\'t even have to move.' }
+      ];
+    }
+
+    // 4. Spider-Man vs Venom
+    if (combo.includes('SPIDER') && combo.includes('VENOM')) {
+      const sId = c1Name.includes('SPIDER') ? 'char1' : 'char2';
+      const vId = c1Name.includes('VENOM') ? 'char1' : 'char2';
+      return [
+        { speakerId: sId, text: 'Venom, serious question. You infected 42 city blocks with symbiotic tendrils, but the subway resonance is already tearing you apart.' },
+        { speakerId: vId, text: 'SUBWAY FREQUENCIES ARE ONLY 120 HERTZ, PARKER. WE EVOLVED BEYOND THAT ACOUSTIC THRESHOLD.' },
+        { speakerId: sId, text: 'Right, but the structural vibration along the Lexington Avenue line vibrates at 14,000 hertz when the express train hits the third rail. Your cellular membrane destabilizes in 0.8 seconds.' },
+        { speakerId: vId, text: 'LIES! WE BONDED TO YOUR CENTRAL NERVOUS SYSTEM, PETER. WE KNOW YOUR BIOLOGY.' },
+        { speakerId: sId, text: 'You know my old biology. Since we split, I synthesized an auditory damping layer in my suit polymer weave. That train is arriving in three, two, one.' },
+        { speakerId: vId, text: 'NO! THE HIGH-PITCHED FEEDBACK... OUR MASS IS DISSOLVING!' },
+        { speakerId: sId, text: 'Next time you want to bond for life, check the transit schedule first.' }
+      ];
+    }
+
+    // 5. Joker vs Batman
+    if (combo.includes('JOKER') && combo.includes('BATMAN')) {
+      const jId = c1Name.includes('JOKER') ? 'char1' : 'char2';
+      const bId = c1Name.includes('BATMAN') ? 'char1' : 'char2';
+      return [
+        { speakerId: jId, text: 'Bruce, serious question: why do you keep hauling me to Arkham Asylum? In the last five years, I have broken out seventeen times.' },
+        { speakerId: bId, text: 'Because Arkham is a classified Department of Corrections psychiatric facility, not a black site.' },
+        { speakerId: jId, text: 'A psychiatric facility with drywall made of cardboard! You spent 40 million dollars on a bat-shaped jet, but you cannot buy Arkham a functional padlock?' },
+        { speakerId: bId, text: 'Arkham maximum-security ward is encased in 18 inches of reinforced graphene polymer. You only escape when municipal guards disable the magnetic relays.' },
+        { speakerId: jId, text: 'Wait, so you know the guards are taking my bribes, and you still send me back to the exact same cell?' },
+        { speakerId: bId, text: 'Every transaction leaves a blockchain ledger with the Federal Reserve. Over three years, your escape bribes have exposed 24 dirty judges and half the city council.' },
+        { speakerId: jId, text: 'You are telling me you let me break out just to audit municipal payroll?!' },
+        { speakerId: bId, text: 'Forensic accounting puts away more criminals than batarangs, Joker.' }
+      ];
+    }
+
+    // 6. Walter White vs Batman
+    if (combo.includes('WALTER')) {
+      const wId = c1Name.includes('WALTER') ? 'char1' : 'char2';
+      const bId = c1Name.includes('BATMAN') ? 'char1' : 'char2';
+      return [
+        { speakerId: wId, text: 'Batman, serious question: you think I am just another Gotham narcotics distributor? 99.1% chemical purity. No one in this city can touch my yield.' },
+        { speakerId: bId, text: 'Your phenylacetone synthesis relies on methylamine shipments hijacked from Madrigal Electromotive in Houston. Wayne Shipping intercepted the manifest 36 hours ago.' },
+        { speakerId: wId, text: 'You intercepted a federal shipment?! You have no legal jurisdiction outside Gotham!' },
+        { speakerId: bId, text: 'I own 51% of Madrigal parent logistics provider. Your precursor supply chain does not exist anymore, Mr. White.' },
+        { speakerId: wId, text: 'Wait, so you are telling me you bought an entire logistics conglomerate just to shut down my laboratory?!' },
+        { speakerId: bId, text: 'You are an Albuquerque chemistry teacher with stage-three lung cancer and 11 million dollars buried in the desert. Sit down before I freeze your offshore accounts.' }
+      ];
+    }
+
+    // 7. General Forensic & Socratic Fallback
     return [
-      { speakerId: 'char1', text: `TELL ME THE TRUTH. DID YOU REALLY THINK YOU COULD WIN?` },
-      { speakerId: 'char2', text: `I DO NOT NEED TO WIN. I JUST NEED TO SURVIVE YOU.` },
-      { speakerId: 'char1', text: `SURVIVAL IS NOT AN OPTION IN THIS FIGHT.` },
-      { speakerId: 'char2', text: `THEN WE WILL SEE WHO IS LEFT STANDING.` }
+      { speakerId: 'char1', text: `${char2.name}, serious question: why do you spend 12 hours a day patrolling when the crime statistics in this district have not dropped by even 2%?` },
+      { speakerId: 'char2', text: 'Because crime statistics measure reported incidents, not prevented casualties. In the last six months, preemptive surveillance stopped 45 armed robberies before 911 dispatches.' },
+      { speakerId: 'char1', text: 'Wait, so you are telling me you intercept emergency frequencies and act as an unauthorized security force without municipal liability insurance?' },
+      { speakerId: 'char2', text: 'Municipal liability requires civilian oversight. When dealing with military-grade munitions, bureaucracy introduces an average response delay of 14 minutes.' },
+      { speakerId: 'char1', text: 'Right, but you bypass civil court just so you can drop through skylights 14 minutes faster.' },
+      { speakerId: 'char2', text: `Tactical efficiency is not negotiable in Gotham, ${char1.name}.` }
     ];
   }
 
-  const turnsTemplate = getDialogue(char1, char2, opts.topic);
+  let turnsTemplate = [];
+  if (opts.input) {
+    const raw = await readFile(path.resolve(repoRoot, opts.input), 'utf8');
+    const parsedInput = JSON.parse(raw);
+    const turnsArray = parsedInput.turns || parsedInput.dialogue || [];
+    turnsTemplate = turnsArray.map(t => ({
+      speakerId: (t.speaker || '').toLowerCase().includes(char1.name.toLowerCase()) ? 'char1' : 'char2',
+      text: t.text
+    }));
+    if (parsedInput.header?.title && !opts.title) opts.title = parsedInput.header.title;
+    if (parsedInput.header?.question && !opts.question) opts.question = parsedInput.header.question;
+  } else {
+    turnsTemplate = getDialogue(char1, char2, opts.topic);
+  }
+
+  // Pre-Synthesis Retention & Socratic Script Critique Airlock
+  const scriptPayload = {
+    title: opts.title || `${char1.name} AND ${char2.name}`,
+    question: opts.question || opts.topic,
+    characters: [char1.name, char2.name],
+    turns: turnsTemplate.map(t => ({
+      speaker: t.speakerId === 'char1' ? char1.name : char2.name,
+      text: t.text
+    }))
+  };
+
+  const critique = critiqueScript(scriptPayload);
+  console.log(`[character-gameplay-generator] Socratic Retention Critique Score: ${critique.score}/100 (${critique.verdict})`);
+
+  if (critique.verdict !== 'PASS') {
+    console.error('\n🚨 SCRIPT FAILED RETENTION AIRLOCK:');
+    console.error(formatCritiqueReport(critique));
+    throw new Error(`Script retention score (${critique.score}/100) failed Socratic quality airlock (minimum required: 85). Generation aborted before provider synthesis.`);
+  }
+
+  console.log('  ✅ Dialogue passed retention quality airlock.');
 
   if (opts.dryRun) {
-    console.log('[dry-run] Plan validated. Voice models resolved.');
+    console.log('[dry-run] Plan validated. Script passed critique airlock. Voice models resolved.');
     return;
   }
 
