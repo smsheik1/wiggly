@@ -81,11 +81,15 @@ export function resolveFormatMetadata(targetSlug, searchRoots = []) {
 
 export function locateProofMedia(formatMeta, searchRoots = []) {
   for (const root of searchRoots) {
+    const existingMedia = path.join(root, "media", formatMeta.slug, "final-result.mp4");
+    if (existsSync(existingMedia)) return existingMedia;
+
     const repoCandidates = [
       path.join(root, formatMeta.relativeRepoDir || `${formatMeta.slug}-v1`),
       path.join(root, formatMeta.slug),
       path.join(root, `../${formatMeta.slug}-v1`),
-      path.join(root, `../../${formatMeta.slug}-v1`)
+      path.join(root, `../../${formatMeta.slug}-v1`),
+      path.join(root, `v3/public/format-repositories/${formatMeta.relativeRepoDir || `${formatMeta.slug}-v1`}`)
     ];
 
     for (const dir of repoCandidates) {
@@ -111,9 +115,11 @@ export function locateProofMedia(formatMeta, searchRoots = []) {
 
   // Fallback to included tutorial video proofs
   const internalFallbacks = [
-    path.join(searchRoots[0] || '.', 'examples/batman-arkham/final-result.mp4'),
-    path.join(searchRoots[0] || '.', 'examples/animal-conversations/final-result.mp4'),
-    path.join(searchRoots[0] || '.', 'fixtures/smoke/media/warm.mp4')
+    path.join(searchRoots[0] || '.', 'media/examples/batman-arkham/final-result.mp4'),
+    path.join(searchRoots[0] || '.', 'media/examples/animal-conversations/final-result.mp4'),
+    path.join(searchRoots[0] || '.', 'examples/batman-arkham-first-run/final.mp4'),
+    path.join(searchRoots[0] || '.', 'examples/animal-conversations-compositor/final.mp4'),
+    path.join(searchRoots[0] || '.', 'media/smoke/result.mp4')
   ];
   for (const f of internalFallbacks) {
     if (existsSync(f)) return f;
@@ -240,7 +246,8 @@ export async function harvestTargetAssets({ targetSlug, destMediaDir, repoRoot }
     root,
     path.join(root, '..'),
     path.join(root, '../../public/format-repositories'),
-    path.join(root, '../../../public/format-repositories')
+    path.join(root, '../../../public/format-repositories'),
+    path.join(root, '../../../../v3/public/format-repositories')
   ];
 
   const formatMeta = resolveFormatMetadata(targetSlug, searchRoots);
@@ -252,7 +259,9 @@ export async function harvestTargetAssets({ targetSlug, destMediaDir, repoRoot }
   const proofDestFull = path.join(targetDir, 'final-result.mp4');
 
   if (proofSource && existsSync(proofSource)) {
-    copyFileSync(proofSource, proofDestFull);
+    if (path.resolve(proofSource) !== path.resolve(proofDestFull)) {
+      copyFileSync(proofSource, proofDestFull);
+    }
   } else {
     // If no media found, write an indicator file or fail gracefully
     throw new Error(`Could not locate proof video for format '${targetSlug}'. Checked search roots.`);

@@ -145,7 +145,7 @@
     },
     {
       "file": "inputs/mugsy-explains.json",
-      "sha256": "c774e20987ac3205aef9369846f7f06d10d345f7087d4ee135cbf26f7b9f3d60",
+      "sha256": "07dc0830fc2520c67f0db14d5015c0ffa4ceba34427deb7cc58f1acb51525860",
       "sizeBytes": 4417
     },
     {
@@ -310,8 +310,8 @@
     },
     {
       "file": "package.json",
-      "sha256": "26ba0c5641b6a8179276222de75cffea58f5d633c23e804b91206042417cbee7",
-      "sizeBytes": 578
+      "sha256": "d1b23640255177c6c44742b44176077fc84be64363b5f2646389e151a1847627",
+      "sizeBytes": 602
     },
     {
       "file": "pipeline.json",
@@ -355,8 +355,8 @@
     },
     {
       "file": "runtime/harvest.mjs",
-      "sha256": "d17550a4f9d762a9979aa582af3c4505c16978f4d606cd891f5757cf75fd319a",
-      "sizeBytes": 15454
+      "sha256": "360c7d8e7546e38f939ed3f5723d96fddeb3226e5053565ec5ce323d9909897c",
+      "sizeBytes": 16038
     },
     {
       "file": "runtime/index.jsx",
