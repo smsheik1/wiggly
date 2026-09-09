@@ -7,6 +7,7 @@
     "test": "node scripts/verify.mjs",
     "critique": "node runtime/critique.mjs",
     "harvest": "node runtime/harvest.mjs",
+    "voice": "node runtime/voice.mjs",
     "smoke": "node runner.mjs smoke",
     "build": "node build-kit.mjs"
   },

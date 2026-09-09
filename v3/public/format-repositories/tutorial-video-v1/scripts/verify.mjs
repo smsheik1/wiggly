@@ -15,7 +15,7 @@ const requiredFiles = [
   "format.json", "input-contract.json", "composition-contract.json", "output-contract.json",
   "requirements.json", "quality.json", "pipeline.json", "goldens.json", "assets.json",
   "release-files.json", "runner.mjs", "build-kit.mjs", "runtime/index.jsx", "runtime/root.jsx",
-  "runtime/tutorial-video.jsx", "runtime/contract.mjs", "runtime/critique.mjs", "runtime/harvest.mjs", "fixtures/smoke/input.json",
+  "runtime/tutorial-video.jsx", "runtime/contract.mjs", "runtime/critique.mjs", "runtime/harvest.mjs", "runtime/voice.mjs", "fixtures/smoke/input.json",
   "fixtures/creative-review.example.json", "evidence/blind-agent-run.json",
   "media/fixed/grid-acid-lime-v1.png", "media/fixed/grid-electric-blue-v1.png",
   "media/fixed/grid-warm-cream-v1.png"
@@ -39,6 +39,7 @@ assert.match(readFileSync(path.join(root, "README.md"), "utf8"), /rejects `sourc
 execFileSync(process.execPath, ["--test", "tests/distribution.test.mjs"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["--test", "tests/critique.test.mjs"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["--test", "tests/harvest.test.mjs"], { cwd: root, stdio: "inherit" });
+execFileSync(process.execPath, ["--test", "tests/voice.test.mjs"], { cwd: root, stdio: "inherit" });
 execFileSync(process.execPath, ["runner.mjs", "doctor"], { cwd: root, stdio: "inherit" });
 const inputs = [
   "examples/batman-arkham-first-run/input.json",

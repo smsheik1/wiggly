@@ -270,8 +270,8 @@
     },
     {
       "file": "package.json",
-      "sha256": "2b7e4434c76ecc26e2b119f091180d327194060e7ee5e1c613fe5c14484ac72d",
-      "sizeBytes": 503
+      "sha256": "eb401e22efa81cd65b57a68e15c6dd63ed8c0a22377c27f5c8b7fb81485ac30a",
+      "sizeBytes": 542
     },
     {
       "file": "pipeline.json",
@@ -339,9 +339,14 @@
       "sizeBytes": 12033
     },
     {
+      "file": "runtime/voice.mjs",
+      "sha256": "bebd833c54d354b3f1a69170c61b2a7631019554f7bafc5d3648bec4e29618cd",
+      "sizeBytes": 6060
+    },
+    {
       "file": "scripts/verify.mjs",
-      "sha256": "bf925facb3aa58302a8909b1433307b24b0f3020553b5361c131fa972952a2df",
-      "sizeBytes": 5162
+      "sha256": "85dbd588b802c73c154847096a3c0588217f3ab922c637b607b345b64509ab8a",
+      "sizeBytes": 5284
     },
     {
       "file": "tests/critique.test.mjs",
@@ -357,6 +362,11 @@
       "file": "tests/harvest.test.mjs",
       "sha256": "dcf00c36db848c4e34263a01e1955638c2f510958bcd2dc630a9c7e4b27766c0",
       "sizeBytes": 2259
+    },
+    {
+      "file": "tests/voice.test.mjs",
+      "sha256": "29b3b66f5ddd141fb9d782bb71793f1eb674560883381645802af864c6dbd661",
+      "sizeBytes": 2784
     }
   ]
 }
