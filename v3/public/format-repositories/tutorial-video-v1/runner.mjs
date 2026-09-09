@@ -245,44 +245,57 @@ export async function make(options = {}) {
   console.log(`[make] [1/5] Harvesting assets for ${targetSlug}...`);
   const harvested = await harvestTargetAssets({ targetSlug, repoRoot: ROOT });
 
-  // 2. Synthesize Audio & Build Narrated Steps
+  // 2. Synthesize Audio & Build Narrated Steps with Content-Driven Boundaries
   console.log(`[make] [2/5] Synthesizing voiceover and calculating microsecond caption timings...`);
   const audioOutputDir = path.join(MEDIA_ROOT, targetSlug);
   mkdirSync(audioOutputDir, { recursive: true });
 
-  const step2Text = audience === "developer"
-    ? `Inspect the ${harvested.format.name} repo contracts, schemas, and verification tests on Wiggly.`
-    : `On Wiggly, choose Copy for another coding agent to grab the ${harvested.format.name} prompt.`;
+  const proofFullDuration = harvested.proofDuration || 25.0;
+  // Step 1 Hook: Take opening punchline beat (4.0-5.5s), aligned to 30 fps
+  const hookDuration = Math.round(Math.min(5.0, Math.max(3.5, proofFullDuration / 4)) * 30) / 30;
 
+  // Step 2 Formula & Prompt Text: Explain the format's actual creative premise and copy action
+  const step2Text = audience === "developer"
+    ? `Inspect the ${harvested.format.name} repo contracts and copy the prompt on Wiggly.`
+    : `Inspect the ${harvested.format.name} repo on Wiggly. It ${harvested.format.formula || "packages creative rules into an autonomous agent"}. Choose Copy for another coding agent.`;
+
+  // Step 3 Execution Text: Pasting into agent and verifying zero providers
   const step3Text = audience === "developer"
     ? `Run the local runner command. The agent validates contracts and renders the video with zero providers.`
-    : `Paste the prompt into your coding agent. The agent reads the package and sets it up automatically.`;
+    : `Paste the prompt into your coding agent. The agent validates contracts and renders the video locally with zero providers.`;
 
+  // Step 5 Closing Text
   const step5Text = `Check the captions and verify the receipt. To try your own format, the Wiggly link is below.`;
 
+  // Step 2: The Formula & Copy Action (Browser)
+  const browserMedia = harvested.media.browserVideo || harvested.media.browserStill;
   const step2Result = await buildNarratedTutorialStep({
     id: "choose-format",
     number: 2,
-    label: audience === "developer" ? "Inspect the format repository" : "Choose and copy a format",
+    label: audience === "developer" ? "Inspect the format repository" : "Choose and copy the format",
     kind: "browser",
     windowTitle: `Wiggly — ${harvested.format.name}`,
     background: "lime",
-    mediaPath: harvested.media.browserStill.file,
+    mediaPath: browserMedia.file,
+    mediaType: browserMedia.type,
     narrationText: step2Text,
     audioRelPath: `${targetSlug}/step-02.wav`,
     audioFullPath: path.join(audioOutputDir, "step-02.wav"),
     voice: "zach",
-    minStepDuration: 4.5
+    minStepDuration: 5.0
   });
 
+  // Step 3: Run the Local Composition (Terminal + Checkpoint)
+  const terminalMedia = harvested.media.terminalVideo || harvested.media.terminalStill;
   const step3Result = await buildNarratedTutorialStep({
     id: "run-agent",
     number: 3,
-    label: audience === "developer" ? "Execute the local composition" : "Paste it into your agent",
+    label: audience === "developer" ? "Execute the local composition" : "Run the local composition",
     kind: "terminal",
     windowTitle: `Coding agent — ${harvested.format.name}`,
     background: "blue",
-    mediaPath: harvested.media.terminalStill.file,
+    mediaPath: terminalMedia.file,
+    mediaType: terminalMedia.type,
     narrationText: step3Text,
     audioRelPath: `${targetSlug}/step-03.wav`,
     audioFullPath: path.join(audioOutputDir, "step-03.wav"),
@@ -290,13 +303,37 @@ export async function make(options = {}) {
     minStepDuration: 6.0
   });
 
-  // Attach checkpoint to step 3
   step3Result.step.checkpoint = {
     eyebrow: "Your checkpoint",
     headline: "The agent is using the packaged compositor—not inventing a slideshow.",
-    badge: "Then render"
+    badge: "Verified 0 providers"
   };
 
+  // Step 4: The Full Uncut Payoff
+  // Plays from hookDuration through to the natural end of the video
+  const payoffStart = hookDuration;
+  const rawPayoffDuration = proofFullDuration - payoffStart;
+  const payoffDuration = Math.round(Math.min(30.0, rawPayoffDuration) * 30) / 30;
+
+  const step4Proof = {
+    id: "finished-output",
+    kind: "final",
+    number: "4",
+    label: "Watch the finished result",
+    background: "lime",
+    durationSeconds: payoffDuration,
+    nativeAudio: true,
+    media: {
+      type: "video",
+      file: harvested.media.proofVideo.file,
+      startSeconds: payoffStart,
+      fit: "contain",
+      authorized: true,
+      provenance: harvested.media.proofVideo.provenance
+    }
+  };
+
+  // Step 5: The Exit CTA
   const step5Result = await buildNarratedTutorialStep({
     id: "next-step",
     number: 5,
@@ -307,7 +344,7 @@ export async function make(options = {}) {
     audioRelPath: `${targetSlug}/step-05.wav`,
     audioFullPath: path.join(audioOutputDir, "step-05.wav"),
     voice: "zach",
-    minStepDuration: 5.5
+    minStepDuration: 5.0
   });
 
   const inputJson = {
@@ -330,11 +367,12 @@ export async function make(options = {}) {
         number: "1",
         label: "See the finished result",
         background: "lime",
-        durationSeconds: 5.0,
+        durationSeconds: hookDuration,
         nativeAudio: true,
         media: {
           type: "video",
           file: harvested.media.proofVideo.file,
+          startSeconds: 0,
           fit: "contain",
           authorized: true,
           provenance: harvested.media.proofVideo.provenance
@@ -342,22 +380,7 @@ export async function make(options = {}) {
       },
       step2Result.step,
       step3Result.step,
-      {
-        id: "finished-output",
-        kind: "final",
-        number: "4",
-        label: "Watch the finished result",
-        background: "lime",
-        durationSeconds: 7.0,
-        nativeAudio: true,
-        media: {
-          type: "video",
-          file: harvested.media.proofVideo.file,
-          fit: "contain",
-          authorized: true,
-          provenance: harvested.media.proofVideo.provenance
-        }
-      },
+      step4Proof,
       step5Result.step
     ]
   };
