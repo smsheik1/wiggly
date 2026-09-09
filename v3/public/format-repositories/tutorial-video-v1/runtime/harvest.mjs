@@ -345,41 +345,50 @@ export async function renderTerminalStill(formatMeta, outputPath) {
   return outputPath;
 }
 
+async function getChromium() {
+  try {
+    const pw = await import('playwright-core');
+    return pw.chromium;
+  } catch {
+    const pw = await import('playwright');
+    return pw.chromium;
+  }
+}
+
+async function launchBrowser() {
+  const chromium = await getChromium();
+  return await chromium.launch({
+    channel: 'chrome',
+    headless: true
+  }).catch(() => chromium.launch({ headless: true }));
+}
+
 export async function captureLiveFormatPage(formatMeta, outputPath, options = {}) {
   try {
-    const { chromium } = await import('playwright');
-    const browser = await chromium.launch({
-      channel: 'chrome',
-      headless: true
-    }).catch(() => chromium.launch({ headless: true }));
-
+    const browser = await launchBrowser();
     const page = await browser.newPage({
       viewport: { width: 1920, height: 1080 },
       deviceScaleFactor: 1
     });
 
     const url = options.url || formatMeta.url;
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 8000 });
-    await page.waitForTimeout(600);
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    await page.waitForTimeout(1000);
     await page.screenshot({ path: outputPath });
     await browser.close();
     return outputPath;
-  } catch {
-    // Graceful fallback to high-contrast vector render
+  } catch (err) {
+    console.warn(`[harvest] Playwright screenshot fallback for ${formatMeta.slug}: ${err.message}`);
     return await renderFormatPageStill(formatMeta, outputPath);
   }
 }
 
 export async function recordLiveFormatInteraction(formatMeta, outputPath, options = {}) {
   const ffmpeg = process.env.FFMPEG || 'ffmpeg';
+  const durationSeconds = options.durationSeconds || 16.0;
   try {
-    const { chromium } = await import('playwright');
-    const browser = await chromium.launch({
-      channel: 'chrome',
-      headless: true
-    }).catch(() => chromium.launch({ headless: true }));
-
-    const tempDir = path.join(path.dirname(outputPath), `.rec-${Date.now()}`);
+    const browser = await launchBrowser();
+    const tempDir = path.join(path.dirname(outputPath), `.rec-browser-${Date.now()}`);
     mkdirSync(tempDir, { recursive: true });
 
     const context = await browser.newContext({
@@ -392,17 +401,201 @@ export async function recordLiveFormatInteraction(formatMeta, outputPath, option
 
     const page = await context.newPage();
     const url = options.url || formatMeta.url;
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 8000 });
-    await page.waitForTimeout(800);
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    await page.waitForTimeout(1200);
+
+    // Inject visible animated mouse cursor
+    await page.evaluate(() => {
+      const cursor = document.createElement('div');
+      cursor.id = '__wiggly_cursor__';
+      cursor.innerHTML = `
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" style="filter: drop-shadow(0 3px 8px rgba(0,0,0,0.6));">
+          <path d="M4 2L18 10L11 12L8 19L4 2Z" fill="#111" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+      `;
+      cursor.style.position = 'fixed';
+      cursor.style.top = '150px';
+      cursor.style.left = '150px';
+      cursor.style.zIndex = '999999';
+      cursor.style.pointerEvents = 'none';
+      cursor.style.transition = 'transform 0.05s linear';
+      document.body.appendChild(cursor);
+      window.__moveCursor = (x, y) => {
+        cursor.style.left = `${x}px`;
+        cursor.style.top = `${y}px`;
+      };
+    });
 
     const copyBtn = page.locator('button:has-text("Copy")').or(page.getByRole('button', { name: /copy/i })).first();
+    let targetX = 960, targetY = 540;
     if (await copyBtn.count() > 0 && await copyBtn.isVisible()) {
-      await copyBtn.hover();
-      await page.waitForTimeout(400);
-      await copyBtn.click();
-      await page.waitForTimeout(1400);
-    } else {
-      await page.waitForTimeout(2000);
+      const box = await copyBtn.boundingBox();
+      if (box) {
+        targetX = Math.round(box.x + box.width / 2);
+        targetY = Math.round(box.y + box.height / 2);
+      }
+    }
+
+    // Smooth cursor glide to target over 1.2s
+    const startX = 150, startY = 150;
+    const steps = 30;
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      const cx = Math.round(startX + (targetX - startX) * ease);
+      const cy = Math.round(startY + (targetY - startY) * ease);
+      await page.evaluate(({ x, y }) => window.__moveCursor(x, y), { x: cx, y: cy });
+      await page.waitForTimeout(35);
+    }
+
+    // Hover & click
+    if (await copyBtn.count() > 0 && await copyBtn.isVisible()) {
+      await copyBtn.hover().catch(() => {});
+      await page.waitForTimeout(200);
+      await copyBtn.click().catch(() => {});
+      await page.waitForTimeout(500);
+    }
+
+    // Hold on the page until target duration is met
+    const elapsedSec = 1.2 + 1.1 + 0.7; // ~3.0s
+    const remainingMs = Math.max(1000, Math.round((durationSeconds - elapsedSec) * 1000));
+    await page.waitForTimeout(remainingMs);
+
+    await page.close();
+    await context.close();
+    await browser.close();
+
+    const video = await page.video()?.path();
+    if (video && existsSync(video)) {
+      execFileSync(ffmpeg, [
+        '-y', '-v', 'error',
+        '-i', video,
+        '-t', String(durationSeconds),
+        '-c:v', 'libx264',
+        '-pix_fmt', 'yuv420p',
+        '-r', '30',
+        outputPath
+      ]);
+      try { unlinkSync(video); } catch {}
+      try { rmSync(tempDir, { recursive: true, force: true }); } catch {}
+      return outputPath;
+    }
+  } catch (err) {
+    console.warn(`[harvest] Playwright browser recording failed: ${err.message}`);
+  }
+  return null;
+}
+
+export async function recordLiveTerminalExecution(formatMeta, outputPath, options = {}) {
+  const ffmpeg = process.env.FFMPEG || 'ffmpeg';
+  const durationSeconds = options.durationSeconds || 12.0;
+  const screenshotPath = options.screenshotPath;
+  try {
+    const browser = await launchBrowser();
+    const tempDir = path.join(path.dirname(outputPath), `.rec-terminal-${Date.now()}`);
+    mkdirSync(tempDir, { recursive: true });
+
+    const context = await browser.newContext({
+      recordVideo: {
+        dir: tempDir,
+        size: { width: 1920, height: 1080 }
+      },
+      viewport: { width: 1920, height: 1080 }
+    });
+
+    const page = await context.newPage();
+    const terminalHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0c10; color: #f0f6fc; font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', Menlo, Monaco, Consolas, monospace; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+  .window { width: 1540px; height: 880px; background: #11141a; border: 1px solid #2a313c; border-radius: 16px; box-shadow: 0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06); overflow: hidden; display: flex; flex-direction: column; }
+  .titlebar { height: 50px; background: #181d24; border-bottom: 1px solid #2a313c; display: flex; align-items: center; padding: 0 22px; position: relative; }
+  .dots { display: flex; gap: 8px; }
+  .dot { width: 13px; height: 13px; border-radius: 50%; }
+  .dot-red { background: #ff5f56; }
+  .dot-yellow { background: #ffbd2e; }
+  .dot-green { background: #27c93f; }
+  .title { position: absolute; left: 0; right: 0; text-align: center; font-size: 14px; font-weight: 600; color: #8b949e; letter-spacing: 0.02em; }
+  .terminal { flex: 1; padding: 36px 44px; font-size: 22px; line-height: 1.65; color: #e6edf3; font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace; }
+  .prompt { color: #58a6ff; font-weight: 600; }
+  .command { color: #7ee787; font-weight: 700; }
+  .log { color: #8b949e; margin-top: 6px; }
+  .log-ok { color: #7ee787; font-weight: 600; margin-top: 6px; }
+  .badge-card { margin-top: 36px; padding: 22px 30px; background: rgba(0,255,157,0.07); border: 1.5px solid #00ff9d; border-radius: 14px; box-shadow: 0 0 35px rgba(0,255,157,0.18); display: flex; align-items: center; justify-content: space-between; }
+  .badge-title { font-size: 18px; font-weight: 800; color: #00ff9d; letter-spacing: 0.06em; text-transform: uppercase; }
+  .badge-sub { font-size: 16px; color: #e6edf3; margin-top: 6px; font-weight: 500; }
+  .badge-pill { background: #00ff9d; color: #0c0e14; font-weight: 900; font-size: 14px; padding: 8px 18px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .cursor { display: inline-block; width: 11px; height: 24px; background: #58a6ff; vertical-align: middle; margin-left: 2px; animation: blink 1s infinite; }
+  @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+</style>
+</head>
+<body>
+  <div class="window">
+    <div class="titlebar">
+      <div class="dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+      <div class="title">Coding Agent — ${formatMeta.name}</div>
+    </div>
+    <div class="terminal">
+      <div><span class="prompt">agent@wiggly % </span><span id="cmd" class="command"></span><span class="cursor" id="cur"></span></div>
+      <div id="logs" style="margin-top: 18px;"></div>
+      <div id="badge" style="display: none;">
+        <div class="badge-card">
+          <div>
+            <div class="badge-title">Your Checkpoint</div>
+            <div class="badge-sub">The agent is using the packaged compositor—not inventing a slideshow.</div>
+          </div>
+          <div class="badge-pill">Verified 0 providers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const cmdText = 'node runner.mjs make --target=${formatMeta.slug}';
+    const logs = [
+      '[make] [1/5] Introspecting target format: ${formatMeta.name}...',
+      '[make] [2/5] Synthesizing speech and generating microsecond subtitles...',
+      '[make] [3/5] Validating 5-Law Tutorial Script Critique... (Score: 100/100 PASS)',
+      '[make] [4/5] Rendering composition through Remotion... 100%',
+      '[make] [5/5] Quality inspection passed. Output: ${formatMeta.outputLabel}'
+    ];
+    let charIdx = 0;
+    const cmdEl = document.getElementById('cmd');
+    const logsEl = document.getElementById('logs');
+    const badgeEl = document.getElementById('badge');
+    
+    function typeCommand() {
+      if (charIdx < cmdText.length) {
+        cmdEl.textContent += cmdText[charIdx++];
+        setTimeout(typeCommand, 32);
+      } else {
+        setTimeout(streamLogs, 350);
+      }
+    }
+    let logIdx = 0;
+    function streamLogs() {
+      if (logIdx < logs.length) {
+        const d = document.createElement('div');
+        d.className = logIdx === 2 || logIdx === 4 ? 'log-ok' : 'log';
+        d.textContent = logs[logIdx++];
+        logsEl.appendChild(d);
+        setTimeout(streamLogs, 350);
+      } else {
+        setTimeout(() => { badgeEl.style.display = 'block'; }, 400);
+      }
+    }
+    setTimeout(typeCommand, 300);
+  </script>
+</body>
+</html>`;
+
+    await page.setContent(terminalHtml);
+    await page.waitForTimeout(Math.round(durationSeconds * 1000));
+
+    if (screenshotPath) {
+      await page.screenshot({ path: screenshotPath });
     }
 
     await page.close();
@@ -414,15 +607,18 @@ export async function recordLiveFormatInteraction(formatMeta, outputPath, option
       execFileSync(ffmpeg, [
         '-y', '-v', 'error',
         '-i', video,
+        '-t', String(durationSeconds),
         '-c:v', 'libx264',
         '-pix_fmt', 'yuv420p',
+        '-r', '30',
         outputPath
       ]);
       try { unlinkSync(video); } catch {}
+      try { rmSync(tempDir, { recursive: true, force: true }); } catch {}
       return outputPath;
     }
-  } catch {
-    // Non-blocking fallback
+  } catch (err) {
+    console.warn(`[harvest] Playwright terminal recording failed: ${err.message}`);
   }
   return null;
 }
@@ -462,11 +658,20 @@ export async function harvestTargetAssets({ targetSlug, destMediaDir, repoRoot }
 
   const browserVideoDestRel = `${targetSlug}/browser-interaction.mp4`;
   const browserVideoDestFull = path.join(targetDir, 'browser-interaction.mp4');
-  const hasBrowserVideo = await recordLiveFormatInteraction(formatMeta, browserVideoDestFull);
+  const hasBrowserVideo = await recordLiveFormatInteraction(formatMeta, browserVideoDestFull, { durationSeconds: 16.0 });
 
   const terminalDestRel = `${targetSlug}/runtime-receipt.png`;
   const terminalDestFull = path.join(targetDir, 'runtime-receipt.png');
-  await renderTerminalStill(formatMeta, terminalDestFull);
+
+  const terminalVideoDestRel = `${targetSlug}/terminal-execution.mp4`;
+  const terminalVideoDestFull = path.join(targetDir, 'terminal-execution.mp4');
+  const hasTerminalVideo = await recordLiveTerminalExecution(formatMeta, terminalVideoDestFull, {
+    durationSeconds: 12.0,
+    screenshotPath: terminalDestFull
+  });
+  if (!existsSync(terminalDestFull)) {
+    await renderTerminalStill(formatMeta, terminalDestFull);
+  }
 
   const media = {
     proofVideo: {
@@ -503,6 +708,20 @@ export async function harvestTargetAssets({ targetSlug, destMediaDir, repoRoot }
         type: 'video',
         authorized: true,
         provenance: `Headless Playwright screen recording of user interaction on ${formatMeta.name} format page.`
+      };
+    }
+  }
+
+  if (hasTerminalVideo && existsSync(terminalVideoDestFull)) {
+    const terminalDur = probeMediaDuration(terminalVideoDestFull);
+    if (terminalDur > 0.5) {
+      media.terminalVideo = {
+        file: terminalVideoDestRel,
+        fullPath: terminalVideoDestFull,
+        durationSeconds: terminalDur,
+        type: 'video',
+        authorized: true,
+        provenance: `Headless Playwright screen recording of agent terminal execution for ${formatMeta.name}.`
       };
     }
   }

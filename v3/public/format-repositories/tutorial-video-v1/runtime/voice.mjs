@@ -251,6 +251,7 @@ export async function buildNarratedTutorialStep({
       type: mediaType,
       file: mediaPath,
       fit: mediaFit,
+      startSeconds: 0,
       authorized: true,
       provenance
     };

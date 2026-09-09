@@ -268,6 +268,7 @@ export async function make(options = {}) {
   const step5Text = `Check the captions and verify the receipt. To try your own format, the Wiggly link is below.`;
 
   // Step 2: The Formula & Copy Action (Browser)
+  const browserMedia = harvested.media.browserVideo || harvested.media.browserStill;
   const step2Result = await buildNarratedTutorialStep({
     id: "choose-format",
     number: 2,
@@ -275,7 +276,8 @@ export async function make(options = {}) {
     kind: "browser",
     windowTitle: `Wiggly — ${harvested.format.name}`,
     background: "lime",
-    mediaPath: harvested.media.browserStill.file,
+    mediaPath: browserMedia.file,
+    mediaType: browserMedia.type,
     narrationText: step2Text,
     audioRelPath: `${targetSlug}/step-02.wav`,
     audioFullPath: path.join(audioOutputDir, "step-02.wav"),
@@ -284,6 +286,7 @@ export async function make(options = {}) {
   });
 
   // Step 3: Run the Local Composition (Terminal + Checkpoint)
+  const terminalMedia = harvested.media.terminalVideo || harvested.media.terminalStill;
   const step3Result = await buildNarratedTutorialStep({
     id: "run-agent",
     number: 3,
@@ -291,7 +294,8 @@ export async function make(options = {}) {
     kind: "terminal",
     windowTitle: `Coding agent — ${harvested.format.name}`,
     background: "blue",
-    mediaPath: harvested.media.terminalStill.file,
+    mediaPath: terminalMedia.file,
+    mediaType: terminalMedia.type,
     narrationText: step3Text,
     audioRelPath: `${targetSlug}/step-03.wav`,
     audioFullPath: path.join(audioOutputDir, "step-03.wav"),

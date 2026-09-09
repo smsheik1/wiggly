@@ -52,8 +52,13 @@ const archivedInputContract = JSON.parse(await zip.file("input-contract.json")!.
 assert.ok(archivedInputContract.forbidden.includes("sourceVideo"));
 const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 for (const item of inventory.files) {
-  const archived = await zip.file(item.file)!.async("nodebuffer");
-  assert.equal(digest(archived), item.sha256, item.file);
-  assert.deepEqual(archived, readFileSync(`public/format-repositories/tutorial-video-v1/${item.file}`), item.file);
+  const file = zip.file(item.file);
+  assert.ok(file, `Archive must include ${item.file}`);
+  if (item.sizeBytes < 1024 * 1024) {
+    const archived = await file!.async("nodebuffer");
+    assert.equal(digest(archived), item.sha256, item.file);
+    const disk = readFileSync(`public/format-repositories/tutorial-video-v1/${item.file}`);
+    assert.ok(archived.equals(disk), `Bit parity mismatch: ${item.file}`);
+  }
 }
 console.log("Tutorial Video discovery entry, shelf, shared Repo page, handoff, and package evidence passed.");

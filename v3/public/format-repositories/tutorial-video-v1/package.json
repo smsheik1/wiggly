@@ -18,6 +18,7 @@
     "react": "19.0.1",
     "react-dom": "19.0.1",
     "remotion": "4.0.473",
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "playwright-core": "^1.60.0"
   }
 }
