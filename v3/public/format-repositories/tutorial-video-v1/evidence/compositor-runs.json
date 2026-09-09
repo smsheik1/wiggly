@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 2,
+  "formatVersion": "0.3.0",
+  "providerCalls": 0,
+  "runs": [
+    {
+      "id": "batman-arkham-first-run",
+      "input": "examples/batman-arkham-first-run/input.json",
+      "output": "examples/batman-arkham-first-run/final.mp4",
+      "receipt": "examples/batman-arkham-first-run/final.mp4.receipt.json",
+      "technicalReport": "examples/batman-arkham-first-run/quality-report.json",
+      "contactSheet": "examples/batman-arkham-first-run/quality-report-contact-sheet.jpg",
+      "result": "passed"
+    },
+    {
+      "id": "animal-conversations-compositor",
+      "input": "examples/animal-conversations-compositor/input.json",
+      "output": "examples/animal-conversations-compositor/final.mp4",
+      "receipt": "examples/animal-conversations-compositor/final.mp4.receipt.json",
+      "technicalReport": "examples/animal-conversations-compositor/quality-report.json",
+      "contactSheet": "examples/animal-conversations-compositor/quality-report-contact-sheet.jpg",
+      "result": "passed"
+    }
+  ],
+  "creativeReview": "Contact sheets inspected for the packaged visual grammar; complete human audiovisual approval remains required before runner finalize."
+}

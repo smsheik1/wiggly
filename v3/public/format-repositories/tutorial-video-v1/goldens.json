@@ -1,9 +1,9 @@
 {
-  "schemaVersion": 1,
-  "purpose": "Two editorially distinct first-run cuts exercise the same local tutorial runtime.",
-  "canonicalContactSheet": "examples/animal-conversations-first-run/contact-sheet.jpg",
+  "schemaVersion": 2,
+  "purpose": "Two different Wiggly Formats exercise one ingredient-driven compositor without source masters or runtime edits.",
+  "canonicalContactSheet": "examples/batman-arkham-first-run/quality-report-contact-sheet.jpg",
   "examples": [
-    {"id": "animal-conversations-first-run", "title": "Animal Conversations · canonical first run", "role": "canonical", "whyItWorks": ["Proof-first opening", "real coding-agent handoff", "explicit approval and local render", "natural source pacing is preserved"], "knownWeaknesses": ["The source master is an operator-supplied recovered tutorial asset."]},
-    {"id": "animal-conversations-variant", "title": "Animal Conversations · alternate editorial run", "role": "replay", "whyItWorks": ["Same runner accepts a separately declared editorial master", "captions and audio stay attached to the master", "natural source pacing is preserved"], "knownWeaknesses": ["Both examples use the Animal Conversations format; add a licensed cross-format master for a broader benchmark."]}
+    {"id": "batman-arkham-first-run", "title": "Batman Arkham Conversations tutorial", "role": "canonical regression", "whyItWorks": ["Tests the exact format that exposed the old empty shell", "Shows every required signature feature", "Preserves native vertical result audio", "Provider calls: 0"], "knownWeaknesses": ["Full audiovisual approval must be recorded by a human viewer."]},
+    {"id": "animal-conversations-compositor", "title": "Animal Conversations tutorial", "role": "cross-format replay", "whyItWorks": ["Different content and timings use the same runtime", "Uses moving browser and coding-agent captures", "Shows the same signature grammar without code changes", "Provider calls: 0"], "knownWeaknesses": ["Recovered operator-approved narration is specific to the demonstrated handoff."]}
   ]
 }

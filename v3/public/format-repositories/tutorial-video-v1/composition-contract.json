@@ -1,13 +1,19 @@
 {
-  "schemaVersion": 1,
-  "sequence": ["result-proof", "format-promise", "source-and-handoff", "approval", "local-render", "finished-output"],
-  "visual": {"width": 1920, "height": 1080, "aspectRatio": "16:9", "safeMargin": 64},
-  "editorial": {
-    "proofFirst": true,
-    "plainLanguage": true,
-    "showRealAgentHandoff": true,
-    "showCostAndTime": true,
-    "reviewCompleteOutput": true
+  "schemaVersion": 2,
+  "officialRuntime": "runtime/tutorial-video.jsx",
+  "sequence": ["proof-first", "real-wiggly-page", "coding-agent-handoff", "neon-checkpoint", "native-finished-output"],
+  "visual": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "aspectRatio": "16:9",
+    "fixedBackgrounds": ["grid-acid-lime-v1.png", "grid-electric-blue-v1.png", "grid-warm-cream-v1.png"],
+    "requiredSignatureFeatures": ["retro-grid", "macOS-window-chrome", "numbered-step-badges", "neon-checkpoint-cards", "styled-subtitles", "progress-bar"]
   },
-  "captionPolicy": "Narration captions stay in reserved negative space; content-native captions remain with the supplied source result."
+  "audio": {
+    "tutorialNarration": "Supplied per narrated step and captioned with timed phrases.",
+    "nativeResult": "Preserved in hero/final steps and never covered by tutorial narration.",
+    "music": "Optional supplied bed at <=0.2 gain; muted during native-result playback."
+  },
+  "editorial": {"proofFirst": true, "showRealBrowserAndAgent": true, "plainLanguage": true, "oneSharedCompositor": true, "noPreRenderedMaster": true}
 }

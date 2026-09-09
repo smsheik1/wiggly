@@ -1,48 +1,74 @@
-# Tutorial Video Wiggly Repo
+---
+name: tutorial-video
+description: Render a proof-first Wiggly tutorial from editable browser, terminal, narration, caption, checkpoint, and finished-result ingredients using the packaged 16:9 compositor.
+---
 
-Use this skill when a user wants a new-user tutorial for a Wiggly Format.
-The tutorial must show the finished result first, then the real path from
-format choice to coding-agent handoff to approved local render.
+# Tutorial Video Wiggly Repo (v0.3.0)
+
+Use this skill when a user wants a polished first-run tutorial for a Wiggly
+Format. The official renderer is `runner.mjs` plus `runtime/tutorial-video.jsx`.
+Never replace it with slides, a second renderer, or a pre-rendered master.
 
 ## Required loop
 
-1. Identify the source format and the audience's first successful outcome.
-2. Gather only permitted source media and preserve its provenance.
-3. Analyze the reference as evidence: result, promise, source, handoff,
-   approvals, runtime, inspection, cost, and limitations.
-4. Draft a short narrated storyboard with captions and a 16:9 safe area.
-5. Show the user the exact handoff and ask for approval before any paid call.
-6. Run `node runner.mjs check --input=<input.json>`.
-7. Run the local render, inspect the MP4, and fix only evidence-backed issues.
-8. Package the kit after two distinct editorial inputs pass the same runtime.
+1. Run `node runner.mjs doctor` and stop if a required local tool is missing.
+   Run every command sequentially; never launch two Remotion commands together.
+   If `localhostPort` is false, request permission to bind a temporary localhost
+   port before the first render. This is local browser access, not a provider.
+2. Read `input-contract.json`, `composition-contract.json`, and one complete
+   example input.
+3. Gather permitted ingredients under `media/`: the real Wiggly page, the real
+   coding-agent or terminal flow, supplied narration, and the finished format
+   video. Preserve authorization and provenance for each file.
+4. Create an ingredient JSON with at least one browser step, one terminal step,
+   two narrated/captioned steps, one checkpoint, and one native-audio final.
+5. Run `node runner.mjs validate --input=<input.json>` before rendering.
+6. Run `node runner.mjs render --input=<input.json> --output=<output.mp4>`.
+7. Run `node runner.mjs inspect --input=<output.mp4> --report=<report.json>` and
+   inspect the generated contact sheet.
+8. Have a human watch and hear the entire MP4. Only then create an approval JSON
+   from `fixtures/creative-review.example.json` and use `runner.mjs finalize`.
 
-## Ground rules
+`npm test` already includes the official smoke render. Do not also run
+`npm run smoke` during the same preflight; the latter is a standalone shortcut.
+Bundled example inputs may be rerun unchanged as proofs. For a new target, use
+`runner.mjs init` and edit the new input; never overwrite an included example.
 
-- Lead with proof of the finished Wiggly result, not an abstract feature list.
-- Use plain verbs: pick, send, approve, render, inspect, watch.
-- Show what the user must provide and what the package supplies.
-- Keep the coding-agent handoff real. Do not stage a fake regular-chat flow or
-  pretend that a browser-only chat can operate a local repository.
-- Treat `yt-dlp` HTTP 403 as access refusal, not proof that a video is missing;
-  offer a permitted local file instead.
-- Do not claim automatic transcription, diarization, voice identity, or role
-  approval. The agent may propose a timed plan; the user approves every beat.
-- Do not imply that the Wiggly runtime accepts a social URL when the host agent
-  must resolve it and save a local file first.
-- Keep cost and timing visible. Runtime provider cost is `$0` with supplied
-  media; coding-agent usage is separate. Any paid generation requires an
-  estimate-and-approval gate.
-- Inspect the entire delivered MP4 with audio when possible. A passing hash or
-  metadata check cannot prove intelligibility or perceived sync.
+## Format grammar
+
+- Open with the finished result so the value is obvious before explanation.
+- Use the bundled lime, blue, and cream grid backgrounds.
+- Put browser/terminal media inside the compositor's visible macOS window.
+- Keep numbered badges at the top, captions in reserved lower space, the neon
+  checkpoint above the progress rail, and the progress rail visible throughout.
+- Preserve result audio in hero/final sections. Never narrate over the final.
+- Keep language concrete: choose a format, copy it, send it, render, inspect,
+  and watch.
+
+## Hard boundaries
+
+- `sourceVideo` is forbidden. Supply editable ingredients.
+- Do not rewrite or bypass the official compositor.
+- Do not claim URL download, transcription, synthetic speech, or screen capture
+  is built into the Repo.
+- Do not invent permissions, provenance, captions, or narration approval.
+- Do not loop short media or freeze its final frame to hide missing footage.
+- There are no providers in this kit. Before any paid generation, show the
+  estimate and wait for explicit approval.
+- Do not misread a sandbox's denied localhost port as missing media. Grant the
+  local Remotion browser/port permission before the first render attempt.
+- Automated metadata and contact-sheet checks do not replace complete human
+  audiovisual review.
 
 ## Commands
 
 ```bash
-node runner.mjs doctor
-node runner.mjs check --input examples/animal-conversations-first-run/input.json
-node runner.mjs render --input examples/animal-conversations-first-run/input.json --output /tmp/tutorial.mp4
-node runner.mjs inspect --input /tmp/tutorial.mp4
+npm ci --ignore-scripts --no-audit --no-fund
 npm test
+node runner.mjs init --output=my-tutorial.json
+node runner.mjs validate --input=my-tutorial.json
+node runner.mjs render --input=my-tutorial.json --output=my-tutorial.mp4
+node runner.mjs inspect --input=my-tutorial.mp4 --report=quality-report.json
 ```
 
 ## Multi-Platform Social Distribution (Optional)

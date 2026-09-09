@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "title": "Make a Batman Arkham Conversations video with Wiggly",
+  "audience": "A first-time user who has never run a Wiggly Repo",
+  "format": {
+    "name": "Batman Arkham Conversations",
+    "slug": "character-gameplay-conversations",
+    "promise": "Fan-favorite character conversations over real Arkham Knight gameplay, assembled as vertical Shorts.",
+    "url": "https://wiggly.agentenamel.com/formats/character-gameplay-conversations",
+    "outputLabel": "how-batman-sleeps.mp4"
+  },
+  "steps": [
+    {
+      "id": "proof-first",
+      "kind": "hero",
+      "number": "1",
+      "label": "See the finished result",
+      "background": "lime",
+      "durationSeconds": 6,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "examples/batman-arkham/final-result.mp4",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Published Batman Arkham Conversations proof from Wiggly Repo 0.2.0; operator-supplied for this tutorial proof."
+      }
+    },
+    {
+      "id": "choose-agent",
+      "kind": "terminal",
+      "number": "2",
+      "label": "Use a coding agent",
+      "windowTitle": "Coding agent — local Wiggly workspace",
+      "background": "blue",
+      "durationSeconds": 6.6,
+      "media": {
+        "type": "image",
+        "file": "examples/batman-arkham/runtime-receipt.png",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Locally rasterized still containing the actual tutorial runtime commands and zero-provider receipt."
+      },
+      "narration": {
+        "file": "examples/batman-arkham/02-agent.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Operator-approved human narration recovered from the original Animal Conversations tutorial production."
+      },
+      "captions": [
+        {"start": 0.2, "end": 1.767, "text": "I'm using Antigravity."},
+        {"start": 1.767, "end": 3.267, "text": "Use a coding agent that can run"},
+        {"start": 3.267, "end": 5.367, "text": "files on your computer, not a regular"},
+        {"start": 5.367, "end": 6.167, "text": "chat window."}
+      ]
+    },
+    {
+      "id": "copy-format",
+      "kind": "browser",
+      "number": "3",
+      "label": "Copy the Wiggly prompt",
+      "windowTitle": "Wiggly — Batman Arkham Conversations",
+      "background": "lime",
+      "durationSeconds": 4.233,
+      "media": {
+        "type": "image",
+        "file": "examples/batman-arkham/format-page.png",
+        "fit": "cover",
+        "authorized": true,
+        "provenance": "Fresh headless-browser capture of the live public Batman Arkham Conversations Repo page on 2026-09-08."
+      },
+      "narration": {
+        "file": "examples/batman-arkham/03-copy.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Operator-approved human narration recovered from the original Animal Conversations tutorial production."
+      },
+      "captions": [
+        {"start": 0.2, "end": 2.833, "text": "On Wiggly, choose Copy for another coding"},
+        {"start": 2.833, "end": 3.433, "text": "agent."}
+      ]
+    },
+    {
+      "id": "paste-and-run",
+      "kind": "terminal",
+      "number": "4",
+      "label": "Paste and run the package",
+      "windowTitle": "Terminal — tutorial-video-v1",
+      "background": "blue",
+      "durationSeconds": 7.5,
+      "media": {
+        "type": "image",
+        "file": "examples/batman-arkham/runtime-receipt.png",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Locally rasterized still containing the actual tutorial runtime commands and zero-provider receipt."
+      },
+      "narration": {
+        "file": "examples/batman-arkham/04-paste.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Operator-approved human narration recovered from the original Animal Conversations tutorial production."
+      },
+      "captions": [
+        {"start": 0.2, "end": 2.733, "text": "Paste the instructions into a new conversation"},
+        {"start": 2.733, "end": 5.333, "text": "and send. The agent reads the package"},
+        {"start": 5.333, "end": 6.467, "text": "and sets it up."}
+      ],
+      "checkpoint": {
+        "eyebrow": "Your checkpoint",
+        "headline": "The agent is using the packaged compositor—not inventing a slideshow.",
+        "badge": "Then render"
+      }
+    },
+    {
+      "id": "finished-output",
+      "kind": "final",
+      "number": "5",
+      "label": "Watch the finished result",
+      "background": "lime",
+      "durationSeconds": 10,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "examples/batman-arkham/final-result.mp4",
+        "startSeconds": 10,
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Published Batman Arkham Conversations proof from Wiggly Repo 0.2.0; operator-supplied for this tutorial proof."
+      }
+    },
+    {
+      "id": "next-step",
+      "kind": "end",
+      "number": "6",
+      "label": "Try your own conversation",
+      "background": "cream",
+      "durationSeconds": 6.6,
+      "narration": {
+        "file": "examples/batman-arkham/06-close.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Operator-approved human narration recovered from the original Animal Conversations tutorial production."
+      },
+      "captions": [
+        {"start": 0.2, "end": 2.167, "text": "Check the captions and listen for any"},
+        {"start": 2.167, "end": 3.533, "text": "mistakes before posting."},
+        {"start": 3.633, "end": 5.167, "text": "To try your own clip, the Wiggly"},
+        {"start": 5.167, "end": 5.9, "text": "link's below."}
+      ]
+    }
+  ]
+}

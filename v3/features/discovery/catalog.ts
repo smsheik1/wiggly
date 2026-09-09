@@ -2222,7 +2222,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
     order: 100.1,
     brand: "Wiggly Tutorial Format · 16:9",
     title: "A format becomes a finished tutorial",
-    curatorNote: "A recovered Animal Conversations workflow became a proof-first tutorial: show the result, send the real prompt to a coding agent, approve the plan, render locally, inspect the MP4, and state the cost honestly. The kit assembles the delivery with no paid generation.",
+    curatorNote: "The full Animal Conversations production remains the visual reference at its natural speed. The downloadable 0.3.0 Repo now contains the actual compositor—retro grids, macOS windows, numbered steps, neon checkpoints, captions, and progress—and proves it independently with Batman inputs at zero provider cost.",
     goal: "teach",
     media: {
       kind: "video",
@@ -2231,7 +2231,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
       durationLabel: "2 min 29 sec",
       aspectRatio: "16:9",
     },
-    format: { slug: "tutorial-video", name: "Tutorial Video", version: "0.2.0", owner: "Wiggly Studio" },
+    format: { slug: "tutorial-video", name: "Tutorial Video", version: "0.3.0", owner: "Wiggly Studio" },
   },
   ...(["cheesecake", "cookies"] as const).map((example, index): DiscoveryEntry => ({
     id: `lego-music-video-${example}`,

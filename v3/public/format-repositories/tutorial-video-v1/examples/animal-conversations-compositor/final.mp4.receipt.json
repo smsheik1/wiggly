@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "formatVersion": "0.3.0",
+  "input": "examples/animal-conversations-compositor/input.json",
+  "inputSha256": "f8b76b3384c1fadac7444bb4240c2b834fe8f40d48cc4d6bfef4f302fa5386a6",
+  "runtimeSha256": "3999ca04d215ea4036e42d4a7d6a648023b597c4f3fb506bed303fc76be5b04b",
+  "output": "examples/animal-conversations-compositor/final.mp4",
+  "outputSha256": "49ed3faccfaae97015acea2aa692efd866a8db11c0a69df8472c2515190787e9",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "durationSeconds": 23.786667,
+  "providerCalls": 0,
+  "signatureFeatures": [
+    "retro-grid",
+    "macos-window-chrome",
+    "numbered-step-badges",
+    "neon-checkpoint-cards",
+    "styled-subtitles",
+    "progress-bar"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "reviewer": "Replace with the human reviewer's name or role",
+  "reviewedAt": "YYYY-MM-DD",
+  "watchedEntireVideo": true,
+  "heardEntireVideo": true,
+  "notes": "Confirm narration intelligibility, caption sync, native-result audio, pacing, and visual fidelity. Do not approve this example without actually watching and listening."
+}

@@ -1,9 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "file": "MP4",
   "video": {"width": 1920, "height": 1080, "aspectRatio": "16:9", "codec": "h264", "pixelFormat": "yuv420p", "fps": 30},
   "audio": {"required": true, "codec": "aac", "sampleRate": 48000, "channels": 2},
-  "durationSeconds": {"sameAs": "sourceVideo", "tolerance": 0.15},
-  "captions": "burned into the supplied, reviewed tutorial master",
-  "evidence": ["quality-report.json", "PROOF.md", "sha256"]
+  "durationSeconds": {"sameAs": "sum(steps.durationSeconds)", "tolerance": 0.12, "minimum": 12, "maximum": 240.12},
+  "captions": "Burned in by the official compositor from each narrated step's timed caption phrases.",
+  "evidence": ["<output>.receipt.json", "quality-report.json", "quality-report-contact-sheet.jpg", "sha256"],
+  "providerCalls": 0
 }

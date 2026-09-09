@@ -412,7 +412,7 @@ const approvedRepoOrder = [
   ["tutorial-video", "Tutorial Video"],
 ];
 const tutorialEntry = discoveryCatalog.find((entry) => entry.format.slug === "tutorial-video");
-assert.equal(tutorialEntry?.media.durationLabel, "2 min 29 sec", "Tutorial proof should advertise the recovered master's natural duration.");
+assert.equal(tutorialEntry?.media.durationLabel, "2 min 29 sec", "Tutorial showcase should preserve the approved Animal Conversations cut at natural speed.");
 assert.deepEqual(
   shelves.map((shelf) => [shelf.id, shelf.title]),
   approvedRepoOrder,

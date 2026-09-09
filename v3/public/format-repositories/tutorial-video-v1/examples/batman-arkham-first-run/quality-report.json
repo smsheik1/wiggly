@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "input": "examples/batman-arkham-first-run/final.mp4",
+  "inputSha256": "3a24911245135050f976ce3eff5f7f112dba93e6cfdd4318adbdc9a4f900f6ac",
+  "passed": true,
+  "checks": {
+    "h264": true,
+    "aac": true,
+    "dimensions": true,
+    "frameRate": true,
+    "hasAudio": true,
+    "duration": true
+  },
+  "metadata": {
+    "durationSeconds": 40.981333,
+    "video": {
+      "codec_name": "h264",
+      "codec_type": "video",
+      "width": 1920,
+      "height": 1080,
+      "r_frame_rate": "30/1",
+      "side_data_list": [
+        {}
+      ]
+    },
+    "audio": {
+      "codec_name": "aac",
+      "codec_type": "audio",
+      "sample_rate": "48000",
+      "channels": 2,
+      "r_frame_rate": "0/0"
+    }
+  },
+  "contactSheet": "examples/batman-arkham-first-run/quality-report-contact-sheet.jpg",
+  "sampling": {
+    "mode": "ingredient-step-midpoints",
+    "stepIds": [
+      "proof-first",
+      "choose-agent",
+      "copy-format",
+      "paste-and-run",
+      "finished-output",
+      "next-step"
+    ]
+  },
+  "creativeReview": "required before finalize"
+}

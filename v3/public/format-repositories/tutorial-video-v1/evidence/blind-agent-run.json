@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "formatVersion": "0.3.0",
+  "testedAt": "2026-09-08",
+  "testMode": "Fresh agent received only a clean extracted Repo and the request to create a Batman Arkham Conversations tutorial from bundled authorized media.",
+  "constraints": ["No parent/source checkout", "No prior conversation", "No network", "No provider calls", "No paid generation", "One target render attempt"],
+  "commands": [
+    "node runner.mjs doctor",
+    "node runner.mjs validate --input=examples/batman-arkham-first-run/input.json",
+    "node runner.mjs render --input=examples/batman-arkham-first-run/input.json --output=batman-arkham-conversations-tutorial.mp4",
+    "node runner.mjs inspect --input=batman-arkham-conversations-tutorial.mp4 --report=batman-arkham-conversations-quality-report.json"
+  ],
+  "result": "passed",
+  "output": {"width": 1920, "height": 1080, "fps": 30, "durationSeconds": 40.981333, "videoCodec": "h264", "audioCodec": "aac", "audioChannels": 2},
+  "outputSha256": "66196f9f005cba7b2ae973b5f07842425a371f00aff894d835ec0dd88c6819fd",
+  "providerCalls": 0,
+  "runtimeIdentityObserved": ["acid-lime/electric-blue/warm-cream retro grids", "macOS window chrome", "numbered badges", "neon checkpoint", "styled captions", "progress rail"],
+  "reviewBoundary": "The fresh agent inspected the complete technical output and contact sheet. It did not claim human audiovisual approval or run finalize."
+}

@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 2,
+  "title": "Make an Animal Conversations video with Wiggly",
+  "audience": "A first-time user who has never run a Wiggly Repo",
+  "format": {
+    "name": "Animal Conversations",
+    "slug": "animal-conversations",
+    "promise": "Turn a simple animal pairing into a polished narrated conversation video.",
+    "url": "https://wiggly.agentenamel.com/formats/animal-conversations",
+    "outputLabel": "animal-conversations.mp4"
+  },
+  "steps": [
+    {
+      "id": "proof-first",
+      "kind": "hero",
+      "number": "1",
+      "label": "See the finished result",
+      "background": "lime",
+      "durationSeconds": 4,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "examples/animal-conversations/final-result.mp4",
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Operator-approved Animal Conversations tutorial proof recovered from the original production workspace."
+      }
+    },
+    {
+      "id": "copy-format",
+      "kind": "browser",
+      "number": "2",
+      "label": "Choose and copy a format",
+      "windowTitle": "Wiggly — Animal Conversations",
+      "background": "lime",
+      "durationSeconds": 4.233,
+      "media": {
+        "type": "video",
+        "file": "examples/animal-conversations/format-page.mp4",
+        "fit": "cover",
+        "authorized": true,
+        "provenance": "Operator-approved Wiggly browser recording recovered from the original Animal Conversations tutorial production."
+      },
+      "narration": {
+        "file": "examples/animal-conversations/06-copy.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Operator-approved human narration recovered from the original Animal Conversations tutorial production."
+      },
+      "captions": [
+        {"start": 0.2, "end": 2.833, "text": "On Wiggly, choose Copy for another coding"},
+        {"start": 2.833, "end": 3.433, "text": "agent."}
+      ]
+    },
+    {
+      "id": "paste-and-run",
+      "kind": "terminal",
+      "number": "3",
+      "label": "Paste it into your agent",
+      "windowTitle": "Coding agent — Animal Conversations",
+      "background": "blue",
+      "durationSeconds": 7.5,
+      "media": {
+        "type": "video",
+        "file": "examples/animal-conversations/paste-focused.mp4",
+        "fit": "cover",
+        "authorized": true,
+        "provenance": "Operator-approved coding-agent recording recovered from the original Animal Conversations tutorial production."
+      },
+      "narration": {
+        "file": "examples/animal-conversations/07-paste.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Operator-approved human narration recovered from the original Animal Conversations tutorial production."
+      },
+      "captions": [
+        {"start": 0.2, "end": 2.733, "text": "Paste the instructions into a new conversation"},
+        {"start": 2.733, "end": 5.333, "text": "and send. The agent reads the package"},
+        {"start": 5.333, "end": 6.467, "text": "and sets it up."}
+      ],
+      "checkpoint": {
+        "eyebrow": "Your checkpoint",
+        "headline": "The agent has the format kit and is ready to render.",
+        "badge": "Then render"
+      }
+    },
+    {
+      "id": "finished-output",
+      "kind": "final",
+      "number": "4",
+      "label": "Get the finished video",
+      "background": "cream",
+      "durationSeconds": 8,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "examples/animal-conversations/final-result.mp4",
+        "startSeconds": 8,
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Operator-approved Animal Conversations tutorial proof recovered from the original production workspace."
+      }
+    }
+  ]
+}

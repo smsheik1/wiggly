@@ -1,10 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "stages": [
-    {"id": "source-proof", "output": "Permitted tutorial master, provenance, and format evidence", "approvalRequired": true, "providerCall": false, "paid": false},
-    {"id": "storyboard", "output": "Proof-first narrated step list with captions and cost/time receipt", "approvalRequired": true, "providerCall": false, "paid": false},
-    {"id": "local-assembly", "output": "Deterministic 16:9 H.264/AAC MP4 from the approved master", "approvalRequired": false, "providerCall": false, "paid": false},
-    {"id": "inspection", "output": "ffprobe metadata, hash, contact sheet, and direct playback review", "approvalRequired": true, "providerCall": false, "paid": false},
-    {"id": "distribute", "output": "Simultaneous multi-platform publishing receipt (YouTube, Instagram, TikTok, X) with zero secret leakage", "approvalRequired": true, "providerCall": false, "paid": false}
+    {"id": "ingredients", "output": "Authorized format metadata, browser/terminal captures, narration, captions, checkpoints, and native result", "approvalRequired": true, "providerCall": false, "paid": false},
+    {"id": "validation", "output": "Validated editable timeline; pre-rendered source masters rejected", "approvalRequired": false, "providerCall": false, "paid": false},
+    {"id": "official-composition", "output": "Signature Wiggly tutorial rendered by runtime/tutorial-video.jsx", "approvalRequired": false, "providerCall": false, "paid": false},
+    {"id": "inspection", "output": "Metadata, hashes, every-step contact sheet, and explicit audiovisual review record", "approvalRequired": true, "providerCall": false, "paid": false},
+    {"id": "distribute", "output": "Optional multi-platform publishing receipt for approved YouTube, Instagram, TikTok, and X posts with zero secret leakage", "approvalRequired": true, "providerCall": false, "paid": false}
   ]
 }

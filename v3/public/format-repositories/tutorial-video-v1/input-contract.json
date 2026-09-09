@@ -1,16 +1,37 @@
 {
-  "schemaVersion": 1,
-  "required": ["title", "sourceFormat", "sourceVideo", "aspectRatio", "captionStrategy", "steps"],
+  "schemaVersion": 2,
+  "type": "object",
+  "additionalProperties": false,
+  "forbidden": ["sourceVideo"],
+  "required": ["schemaVersion", "title", "audience", "format", "steps"],
   "properties": {
-    "title": {"type": "string", "minLength": 1},
-    "sourceFormat": {"type": "string", "minLength": 1},
-    "sourceVideo": {"type": "string", "description": "A permitted local tutorial master, relative to the kit root."},
-    "durationSeconds": {"type": "number", "minimum": 1, "description": "Optional expected source duration in seconds; when supplied it must match the probed source within 0.15 seconds."},
-    "aspectRatio": {"const": "16:9"},
-    "captionStrategy": {"enum": ["burned-in", "sidecar-reviewed"]},
-    "narration": {"type": "object"},
-    "steps": {"type": "array", "minItems": 4},
-    "approvalGates": {"type": "array"},
-    "cost": {"type": "object"}
-  }
+    "schemaVersion": {"const": 2},
+    "title": {"type": "string", "minLength": 1, "maxLength": 80},
+    "audience": {"type": "string", "minLength": 1, "maxLength": 120},
+    "format": {"type": "object", "required": ["name", "slug", "promise", "url", "outputLabel"]},
+    "steps": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 14,
+      "items": {
+        "required": ["id", "kind", "number", "label", "background", "durationSeconds"],
+        "kind": ["hero", "browser", "terminal", "media", "final", "end"],
+        "background": ["lime", "blue", "cream"],
+        "media": "Authorized image or video under media/, with provenance and optional startSeconds/fit.",
+        "narration": "Authorized local audio under media/, with provenance and startSeconds.",
+        "captions": "Ordered timed phrases relative to the step; required with narration.",
+        "checkpoint": "Optional neon eyebrow/headline/badge callout.",
+        "nativeAudio": "Allowed only for hero/final video; required for the single final step."
+      }
+    },
+    "music": "Optional authorized local audio under media/, long enough for the entire timeline; volume > 0 and <= 0.2."
+  },
+  "crossFieldRules": [
+    "sourceVideo is rejected: users supply editable ingredients, never a pre-rendered tutorial master.",
+    "At least one browser step, one terminal step, two narrated steps, one checkpoint, and exactly one final step are required.",
+    "Every local media path is relative to media/, regular, non-symlinked, <=250 MB, authorized, and carries provenance.",
+    "Video sections must have enough source duration; the runtime never loops or freezes short media.",
+    "The ingredient timeline must be 12–240 seconds and align to 30 fps."
+  ],
+  "canonicalValidator": "runtime/contract.mjs"
 }
