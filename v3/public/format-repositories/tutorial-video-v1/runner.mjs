@@ -251,99 +251,232 @@ export async function make(options = {}) {
   mkdirSync(audioOutputDir, { recursive: true });
 
   const proofFullDuration = harvested.proofDuration || 25.0;
-  // Step 1 Hook: Take opening punchline beat (4.0-5.5s), aligned to 30 fps
-  const hookDuration = Math.round(Math.min(5.0, Math.max(3.5, proofFullDuration / 4)) * 30) / 30;
-
-  // Step 2 Formula & Prompt Text: Explain navigating to the format and copying the agent prompt
-  const step2Text = audience === "developer"
-    ? `Inspect the ${harvested.format.name} repo contracts and copy the prompt on Wiggly.`
-    : `On Wiggly, open the ${harvested.format.name} format and copy the prompt for your coding agent.`;
-
-  // Step 3 Execution Text: Pasting into agent and verifying zero providers
-  const step3Text = audience === "developer"
-    ? `Paste the prompt into your coding agent. The agent validates contracts and renders the video locally.`
-    : `Paste the prompt into your coding agent. It validates contracts and renders the video locally.`;
-
-  // Step 5 Closing Text
-  const step5Text = `Check the captions and verify the receipt. To try your own format, the Wiggly link is below.`;
-
-  // Step 2: The Formula & Copy Action (Browser)
-  const browserMedia = harvested.media.browserVideo || harvested.media.browserStill;
-  const step2Result = await buildNarratedTutorialStep({
-    id: "choose-format",
-    number: 2,
-    label: "Copy the coding agent prompt",
-    kind: "browser",
-    windowTitle: `Wiggly — ${harvested.format.name}`,
+  // Step 1: Hook (4.5s)
+  const hookDuration = 4.5;
+  const step1Hero = {
+    id: "proof-first",
+    kind: "hero",
+    number: "1",
+    label: "See the finished result",
     background: "lime",
-    mediaPath: browserMedia.file,
-    mediaType: browserMedia.type,
-    narrationText: step2Text,
-    audioRelPath: `${targetSlug}/step-02.wav`,
-    audioFullPath: path.join(audioOutputDir, "step-02.wav"),
-    voice: "zach",
-    minStepDuration: 7.5
-  });
-
-  // Step 3: Run the Local Composition (Terminal + Checkpoint)
-  const terminalMedia = harvested.media.terminalVideo || harvested.media.terminalStill;
-  const step3Result = await buildNarratedTutorialStep({
-    id: "run-agent",
-    number: 3,
-    label: "Paste into your coding agent",
-    kind: "terminal",
-    windowTitle: `Coding Agent (Antigravity / Claude Code) — ${harvested.format.name}`,
-    background: "blue",
-    mediaPath: terminalMedia.file,
-    mediaType: terminalMedia.type,
-    narrationText: step3Text,
-    audioRelPath: `${targetSlug}/step-03.wav`,
-    audioFullPath: path.join(audioOutputDir, "step-03.wav"),
-    voice: "zach",
-    minStepDuration: 8.0
-  });
-
-  step3Result.step.checkpoint = {
-    eyebrow: "Your checkpoint",
-    headline: "The agent is using the packaged compositor—not inventing a slideshow.",
-    badge: "Verified 0 providers"
-  };
-
-  // Step 4: The Finished Result Proof Excerpt (tight 5.0s, not 20+ second cartoon dump)
-  const payoffStart = hookDuration;
-  const rawPayoffDuration = proofFullDuration - payoffStart;
-  const payoffDuration = Math.round(Math.min(5.0, Math.max(3.5, rawPayoffDuration)) * 30) / 30;
-
-  const step4Proof = {
-    id: "finished-output",
-    kind: "final",
-    number: "4",
-    label: "Watch the finished output",
-    background: "lime",
-    durationSeconds: payoffDuration,
+    durationSeconds: hookDuration,
     nativeAudio: true,
     media: {
       type: "video",
       file: harvested.media.proofVideo.file,
-      startSeconds: payoffStart,
+      startSeconds: 0,
       fit: "contain",
       authorized: true,
       provenance: harvested.media.proofVideo.provenance
     }
   };
 
-  // Step 5: The Exit CTA
+  // Step 2: Social Proof (8.5s)
+  const socialProofMedia = harvested.media.socialProofStill || {
+    file: `${targetSlug}/mugsyclips-profile.png`,
+    type: "image"
+  };
+  const step2Result = await buildNarratedTutorialStep({
+    id: "social-proof",
+    number: 2,
+    label: "Compare with the viral format",
+    kind: "social-proof",
+    background: "lime",
+    mediaPath: socialProofMedia.file,
+    mediaType: "image",
+    narrationText: `Look at Mugsy Clips on Instagram with thirty-five thousand followers. Wiggly packages this exact comparison format so your coding agent can build it locally.`,
+    audioRelPath: `${targetSlug}/step-02.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-02.wav"),
+    voice: "zach",
+    minStepDuration: 8.5
+  });
+
+  // Step 3: Browser (Copy prompt) (7.5s)
+  const browserMedia = harvested.media.browserVideo || harvested.media.browserStill;
+  const step3Result = await buildNarratedTutorialStep({
+    id: "choose-format",
+    number: 3,
+    label: "Copy the coding agent prompt",
+    kind: "browser",
+    windowTitle: `Wiggly — ${harvested.format.name}`,
+    background: "lime",
+    mediaPath: browserMedia.file,
+    mediaType: browserMedia.type,
+    narrationText: `On Wiggly, open the Mugsy Explains format, choose Send to Coding Agent, and copy the prompt.`,
+    audioRelPath: `${targetSlug}/step-03.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-03.wav"),
+    voice: "zach",
+    minStepDuration: 7.5
+  });
+
+  // Step 4: Terminal (Paste into agent) (8.5s)
+  const intakeMedia = harvested.media.intakeVideo || harvested.media.terminalVideo || harvested.media.terminalStill;
+  const step4Result = await buildNarratedTutorialStep({
+    id: "run-agent",
+    number: 4,
+    label: "Paste into your coding agent",
+    kind: "terminal",
+    windowTitle: `Coding Agent (Antigravity / Claude Code) — ${harvested.format.name}`,
+    background: "blue",
+    mediaPath: intakeMedia.file,
+    mediaType: intakeMedia.type,
+    mediaFit: "cover",
+    narrationText: `Paste the instructions into Antigravity or Claude Code. The agent reads the package and sets up your lessons.`,
+    audioRelPath: `${targetSlug}/step-04.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-04.wav"),
+    voice: "zach",
+    minStepDuration: 8.5
+  });
+  if (intakeMedia && intakeMedia.type === "video" && intakeMedia.durationSeconds && step4Result.step.durationSeconds > intakeMedia.durationSeconds) {
+    step4Result.step.durationSeconds = Math.floor(intakeMedia.durationSeconds * 30) / 30;
+  }
+  step4Result.step.checkpoint = {
+    eyebrow: "Your checkpoint",
+    headline: "The agent is using the packaged compositor—not inventing a slideshow.",
+    badge: "Verified 0 providers"
+  };
+
+  // Step 5: Review Lessons Checkpoint (8.5s)
+  const reviewMedia = harvested.media.reviewVideo || harvested.media.terminalVideo || harvested.media.terminalStill;
   const step5Result = await buildNarratedTutorialStep({
-    id: "next-step",
+    id: "review-lessons",
     number: 5,
-    label: "Try your own format",
-    kind: "end",
-    background: "cream",
-    narrationText: step5Text,
+    label: "Review the lesson plan",
+    kind: "terminal",
+    windowTitle: `Antigravity — Lesson Review`,
+    background: "blue",
+    mediaPath: reviewMedia.file,
+    mediaType: reviewMedia.type,
+    mediaFit: "cover",
+    narrationText: `Review the three comparative lessons and character poses before rendering. You stay in control of the creative output.`,
     audioRelPath: `${targetSlug}/step-05.wav`,
     audioFullPath: path.join(audioOutputDir, "step-05.wav"),
     voice: "zach",
-    minStepDuration: 4.5
+    minStepDuration: 8.5
+  });
+  if (reviewMedia && reviewMedia.type === "video" && reviewMedia.durationSeconds && step5Result.step.durationSeconds > reviewMedia.durationSeconds) {
+    step5Result.step.durationSeconds = Math.floor(reviewMedia.durationSeconds * 30) / 30;
+  }
+  step5Result.step.checkpoint = {
+    eyebrow: "Your one checkpoint",
+    headline: "Review the 3 comparative lessons and character poses.",
+    badge: "Then approve"
+  };
+
+  // Step 6: Package Breakdown (8.0s)
+  const step6Result = await buildNarratedTutorialStep({
+    id: "package-breakdown",
+    number: 6,
+    label: "Inspect the included assets",
+    kind: "package-breakdown",
+    background: "lime",
+    narrationText: `The package includes five expressive cartoon poses and the handwritten Virgil font. No external image generator is required.`,
+    audioRelPath: `${targetSlug}/step-06.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-06.wav"),
+    voice: "zach",
+    minStepDuration: 8.0
+  });
+
+  // Step 7: Replacement Value ($0) (8.0s)
+  const step7Result = await buildNarratedTutorialStep({
+    id: "replacement-value",
+    number: 7,
+    label: "Verify zero generation fees",
+    kind: "replacement-value",
+    background: "lime",
+    narrationText: `You don't need an image model, a video model, or a dedicated GPU. Everything renders locally with zero API credits.`,
+    audioRelPath: `${targetSlug}/step-07.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-07.wav"),
+    voice: "zach",
+    minStepDuration: 8.0
+  });
+
+  // Step 8: Approve & Render (7.5s)
+  const renderMedia = harvested.media.renderVideo || harvested.media.terminalVideo || harvested.media.terminalStill;
+  const step8Result = await buildNarratedTutorialStep({
+    id: "approve-render",
+    number: 8,
+    label: "Approve and render the video",
+    kind: "terminal",
+    windowTitle: `Coding Agent — Final Render`,
+    background: "blue",
+    mediaPath: renderMedia.file,
+    mediaType: renderMedia.type,
+    mediaFit: "cover",
+    narrationText: `Once you approve the plan, the agent runs the local compositor and builds the final video.`,
+    audioRelPath: `${targetSlug}/step-08.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-08.wav"),
+    voice: "zach",
+    minStepDuration: 7.5
+  });
+  if (renderMedia && renderMedia.type === "video" && renderMedia.durationSeconds && step8Result.step.durationSeconds > renderMedia.durationSeconds) {
+    step8Result.step.durationSeconds = Math.floor(renderMedia.durationSeconds * 30) / 30;
+  }
+  step8Result.step.checkpoint = {
+    eyebrow: "Final MP4",
+    headline: "Video rendered and verified locally.",
+    badge: "Ready to post"
+  };
+
+  // Step 9: Finished Output Payoff (8.0s)
+  const step9Proof = {
+    id: "finished-output",
+    kind: "final",
+    number: "9",
+    label: "Watch the finished output",
+    background: "lime",
+    durationSeconds: 8.0,
+    nativeAudio: true,
+    media: {
+      type: "video",
+      file: harvested.media.proofVideo.file,
+      startSeconds: 0,
+      fit: "contain",
+      authorized: true,
+      provenance: harvested.media.proofVideo.provenance
+    }
+  };
+
+  // Step 10: 13/13 Quality Scorecard (7.5s)
+  const step10Result = await buildNarratedTutorialStep({
+    id: "scorecard",
+    number: 10,
+    label: "Verify the quality scorecard",
+    kind: "scorecard",
+    background: "lime",
+    narrationText: `Every video passes thirteen automated quality checks for audio sync, dimensions, and timing.`,
+    audioRelPath: `${targetSlug}/step-10.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-10.wav"),
+    voice: "zach",
+    minStepDuration: 7.5
+  });
+
+  // Step 11: Beginner Checklist (7.5s)
+  const step11Result = await buildNarratedTutorialStep({
+    id: "checklist",
+    number: 11,
+    label: "Start with the beginner checklist",
+    kind: "checklist",
+    background: "lime",
+    narrationText: `To make your own, pick a topic, choose three lessons, and run the prompt in your favorite coding agent.`,
+    audioRelPath: `${targetSlug}/step-11.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-11.wav"),
+    voice: "zach",
+    minStepDuration: 7.5
+  });
+
+  // Step 12: Workflow Replacement & CTA (7.5s)
+  const step12Result = await buildNarratedTutorialStep({
+    id: "workflow",
+    number: 12,
+    label: "Replace three separate tools",
+    kind: "workflow",
+    background: "lime",
+    narrationText: `Wiggly replaces drawing tools, voice subscriptions, and video editors. The link to get started is below.`,
+    audioRelPath: `${targetSlug}/step-12.wav`,
+    audioFullPath: path.join(audioOutputDir, "step-12.wav"),
+    voice: "zach",
+    minStepDuration: 7.5
   });
 
   const defaultMusic = {
@@ -369,27 +502,18 @@ export async function make(options = {}) {
     },
     music: defaultMusic,
     steps: [
-      {
-        id: "proof-first",
-        kind: "hero",
-        number: "1",
-        label: "See the finished result",
-        background: "lime",
-        durationSeconds: hookDuration,
-        nativeAudio: true,
-        media: {
-          type: "video",
-          file: harvested.media.proofVideo.file,
-          startSeconds: 0,
-          fit: "contain",
-          authorized: true,
-          provenance: harvested.media.proofVideo.provenance
-        }
-      },
+      step1Hero,
       step2Result.step,
       step3Result.step,
-      step4Proof,
-      step5Result.step
+      step4Result.step,
+      step5Result.step,
+      step6Result.step,
+      step7Result.step,
+      step8Result.step,
+      step9Proof,
+      step10Result.step,
+      step11Result.step,
+      step12Result.step
     ]
   };
 

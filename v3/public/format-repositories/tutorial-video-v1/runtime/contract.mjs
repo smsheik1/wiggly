@@ -3,7 +3,10 @@ import { existsSync, lstatSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 export const VIDEO = Object.freeze({ width: 1920, height: 1080, fps: 30 });
-export const ALLOWED_STEP_KINDS = Object.freeze(["hero", "browser", "terminal", "media", "final", "end"]);
+export const ALLOWED_STEP_KINDS = Object.freeze([
+  "hero", "browser", "terminal", "media", "final", "end",
+  "social-proof", "package-breakdown", "replacement-value", "scorecard", "checklist", "workflow"
+]);
 export const ALLOWED_BACKGROUNDS = Object.freeze(["lime", "blue", "cream"]);
 
 const assert = (condition, message) => {
@@ -125,7 +128,9 @@ export function validateTutorialInput(input, { mediaRoot }) {
       }
       media = { ...media, startSeconds, fit };
     }
-    if (!["end"].includes(rawStep.kind)) assert(media, `${id}.media is required for ${rawStep.kind} sections.`);
+    if (!["end", "package-breakdown", "replacement-value", "scorecard", "checklist", "workflow"].includes(rawStep.kind)) {
+      assert(media, `${id}.media is required for ${rawStep.kind} sections.`);
+    }
 
     let narration = null;
     if (rawStep.narration) {

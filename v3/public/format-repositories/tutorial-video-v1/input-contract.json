@@ -15,7 +15,7 @@
       "maxItems": 14,
       "items": {
         "required": ["id", "kind", "number", "label", "background", "durationSeconds"],
-        "kind": ["hero", "browser", "terminal", "media", "final", "end"],
+        "kind": ["hero", "browser", "terminal", "media", "final", "end", "social-proof", "package-breakdown", "replacement-value", "scorecard", "checklist", "workflow"],
         "background": ["lime", "blue", "cream"],
         "media": "Authorized image or video under media/, with provenance and optional startSeconds/fit.",
         "narration": "Authorized local audio under media/, with provenance and startSeconds.",
