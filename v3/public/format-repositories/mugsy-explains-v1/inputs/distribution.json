@@ -1,0 +1,28 @@
+{
+  "media": "goldens/wiggly-format-explainer.mp4",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "target": "shorts",
+      "title": "Mugsy Explains: Wiggly Formats vs Traditional AI",
+      "description": "Mugsy breaks down the real differences between Wiggly Format Repos and generic AI wrappers in three snappy comparisons. #Shorts #Wiggly #AI #Coding",
+      "categoryId": "27",
+      "privacy": "public",
+      "tags": ["wiggly", "ai", "coding", "format", "explainer", "shorts"]
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "Mugsy Explains: Why standard AI video prompts fail while executable Format Repos deliver reproducible results every time.\n\n3 quick comparisons. 25 seconds.\n\n#AI #Coding #TechExplainers"
+    },
+    "instagram": {
+      "enabled": true,
+      "target": "reels",
+      "caption": "Mugsy Explains: Wiggly Formats vs Traditional AI ☕️\n\nThree quick comparisons explaining why deterministic pipelines beat unpredictable prompt-and-pray generators every single time.\n\n#mugsy #explainervideo #ai #coding #buildinpublic #tech #reels",
+      "shareToFeed": true
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "Mugsy breaks down why executable format repos change everything for AI video ☕️ #mugsyclips #ai #coding #tech #explainer #fyp"
+    }
+  }
+}

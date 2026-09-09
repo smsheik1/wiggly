@@ -29,6 +29,9 @@ for (const folder of ["features/audio", "features/formats", "features/llm", "fea
 for (const file of ["scripts/lego-music-video-format.ts", "tests/lego-music-video-contract.test.ts", "tests/lego-music-video-runtime.test.ts"]) add(`v3/${file}`, await readFile(path.join(v3, file)));
 for (const file of ["README.md", "SKILL.md", "format.json", "requirements.json", "inputs.json", "scene-contract.json", "pipeline.json", "assets.json", "quality.json", "goldens.json"]) add(`v3/${relative}/${file}`, await readFile(path.join(repo, file)));
 await copy(`${relative}/goldens`);
+await copy(`${relative}/inputs`);
+await copy(`${relative}/runtime`);
+await copy(`${relative}/tests`);
 add("v3/package.json", await readFile(path.join(repo, "kit.package.json")));
 add("v3/tsconfig.json", await readFile(path.join(repo, "kit.tsconfig.json")));
 add(".gitignore", "node_modules/\nsecrets.env\nv3/public/format-repositories/lego-music-video-v1/agent-runs/\n");

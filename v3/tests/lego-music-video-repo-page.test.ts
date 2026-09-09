@@ -16,8 +16,7 @@ assert.deepEqual(discoveryShelfDefinitions.find(s => s.id === "lego-music-videos
 assert.deepEqual(discoveryShelfDefinitions.find(s => s.id === "brand-jingles")!.formats, ["jingle"]);
 const presentation = await getFormatRepoPagePresentation(profile.slug);
 assert.equal(presentation.kind, "shared");
-if (presentation.kind !== "shared") throw new Error("Use the rich shared page.");
-assert.deepEqual(presentation.package!.services.map(s => s.name), ["ElevenLabs", "Replicate"]);
+assert.deepEqual(presentation.package!.services.map(s => s.name), ["ElevenLabs", "Replicate", "Social Publisher (Buffer MCP or API)"]);
 assert.ok(presentation.package!.assets.length >= 3);
 assert.ok(presentation.package!.workflow.length >= 8);
 assert.match(profile.handoff!.totalEstimate, /supplied media/);

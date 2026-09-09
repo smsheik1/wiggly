@@ -18,8 +18,10 @@ assert.deepEqual(discoveryShelfDefinitions.find((shelf) => shelf.id === "tutoria
 const presentation = await getFormatRepoPagePresentation("tutorial-video");
 assert.equal(presentation.kind, "shared");
 if (presentation.kind !== "shared") throw new Error("Tutorial Video uses the shared Repo presentation.");
-assert.ok(presentation.package);
-assert.equal(presentation.package.services.length, 0, "Tutorial runtime has no provider services.");
+assert.deepEqual(
+  presentation.package.services.map((s) => s.name),
+  ["Social Publisher (Buffer MCP or API)"],
+);
 assert.ok(presentation.package.optionalTools.includes("yt-dlp"));
 assert.ok(presentation.package.optionalTools.includes("whisper.cpp"));
 assert.ok(presentation.package.workflow.length >= 4);

@@ -22,5 +22,25 @@ Ask only one question at a time. If the user asks for the included Wiggly exampl
 10. Ask the user to confirm voice identity, pronunciation, and creative fit.
 11. Run `python3 runner.py finalize --human-review pass` only after approval.
 12. Return the final playable MP4.
+13. (Optional) Run `node runtime/publish.mjs --dry-run inputs/distribution.json goldens/wiggly-format-explainer.mp4` to validate social distribution.
 
 Stop loudly on missing tools, keys, invalid content, failed inspection, or an unapproved voice. Do not switch providers. Do not make image- or video-generation calls.
+
+## Multi-Platform Social Distribution (Optional)
+
+When a Mugsy Explains video is rendered and approved, the agent can distribute it across YouTube Shorts, Instagram Reels, TikTok, and X via the packaged `runtime/publish.mjs` CLI or connected Buffer MCP tools:
+
+1. **Author platform-tailored copy in `inputs/distribution.json`:**
+   - **YouTube Shorts:** Fast, high-intrigue explainer title (≤100 chars), categoryId (`27` for Education or `28` for Tech), strictly vertical (9:16, ≤60s).
+   - **Twitter/X:** Engaging educational hook with core takeaway (≤280 chars total).
+   - **Instagram Reels:** Snappy caption with relevant hashtags (vertical 9:16).
+   - **TikTok:** Punchy curiosity hook with trending tags (≤2200 chars).
+2. **Dry-run validation:**
+   ```sh
+   node runtime/publish.mjs --dry-run inputs/distribution.json goldens/wiggly-format-explainer.mp4
+   ```
+3. **Live dispatch requires explicit human sign-off:**
+   - Confirm target channels and copy with the user (`approvalRequired: true`).
+   - Execute with connected Buffer MCP tools or `node runtime/publish.mjs inputs/distribution.json /path/to/final.mp4`.
+   - Generates a verified distribution receipt (`<video>.distribution.json`) with zero secret leakage.
+

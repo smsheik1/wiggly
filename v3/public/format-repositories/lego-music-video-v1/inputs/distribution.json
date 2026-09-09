@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "goldens/cookies/input.json",
+  "media": "goldens/cookies/final.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "David's Cookies Lego Music Video 🍪🧱 #Shorts",
+      "description": "An original 20-second Lego animated music video in a miniature world with moving cinematic shots and lyric captions.\n\n#Shorts #Lego #StopMotion #Animation #MusicVideo #Cookies",
+      "categoryId": "10",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "When the craving hits in the Lego world 🍪🧱 An original miniature music video.\n.\n.\n#lego #musicvideo #animation #stopmotion #reels #creative"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "Lego music video for fresh-baked cookies goes unreasonably hard 🍪🧱🎵 #Lego #Animation"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "Lego minifigures singing about cookies is my new favorite genre 🍪🎵 #lego #animation #musicvideo #fyp #stopmotion",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}
