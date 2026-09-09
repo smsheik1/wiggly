@@ -8,6 +8,13 @@
       "model": "s2.1-pro-free",
       "estimatedCost": "$0 on the free developer model",
       "approval": "Ask before generating a new narration"
+    },
+    {
+      "name": "Social Publisher (Buffer MCP or API)",
+      "purpose": "Simultaneous multi-platform publishing to YouTube Shorts, Instagram Reels, TikTok, and X.",
+      "optional": true,
+      "environmentVariables": ["BUFFER_API_KEY"],
+      "pricingSource": "https://buffer.com/pricing"
     }
   ],
   "paidImageOrVideoProviders": []

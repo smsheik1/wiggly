@@ -9,6 +9,56 @@
     "render",
     "inspect",
     "human-review",
+    "distribute",
     "finalize"
+  ],
+  "stages": [
+    {
+      "id": "choose-topic",
+      "output": "Select one A-versus-B topic with three clear comparison lessons"
+    },
+    {
+      "id": "write-three-comparisons",
+      "output": "Fifteen snappy sentences with tight spoken phrasing"
+    },
+    {
+      "id": "collect-six-proof-images",
+      "output": "Six curated proof screenshots or diagrams"
+    },
+    {
+      "id": "smoke",
+      "output": "Deterministic local smoke test"
+    },
+    {
+      "id": "validate",
+      "output": "Verify timing, character poses, and handwritten captions"
+    },
+    {
+      "id": "approve-voice",
+      "approvalRequired": true,
+      "output": "Confirm narrator voice model and audio direction"
+    },
+    {
+      "id": "render",
+      "output": "Local deterministic assembly of 9:16 vertical MP4"
+    },
+    {
+      "id": "inspect",
+      "output": "Inspect video stream, audio intelligibility, and contact sheet"
+    },
+    {
+      "id": "human-review",
+      "approvalRequired": true,
+      "output": "Explicit human sign-off on the rendered vertical video"
+    },
+    {
+      "id": "distribute",
+      "approvalRequired": true,
+      "output": "Simultaneous multi-platform publishing receipt (YouTube Shorts, Instagram Reels, TikTok, X) with zero secret leakage"
+    },
+    {
+      "id": "finalize",
+      "output": "Final packaging and receipt generation"
+    }
   ]
 }
