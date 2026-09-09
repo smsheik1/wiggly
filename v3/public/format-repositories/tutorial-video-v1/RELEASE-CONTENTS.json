@@ -219,6 +219,21 @@
       "sizeBytes": 934154
     },
     {
+      "file": "media/mugsy-explains/final-result.mp4",
+      "sha256": "2e978f8873a5ef32a30d1378fd3e9ccaeade9d39a3bb3d91d9a850725f4eebf2",
+      "sizeBytes": 1436612
+    },
+    {
+      "file": "media/mugsy-explains/format-page.png",
+      "sha256": "3ff351b7ef369a7b5683e343e6f8479be7994f341412ec49efc5a8100930d4be",
+      "sizeBytes": 114791
+    },
+    {
+      "file": "media/mugsy-explains/runtime-receipt.png",
+      "sha256": "00210c66706de20bbcaf6717a926d70649a9b23d43e7404e2103537ae0a48f9c",
+      "sizeBytes": 154984
+    },
+    {
       "file": "media/smoke/browser-narration.wav",
       "sha256": "14542df96292023a58c5a4b039cb3a30d92c30605051908ce87062424ab6788c",
       "sizeBytes": 230478
@@ -255,8 +270,8 @@
     },
     {
       "file": "package.json",
-      "sha256": "d02c16378bc3d300d5208479fb9bb9cab684dc6972fcfb934ba80f8b02365392",
-      "sizeBytes": 460
+      "sha256": "2b7e4434c76ecc26e2b119f091180d327194060e7ee5e1c613fe5c14484ac72d",
+      "sizeBytes": 503
     },
     {
       "file": "pipeline.json",
@@ -299,6 +314,11 @@
       "sizeBytes": 12444
     },
     {
+      "file": "runtime/harvest.mjs",
+      "sha256": "d17550a4f9d762a9979aa582af3c4505c16978f4d606cd891f5757cf75fd319a",
+      "sizeBytes": 15454
+    },
+    {
       "file": "runtime/index.jsx",
       "sha256": "9c10aeb19a9e36ed5b361bda6562fbf96a2b95165bab1c75bd70c3834dcb5695",
       "sizeBytes": 113
@@ -320,8 +340,8 @@
     },
     {
       "file": "scripts/verify.mjs",
-      "sha256": "e2cd60a96f39c05166efa2934683a26cc291dae324c7f023c74afb0f147ed16b",
-      "sizeBytes": 5036
+      "sha256": "bf925facb3aa58302a8909b1433307b24b0f3020553b5361c131fa972952a2df",
+      "sizeBytes": 5162
     },
     {
       "file": "tests/critique.test.mjs",
@@ -332,6 +352,11 @@
       "file": "tests/distribution.test.mjs",
       "sha256": "5e605fcf532258776c0dfd86e8a9fc401a6156d9881db6045906717105cfe0a9",
       "sizeBytes": 4208
+    },
+    {
+      "file": "tests/harvest.test.mjs",
+      "sha256": "dcf00c36db848c4e34263a01e1955638c2f510958bcd2dc630a9c7e4b27766c0",
+      "sizeBytes": 2259
     }
   ]
 }

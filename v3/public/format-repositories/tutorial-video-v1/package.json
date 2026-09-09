@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node scripts/verify.mjs",
     "critique": "node runtime/critique.mjs",
+    "harvest": "node runtime/harvest.mjs",
     "smoke": "node runner.mjs smoke",
     "build": "node build-kit.mjs"
   },
