@@ -13,7 +13,7 @@
   "audio": {
     "tutorialNarration": "Supplied per narrated step and captioned with timed phrases.",
     "nativeResult": "Preserved in hero/final steps and never covered by tutorial narration.",
-    "music": "Optional supplied bed at <=0.2 gain; muted during native-result playback."
+    "music": "Optional supplied bed at <=0.35 gain; muted during native-result playback."
   },
   "editorial": {"proofFirst": true, "showRealBrowserAndAgent": true, "plainLanguage": true, "oneSharedCompositor": true, "noPreRenderedMaster": true}
 }

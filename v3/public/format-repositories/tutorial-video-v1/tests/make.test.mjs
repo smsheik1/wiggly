@@ -25,6 +25,9 @@ test('runner.mjs make executes cleanly with --dry-run for mugsy-explains', () =>
     assert.equal(recipe.format.slug, 'mugsy-explains');
     assert.equal(recipe.steps[0].kind, 'hero');
     assert.equal(recipe.steps[0].nativeAudio, true);
+    assert.ok(recipe.music, 'Must configure default background music');
+    assert.equal(recipe.music.file, 'fixed/cancun-sega-genesis.mp3');
+    assert.equal(recipe.music.volume, 0.20);
   } finally {
     if (existsSync(testRecipe)) {
       try { unlinkSync(testRecipe); } catch {}

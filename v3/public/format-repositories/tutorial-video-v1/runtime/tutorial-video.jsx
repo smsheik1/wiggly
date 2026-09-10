@@ -190,12 +190,22 @@ function Hero({ step, format }) {
   return (
     <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
       <GridBackground variant={step.background} />
-      <div style={{ position: "absolute", left: 120, top: 238, width: 900, opacity: enter, transform: `translateY(${interpolate(enter, [0, 1], [28, 0])}px)` }}>
-        <div style={{ fontSize: 20, fontWeight: 950, letterSpacing: ".16em", color: COLORS.lime }}>SEE THE RESULT FIRST</div>
-        <div style={{ marginTop: 20, fontSize: 82, lineHeight: .98, fontWeight: 900, letterSpacing: "-.055em" }}>{format.name}</div>
-        <div style={{ marginTop: 30, maxWidth: 820, fontSize: 37, lineHeight: 1.18, fontWeight: 650, color: "#dce5de", letterSpacing: "-.025em" }}>{format.promise}</div>
-      </div>
-      <div style={{ position: "absolute", right: 160, top: 95, width: 500, height: 890, overflow: "hidden", borderRadius: 28, border: "2px solid rgba(255,255,255,.35)", background: "#000", boxShadow: "0 34px 110px rgba(0,0,0,.62)", opacity: enter }}>
+      <div
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "52%",
+          transform: `translate(-50%, -50%) scale(${interpolate(enter, [0, 1], [0.94, 1])})`,
+          width: 480,
+          height: 854,
+          overflow: "hidden",
+          borderRadius: 28,
+          border: `3px solid ${COLORS.lime}`,
+          background: "#000",
+          boxShadow: "0 34px 110px rgba(0,0,0,.7), 0 0 50px rgba(196,255,57,.25)",
+          opacity: enter,
+        }}
+      >
         <Media step={step} framed={false} />
       </div>
       <StepBadge number={step.number} label={step.label} />
@@ -219,11 +229,331 @@ function EndCard({ step, format }) {
   );
 }
 
-function FinalResult({ step, format }) {
+function SocialProof({ step, format }) {
+  const frame = useCurrentFrame();
+  const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
   return (
-    <AbsoluteFill style={{ background: "#000", color: COLORS.white, fontFamily: FONT }}>
-      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}><Media step={step} framed={false} /></div>
-      <div style={{ position: "absolute", left: 50, top: 42, padding: "10px 16px", borderRadius: 999, background: "rgba(8,11,9,.9)", color: COLORS.lime, fontSize: 17, fontWeight: 900, letterSpacing: ".08em" }}>{format.outputLabel.toUpperCase()}</div>
+    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
+      <GridBackground variant={step.background || "lime"} />
+      <StepBadge number={step.number} label={step.label} />
+      
+      <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
+        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>WHAT WIGGLY DOES</div>
+        <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
+          A ready-made video format your coding agent can run.
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, top: 215, height: 690, display: "grid", gridTemplateColumns: "1fr 90px 1fr", alignItems: "center", gap: 24, opacity: enter }}>
+        <div style={{ height: "100%", background: "#fff", borderRadius: 24, overflow: "hidden", border: "2px solid rgba(255,255,255,.25)", boxShadow: "0 24px 70px rgba(0,0,0,.5)", position: "relative" }}>
+          <div style={{ position: "absolute", left: 24, top: 18, zIndex: 10, display: "flex", alignItems: "center", gap: 10, background: "rgba(0,0,0,.85)", padding: "6px 14px", borderRadius: 999, color: "#fff", fontSize: 14, fontWeight: 800 }}>
+            <span>@mugsyclips — ORIGINAL</span>
+          </div>
+          <Img src={staticFile(step.media?.file || "mugsy-explains/mugsyclips-profile.png")} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }} />
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "16px 20px", background: "linear-gradient(to top, rgba(0,0,0,.92), transparent)", color: "#fff" }}>
+            <div style={{ fontSize: 18, fontWeight: 850 }}>Mugsy Explains Viral Concept</div>
+            <div style={{ fontSize: 14, color: "#cbd5e1", marginTop: 2 }}>35.1K Followers • Millions of Views on A-vs-B Comparisons</div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 32, background: COLORS.lime, color: COLORS.ink, display: "grid", placeItems: "center", fontSize: 28, fontWeight: 950, boxShadow: "0 0 30px rgba(196,255,57,.5)" }}>
+            →
+          </div>
+          <div style={{ fontSize: 12, fontWeight: 900, color: COLORS.lime, letterSpacing: ".1em", textAlign: "center" }}>SAME FORMULA</div>
+        </div>
+
+        <div style={{ height: "100%", background: "#111513", borderRadius: 24, overflow: "hidden", border: `2px solid ${COLORS.lime}`, boxShadow: "0 24px 70px rgba(0,0,0,.6)", position: "relative", display: "grid", placeItems: "center" }}>
+          <div style={{ position: "absolute", left: 24, top: 18, zIndex: 10, display: "flex", alignItems: "center", gap: 10, background: COLORS.lime, padding: "6px 14px", borderRadius: 999, color: COLORS.ink, fontSize: 14, fontWeight: 900 }}>
+            <span>WIGGLY — MUGSY EXPLAINS</span>
+          </div>
+          <div style={{ width: 330, height: 586, borderRadius: 20, overflow: "hidden", border: "2px solid rgba(255,255,255,.2)" }}>
+            <OffthreadVideo src={staticFile("mugsy-explains/final-result.mp4")} startFrom={0} muted={true} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "16px 20px", background: "linear-gradient(to top, rgba(0,0,0,.92), transparent)", color: "#fff" }}>
+            <div style={{ fontSize: 18, fontWeight: 850 }}>100% Deterministic Code</div>
+            <div style={{ fontSize: 14, color: COLORS.lime, marginTop: 2 }}>Packaged poses + handwriting + audio sync</div>
+          </div>
+        </div>
+      </div>
+
+      {step.captions.length ? <Caption cues={step.captions} /> : null}
+    </AbsoluteFill>
+  );
+}
+
+function PackageBreakdown({ step, format }) {
+  const frame = useCurrentFrame();
+  const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
+  const poses = [
+    { name: "COFFEE EXPLAIN", file: "mugsy-explains/poses/coffee-explain.png", label: "Pose 1: Intro / Hook" },
+    { name: "POINT LEFT", file: "mugsy-explains/poses/point-left.png", label: "Pose 2: Contrast A" },
+    { name: "POINT RIGHT", file: "mugsy-explains/poses/point-right.png", label: "Pose 3: Contrast B" },
+    { name: "QUESTION", file: "mugsy-explains/poses/question.png", label: "Pose 4: Lesson Reveal" },
+    { name: "RAISE HAND", file: "mugsy-explains/poses/raise-hand.png", label: "Pose 5: Conclusion" },
+  ];
+  return (
+    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
+      <GridBackground variant={step.background || "lime"} />
+      <StepBadge number={step.number} label={step.label} />
+      
+      <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
+        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>COMPLETE WIGGLY PACKAGE</div>
+        <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
+          Characters, poses, and handwriting — included.
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", right: 84, top: 130, opacity: enter, background: COLORS.lime, color: COLORS.ink, padding: "8px 18px", borderRadius: 999, fontWeight: 950, fontSize: 14, letterSpacing: ".06em", display: "flex", alignItems: "center", gap: 8 }}>
+        <span>✔ NO IMAGE GENERATOR REQUIRED</span>
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, top: 220, display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, opacity: enter }}>
+        {poses.map((p) => (
+          <div key={p.name} style={{ background: "#fff", borderRadius: 20, padding: "16px 12px", border: "2px solid rgba(255,255,255,.3)", boxShadow: "0 18px 50px rgba(0,0,0,.4)", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ height: 350, width: "100%", display: "grid", placeItems: "center" }}>
+              <Img src={staticFile(p.file)} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
+            </div>
+            <div style={{ marginTop: 14, fontSize: 15, fontWeight: 900, color: COLORS.ink }}>{p.name}</div>
+            <div style={{ marginTop: 2, fontSize: 12, fontWeight: 600, color: "#64748b" }}>{p.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, bottom: 125, background: "rgba(8,11,9,.9)", border: "2px solid rgba(196,255,57,.4)", borderRadius: 16, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: enter }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.lime }}>5 Expressive Poses • Virgil Handwritten Font • Dual-Panel Dynamic Layout</div>
+        <div style={{ fontSize: 15, fontWeight: 900, background: COLORS.lime, color: COLORS.ink, padding: "6px 14px", borderRadius: 999 }}>$0 GENERATION FEES</div>
+      </div>
+
+      {step.captions.length ? <Caption cues={step.captions} /> : null}
+    </AbsoluteFill>
+  );
+}
+
+function ReplacementValue({ step, format }) {
+  const frame = useCurrentFrame();
+  const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
+  const cards = [
+    { title: "IMAGE MODEL", status: "NOT NEEDED", desc: "Line art and poses are bundled as local SVG/PNG" },
+    { title: "VIDEO MODEL", status: "NOT NEEDED", desc: "Remotion compositor handles timing and animation" },
+    { title: "DEDICATED GPU", status: "NOT NEEDED", desc: "Runs locally on any Mac Mini M4 or standard CPU" }
+  ];
+  return (
+    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
+      <GridBackground variant={step.background || "lime"} />
+      <StepBadge number={step.number} label={step.label} />
+      
+      <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
+        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>THE FORMAT RUNS LOCALLY</div>
+        <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
+          No generation credits.
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, top: 230, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, opacity: enter }}>
+        {cards.map((c) => (
+          <div key={c.title} style={{ background: "#fff", color: COLORS.ink, borderRadius: 24, padding: "36px 30px", border: "2px solid rgba(255,255,255,.4)", boxShadow: "0 20px 60px rgba(0,0,0,.45)" }}>
+            <div style={{ width: 48, height: 48, borderRadius: 24, background: COLORS.lime, color: COLORS.ink, display: "grid", placeItems: "center", fontSize: 24, fontWeight: 950 }}>✔</div>
+            <div style={{ marginTop: 24, fontSize: 26, fontWeight: 950, letterSpacing: "-.02em" }}>{c.title}</div>
+            <div style={{ marginTop: 4, fontSize: 16, fontWeight: 800, color: "#15803d", letterSpacing: ".06em" }}>{c.status}</div>
+            <div style={{ marginTop: 14, fontSize: 17, color: "#475569", lineHeight: 1.45 }}>{c.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, bottom: 125, background: COLORS.lime, color: COLORS.ink, borderRadius: 16, padding: "20px 28px", border: `3px solid ${COLORS.ink}`, boxShadow: `8px 8px 0 ${COLORS.ink}`, display: "flex", justifyContent: "space-between", alignItems: "center", opacity: enter }}>
+        <div style={{ fontSize: 24, fontWeight: 900 }}>Characters, poses, typography, and renderer are already packaged.</div>
+        <div style={{ fontSize: 32, fontWeight: 950 }}>$0</div>
+      </div>
+
+      {step.captions.length ? <Caption cues={step.captions} /> : null}
+    </AbsoluteFill>
+  );
+}
+
+function Scorecard({ step, format }) {
+  const frame = useCurrentFrame();
+  const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
+  const items = [
+    { name: "VIDEO", status: "PASSED", sub: "1920x1080 30fps" },
+    { name: "AUDIO", status: "PASSED", sub: "Clean 48kHz stereo" },
+    { name: "CHARACTER POSES", status: "PASSED", sub: "Exact lesson alignment" },
+    { name: "FINAL MP4", status: "PASSED", sub: "Verified 0 providers" }
+  ];
+  return (
+    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
+      <GridBackground variant={step.background || "lime"} />
+      <StepBadge number={step.number} label={step.label} />
+      
+      <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
+        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>ONE FINAL SCORE</div>
+        <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
+          Everything gets checked.
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", right: 84, top: 120, fontSize: 64, fontWeight: 950, color: COLORS.lime, opacity: enter }}>
+        13/13
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, top: 230, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, opacity: enter }}>
+        {items.map((it) => (
+          <div key={it.name} style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "32px 24px", border: "2px solid rgba(255,255,255,.4)", boxShadow: "0 20px 60px rgba(0,0,0,.45)" }}>
+            <div style={{ width: 44, height: 44, borderRadius: 22, background: COLORS.lime, color: COLORS.ink, display: "grid", placeItems: "center", fontSize: 22, fontWeight: 950 }}>✔</div>
+            <div style={{ marginTop: 20, fontSize: 22, fontWeight: 950 }}>{it.name}</div>
+            <div style={{ marginTop: 4, fontSize: 15, fontWeight: 800, color: "#15803d" }}>{it.status}</div>
+            <div style={{ marginTop: 10, fontSize: 15, color: "#64748b" }}>{it.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, bottom: 125, background: COLORS.lime, color: COLORS.ink, borderRadius: 16, padding: "20px 28px", border: `3px solid ${COLORS.ink}`, boxShadow: `8px 8px 0 ${COLORS.ink}`, display: "flex", justifyContent: "space-between", alignItems: "center", opacity: enter }}>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>Review once. Approve the finished file.</div>
+        <div style={{ fontSize: 16, fontWeight: 950, background: COLORS.ink, color: COLORS.lime, padding: "8px 18px", borderRadius: 999 }}>{format.outputLabel.toUpperCase()} • READY</div>
+      </div>
+
+      {step.captions.length ? <Caption cues={step.captions} /> : null}
+    </AbsoluteFill>
+  );
+}
+
+function BeginnerChecklist({ step, format }) {
+  const frame = useCurrentFrame();
+  const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
+  const agents = ["ANTIGRAVITY", "CODEX", "CLAUDE CODE", "CURSOR"];
+  return (
+    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
+      <GridBackground variant={step.background || "lime"} />
+      <StepBadge number={step.number} label={step.label} />
+      
+      <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
+        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>BEGINNER CHECKLIST</div>
+        <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
+          Pick a topic, three lessons, and a coding agent.
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, top: 225, height: 490, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, opacity: enter }}>
+        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: "2px solid rgba(255,255,255,.4)", display: "flex", flexDirection: "column" }}>
+          <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>1 • PICK A TOPIC</div>
+          <div style={{ marginTop: 14, fontSize: 24, fontWeight: 900 }}>Prompt vs Format</div>
+          <div style={{ marginTop: 8, fontSize: 15, color: "#475569", lineHeight: 1.4 }}>Start with any creative or technical concept with 3 A-vs-B differences.</div>
+          <div style={{ marginTop: "auto", padding: "12px 16px", background: "#f1f5f9", borderRadius: 12, fontSize: 14, fontWeight: 700, color: COLORS.ink }}>e.g. CGI vs VFX, Rules vs Luck</div>
+        </div>
+
+        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: "2px solid rgba(255,255,255,.4)", display: "flex", flexDirection: "column" }}>
+          <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>2 • CHOOSE 3 LESSONS</div>
+          <div style={{ marginTop: 14, fontSize: 20, fontWeight: 900, display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>1. Rules vs Prompts</div>
+            <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>2. Examples vs Luck</div>
+            <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>3. Tests vs Hope</div>
+          </div>
+        </div>
+
+        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: "2px solid rgba(255,255,255,.4)", display: "flex", flexDirection: "column" }}>
+          <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>3 • USE A CODING AGENT</div>
+          <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {agents.map((ag) => (
+              <div key={ag} style={{ background: "#0f172a", color: "#fff", borderRadius: 12, padding: "16px 10px", textAlign: "center", fontSize: 13, fontWeight: 800 }}>
+                🤖 {ag}
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: "auto", fontSize: 14, color: "#64748b", textAlign: "center" }}>Terminal & media access</div>
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, bottom: 125, background: COLORS.lime, color: COLORS.ink, borderRadius: 16, padding: "18px 26px", border: `3px solid ${COLORS.ink}`, display: "flex", justifyContent: "space-between", alignItems: "center", opacity: enter }}>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>Start with a topic you want to teach, and your coding agent handles the rest.</div>
+        <div style={{ fontSize: 16, fontWeight: 950, background: COLORS.ink, color: COLORS.lime, padding: "6px 16px", borderRadius: 999 }}>READY TO RUN</div>
+      </div>
+
+      {step.captions.length ? <Caption cues={step.captions} /> : null}
+    </AbsoluteFill>
+  );
+}
+
+function WorkflowReplacement({ step, format }) {
+  const frame = useCurrentFrame();
+  const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
+  return (
+    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
+      <GridBackground variant={step.background || "lime"} />
+      <StepBadge number={step.number} label={step.label} />
+      
+      <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
+        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>THE WHOLE WORKFLOW</div>
+        <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
+          One package replaces three separate tools.
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, top: 240, height: 460, display: "grid", gridTemplateColumns: "1fr 90px 1.4fr", alignItems: "center", gap: 20, opacity: enter }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          {["ILLUSTRATION / DRAWING TOOL", "VOICE MODEL SUBSCRIPTION", "TIMELINE VIDEO EDITOR"].map((tool) => (
+            <div key={tool} style={{ background: "#fff", color: COLORS.ink, borderRadius: 16, padding: "22px 28px", fontSize: 19, fontWeight: 900, boxShadow: "0 10px 30px rgba(0,0,0,.3)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span>{tool}</span>
+              <span style={{ color: "#ef4444", fontWeight: 950 }}>✕</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: "grid", placeItems: "center" }}>
+          <div style={{ width: 64, height: 64, borderRadius: 32, background: COLORS.lime, color: COLORS.ink, display: "grid", placeItems: "center", fontSize: 32, fontWeight: 950, boxShadow: "0 0 30px rgba(196,255,57,.5)" }}>
+            →
+          </div>
+        </div>
+
+        <div style={{ background: COLORS.lime, color: COLORS.ink, borderRadius: 24, padding: "44px 40px", border: `3px solid ${COLORS.ink}`, boxShadow: `10px 10px 0 ${COLORS.ink}, 0 0 50px rgba(196,255,57,.3)`, display: "flex", flexDirection: "column", justifyContent: "center", height: "100%", boxSizing: "border-box" }}>
+          <div style={{ fontSize: 15, fontWeight: 950, letterSpacing: ".12em" }}>AUTONOMOUS CODING AGENT PACKAGE</div>
+          <div style={{ marginTop: 10, fontSize: 44, fontWeight: 950, letterSpacing: "-.04em", lineHeight: 1.05 }}>WIGGLY</div>
+          <div style={{ marginTop: 6, fontSize: 24, fontWeight: 800 }}>Complete {format.name} Package</div>
+          <div style={{ marginTop: 22, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {["Packaged Poses", "Handwriting Engine", "0 Provider Fees", "Local Render"].map((tag) => (
+              <span key={tag} style={{ background: COLORS.ink, color: COLORS.lime, padding: "8px 16px", borderRadius: 999, fontSize: 14, fontWeight: 900 }}>✔ {tag}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, bottom: 125, background: "rgba(8,11,9,.95)", border: "2px solid rgba(255,255,255,.2)", borderRadius: 16, padding: "18px 26px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: enter }}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>To try your own format, copy the prompt on Wiggly below.</div>
+        <div style={{ fontSize: 16, fontWeight: 950, background: COLORS.lime, color: COLORS.ink, padding: "8px 20px", borderRadius: 999 }}>{format.url}</div>
+      </div>
+
+      {step.captions.length ? <Caption cues={step.captions} /> : null}
+    </AbsoluteFill>
+  );
+}
+
+function FinalResult({ step, format }) {
+  const frame = useCurrentFrame();
+  const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
+  return (
+    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
+      <GridBackground variant={step.background || "lime"} />
+      <StepBadge number={step.number} label={step.label} />
+      
+      <div style={{
+        position: "absolute",
+        left: "50%",
+        top: "52%",
+        transform: `translate(-50%, -50%) scale(${interpolate(enter, [0, 1], [0.95, 1])})`,
+        width: 480,
+        height: 854,
+        borderRadius: 28,
+        overflow: "hidden",
+        border: `3px solid ${COLORS.lime}`,
+        boxShadow: "0 30px 100px rgba(0,0,0,.7), 0 0 50px rgba(196,255,57,.25)",
+        background: "#000",
+        opacity: enter,
+      }}>
+        <Media step={step} framed={false} />
+      </div>
+
+      <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", top: 46, padding: "10px 22px", borderRadius: 999, background: "rgba(8,11,9,.94)", border: "1px solid rgba(255,255,255,.2)", color: COLORS.lime, fontSize: 16, fontWeight: 950, letterSpacing: ".08em", display: "flex", alignItems: "center", gap: 10, zIndex: 30 }}>
+        <span>🎬 {format.outputLabel.toUpperCase()} — GENERATED IN 1 CLICK</span>
+      </div>
     </AbsoluteFill>
   );
 }
@@ -245,6 +575,12 @@ function StandardStep({ step }) {
 
 function StepVisual({ step, format }) {
   if (step.kind === "hero") return <Hero step={step} format={format} />;
+  if (step.kind === "social-proof") return <SocialProof step={step} format={format} />;
+  if (step.kind === "package-breakdown") return <PackageBreakdown step={step} format={format} />;
+  if (step.kind === "replacement-value") return <ReplacementValue step={step} format={format} />;
+  if (step.kind === "scorecard") return <Scorecard step={step} format={format} />;
+  if (step.kind === "checklist") return <BeginnerChecklist step={step} format={format} />;
+  if (step.kind === "workflow") return <WorkflowReplacement step={step} format={format} />;
   if (step.kind === "final") return <FinalResult step={step} format={format} />;
   if (step.kind === "end") return <EndCard step={step} format={format} />;
   return <StandardStep step={step} />;

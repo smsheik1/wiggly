@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "input": "outputs/mugsy-explains-tutorial.mp4",
-  "inputSha256": "3cb42d3a935e5e70eccec748940e9ad45b996b38ee1dabcb260a3894bb740769",
+  "inputSha256": "317b9b6b2cbadeb3bc9187ea29a6061095885ab5f874ddb6ee7ea3e1304493c0",
   "passed": true,
   "checks": {
     "h264": true,
@@ -12,7 +12,7 @@
     "duration": true
   },
   "metadata": {
-    "durationSeconds": 52.48,
+    "durationSeconds": 95.594667,
     "video": {
       "codec_name": "h264",
       "codec_type": "video",
@@ -36,10 +36,17 @@
     "mode": "ingredient-step-midpoints",
     "stepIds": [
       "proof-first",
+      "social-proof",
       "choose-format",
       "run-agent",
+      "review-lessons",
+      "package-breakdown",
+      "replacement-value",
+      "approve-render",
       "finished-output",
-      "next-step"
+      "scorecard",
+      "checklist",
+      "workflow"
     ]
   },
   "creativeReview": "required before finalize"

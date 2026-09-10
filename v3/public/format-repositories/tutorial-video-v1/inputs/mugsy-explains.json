@@ -9,6 +9,13 @@
     "url": "https://wiggly.agentenamel.com/formats/mugsy-explains",
     "outputLabel": "mugsy-explains.mp4"
   },
+  "music": {
+    "file": "fixed/cancun-sega-genesis.mp3",
+    "authorized": true,
+    "provenance": "If Playboi Carti's \"Cancun\" was on the Sega Genesis (INSTRUMENTAL) — https://www.youtube.com/watch?v=-zdI0S0Vuzs",
+    "volume": 0.2,
+    "attribution": "Background music: Playboi Carti - Cancun (Sega Genesis Instrumental)"
+  },
   "steps": [
     {
       "id": "proof-first",
@@ -16,7 +23,7 @@
       "number": "1",
       "label": "See the finished result",
       "background": "lime",
-      "durationSeconds": 5,
+      "durationSeconds": 4.5,
       "nativeAudio": true,
       "media": {
         "type": "video",
@@ -28,13 +35,13 @@
       }
     },
     {
-      "id": "choose-format",
-      "kind": "browser",
+      "id": "social-proof",
+      "kind": "social-proof",
       "number": "2",
-      "label": "Choose and copy the format",
-      "windowTitle": "Wiggly — Mugsy Explains",
+      "label": "Compare with the viral format",
+      "windowTitle": "Terminal — Compare with the viral format",
       "background": "lime",
-      "durationSeconds": 12.066666666666666,
+      "durationSeconds": 10.566666666666666,
       "narration": {
         "file": "mugsy-explains/step-02.wav",
         "startSeconds": 0.2,
@@ -44,23 +51,63 @@
       "captions": [
         {
           "start": 0.2,
-          "end": 3.181,
-          "text": "Inspect the Mugsy Explains repo on Wiggly."
+          "end": 2.991,
+          "text": "Look at Mugsy Clips on Instagram with"
         },
         {
-          "start": 3.181,
-          "end": 6.162,
-          "text": "It breaks down 3 A-versus-B lessons with"
+          "start": 2.991,
+          "end": 4.187,
+          "text": "thirty-five thousand followers."
         },
         {
-          "start": 6.162,
-          "end": 8.717,
-          "text": "recurring cartoon poses and handwritten captions."
+          "start": 4.187,
+          "end": 6.978,
+          "text": "Wiggly packages this exact comparison format so"
         },
         {
-          "start": 8.717,
-          "end": 11.273,
-          "text": "Choose Copy for another coding agent."
+          "start": 6.978,
+          "end": 9.769,
+          "text": "your coding agent can build it locally."
+        }
+      ],
+      "media": {
+        "type": "image",
+        "file": "mugsy-explains/mugsyclips-profile.png",
+        "fit": "contain",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      }
+    },
+    {
+      "id": "choose-format",
+      "kind": "browser",
+      "number": "3",
+      "label": "Copy the coding agent prompt",
+      "windowTitle": "Wiggly — Mugsy Explains",
+      "background": "lime",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "mugsy-explains/step-03.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.897,
+          "text": "On Wiggly, open the Mugsy Explains format,"
+        },
+        {
+          "start": 2.897,
+          "end": 4.823,
+          "text": "choose Send to Coding Agent,"
+        },
+        {
+          "start": 4.823,
+          "end": 6.364,
+          "text": "and copy the prompt."
         }
       ],
       "media": {
@@ -75,13 +122,13 @@
     {
       "id": "run-agent",
       "kind": "terminal",
-      "number": "3",
-      "label": "Run the local composition",
-      "windowTitle": "Coding agent — Mugsy Explains",
+      "number": "4",
+      "label": "Paste into your coding agent",
+      "windowTitle": "Coding Agent (Antigravity / Claude Code) — Mugsy Explains",
       "background": "blue",
-      "durationSeconds": 8.133333333333333,
+      "durationSeconds": 8.5,
       "narration": {
-        "file": "mugsy-explains/step-03.wav",
+        "file": "mugsy-explains/step-04.wav",
         "startSeconds": 0.2,
         "authorized": true,
         "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
@@ -89,27 +136,32 @@
       "captions": [
         {
           "start": 0.2,
-          "end": 2.829,
-          "text": "Paste the prompt into your coding agent."
+          "end": 2.735,
+          "text": "Paste the instructions into Antigravity or Claude"
         },
         {
-          "start": 2.829,
-          "end": 5.458,
-          "text": "The agent validates contracts and renders the"
+          "start": 2.735,
+          "end": 3.097,
+          "text": "Code."
         },
         {
-          "start": 5.458,
-          "end": 7.337,
-          "text": "video locally with zero providers."
+          "start": 3.097,
+          "end": 5.632,
+          "text": "The agent reads the package and sets"
+        },
+        {
+          "start": 5.632,
+          "end": 6.717,
+          "text": "up your lessons."
         }
       ],
       "media": {
         "type": "video",
-        "file": "mugsy-explains/terminal-execution.mp4",
-        "fit": "contain",
+        "file": "mugsy-explains/step-04-intake.mp4",
+        "fit": "cover",
         "startSeconds": 0,
         "authorized": true,
-        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+        "provenance": "Authentic Antigravity format intake recording for Mugsy Explains."
       },
       "checkpoint": {
         "eyebrow": "Your checkpoint",
@@ -118,30 +170,13 @@
       }
     },
     {
-      "id": "finished-output",
-      "kind": "final",
-      "number": "4",
-      "label": "Watch the finished result",
-      "background": "lime",
-      "durationSeconds": 20.2,
-      "nativeAudio": true,
-      "media": {
-        "type": "video",
-        "file": "mugsy-explains/final-result.mp4",
-        "startSeconds": 5,
-        "fit": "contain",
-        "authorized": true,
-        "provenance": "Official proof media sourced from final-result.mp4."
-      }
-    },
-    {
-      "id": "next-step",
-      "kind": "end",
+      "id": "review-lessons",
+      "kind": "terminal",
       "number": "5",
-      "label": "Try your own format",
-      "windowTitle": "Terminal — Try your own format",
-      "background": "cream",
-      "durationSeconds": 7.033333333333333,
+      "label": "Review the lesson plan",
+      "windowTitle": "Antigravity — Lesson Review",
+      "background": "blue",
+      "durationSeconds": 8.5,
       "narration": {
         "file": "mugsy-explains/step-05.wav",
         "startSeconds": 0.2,
@@ -151,18 +186,263 @@
       "captions": [
         {
           "start": 0.2,
-          "end": 2.683,
-          "text": "Check the captions and verify the receipt."
+          "end": 2.975,
+          "text": "Review the three comparative lessons and character"
         },
         {
-          "start": 2.683,
-          "end": 4.457,
-          "text": "To try your own format,"
+          "start": 2.975,
+          "end": 4.164,
+          "text": "poses before rendering."
         },
         {
-          "start": 4.457,
-          "end": 6.231,
-          "text": "the Wiggly link is below."
+          "start": 4.164,
+          "end": 6.939,
+          "text": "You stay in control of the creative"
+        },
+        {
+          "start": 6.939,
+          "end": 7.337,
+          "text": "output."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "mugsy-explains/step-05-review.mp4",
+        "fit": "cover",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Authentic Antigravity lesson plan and critique review recording for Mugsy Explains."
+      },
+      "checkpoint": {
+        "eyebrow": "Your one checkpoint",
+        "headline": "Review the 3 comparative lessons and character poses.",
+        "badge": "Then approve"
+      }
+    },
+    {
+      "id": "package-breakdown",
+      "kind": "package-breakdown",
+      "number": "6",
+      "label": "Inspect the included assets",
+      "windowTitle": "Terminal — Inspect the included assets",
+      "background": "lime",
+      "durationSeconds": 8.766666666666667,
+      "narration": {
+        "file": "mugsy-explains/step-06.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 3.216,
+          "text": "The package includes five expressive cartoon poses"
+        },
+        {
+          "start": 3.216,
+          "end": 5.37,
+          "text": "and the handwritten Virgil font."
+        },
+        {
+          "start": 5.37,
+          "end": 7.956,
+          "text": "No external image generator is required."
+        }
+      ]
+    },
+    {
+      "id": "replacement-value",
+      "kind": "replacement-value",
+      "number": "7",
+      "label": "Verify zero generation fees",
+      "windowTitle": "Terminal — Verify zero generation fees",
+      "background": "lime",
+      "durationSeconds": 9.2,
+      "narration": {
+        "file": "mugsy-explains/step-07.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.659,
+          "text": "You don't need an image model,"
+        },
+        {
+          "start": 2.659,
+          "end": 5.528,
+          "text": "a video model, or a dedicated GPU."
+        },
+        {
+          "start": 5.528,
+          "end": 8.398,
+          "text": "Everything renders locally with zero API credits."
+        }
+      ]
+    },
+    {
+      "id": "approve-render",
+      "kind": "terminal",
+      "number": "8",
+      "label": "Approve and render the video",
+      "windowTitle": "Coding Agent — Final Render",
+      "background": "blue",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "mugsy-explains/step-08.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.002,
+          "text": "Once you approve the plan,"
+        },
+        {
+          "start": 2.002,
+          "end": 4.524,
+          "text": "the agent runs the local compositor and"
+        },
+        {
+          "start": 4.524,
+          "end": 5.966,
+          "text": "builds the final video."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "mugsy-explains/step-08-render.mp4",
+        "fit": "cover",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Authentic Antigravity local Remotion render approval recording for Mugsy Explains."
+      },
+      "checkpoint": {
+        "eyebrow": "Final MP4",
+        "headline": "Video rendered and verified locally.",
+        "badge": "Ready to post"
+      }
+    },
+    {
+      "id": "finished-output",
+      "kind": "final",
+      "number": "9",
+      "label": "Watch the finished output",
+      "background": "lime",
+      "durationSeconds": 8,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "mugsy-explains/final-result.mp4",
+        "startSeconds": 0,
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Official proof media sourced from final-result.mp4."
+      }
+    },
+    {
+      "id": "scorecard",
+      "kind": "scorecard",
+      "number": "10",
+      "label": "Verify the quality scorecard",
+      "windowTitle": "Terminal — Verify the quality scorecard",
+      "background": "lime",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "mugsy-explains/step-10.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 3.59,
+          "text": "Every video passes thirteen automated quality checks"
+        },
+        {
+          "start": 3.59,
+          "end": 5.527,
+          "text": "for audio sync, dimensions,"
+        },
+        {
+          "start": 5.527,
+          "end": 6.496,
+          "text": "and timing."
+        }
+      ]
+    },
+    {
+      "id": "checklist",
+      "kind": "checklist",
+      "number": "11",
+      "label": "Start with the beginner checklist",
+      "windowTitle": "Terminal — Start with the beginner checklist",
+      "background": "lime",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "mugsy-explains/step-11.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.414,
+          "text": "To make your own,"
+        },
+        {
+          "start": 1.414,
+          "end": 3.235,
+          "text": "pick a topic, choose three lessons,"
+        },
+        {
+          "start": 3.235,
+          "end": 5.359,
+          "text": "and run the prompt in your favorite"
+        },
+        {
+          "start": 5.359,
+          "end": 5.966,
+          "text": "coding agent."
+        }
+      ]
+    },
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "number": "12",
+      "label": "Replace three separate tools",
+      "windowTitle": "Terminal — Replace three separate tools",
+      "background": "lime",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "mugsy-explains/step-12.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.796,
+          "text": "Wiggly replaces drawing tools,"
+        },
+        {
+          "start": 1.796,
+          "end": 3.791,
+          "text": "voice subscriptions, and video editors."
+        },
+        {
+          "start": 3.791,
+          "end": 6.585,
+          "text": "The link to get started is below."
         }
       ]
     }

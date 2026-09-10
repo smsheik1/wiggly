@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 
 // Default Zach D. Films narrator voice model (0873499c22e24d13b074fa76d27562e5)
 export const ZACH_VOICE_ID = '0873499c22e24d13b074fa76d27562e5';
+// Official Mugsy Explains voice clone (a126d52c2d20443bb024aeef10e741bf)
+export const MUGSY_VOICE_ID = 'a126d52c2d20443bb024aeef10e741bf';
 export const FISH_MODEL = 's2.1-pro-free';
 
 export async function loadFishApiKey(repoRoot) {
@@ -135,7 +137,7 @@ export async function synthesizeSpeechFile({
   if (!apiKey) throw new Error('Fish Audio is required for new narration. Set FISH_STUDIO_APIKEY or FISH_API_KEY in the process environment; no offline or paid fallback is enabled.');
 
   // Fish Audio is the only real narration path. The model is pinned to the free tier.
-  const voiceId = (voice === 'zach' || !voice) ? ZACH_VOICE_ID : voice;
+  const voiceId = (voice === 'mugsy') ? MUGSY_VOICE_ID : (voice === 'zach' || !voice) ? ZACH_VOICE_ID : voice;
   if (!voiceId) throw new Error('A Fish Audio voice ID is required for new narration.');
   try {
     const res = await fetch('https://api.fish.audio/v1/tts', {

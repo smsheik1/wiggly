@@ -1,0 +1,17 @@
+{
+  "name": "mugsy-explains",
+  "version": "0.1.1-proof",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "fetch-proof": "node tools/fetch-proof.mjs",
+    "auto-proofs": "node tools/auto-fetch-proofs.mjs",
+    "publish": "node runtime/publish.mjs"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
+  }
+}
