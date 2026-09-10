@@ -3,14 +3,34 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bundle } from '@remotion/bundler';
-import { renderMedia, selectComposition } from '@remotion/renderer';
 import { critiqueMugsyScript } from './runtime/critique.mjs';
 import { autoHarvestLessonProofs } from './runtime/harvest.mjs';
 import { scoutComparisonTopics } from './runtime/scout.mjs';
 import { buildLessonAudio, MUGSY_VOICE_ID } from './runtime/voice.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
+
+async function getRemotion() {
+  try {
+    const bundler = await import('@remotion/bundler');
+    const renderer = await import('@remotion/renderer');
+    return {
+      bundle: bundler.bundle,
+      renderMedia: renderer.renderMedia,
+      selectComposition: renderer.selectComposition
+    };
+  } catch {
+    console.log('[setup] Missing Remotion packages. Auto-installing dependencies...');
+    execFileSync('npm', ['install', '--no-audit', '--no-fund'], { cwd: ROOT, stdio: 'inherit' });
+    const bundler = await import('@remotion/bundler');
+    const renderer = await import('@remotion/renderer');
+    return {
+      bundle: bundler.bundle,
+      renderMedia: renderer.renderMedia,
+      selectComposition: renderer.selectComposition
+    };
+  }
+}
 
 function parseArgs(args) {
   const result = { _: [] };
@@ -60,6 +80,8 @@ export async function renderMugsyVideo(recipePayload, outputPath, options = {}) 
   const fullOut = path.resolve(process.cwd(), outputPath);
   mkdirSync(path.dirname(fullOut), { recursive: true });
 
+  const { bundle, selectComposition, renderMedia } = await getRemotion();
+
   console.log('[render] Bundling Remotion composition...');
   const bundled = await bundle({
     entryPoint: path.join(ROOT, 'runtime/index.jsx'),
@@ -107,9 +129,12 @@ export async function renderMugsyVideo(recipePayload, outputPath, options = {}) 
   if (process.platform === 'darwin' && !options.noOpen) {
     try {
       execFileSync('osascript', [
-        '-e', `tell application "QuickTime Player" to open POSIX file "${fullOut}"`,
-        '-e', 'tell application "QuickTime Player" to activate',
-        '-e', 'tell application "QuickTime Player" to play document 1'
+        '-e', 'tell application "QuickTime Player"',
+        '-e', '  activate',
+        '-e', `  open POSIX file "${fullOut}"`,
+        '-e', '  delay 0.5',
+        '-e', '  if (exists document 1) then play document 1',
+        '-e', 'end tell'
       ], { stdio: 'ignore' });
       console.log('[render] 🎬 Opened and playing in QuickTime Player!');
     } catch {}
@@ -160,19 +185,71 @@ export async function make(options = {}) {
   const audioDir = path.join(ROOT, 'run/audio/sentences');
   const sentenceMetadata = await buildLessonAudio(fullContentPath, audioDir);
 
-  // Calculate timeline schedule
+  // Generate 150ms silence block for natural breathing room
+  const silencePath = path.join(ROOT, 'run/audio/silence-150ms.wav');
+  execFileSync('ffmpeg', [
+    '-y', '-v', 'error',
+    '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=mono',
+    '-t', '0.15',
+    '-c:a', 'pcm_s16le',
+    silencePath
+  ]);
+
+  // Build unified master audio track and frame-accurate sentence & chunk timeline
+  const concatLines = [];
   let currentTime = 0;
-  const scheduledSentences = sentenceMetadata.map((s) => {
+  const scheduledSentences = [];
+  const scheduledChunks = [];
+
+  for (let i = 0; i < sentenceMetadata.length; i++) {
+    const s = sentenceMetadata[i];
     const start = currentTime;
-    const end = start + s.durationSeconds + 0.15; // 150ms breathing room
-    currentTime = end;
-    return {
+    const end = start + s.durationSeconds;
+    const nextSentenceStart = end + 0.15; // 150ms breathing room
+
+    concatLines.push(`file '${s.audioPath.replace(/'/g, "'\\''")}'`);
+    if (i < sentenceMetadata.length - 1) {
+      concatLines.push(`file '${silencePath.replace(/'/g, "'\\''")}'`);
+    }
+
+    scheduledSentences.push({
       ...s,
       startSeconds: Math.round(start * 100) / 100,
       endSeconds: Math.round(end * 100) / 100,
       audioSrc: `run/audio/sentences/${s.audioFile}`
-    };
-  });
+    });
+
+    const chunks = (s.chunks && s.chunks.length > 0) ? s.chunks : [s.text];
+    const chunkDuration = s.durationSeconds / chunks.length;
+
+    for (let c = 0; c < chunks.length; c++) {
+      const cStart = start + c * chunkDuration;
+      // Last chunk stays visible across the 150ms breathing pause
+      const cEnd = (c === chunks.length - 1) ? nextSentenceStart : (start + (c + 1) * chunkDuration);
+      scheduledChunks.push({
+        chunkIndex: scheduledChunks.length,
+        sentenceIndex: i,
+        lessonIndex: s.lessonIndex,
+        role: s.role,
+        text: chunks[c],
+        startSeconds: Math.round(cStart * 1000) / 1000,
+        endSeconds: Math.round(cEnd * 1000) / 1000
+      });
+    }
+
+    currentTime = nextSentenceStart;
+  }
+
+  const concatListPath = path.join(ROOT, 'run/audio/concat-list.txt');
+  writeFileSync(concatListPath, concatLines.join('\n') + '\n');
+  const masterAudioPath = path.join(ROOT, 'run/audio/master-voiceover.wav');
+  execFileSync('ffmpeg', [
+    '-y', '-v', 'error',
+    '-f', 'concat', '-safe', '0',
+    '-i', concatListPath,
+    '-ar', '48000', '-ac', '1', '-c:a', 'pcm_s16le',
+    masterAudioPath
+  ]);
 
   const recipePayload = {
     title: rawContent.title,
@@ -181,7 +258,9 @@ export async function make(options = {}) {
       leftImage: l.leftImage,
       rightImage: l.rightImage
     })),
-    sentences: scheduledSentences
+    sentences: scheduledSentences,
+    chunks: scheduledChunks,
+    audioTrack: 'run/audio/master-voiceover.wav'
   };
 
   if (options.dryRun || options['dry-run']) {

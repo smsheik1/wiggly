@@ -10,8 +10,8 @@
     },
     {
       "file": ".gitignore",
-      "sha256": "ecbb87f5b0e807dcbf27532cd0273a5c381b164cd73b0ac6c11eef5f759a9469",
-      "sizeBytes": 120
+      "sha256": "514319aa3f4a0ca736c8f9e3b28d7f8bc0e38e2a173d5d6023a083775bb2d523",
+      "sizeBytes": 154
     },
     {
       "file": "BLIND-HANDOFF.md",
@@ -215,8 +215,8 @@
     },
     {
       "file": "runner.mjs",
-      "sha256": "23843e5a3069958b605063babbfb45dae6d8083a354391617b8068b79a7da1e1",
-      "sizeBytes": 8962
+      "sha256": "1809c66bbbe322f00a046b485c65ee9444716c8b95101947a6feaf8babafc100",
+      "sizeBytes": 11623
     },
     {
       "file": "runner.py",
@@ -245,8 +245,8 @@
     },
     {
       "file": "runtime/mugsy-explains.jsx",
-      "sha256": "d5e533981f3e02bb57d298ac733892c7c02cc1333d18bdab47251fe8af5c0509",
-      "sizeBytes": 8023
+      "sha256": "32b1814d960a020831e2adcbe38da21ecc3c9d5ec41101954c8d7757ef41689b",
+      "sizeBytes": 9016
     },
     {
       "file": "runtime/publish.mjs",
