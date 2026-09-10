@@ -5,7 +5,10 @@
     "assets/repo-builder-overview.svg", "release-files.json", "build-kit.mjs", "verify-kit.mjs",
     "bin/wiggly-repo-builder.mjs", "runtime/contracts.mjs", "runtime/intake.mjs",
     "runtime/package.mjs", "runtime/smoke.mjs", "runtime/transcribe.mjs",
+    "runtime/analyze.mjs", "runtime/harvest-assets.mjs", "runtime/generate-runtime.mjs",
+    "runtime/scaffold-skill.mjs", "runtime/prove-repo.mjs",
     "references/reference-analysis.md", "references/format-authoring.md",
-    "tests/contracts.test.mjs", "tests/intake.test.mjs", "tests/package.test.mjs", "tests/transcribe.test.mjs", "tests/verify-kit.test.mjs"
+    "tests/contracts.test.mjs", "tests/intake.test.mjs", "tests/package.test.mjs",
+    "tests/transcribe.test.mjs", "tests/verify-kit.test.mjs", "tests/builder.test.mjs"
   ]
 }
