@@ -3,7 +3,7 @@
   "formatVersion": "0.4.0",
   "input": "examples/batman-arkham-first-run/input.json",
   "inputSha256": "c31bc6ad434ffe4e5a5fb4ddf8e385ebf667360b52b08e63dbb7a035a209cee0",
-  "runtimeSha256": "3999ca04d215ea4036e42d4a7d6a648023b597c4f3fb506bed303fc76be5b04b",
+  "runtimeSha256": "18f20d1471da582fc7aee8992460fef2ef3cb77d5cc0554e6a70120d80ab9834",
   "output": "examples/batman-arkham-first-run/final.mp4",
   "outputSha256": "3a24911245135050f976ce3eff5f7f112dba93e6cfdd4318adbdc9a4f900f6ac",
   "width": 1920,

@@ -7,7 +7,8 @@ export const IMPERATIVE_VERBS = new Set([
   'see', 'choose', 'copy', 'paste', 'run', 'inspect', 'watch', 'try',
   'open', 'download', 'install', 'verify', 'check', 'review', 'launch',
   'execute', 'build', 'generate', 'test', 'deploy', 'start', 'create',
-  'add', 'send', 'load', 'render', 'probe', 'wire', 'connect', 'grab'
+  'add', 'send', 'load', 'render', 'probe', 'wire', 'connect', 'grab',
+  'compare', 'approve', 'replace'
 ]);
 
 export const BANNED_FLUFF_PATTERNS = [
@@ -214,9 +215,9 @@ export function critiqueTutorialScript(rawInput, options = {}) {
     }
   }
 
-  if (totalDurationSeconds < 20 || totalDurationSeconds > 120) {
+  if (totalDurationSeconds < 20 || totalDurationSeconds > 180) {
     clockScore -= 4;
-    clockFeedback.push(`Total duration (${totalDurationSeconds.toFixed(1)}s) is outside optimal 20-120s tutorial boundary.`);
+    clockFeedback.push(`Total duration (${totalDurationSeconds.toFixed(1)}s) is outside optimal 20-180s tutorial boundary.`);
   }
   clockScore = Math.max(0, Math.min(20, clockScore));
 

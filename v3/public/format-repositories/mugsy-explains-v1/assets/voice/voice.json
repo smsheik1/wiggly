@@ -1,0 +1,12 @@
+{
+  "provider": "fish.audio",
+  "model": "s2.1-pro-free",
+  "voiceId": "a126d52c2d20443bb024aeef10e741bf",
+  "voiceName": "Mugsy Explains - Official Voice",
+  "visibility": "unlist",
+  "provenance": "Trained from 3 clean dialogue samples from @mugsyclips original creator videos (reference-00.wav, reference-01.wav, reference-02.wav).",
+  "defaultProsody": {
+    "speed": 1.15,
+    "normalize": true
+  }
+}

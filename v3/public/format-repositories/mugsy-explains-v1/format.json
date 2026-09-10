@@ -6,5 +6,11 @@
   "version": "0.1.1-proof",
   "output": "vertical MP4",
   "runtime": "runner.py",
-  "status": "proof"
+  "status": "proof",
+  "voice": {
+    "provider": "fish.audio",
+    "voiceId": "a126d52c2d20443bb024aeef10e741bf",
+    "voiceName": "Mugsy Explains - Official Voice",
+    "model": "s2.1-pro-free"
+  }
 }
