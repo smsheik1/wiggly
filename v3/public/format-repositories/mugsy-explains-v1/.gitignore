@@ -7,3 +7,6 @@ run/smoke/
 run/inspection.json
 run/render-manifest.json
 final/
+outputs/
+run/audio/
+node_modules/

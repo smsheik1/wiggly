@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "kit": "mugsy-explains",
+  "version": "0.4.0",
+  "runtime": "runtime/mugsy-explains.jsx",
+  "runtimeSha256": "61c122b94d928e53bdb254190a39c137c43ae7df6719d2643fdf65357492fcf7",
+  "voiceModelId": "a126d52c2d20443bb024aeef10e741bf",
+  "publication": "user-approved-modern-baseline",
+  "creativeReview": "100/100-pass-retention-critique; zero-provider-ddg-proofs; auto-quicktime-delivery"
+}

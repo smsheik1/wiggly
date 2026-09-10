@@ -1,0 +1,28 @@
+{
+  "name": "wiggly-mugsy-explains-format-kit",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "smoke": "node runner.mjs smoke",
+    "scout": "node runtime/scout.mjs",
+    "critique": "node runtime/critique.mjs",
+    "harvest": "node runtime/harvest.mjs",
+    "voice": "node runtime/voice.mjs",
+    "render": "node runner.mjs render",
+    "make": "node runner.mjs make",
+    "publish": "node runtime/publish.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.473",
+    "@remotion/renderer": "4.0.473",
+    "react": "19.0.1",
+    "react-dom": "19.0.1",
+    "remotion": "4.0.473",
+    "sharp": "^0.33.5"
+  }
+}
