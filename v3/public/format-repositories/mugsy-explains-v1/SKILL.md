@@ -15,7 +15,7 @@ Ask only one question at a time. If the user asks for the included Wiggly exampl
 3. For a new topic, edit only `content.json` and replace its six proof images. Never edit `runtime/build_proof.py` for content.
 4. Before validation, read the fifteen sentences aloud and inspect the six proof images at phone size. Fix A/B pairs that do not answer the same viewer question, unclear labels, awkward spoken grammar, repeated lessons, whole-page screenshots, and proof that cannot be understood in one second.
 5. Run `python3 runner.py validate` before voice generation.
-6. Report the Fish model and estimate: `$0 on s2.1-pro-free`.
+6. Report the Fish model and voice: `Mugsy Explains - Official Voice` (`a126d52c2d20443bb024aeef10e741bf`, `$0 on s2.1-pro-free`).
 7. Ask once before generating new narration.
 8. Run `python3 runner.py render` with `FISH_STUDIO_APIKEY` in the environment.
 9. Run `python3 runner.py inspect` and show the contact sheet.
