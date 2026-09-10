@@ -13,6 +13,7 @@ type FormatProfileConfig = {
   lastUpdated: string;
   technicalHref?: string;
   repositoryHref?: string;
+  githubRepo?: string;
   manifestPath?: string;
   historicalProofVersions?: string[];
   whatStays: string[];
@@ -26,6 +27,7 @@ const formatConfigs: FormatProfileConfig[] = [
     slug: "character-gameplay-conversations",
     promise: "Fan-favorite characters trade lines over Arkham Knight and Spider-Man 2 gameplay with timed captions and ducked music—assembled into vertical 9:16 Shorts.",
     lastUpdated: "September 2026",
+    githubRepo: "https://github.com/smsheik1/wiggly-character-gameplay-conversations",
     manifestPath: "format-repositories/character-gameplay-conversations-v1/format.json",
     repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.3.0.zip",
     technicalHref: "/format-repositories/character-gameplay-conversations-v1/BENCHMARK.md",
@@ -101,6 +103,7 @@ const formatConfigs: FormatProfileConfig[] = [
     slug: "repo-builder",
     promise: "Turn a reference video into a reusable Wiggly Repo with your coding agent. Inspect the ingredients, approve the blueprint, then build and test the recipe.",
     lastUpdated: "September 2026",
+    githubRepo: "https://github.com/smsheik1/wiggly-repo-builder",
     manifestPath: "format-repositories/repo-builder-v1/format.json",
     repositoryHref: "/format-repositories/repo-builder-v1/downloads/wiggly-repo-builder-0.1.1.zip",
     technicalHref: "/format-repositories/repo-builder-v1/PROOF-REPORT.md",
@@ -246,9 +249,12 @@ const formatConfigs: FormatProfileConfig[] = [
   {
     slug: "mugsy-explains",
     promise: "Turn three useful differences into a fast visual lesson people can understand at a glance.",
-    lastUpdated: "August 2026",
+    lastUpdated: "September 2026",
+    githubRepo: "https://github.com/smsheik1/wiggly-mugsy-explains",
+    repositoryHref: "/format-repositories/mugsy-explains-v1/downloads/wiggly-mugsy-explains-format-kit-0.4.0.zip",
     technicalHref: "/format-lab/mugsy-explains",
     manifestPath: "format-repositories/mugsy-explains-v1/format.json",
+    historicalProofVersions: ["0.1.1-proof"],
     whatStays: [
       "Three A-versus-B lessons",
       "The same recurring silent host",
@@ -2488,5 +2494,6 @@ export function getDiscoveryFormatProfile(slug: string): DiscoveryFormatProfile 
     whatChanges: config.whatChanges,
     characterOptions: config.characterOptions,
     handoff: config.handoff,
+    githubRepo: config.githubRepo,
   };
 }

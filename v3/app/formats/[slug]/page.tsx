@@ -151,7 +151,17 @@ export default async function FormatPage({
                 <ExternalLink className="size-4" aria-hidden="true" />
               </Link>
             ) : null}
-            {format.repositoryHref ? (
+            {format.githubRepo ? (
+              <a
+                href={format.githubRepo}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-12 items-center gap-2 rounded-md border-2 border-[#080817] bg-[#c9ff55] px-5 text-sm font-black"
+              >
+                View on GitHub
+                <ExternalLink className="size-4" aria-hidden="true" />
+              </a>
+            ) : format.repositoryHref ? (
               <a
                 href={format.repositoryHref}
                 download

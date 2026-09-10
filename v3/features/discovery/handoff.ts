@@ -19,6 +19,22 @@ export function buildDiscoveryHandoffPrompt(
   }
 
   const formatUrl = absoluteUrl(origin, `/formats/${format.slug}`);
+
+  if (format.githubRepo) {
+    return `CODING AGENT REQUIRED: If you cannot access this computer's terminal, filesystem, and media files, do not analyze or simulate. Reply only: "Open this in Codex, Claude Code, Antigravity, Cursor, or Copilot CLI."
+
+Let's create this with the latest published Wiggly Format: ${format.name}.
+
+Format page: ${formatUrl}
+GitHub Repo: ${format.githubRepo}
+
+Clone the format into a new workspace:
+git clone --depth 1 ${format.githubRepo}.git
+(Fallback if git throttles: curl -sL ${format.githubRepo}/archive/main.tar.gz | tar -xz)
+
+Enter the repository directory, follow the root agent instructions, SKILL.md, and contracts. Use the packaged runtime; do not rebuild it. Never use a paid provider without my explicit approval. Continue until the Format's validation and quality checks pass, then return its defined deliverables.`;
+  }
+
   const repositoryLine = format.repositoryHref
     ? `Runnable Repo: ${absoluteUrl(origin, format.repositoryHref)}\n`
     : "";

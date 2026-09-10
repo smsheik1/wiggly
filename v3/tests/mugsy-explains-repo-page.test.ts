@@ -39,7 +39,7 @@ for (const file of [
 const format = JSON.parse(readFileSync(`${packageRoot}/format.json`, "utf8"));
 assert.equal(format.id, "mugsy-explains");
 assert.equal(format.name, "Mugsy Explains");
-assert.equal(format.version, "0.1.1-proof");
+assert.equal(format.version, "0.4.0");
 
 const storyPrompt = readFileSync(`${packageRoot}/prompts/story.md`, "utf8");
 assert.match(storyPrompt, /answer the same viewer question/i);
