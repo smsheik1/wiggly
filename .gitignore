@@ -29,3 +29,5 @@ arkham-content-studio/
 v3/public/format-repositories/*/outputs/
 v3/public/format-repositories/*/run/
 v3/public/format-repositories/*/downloads/*.zip
+v3/public/format-repositories/*/progress.html
+v3/public/format-repositories/*/progress.json

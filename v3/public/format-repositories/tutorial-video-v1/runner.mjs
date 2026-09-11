@@ -10,6 +10,7 @@ import { renderMedia, selectComposition } from "@remotion/renderer";
 import { loadAndValidateInput, probeMedia, VIDEO } from "./runtime/contract.mjs";
 import { critiqueTutorialScript, formatCritiqueReport } from "./runtime/critique.mjs";
 import { harvestTargetAssets } from "./runtime/harvest.mjs";
+import { createProgressHud } from "./runtime/hud.mjs";
 import { buildNarratedTutorialStep } from "./runtime/voice.mjs";
 
 export const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -75,7 +76,7 @@ export function doctor() {
   return result;
 }
 
-export async function render(inputFile, outputFile) {
+export async function render(inputFile, outputFile, existingHud = null) {
   if (!checkBinary(ffmpeg) || !checkBinary(ffprobe)) throw new Error("Render requires FFmpeg and FFprobe on PATH.");
   if (!checkLocalhostPort()) throw new Error("Render needs permission to bind a localhost port for Remotion's local browser. Grant that local sandbox permission before starting the render; this is not a network or provider call.");
   const inputPath = path.resolve(inputFile);
@@ -83,6 +84,24 @@ export async function render(inputFile, outputFile) {
   if (path.extname(output).toLowerCase() !== ".mp4") throw new Error("Output must be an .mp4 file.");
   mkdirSync(path.dirname(output), { recursive: true });
   const prepared = validateInput(inputPath);
+
+  const hud = existingHud || createProgressHud({
+    title: "WIGGLY COMPOSITOR",
+    targetSlug: path.basename(inputFile, ".json"),
+    rootDir: ROOT,
+    totalStages: 2
+  });
+
+  const totalFrames = prepared.durationInFrames || Math.round(prepared.durationSeconds * 30);
+
+  hud.update({
+    stageIndex: 1,
+    totalStages: 2,
+    stageName: "Bundling Remotion React composition...",
+    percent: 5,
+    totalFrames
+  });
+
   let lastBundleProgress = -1;
   const serveUrl = await bundle({
     entryPoint: ENTRY,
@@ -91,13 +110,21 @@ export async function render(inputFile, outputFile) {
       const percent = Math.floor(progress / 10) * 10;
       if (percent !== lastBundleProgress) {
         lastBundleProgress = percent;
-        console.log(`Bundle ${percent}%`);
+        hud.update({
+          stageIndex: 1,
+          totalStages: 2,
+          stageName: `Bundling Remotion composition (${percent}%)`,
+          percent: Math.round(percent * 0.15),
+          totalFrames
+        });
       }
     },
   });
   const browserExecutable = bundledBrowser || undefined;
   const composition = await selectComposition({ serveUrl, id: "TutorialVideo", inputProps: prepared, browserExecutable });
   let lastRenderProgress = -1;
+  const renderStartTime = Date.now();
+
   await renderMedia({
     serveUrl,
     composition,
@@ -113,7 +140,18 @@ export async function render(inputFile, outputFile) {
       const percent = Math.floor(progress * 10) * 10;
       if (percent !== lastRenderProgress) {
         lastRenderProgress = percent;
-        console.log(`Render ${percent}%`);
+        const currentFrame = Math.round(progress * totalFrames);
+        const elapsedSec = (Date.now() - renderStartTime) / 1000;
+        const etaSeconds = progress > 0 ? (elapsedSec / progress) * (1 - progress) : 0;
+        hud.update({
+          stageIndex: 2,
+          totalStages: 2,
+          stageName: `Rendering H.264 video frames (${Math.round(progress * 100)}%)`,
+          percent: Math.round(15 + progress * 80),
+          currentFrame,
+          totalFrames,
+          etaSeconds
+        });
       }
     },
   });
@@ -121,6 +159,13 @@ export async function render(inputFile, outputFile) {
   if (metadata.video?.width !== VIDEO.width || metadata.video?.height !== VIDEO.height) throw new Error("Rendered output is not 1920x1080.");
   if (!metadata.audio) throw new Error("Rendered output is missing audio.");
   if (Math.abs(metadata.durationSeconds - prepared.durationSeconds) > 0.12) throw new Error(`Rendered duration ${metadata.durationSeconds.toFixed(3)}s does not match the ingredient timeline ${prepared.durationSeconds.toFixed(3)}s.`);
+
+  if (!existingHud) {
+    hud.finish({
+      videoPath: path.relative(ROOT, output),
+      durationSeconds: metadata.durationSeconds
+    });
+  }
   const receipt = {
     schemaVersion: 1,
     formatVersion: "0.3.0",
@@ -241,12 +286,29 @@ export async function make(options = {}) {
 
   console.log(`[make] Starting autonomous 1-click tutorial generator for: ${targetSlug} (audience: ${audience})`);
 
+  const hud = createProgressHud({
+    title: "WIGGLY TUTORIAL MAKER",
+    targetSlug,
+    rootDir: ROOT,
+    totalStages: 5
+  });
+
   // 1. Harvest Visual Assets
-  console.log(`[make] [1/5] Harvesting assets for ${targetSlug}...`);
+  hud.update({
+    stageIndex: 1,
+    totalStages: 5,
+    stageName: `Harvesting visual assets & proof for ${targetSlug}...`,
+    percent: 10
+  });
   const harvested = await harvestTargetAssets({ targetSlug, repoRoot: ROOT });
 
   // 2. Synthesize Audio & Build Narrated Steps with Content-Driven Boundaries
-  console.log(`[make] [2/5] Synthesizing voiceover and calculating microsecond caption timings...`);
+  hud.update({
+    stageIndex: 2,
+    totalStages: 5,
+    stageName: "Synthesizing voiceovers & microsecond caption timings...",
+    percent: 25
+  });
   const audioOutputDir = path.join(MEDIA_ROOT, targetSlug);
   mkdirSync(audioOutputDir, { recursive: true });
 
@@ -524,6 +586,12 @@ export async function make(options = {}) {
   console.log(`[make] Wrote generated tutorial recipe to ${path.relative(ROOT, inputFilePath)}`);
 
   // 3. Critique Script
+  hud.update({
+    stageIndex: 3,
+    totalStages: 5,
+    stageName: "Evaluating 5-Law Retention Critique...",
+    percent: 35
+  });
   console.log(`[make] [3/5] Running 5-law script critique linter...`);
   const critique = critiqueTutorialScript(inputJson);
   console.log(formatCritiqueReport(critique));
@@ -532,18 +600,33 @@ export async function make(options = {}) {
   }
 
   // 4. Validate Contract
+  hud.update({
+    stageIndex: 4,
+    totalStages: 5,
+    stageName: "Validating timeline and ingredient contracts...",
+    percent: 40
+  });
   console.log(`[make] [4/5] Validating timeline and ingredient contracts...`);
   const validated = validateInput(inputFilePath);
 
   if (skipRender) {
     console.log(`[make] [5/5] Skipped render (--skip-render or --dry-run active). Recipe and assets ready!`);
+    hud.finish({
+      videoPath: path.relative(ROOT, inputFilePath),
+      durationSeconds: validated.durationSeconds
+    });
     return { status: "ready", input: inputFilePath, critique, validated };
   }
 
   // 5. Render & Inspect
   console.log(`[make] [5/5] Rendering official 1080p composition...`);
-  const renderResult = await render(inputFilePath, outputFile);
+  const renderResult = await render(inputFilePath, outputFile, hud);
   const inspection = inspect(outputFile);
+
+  hud.finish({
+    videoPath: path.relative(ROOT, outputFile),
+    durationSeconds: inspection.metadata?.durationSeconds || validated.durationSeconds
+  });
 
   return {
     status: "completed",
