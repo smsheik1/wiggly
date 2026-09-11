@@ -238,7 +238,6 @@ function SocialProof({ step, format }) {
       <StepBadge number={step.number} label={step.label} />
       
       <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
-        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>WHAT WIGGLY DOES</div>
         <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
           A ready-made video format your coding agent can run.
         </div>
@@ -420,7 +419,12 @@ function Scorecard({ step, format }) {
 function BeginnerChecklist({ step, format }) {
   const frame = useCurrentFrame();
   const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
-  const agents = ["ANTIGRAVITY", "CODEX", "CLAUDE CODE", "CURSOR"];
+  const agents = [
+    { label: "ANTIGRAVITY", logo: "media/fixed/agent-logos/antigravity.svg", bg: "#fff", color: "#4285F4" },
+    { label: "CODEX", logo: "media/fixed/agent-logos/codex.svg", bg: "#fff", color: "#000" },
+    { label: "CLAUDE CODE", logo: "media/fixed/agent-logos/claude.svg", bg: "#fff", color: "#D97757" },
+    { label: "CURSOR", logo: "media/fixed/agent-logos/cursor.svg", bg: "#fff", color: "#000" },
+  ];
   return (
     <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
       <GridBackground variant={step.background || "lime"} />
@@ -454,8 +458,11 @@ function BeginnerChecklist({ step, format }) {
           <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>3 • USE A CODING AGENT</div>
           <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             {agents.map((ag) => (
-              <div key={ag} style={{ background: "#0f172a", color: "#fff", borderRadius: 12, padding: "16px 10px", textAlign: "center", fontSize: 13, fontWeight: 800 }}>
-                🤖 {ag}
+              <div key={ag.label} style={{ background: "#0f172a", borderRadius: 12, padding: "14px 10px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                <div style={{ width: 44, height: 44, background: ag.bg, borderRadius: 10, display: "grid", placeItems: "center", padding: 6 }}>
+                  <Img src={staticFile(ag.logo)} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                </div>
+                <div style={{ color: "#fff", fontSize: 11, fontWeight: 800, letterSpacing: ".06em", textAlign: "center" }}>{ag.label}</div>
               </div>
             ))}
           </div>
