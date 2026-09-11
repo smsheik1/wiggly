@@ -11,6 +11,7 @@ type FormatProfileConfig = {
   slug: string;
   promise: string;
   lastUpdated: string;
+  githubRepo?: string;
   technicalHref?: string;
   repositoryHref?: string;
   manifestPath?: string;
@@ -27,7 +28,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Fan-favorite characters trade lines over Arkham Knight and Spider-Man 2 gameplay with timed captions and ducked music—assembled into vertical 9:16 Shorts.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/character-gameplay-conversations-v1/format.json",
-    repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.3.0.zip",
+    repositoryHref: "https://github.com/smsheik1/wiggly-character-gameplay-conversations/releases/download/v0.3.0/character-gameplay-conversations-0.3.0.zip",
     technicalHref: "/format-repositories/character-gameplay-conversations-v1/BENCHMARK.md",
     historicalProofVersions: ["0.1.1", "0.1.2", "0.1.3", "0.1.4", "0.2.0"],
     whatStays: ["A persistent title and question", "Real gameplay beneath the conversation", "Speaker labels and timed dialogue captions", "One local renderer for same-universe casts and crossovers"],
@@ -53,7 +54,7 @@ const formatConfigs: FormatProfileConfig[] = [
     lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-roast-me-conversations",
     manifestPath: "format-repositories/roast-me-conversations-v1/format.json",
-    repositoryHref: "/format-repositories/roast-me-conversations-v1/downloads/roast-me-conversations-0.3.0.zip",
+    repositoryHref: "https://github.com/smsheik1/wiggly-roast-me-conversations/releases/download/v0.3.0/roast-me-conversations-0.3.0.zip",
     technicalHref: "/format-repositories/roast-me-conversations-v1/BENCHMARK.md",
     historicalProofVersions: ["0.1.0", "0.2.0"],
     whatStays: [
@@ -103,7 +104,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Turn a reference video into a reusable Wiggly Repo with your coding agent. Inspect the ingredients, approve the blueprint, then build and test the recipe.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/repo-builder-v1/format.json",
-    repositoryHref: "/format-repositories/repo-builder-v1/downloads/wiggly-repo-builder-0.1.1.zip",
+    repositoryHref: "https://github.com/smsheik1/wiggly-repo-builder/releases/download/v0.1.1/wiggly-repo-builder-0.1.1.zip",
     technicalHref: "/format-repositories/repo-builder-v1/PROOF-REPORT.md",
     whatStays: [
       "Local reference intake, evidence hashes, and optional transcription",
@@ -133,7 +134,7 @@ const formatConfigs: FormatProfileConfig[] = [
     lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-tutorial-video",
     manifestPath: "format-repositories/tutorial-video-v1/format.json",
-    repositoryHref: "/format-repositories/tutorial-video-v1/downloads/wiggly-tutorial-video-format-kit-0.4.0.zip",
+    repositoryHref: "https://github.com/smsheik1/wiggly-tutorial-video/releases/download/v0.4.0/wiggly-tutorial-video-format-kit-0.4.0.zip",
     technicalHref: "/format-repositories/tutorial-video-v1/PROOF-REPORT.md",
     whatStays: [
       "The finished Wiggly result appears before the explanation",
@@ -182,6 +183,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Turn your brand into a Lego music video: one original song, a miniature world, and three cinematic scenes.",
     lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-lego-music-video",
+    repositoryHref: "https://github.com/smsheik1/wiggly-lego-music-video/releases/download/v0.1.0/wiggly-lego-music-video-format-kit.zip",
     manifestPath: "format-repositories/lego-music-video-v1/format.json",
     whatStays: ["A brand ad told through a song", "One coherent Lego world and recurring hero object", "Three lyric-led moving scenes", "Vertical video with brand identity and lyric captions"],
     whatChanges: ["The brand and buyer truth", "The music direction and lyrics", "The miniature world and its characters", "The three visual events and final payoff"],
@@ -205,6 +207,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Turn one real current story into a short deadpan fish report built from source proof.",
     lastUpdated: "August 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-talking-fish-news",
+    repositoryHref: "https://github.com/smsheik1/wiggly-talking-fish-news/releases/download/v1.0.0/wiggly-talking-fish-news-format-kit.zip",
     technicalHref: "/format-lab/talking-fish-news",
     manifestPath: "format-repositories/talking-fish-news-v1/format.json",
     whatStays: [
@@ -251,6 +254,8 @@ const formatConfigs: FormatProfileConfig[] = [
     slug: "mugsy-explains",
     promise: "Turn three useful differences into a fast visual lesson people can understand at a glance.",
     lastUpdated: "August 2026",
+    githubRepo: "https://github.com/smsheik1/wiggly-mugsy-explains",
+    repositoryHref: "https://github.com/smsheik1/wiggly-mugsy-explains/releases/download/v0.1.1-proof/wiggly-mugsy-explains-format-kit.zip",
     technicalHref: "/format-lab/mugsy-explains",
     manifestPath: "format-repositories/mugsy-explains-v1/format.json",
     whatStays: [
@@ -300,6 +305,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Turn one evidence-backed product story into a fast, impossible-to-film 3D explanation.",
     lastUpdated: "July 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-three-d-breakdown",
+    repositoryHref: "https://github.com/smsheik1/wiggly-three-d-breakdown/releases/download/v1.6.0/wiggly-three-d-breakdown-format-kit.zip",
     technicalHref: "/format-lab/three-d-breakdown",
     manifestPath: "format-repositories/three-d-breakdown-v1/format.json",
     historicalProofVersions: ["1.5.0"],
@@ -368,6 +374,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Teach a real idea through a familiar story world people already understand.",
     lastUpdated: "July 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-otaku-explainer",
+    repositoryHref: "https://github.com/smsheik1/wiggly-otaku-explainer/releases/download/v1.2.0-experiment/wiggly-cartoon-explainer-format-kit.zip",
     technicalHref: "/format-lab/cartoon-explainer",
     manifestPath: "format-repositories/otaku-explainer-v1/format.json",
     whatStays: [
@@ -412,6 +419,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Turn one real event, launch, or promotion into a thirty-second character-led breaking-news bulletin people want to watch.",
     lastUpdated: "August 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-squilliam-news",
+    repositoryHref: "https://github.com/smsheik1/wiggly-squilliam-news/releases/download/v0.2.1-proof/wiggly-squilliam-news-format-kit.zip",
     technicalHref: "/format-lab/squilliam-news",
     manifestPath: "format-repositories/squilliam-news-v1/format.json",
     characterOptions: [
@@ -506,7 +514,7 @@ const formatConfigs: FormatProfileConfig[] = [
     lastUpdated: "August 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-bikini-bottom-dance-off",
     technicalHref: "/format-lab/character-dance-lab",
-    repositoryHref: "/format-repositories/bikini-bottom-dance-off-v1/downloads/wiggly-bikini-bottom-dance-off-format-kit.zip",
+    repositoryHref: "https://github.com/smsheik1/wiggly-bikini-bottom-dance-off/releases/download/v0.17.0/wiggly-bikini-bottom-dance-off-format-kit.zip",
     manifestPath: "format-repositories/bikini-bottom-dance-off-v1/format.json",
     whatStays: [
       "A three-beep countdown with no music underneath",
@@ -562,7 +570,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Send your coding agent a video link or local clip. It prepares the dialogue for your approval, then turns it into a talking Dog-and-Bunny video with the included characters and backgrounds.",
     lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-animal-conversations",
-    repositoryHref: "/format-repositories/animal-conversations-v1/downloads/wiggly-animal-conversations-format-kit.zip",
+    repositoryHref: "https://github.com/smsheik1/wiggly-animal-conversations/releases/download/v0.17.0/wiggly-animal-conversations-format-kit-0.17.0.zip",
     manifestPath: "format-repositories/animal-conversations-v1/format.json",
     historicalProofVersions: ["0.15.1", "0.16.2"],
     whatStays: [
@@ -610,7 +618,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Give Shaz a voice track and pick a room. The kit reads the words locally, lip-syncs the mouth, and gives a fresh agent five artist-reviewed gestures for the moments that matter.",
     lastUpdated: "August 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-shaz-puppet-runtime",
-    repositoryHref: "/format-repositories/shaz-puppet-runtime-v1/downloads/wiggly-shaz-puppet-runtime-format-kit.zip",
+    repositoryHref: "https://github.com/smsheik1/wiggly-shaz-puppet-runtime/releases/download/v0.4.0/wiggly-shaz-puppet-runtime-format-kit.zip",
     manifestPath: "format-repositories/shaz-puppet-runtime-v1/format.json",
     historicalProofVersions: ["0.2.0"],
     whatStays: [
@@ -675,6 +683,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Turn one buyer truth into a 20-second hook people can remember and sing back.",
     lastUpdated: "July 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-brand-jingle",
+    repositoryHref: "https://github.com/smsheik1/wiggly-brand-jingle/releases/download/v1.0.0/wiggly-brand-jingle-format-kit.zip",
     technicalHref: "/format-lab/brand-jingle",
     manifestPath: "format-repositories/brand-jingle-v1/format.json",
     whatStays: [
@@ -720,6 +729,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Turn one sharp buyer truth into a familiar reaction clip people understand instantly.",
     lastUpdated: "July 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-video-meme",
+    repositoryHref: "https://github.com/smsheik1/wiggly-video-meme/releases/download/v1.0.0/wiggly-video-meme-format-kit.zip",
     technicalHref: "/format-lab/video-meme",
     manifestPath: "format-repositories/video-meme-v1/format.json",
     whatStays: [
@@ -762,6 +772,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Turn a voice-led pitch into a branded visual people can follow with sound on or off.",
     lastUpdated: "July 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-visualizer",
+    repositoryHref: "https://github.com/smsheik1/wiggly-visualizer/releases/download/v1.0.0/wiggly-visualizer-format-kit.zip",
     technicalHref: "/format-lab/visualizer",
     manifestPath: "format-repositories/visualizer-v1/format.json",
     whatStays: ["One clear spoken idea", "Animated audio bars", "Readable captions"],
@@ -895,6 +906,7 @@ const formatConfigs: FormatProfileConfig[] = [
   {
     slug: "brainrot",
     githubRepo: "https://github.com/smsheik1/wiggly-brainrot",
+    repositoryHref: "https://github.com/smsheik1/wiggly-brainrot/releases/download/v1.0.0/wiggly-brainrot-format-kit.zip",
     promise: "Turn one buyer truth into a fast character exchange over familiar gameplay.",
     lastUpdated: "July 2026",
     technicalHref: "/format-lab/brainrot",
@@ -2351,6 +2363,7 @@ const formatConfigs: FormatProfileConfig[] = [
   {
     slug: "meme",
     githubRepo: "https://github.com/smsheik1/wiggly-meme",
+    repositoryHref: "https://github.com/smsheik1/wiggly-meme/releases/download/v1.0.0/wiggly-meme-format-kit.zip",
     promise: "Turn a buyer's familiar frustration into an ad they understand in one glance.",
     lastUpdated: "July 2026",
     technicalHref: "/format-lab/meme",

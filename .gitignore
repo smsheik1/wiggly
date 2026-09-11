@@ -24,3 +24,8 @@ secrets.env
 graphify-out/cache/
 workspaces/
 arkham-content-studio/
+
+# Format kit build artifacts — should never be committed
+v3/public/format-repositories/*/outputs/
+v3/public/format-repositories/*/run/
+v3/public/format-repositories/*/downloads/*.zip
