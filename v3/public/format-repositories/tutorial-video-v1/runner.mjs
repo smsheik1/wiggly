@@ -457,7 +457,7 @@ export async function make(options = {}) {
     number: 11,
     label: "Start with the beginner checklist",
     kind: "checklist",
-    background: "lime",
+    background: "cream",
     narrationText: `To make your own, pick a topic, choose three lessons, and run the prompt in your favorite coding agent.`,
     audioRelPath: `${targetSlug}/step-11.wav`,
     audioFullPath: path.join(audioOutputDir, "step-11.wav"),

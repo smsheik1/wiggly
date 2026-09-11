@@ -194,7 +194,7 @@ function Hero({ step, format }) {
         style={{
           position: "absolute",
           left: "50%",
-          top: "52%",
+          top: "50%",
           transform: `translate(-50%, -50%) scale(${interpolate(enter, [0, 1], [0.94, 1])})`,
           width: 480,
           height: 854,
@@ -208,7 +208,6 @@ function Hero({ step, format }) {
       >
         <Media step={step} framed={false} />
       </div>
-      <StepBadge number={step.number} label={step.label} />
     </AbsoluteFill>
   );
 }
@@ -235,15 +234,7 @@ function SocialProof({ step, format }) {
   return (
     <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
       <GridBackground variant={step.background || "lime"} />
-      <StepBadge number={step.number} label={step.label} />
-      
-      <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
-        <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
-          A ready-made video format your coding agent can run.
-        </div>
-      </div>
-
-      <div style={{ position: "absolute", left: 84, right: 84, top: 215, height: 690, display: "grid", gridTemplateColumns: "1fr 90px 1fr", alignItems: "center", gap: 24, opacity: enter }}>
+      <div style={{ position: "absolute", left: 84, right: 84, top: 110, height: 810, display: "grid", gridTemplateColumns: "1fr 90px 1fr", alignItems: "center", gap: 24, opacity: enter }}>
         <div style={{ height: "100%", background: "#fff", borderRadius: 24, overflow: "hidden", border: "2px solid rgba(255,255,255,.25)", boxShadow: "0 24px 70px rgba(0,0,0,.5)", position: "relative" }}>
           <div style={{ position: "absolute", left: 24, top: 18, zIndex: 10, display: "flex", alignItems: "center", gap: 10, background: "rgba(0,0,0,.85)", padding: "6px 14px", borderRadius: 999, color: "#fff", fontSize: 14, fontWeight: 800 }}>
             <span>@mugsyclips — ORIGINAL</span>
@@ -266,12 +257,8 @@ function SocialProof({ step, format }) {
           <div style={{ position: "absolute", left: 24, top: 18, zIndex: 10, display: "flex", alignItems: "center", gap: 10, background: COLORS.lime, padding: "6px 14px", borderRadius: 999, color: COLORS.ink, fontSize: 14, fontWeight: 900 }}>
             <span>WIGGLY — MUGSY EXPLAINS</span>
           </div>
-          <div style={{ width: 330, height: 586, borderRadius: 20, overflow: "hidden", border: "2px solid rgba(255,255,255,.2)" }}>
+          <div style={{ width: 360, height: 640, borderRadius: 20, overflow: "hidden", border: "2px solid rgba(255,255,255,.2)" }}>
             <OffthreadVideo src={staticFile("mugsy-explains/final-result.mp4")} startFrom={0} muted={true} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          </div>
-          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "16px 20px", background: "linear-gradient(to top, rgba(0,0,0,.92), transparent)", color: "#fff" }}>
-            <div style={{ fontSize: 18, fontWeight: 850 }}>100% Deterministic Code</div>
-            <div style={{ fontSize: 14, color: COLORS.lime, marginTop: 2 }}>Packaged poses + handwriting + audio sync</div>
           </div>
         </div>
       </div>
@@ -420,32 +407,35 @@ function BeginnerChecklist({ step, format }) {
   const frame = useCurrentFrame();
   const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
   const agents = [
-    { label: "ANTIGRAVITY", logo: "media/fixed/agent-logos/antigravity.svg", bg: "#fff", color: "#4285F4" },
-    { label: "CODEX", logo: "media/fixed/agent-logos/codex.svg", bg: "#fff", color: "#000" },
-    { label: "CLAUDE CODE", logo: "media/fixed/agent-logos/claude.svg", bg: "#fff", color: "#D97757" },
-    { label: "CURSOR", logo: "media/fixed/agent-logos/cursor.svg", bg: "#fff", color: "#000" },
+    { label: "ANTIGRAVITY", logo: "fixed/agent-logos/antigravity.svg", bg: "#fff", color: "#4285F4" },
+    { label: "CODEX", logo: "fixed/agent-logos/codex.svg", bg: "#fff", color: "#000" },
+    { label: "CLAUDE CODE", logo: "fixed/agent-logos/claude.svg", bg: "#fff", color: "#D97757" },
+    { label: "CURSOR", logo: "fixed/agent-logos/cursor.svg", bg: "#fff", color: "#000" },
   ];
+  const isCream = (step.background || "lime") === "cream";
+  const textColor = isCream ? COLORS.ink : COLORS.white;
+  const eyebrowColor = isCream ? COLORS.ink : COLORS.lime;
   return (
-    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
+    <AbsoluteFill style={{ color: textColor, fontFamily: FONT }}>
       <GridBackground variant={step.background || "lime"} />
       <StepBadge number={step.number} label={step.label} />
       
       <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
-        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>BEGINNER CHECKLIST</div>
+        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: eyebrowColor, opacity: 0.6 }}>BEGINNER CHECKLIST</div>
         <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
           Pick a topic, three lessons, and a coding agent.
         </div>
       </div>
 
       <div style={{ position: "absolute", left: 84, right: 84, top: 225, height: 490, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, opacity: enter }}>
-        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: "2px solid rgba(255,255,255,.4)", display: "flex", flexDirection: "column" }}>
+        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 18px 45px rgba(0,0,0,.08)" : undefined, display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>1 • PICK A TOPIC</div>
           <div style={{ marginTop: 14, fontSize: 24, fontWeight: 900 }}>Prompt vs Format</div>
           <div style={{ marginTop: 8, fontSize: 15, color: "#475569", lineHeight: 1.4 }}>Start with any creative or technical concept with 3 A-vs-B differences.</div>
           <div style={{ marginTop: "auto", padding: "12px 16px", background: "#f1f5f9", borderRadius: 12, fontSize: 14, fontWeight: 700, color: COLORS.ink }}>e.g. CGI vs VFX, Rules vs Luck</div>
         </div>
 
-        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: "2px solid rgba(255,255,255,.4)", display: "flex", flexDirection: "column" }}>
+        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 18px 45px rgba(0,0,0,.08)" : undefined, display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>2 • CHOOSE 3 LESSONS</div>
           <div style={{ marginTop: 14, fontSize: 20, fontWeight: 900, display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>1. Rules vs Prompts</div>
@@ -454,7 +444,7 @@ function BeginnerChecklist({ step, format }) {
           </div>
         </div>
 
-        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: "2px solid rgba(255,255,255,.4)", display: "flex", flexDirection: "column" }}>
+        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 18px 45px rgba(0,0,0,.08)" : undefined, display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>3 • USE A CODING AGENT</div>
           <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             {agents.map((ag) => (
