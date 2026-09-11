@@ -99,3 +99,16 @@ Ask these questions before writing code:
 - Human-readable rulebook: `docs/wiggly-engineering-rules.md`
 - Local Codex skill: `wiggly-guardrails`
 - Required before creating or materially changing a Wiggly Repo: `.agents/skills/wiggly-repo-builder`
+
+## gstack
+
+For product, site, design, QA, and ship work, use [gstack](https://github.com/garrytan/gstack) skills when they are installed: `/office-hours`, `/plan-ceo-review`, `/design-shotgun`, `/design-review`, `/review`, `/qa`, `/ship`. Use `/browse` for web browsing.
+
+Install is optional and does not block format-kit work:
+
+```bash
+git clone --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
+cd ~/.claude/skills/gstack && ./setup --team
+```
+
+Format-kit and Wiggly Repo builder work still follows this file and `.agents/skills/wiggly-repo-builder`. Those runs do not require gstack.
