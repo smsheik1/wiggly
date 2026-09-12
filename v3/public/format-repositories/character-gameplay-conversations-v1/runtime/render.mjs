@@ -86,7 +86,9 @@ export async function validate(input,inputDirectory){
   const file=await media(inputDirectory,input.music.file);const info=probe(file);check(info.streams.some(s=>s.codec_type==='audio'),'Music needs an audio stream');
   check(Number(info.format.duration)+0.02>=total,'Supplied music is shorter than the conversation; provide a full-length bed');
   check(input.music.attribution===undefined||(typeof input.music.attribution==='string'&&input.music.attribution.trim().length>0&&input.music.attribution.length<=2000),'Music attribution must be nonempty text up to 2000 characters');
-  music={file,volume,attribution:input.music.attribution??null};
+  check(input.music.duckUnderDialogue===undefined||typeof input.music.duckUnderDialogue==='boolean','duckUnderDialogue must be a boolean if specified');
+  const duckUnderDialogue=input.music.duckUnderDialogue??false;
+  music={file,volume,duckUnderDialogue,attribution:input.music.attribution??null};
  }
  if(input.ranking!==undefined){
   check(Array.isArray(input.ranking)&&input.ranking.length>=2&&input.ranking.length<=10,"ranking must have 2-10 items");
@@ -220,47 +222,52 @@ export async function render(inputFile,outputFile){
   filters.push(`[dialogueRaw]acopy[dialogue]`);
  }
 
- if(music){
-  const fadeIn=Math.min(0.35,total/2),fadeOut=Math.min(0.7,total/2);
-  filters.push(`[dialogue]asplit=2[voice][ducking]`);
-  filters.push(`[${musicIndex}:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=duration=${total},asetpts=PTS-STARTPTS,volume=${music.volume},afade=t=in:d=${fadeIn},afade=t=out:st=${total-fadeOut}:d=${fadeOut}[bed]`);
-  filters.push('[bed][ducking]sidechaincompress=threshold=0.035:ratio=6:attack=15:release=250[quietbed]');
-  filters.push('[voice][quietbed]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:level=false:latency=true[audio]');
- }else{
-  filters.push(`[dialogue]alimiter=limit=0.95:level=false:latency=true[audio]`);
- }
-
- if(music?.attribution)args.push('-metadata',`comment=${music.attribution}`);
- args.push('-filter_complex_threads','1','-filter_complex',filters.join(';'),'-map','[video]','-map','[audio]','-t',String(total),'-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-threads','1','-c:a','aac','-b:a','128k','-movflags','+faststart',outputFile);
-
- const base=await renderOverlay(input);
- const child=spawn('ffmpeg',args,{stdio:['pipe','ignore','pipe']});let errors='',timedOut=false;child.stderr.on('data',b=>{errors=(errors+b).slice(-16000);});child.stdin.on('error',()=>{});
- const timeout=setTimeout(()=>{timedOut=true;child.kill('SIGKILL');},180000);
- const exited=new Promise((resolve,reject)=>{child.on('error',error=>{clearTimeout(timeout);reject(error);});child.on('close',code=>{clearTimeout(timeout);code===0?resolve():reject(new Error(`FFmpeg ${timedOut?'timed out':'failed'} (${code}): ${errors}`));});});exited.catch(()=>{});
-
- let cachedKey='',frame=base;
- try { for(let n=0;n<Math.round(total*FPS);n++){
-  const t=n/FPS;const turn=turns.find(turn=>t>=turn.start&&t<turn.start+turn.durationSeconds);const caption=turn?.captions.find(c=>t-turn.start>=c.start&&t-turn.start<c.end);
-  let fx=null;
-  if(n===0){
-   fx={type:'black'};
-  }else if(n>=1&&n<=3){
-   fx={type:'glitch',frame:n};
-  }else{
-   const tr=transitions.find(tr=>t>=tr&&t<tr+0.16);
-   if(tr){
-    const f=Math.round((t-tr)*FPS);
-    fx={type:'glitch',frame:f};
+  if(music){
+   const fadeIn=Math.min(0.35,total/2),fadeOut=Math.min(0.7,total/2);
+   if(music.duckUnderDialogue){
+    filters.push(`[dialogue]asplit=2[voice][ducking]`);
+    filters.push(`[${musicIndex}:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=duration=${total},asetpts=PTS-STARTPTS,volume=${music.volume},afade=t=in:d=${fadeIn},afade=t=out:st=${total-fadeOut}:d=${fadeOut}[bed]`);
+    filters.push('[bed][ducking]sidechaincompress=threshold=0.035:ratio=6:attack=15:release=250[quietbed]');
+    filters.push('[voice][quietbed]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:level=false:latency=true[audio]');
+   }else{
+    filters.push(`[${musicIndex}:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=duration=${total},asetpts=PTS-STARTPTS,volume=${music.volume},afade=t=in:d=${fadeIn},afade=t=out:st=${total-fadeOut}:d=${fadeOut}[bed]`);
+    filters.push('[dialogue][bed]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:level=false:latency=true[audio]');
    }
+  }else{
+   filters.push(`[dialogue]alimiter=limit=0.95:level=false:latency=true[audio]`);
   }
-  const key = `${turn?.start ?? ''}:${caption?.start ?? ''}:${turn?.revealedRanks?.join(',') ?? ''}:${turn?.featuredCard?.image ?? ''}:${fx?.type ?? ''}:${fx?.frame ?? ''}`;
-  if(key!==cachedKey){cachedKey=key;frame=await renderOverlay(input,turn,caption,fx);}
-  if(child.stdin.destroyed)break;if(!child.stdin.write(frame))await Promise.race([once(child.stdin,'drain'),exited]);
- }
- child.stdin.end();await exited; } finally {clearTimeout(timeout);if(child.exitCode===null)child.kill('SIGKILL');}
 
- const receipt={schemaVersion:1,argv:['node',path.relative(process.cwd(),fileURLToPath(import.meta.url)),path.relative(process.cwd(),inputFile),path.relative(process.cwd(),outputFile)],inputSha256:digest(source),runtimeSha256:digest(await readFile(fileURLToPath(import.meta.url))),outputSha256:digest(await readFile(outputFile)),durationSeconds:total,width:W,height:H,fps:FPS,gameplaySha256:await Promise.all(gameplayKeys.map(async k=>digest(await readFile(gameplayClips[k].file)))),audioSha256:await Promise.all(turns.map(async t=>digest(await readFile(t.audio)))),review:'Supplied-media composition completed. No direct moving-video or audio perception; voice identity, reference fidelity and creative approval remain unverified.'};
- if(music)receipt.music={sha256:digest(await readFile(music.file)),volume:music.volume,duckedUnderDialogue:true,fadeInSeconds:Math.min(0.35,total/2),fadeOutSeconds:Math.min(0.7,total/2),attribution:music.attribution};
+  if(music?.attribution)args.push('-metadata',`comment=${music.attribution}`);
+  args.push('-filter_complex_threads','1','-filter_complex',filters.join(';'),'-map','[video]','-map','[audio]','-t',String(total),'-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-threads','1','-c:a','aac','-b:a','128k','-movflags','+faststart',outputFile);
+
+  const base=await renderOverlay(input);
+  const child=spawn('ffmpeg',args,{stdio:['pipe','ignore','pipe']});let errors='',timedOut=false;child.stderr.on('data',b=>{errors=(errors+b).slice(-16000);});child.stdin.on('error',()=>{});
+  const timeout=setTimeout(()=>{timedOut=true;child.kill('SIGKILL');},180000);
+  const exited=new Promise((resolve,reject)=>{child.on('error',error=>{clearTimeout(timeout);reject(error);});child.on('close',code=>{clearTimeout(timeout);code===0?resolve():reject(new Error(`FFmpeg ${timedOut?'timed out':'failed'} (${code}): ${errors}`));});});exited.catch(()=>{});
+
+  let cachedKey='',frame=base;
+  try { for(let n=0;n<Math.round(total*FPS);n++){
+   const t=n/FPS;const turn=turns.find(turn=>t>=turn.start&&t<turn.start+turn.durationSeconds);const caption=turn?.captions.find(c=>t-turn.start>=c.start&&t-turn.start<c.end);
+   let fx=null;
+   if(n===0){
+    fx={type:'black'};
+   }else if(n>=1&&n<=3){
+    fx={type:'glitch',frame:n};
+   }else{
+    const tr=transitions.find(tr=>t>=tr&&t<tr+0.16);
+    if(tr){
+     const f=Math.round((t-tr)*FPS);
+     fx={type:'glitch',frame:f};
+    }
+   }
+   const key = `${turn?.start ?? ''}:${caption?.start ?? ''}:${turn?.revealedRanks?.join(',') ?? ''}:${turn?.featuredCard?.image ?? ''}:${fx?.type ?? ''}:${fx?.frame ?? ''}`;
+   if(key!==cachedKey){cachedKey=key;frame=await renderOverlay(input,turn,caption,fx);}
+   if(child.stdin.destroyed)break;if(!child.stdin.write(frame))await Promise.race([once(child.stdin,'drain'),exited]);
+  }
+  child.stdin.end();await exited; } finally {clearTimeout(timeout);if(child.exitCode===null)child.kill('SIGKILL');}
+
+  const receipt={schemaVersion:1,argv:['node',path.relative(process.cwd(),fileURLToPath(import.meta.url)),path.relative(process.cwd(),inputFile),path.relative(process.cwd(),outputFile)],inputSha256:digest(source),runtimeSha256:digest(await readFile(fileURLToPath(import.meta.url))),outputSha256:digest(await readFile(outputFile)),durationSeconds:total,width:W,height:H,fps:FPS,gameplaySha256:await Promise.all(gameplayKeys.map(async k=>digest(await readFile(gameplayClips[k].file)))),audioSha256:await Promise.all(turns.map(async t=>digest(await readFile(t.audio)))),review:'Supplied-media composition completed. No direct moving-video or audio perception; voice identity, reference fidelity and creative approval remain unverified.'};
+  if(music)receipt.music={sha256:digest(await readFile(music.file)),volume:music.volume,duckedUnderDialogue:music.duckUnderDialogue,fadeInSeconds:Math.min(0.35,total/2),fadeOutSeconds:Math.min(0.7,total/2),attribution:music.attribution};
  await writeFile(`${outputFile}.receipt.json`,JSON.stringify(receipt,null,2)+'\n',{flag:'wx'});return receipt;
 }
 

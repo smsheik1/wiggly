@@ -9,8 +9,8 @@ const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const VOICE_PRESETS = {
-  'batman': { id: 'ef549174cea246468ce32b00afa6affa', name: 'BATMAN', universe: 'DC' },
-  'kevin conroy': { id: 'ef549174cea246468ce32b00afa6affa', name: 'BATMAN', universe: 'DC' },
+  'batman': { id: '46a27a4d536d4dc888ea73563df935a7', name: 'BATMAN', universe: 'DC' },
+  'kevin conroy': { id: '46a27a4d536d4dc888ea73563df935a7', name: 'BATMAN', universe: 'DC' },
   'robin': { id: 'bc748d906c524a91bbb88e87f2bac62b', name: 'ROBIN', universe: 'DC' },
   'tim drake': { id: 'bc748d906c524a91bbb88e87f2bac62b', name: 'ROBIN', universe: 'DC' },
   'nightwing': { id: '5ff622f2dd30418ebb5bce8c1b920bdf', name: 'NIGHTWING', universe: 'DC' },
