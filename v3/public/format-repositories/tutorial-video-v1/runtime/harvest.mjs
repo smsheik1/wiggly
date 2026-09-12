@@ -124,6 +124,16 @@ export const KNOWN_FORMATS = {
     outputLabel: 'animal-conversations.mp4',
     relativeRepoDir: 'animal-conversations-v1',
     runtimeCommand: 'node runner.mjs make'
+  },
+  'otaku-explainer': {
+    name: 'Cartoon Explainer',
+    slug: 'otaku-explainer',
+    promise: 'Familiar characters explain a real idea through their own story world.',
+    formula: 'breaks down a complex technical concept using familiar story-world characters and anime battle metaphors',
+    url: 'https://wiggly.agentenamel.com/formats/otaku-explainer',
+    outputLabel: 'otaku-explainer.mp4',
+    relativeRepoDir: 'otaku-explainer-v1',
+    runtimeCommand: 'node runner.mjs make'
   }
 };
 
@@ -201,6 +211,8 @@ export function locateProofMedia(formatMeta, searchRoots = []) {
       if (!existsSync(dir)) continue;
 
       const subpaths = [
+        'assets/reference/reference.mp4',
+        'reference.mp4',
         'examples/wiggly-proof.mp4',
         'goldens/wiggly-format-explainer.mp4',
         'proofs/same-universe-0.1.4.mp4',
@@ -210,6 +222,14 @@ export function locateProofMedia(formatMeta, searchRoots = []) {
         'examples/animal-conversations/final-result.mp4',
         'examples/batman-arkham/final-result.mp4'
       ];
+
+      const formatJsonPath = path.join(dir, 'format.json');
+      if (existsSync(formatJsonPath)) {
+        try {
+          const fj = JSON.parse(readFileSync(formatJsonPath, 'utf8'));
+          if (fj.sourceReference) subpaths.unshift(fj.sourceReference);
+        } catch {}
+      }
 
       for (const sp of subpaths) {
         const full = path.join(dir, sp);
@@ -361,6 +381,37 @@ async function launchBrowser() {
     channel: 'chrome',
     headless: true
   }).catch(() => chromium.launch({ headless: true }));
+}
+
+export async function captureSocialProofChannel(url, outputPath, options = {}) {
+  try {
+    const browser = await launchBrowser();
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 960 },
+      deviceScaleFactor: 2,
+      colorScheme: 'light'
+    });
+    const page = await context.newPage();
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.waitForTimeout(2500);
+
+    // CRITICAL: Dismiss modal dialogs via native close button click
+    // Never strip DOM nodes manually as that leaves background scrims / dim overlays intact
+    const closeBtn = await page.$("div[role='dialog'] [role='button']") || 
+                     await page.$("div[role='dialog'] svg[aria-label='Close']") ||
+                     await page.$("div[role='dialog'] svg");
+    if (closeBtn) {
+      await closeBtn.click().catch(() => {});
+      await page.waitForTimeout(1500);
+    }
+
+    await page.screenshot({ path: outputPath });
+    await browser.close();
+    return outputPath;
+  } catch (err) {
+    console.warn(`[harvest] Social proof channel capture failed: ${err.message}`);
+    return null;
+  }
 }
 
 export async function captureLiveFormatPage(formatMeta, outputPath, options = {}) {
@@ -523,11 +574,17 @@ export function getAgentStepHtml({ stage = 'intake', formatName = 'Mugsy Explain
   let cursorTarget = { x: 500, y: 350 };
   let clickTarget = false;
 
+  const isOtaku = formatSlug.includes('otaku') || formatName.toLowerCase().includes('cartoon');
+
   if (isIntake) {
+    const repoUrl = isOtaku
+      ? 'https://github.com/smsheik1/wiggly-otaku-explainer/releases/download/v1.2.0-experiment/wiggly-cartoon-explainer-format-kit.zip'
+      : `https://github.com/smsheik1/wiggly-${formatSlug}/releases/download/v0.3.0/${formatSlug}-0.3.0.zip`;
+
     userText = `CODING AGENT REQUIRED: Let's create this with the latest published Wiggly Format: ${formatName}.
 
 Format page: https://wiggly.agentenamel.com/formats/${formatSlug}
-Runnable Repo: https://wiggly.agentenamel.com/format-repositories/${formatSlug}-v1/downloads/wiggly-${formatSlug}-format-kit-0.3.0.zip
+Runnable Repo: ${repoUrl}
 
 Download and extract into a new workspace. Report the exact published Format version before intake. Continue until validation checks pass, then return deliverables.`;
 
@@ -546,76 +603,124 @@ Download and extract into a new workspace. Report the exact published Format ver
       </div>
     `;
 
-    responseHtml = `
-      <div class="resp-title">Format Intake Complete ✓</div>
-      <p><strong>Published Format:</strong> <code>${formatSlug} (v0.3.0)</code> • <strong>Runtime:</strong> 5 cartoon poses verified, 0 provider fees.</p>
-      <div style="margin-top: 14px; font-weight: 600; color: #fff; font-size: 15px;">What 3-lesson comparison would you like to create?</div>
-      <ul class="option-list">
-        <li id="opt1" class="selectable"><strong>• Sourdough vs Store-Bought Bread</strong> <span class="dim">(Fermentation, wild yeast, digestion)</span></li>
-        <li><strong>• Cold Brew vs Iced Coffee</strong> <span class="dim">(Acidity, extraction chemistry, caffeine)</span></li>
-        <li><strong>• Mechanical vs Membrane Keyboards</strong> <span class="dim">(Switches, tactile lifespan, fatigue)</span></li>
-      </ul>
-    `;
+    if (isOtaku) {
+      responseHtml = `
+        <div class="resp-title">Format Intake Complete ✓</div>
+        <p><strong>Published Format:</strong> <code>${formatSlug} (v1.2.0)</code> • <strong>Story Worlds:</strong> Naruto, Yu-Gi-Oh, Danny Phantom packaged.</p>
+        <div style="margin-top: 14px; font-weight: 600; color: #fff; font-size: 15px;">What topic and story world would you like to create?</div>
+        <ul class="option-list">
+          <li id="opt1" class="selectable"><strong>• Compilers vs Interpreters</strong> <span class="dim">(Naruto world: Kakashi teaches Naruto & Orochimaru)</span></li>
+          <li><strong>• Proof of Work vs Proof of Stake</strong> <span class="dim">(Yu-Gi-Oh world: Kaiba vs Yugi duel)</span></li>
+          <li><strong>• RAM vs Solid State Storage</strong> <span class="dim">(Danny Phantom: Fenton ghost portal energy)</span></li>
+        </ul>
+      `;
+    } else {
+      responseHtml = `
+        <div class="resp-title">Format Intake Complete ✓</div>
+        <p><strong>Published Format:</strong> <code>${formatSlug} (v0.3.0)</code> • <strong>Runtime:</strong> 5 cartoon poses verified, 0 provider fees.</p>
+        <div style="margin-top: 14px; font-weight: 600; color: #fff; font-size: 15px;">What 3-lesson comparison would you like to create?</div>
+        <ul class="option-list">
+          <li id="opt1" class="selectable"><strong>• Sourdough vs Store-Bought Bread</strong> <span class="dim">(Fermentation, wild yeast, digestion)</span></li>
+          <li><strong>• Cold Brew vs Iced Coffee</strong> <span class="dim">(Acidity, extraction chemistry, caffeine)</span></li>
+          <li><strong>• Mechanical vs Membrane Keyboards</strong> <span class="dim">(Switches, tactile lifespan, fatigue)</span></li>
+        </ul>
+      `;
+    }
     cursorStart = { x: 250, y: 220 };
     cursorTarget = { x: 380, y: 340 };
     clickTarget = true;
   } else if (isReview) {
-    userText = `Let's do Sourdough vs Store-Bought Bread. Write the dialogue, run the critique engine to verify our retention score, and show me the lesson plan before rendering.`;
+    if (isOtaku) {
+      userText = `Let's do Compilers vs Interpreters in the Naruto world. Write the Socratic dialogue, verify our retention score, and show me the scene plan before rendering.`;
 
-    toolsHtml = `
-      <div class="tool-row">
-        <span>Ran 1 command</span>
-        <span>▾</span>
-        <span class="tool-tag green">node runtime/critique.mjs</span>
-        <span class="tool-tag lime-pill">✔ 5-Law Retention Critique: PASS (96/100)</span>
-      </div>
-    `;
+      toolsHtml = `
+        <div class="tool-row">
+          <span>Ran 1 command</span>
+          <span>▾</span>
+          <span class="tool-tag green">node runtime/critique.mjs</span>
+          <span class="tool-tag lime-pill">✔ 5-Law Retention Critique: PASS (98/100)</span>
+        </div>
+      `;
 
-    responseHtml = `
-      <div class="resp-title">3-Lesson Comparison Plan & Pose Alignment ✓</div>
-      <p><strong>Topic:</strong> Sourdough vs Store-Bought Bread • <strong>Critique Score:</strong> <code class="green-code">96/100 (Passes all 5 Laws)</code></p>
-      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 9px;">
-        <div class="lesson-card">
-          <strong>Lesson 1: Wild Yeast vs Industrial Yeast</strong>
-          <div class="lesson-sub">Lactic acid bacteria pre-digest gluten proteins → <span class="pose-badge">COFFEE EXPLAIN</span></div>
+      responseHtml = `
+        <div class="resp-title">Story World Lesson Plan & Role Alignment ✓</div>
+        <p><strong>Topic:</strong> Compilers vs Interpreters • <strong>World:</strong> Naruto • <strong>Critique Score:</strong> <code class="green-code">98/100 (Passes all 5 Laws)</code></p>
+        <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 9px;">
+          <div class="lesson-card">
+            <strong>Beat 1: The Jutsu Scroll Analogy</strong>
+            <div class="lesson-sub">Naruto tries to read every line mid-battle vs pre-translating an entire scroll → <span class="pose-badge">KAKASHI & NARUTO</span></div>
+          </div>
+          <div class="lesson-card">
+            <strong>Beat 2: Execution Speed vs Startup Latency</strong>
+            <div class="lesson-sub">Compilers take prep time but run at light-speed; interpreters start instantly but lag → <span class="pose-badge">OROCHIMARU CHALLENGE</span></div>
+          </div>
+          <div class="lesson-card">
+            <strong>Beat 3: The JIT Hybrid Takeaway</strong>
+            <div class="lesson-sub">Modern engines compile hotspots like Shadow Clones in hot loops → <span class="pose-badge">FINAL PUNCHLINE</span></div>
+          </div>
         </div>
-        <div class="lesson-card">
-          <strong>Lesson 2: Phytic Acid Neutralization</strong>
-          <div class="lesson-sub">Natural 24h fermentation unlocks zinc, iron, and magnesium → <span class="pose-badge">POINT LEFT</span></div>
+        <div style="margin-top: 12px; font-size: 13.5px; color: #a1a1aa;">
+          ✔ 3 character voices mapped • Konoha backgrounds verified • 0 API fees • <em>Ready for render approval.</em>
         </div>
-        <div class="lesson-card">
-          <strong>Lesson 3: The 4-Day Shelf-Life Myth</strong>
-          <div class="lesson-sub">Real bread goes stale, not moldy; supermarket loaves use propionate → <span class="pose-badge">QUESTION / RAISE HAND</span></div>
+      `;
+    } else {
+      userText = `Let's do Sourdough vs Store-Bought Bread. Write the dialogue, run the critique engine to verify our retention score, and show me the lesson plan before rendering.`;
+
+      toolsHtml = `
+        <div class="tool-row">
+          <span>Ran 1 command</span>
+          <span>▾</span>
+          <span class="tool-tag green">node runtime/critique.mjs</span>
+          <span class="tool-tag lime-pill">✔ 5-Law Retention Critique: PASS (96/100)</span>
         </div>
-      </div>
-      <div style="margin-top: 12px; font-size: 13.5px; color: #a1a1aa;">
-        ✔ 5 cartoon poses mapped • Virgil font synced • 0 external API calls • <em>Ready for render approval.</em>
-      </div>
-    `;
+      `;
+
+      responseHtml = `
+        <div class="resp-title">3-Lesson Comparison Plan & Pose Alignment ✓</div>
+        <p><strong>Topic:</strong> Sourdough vs Store-Bought Bread • <strong>Critique Score:</strong> <code class="green-code">96/100 (Passes all 5 Laws)</code></p>
+        <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 9px;">
+          <div class="lesson-card">
+            <strong>Lesson 1: Wild Yeast vs Industrial Yeast</strong>
+            <div class="lesson-sub">Lactic acid bacteria pre-digest gluten proteins → <span class="pose-badge">COFFEE EXPLAIN</span></div>
+          </div>
+          <div class="lesson-card">
+            <strong>Lesson 2: Phytic Acid Neutralization</strong>
+            <div class="lesson-sub">Natural 24h fermentation unlocks zinc, iron, and magnesium → <span class="pose-badge">POINT LEFT</span></div>
+          </div>
+          <div class="lesson-card">
+            <strong>Lesson 3: The 4-Day Shelf-Life Myth</strong>
+            <div class="lesson-sub">Real bread goes stale, not moldy; supermarket loaves use propionate → <span class="pose-badge">QUESTION / RAISE HAND</span></div>
+          </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 13.5px; color: #a1a1aa;">
+          ✔ 5 cartoon poses mapped • Virgil font synced • 0 external API calls • <em>Ready for render approval.</em>
+        </div>
+      `;
+    }
     cursorStart = { x: 320, y: 180 };
     cursorTarget = { x: 580, y: 295 };
   } else if (isRender) {
-    userText = `Approved. Render the final MP4 with the Mugsy Explains local Remotion compositor.`;
+    userText = `Approved. Render the final MP4 with the ${formatName} local Remotion compositor.`;
 
     toolsHtml = `
       <div class="tool-row">
         <span>Ran 1 command</span>
         <span>▾</span>
-        <span class="tool-tag green">npx remotion render runtime/tutorial-video.jsx mugsy-explains outputs/mugsy-explains-tutorial.mp4</span>
+        <span class="tool-tag green">node runner.mjs render --approve-loop</span>
       </div>
       <div class="render-progress-bar">
         <div class="progress-track"><div class="progress-fill"></div></div>
-        <span class="progress-label">Rendering frames: 100% [3,120 / 3,120 @ 30fps]</span>
+        <span class="progress-label">Rendering frames: 100% [2,866 / 2,866 @ 30fps]</span>
       </div>
     `;
 
     responseHtml = `
       <div class="resp-title">Master Render Complete ✓</div>
       <div class="receipt-box">
-        <div>• <strong>Output:</strong> <code class="green-code">outputs/sourdough-vs-storebought.mp4</code> (1080x1920 9:16)</div>
+        <div>• <strong>Output:</strong> <code class="green-code">outputs/${formatSlug}.mp4</code> (1080x1920 9:16)</div>
         <div>• <strong>Audio:</strong> Synchronized voiceover + background music bed (0 provider fees)</div>
         <div>• <strong>Quality Scorecard:</strong> <span class="lime-pill">13/13 automated checks passed</span></div>
-        <div>• <strong>Render Time:</strong> 14.2s (100% local CPU/GPU compositor)</div>
+        <div>• <strong>Render Time:</strong> 16.4s (100% local CPU/GPU compositor)</div>
       </div>
       <div style="margin-top: 12px; font-size: 14px; color: #a1a1aa;">
         Deliverable verified and ready to post to YouTube Shorts, TikTok, and Instagram Reels.
@@ -1080,15 +1185,33 @@ export async function harvestTargetAssets({ targetSlug, destMediaDir, repoRoot }
     }
   };
 
-  const socialDestRel = `${targetSlug}/mugsyclips-profile.png`;
-  const socialDestFull = path.join(targetDir, 'mugsyclips-profile.png');
+  const socialDestRel = targetSlug === 'otaku-explainer' 
+    ? `${targetSlug}/viral-reference-proof.png`
+    : `${targetSlug}/mugsyclips-profile.png`;
+  const socialDestFull = path.join(targetDir, targetSlug === 'otaku-explainer' ? 'viral-reference-proof.png' : 'mugsyclips-profile.png');
+  const fallbackBenchmark = existsSync(path.join(root, 'media', targetSlug, 'viral-reference-proof.png'))
+    ? { rel: `${targetSlug}/viral-reference-proof.png`, full: path.join(root, 'media', targetSlug, 'viral-reference-proof.png') }
+    : existsSync(path.join(root, 'media', 'fixed', 'viral-benchmark.png'))
+    ? { rel: 'fixed/viral-benchmark.png', full: path.join(root, 'media', 'fixed', 'viral-benchmark.png') }
+    : { rel: 'mugsy-explains/mugsyclips-profile.png', full: path.join(root, 'media', 'mugsy-explains', 'mugsyclips-profile.png') };
+
   if (existsSync(socialDestFull)) {
     media.socialProofStill = {
       file: socialDestRel,
       fullPath: socialDestFull,
       type: 'image',
       authorized: true,
-      provenance: `Clean high-resolution capture of @mugsyclips Instagram channel showing viral demand signal.`
+      provenance: targetSlug === 'otaku-explainer'
+        ? `Clean high-resolution capture of @Otaku_Developer benchmark channel showing viral demand signal.`
+        : `Clean high-resolution capture of @mugsyclips Instagram channel showing viral demand signal.`
+    };
+  } else if (existsSync(fallbackBenchmark.full)) {
+    media.socialProofStill = {
+      file: fallbackBenchmark.rel,
+      fullPath: fallbackBenchmark.full,
+      type: 'image',
+      authorized: true,
+      provenance: `Clean high-resolution capture showing viral benchmark demand signal.`
     };
   }
 

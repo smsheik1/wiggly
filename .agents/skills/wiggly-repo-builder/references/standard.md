@@ -190,6 +190,14 @@ For a new lesson, record the behavior, root cause, smallest general rule, and ev
 
 **Evidence:** The first randomized-cast `Life Goes On` run exposed the repetition. Dance Off `0.17.0` moved choreography into a seeded selector, proved identical-seed reproducibility, rejected a roster changed after selection, recorded a two-run cooldown, and rendered a 47-second smoke with twelve distinct motions through the unchanged official renderer.
 
+### 22. Click native close buttons on modal dialogs
+
+**Rule:** Never delete or hide modal dialogs in the DOM. Always click the page's native close button (`svg[aria-label="Close"]` or `[role="button"]`).
+
+**Why:** Deleting the modal leaves its dark backdrop scrim covering the screen, making the entire capture dim and gray. Clicking the real button dismisses the scrim and captures full native brightness.
+
+**Evidence:** Capturing `@_otaku_explains_` by removing `div[role="dialog"]` created dark, murky channel screenshots. Clicking Instagram's native `Close` button cleanly tore down the scrim and captured a crisp, bright 2560x1920 proof at 100% saturation.
+
 ## Still testing
 
 These ideas are deliberately not universal yet:

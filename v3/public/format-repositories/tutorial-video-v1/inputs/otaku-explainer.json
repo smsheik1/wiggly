@@ -1,0 +1,502 @@
+{
+  "schemaVersion": 2,
+  "title": "Make a Cartoon Explainer video with Wiggly",
+  "audience": "A first-time creator who wants to generate videos without writing code",
+  "format": {
+    "name": "Cartoon Explainer",
+    "slug": "otaku-explainer",
+    "promise": "Familiar characters explain a real idea through their own story world.",
+    "url": "https://wiggly.agentenamel.com/formats/otaku-explainer",
+    "outputLabel": "otaku-explainer.mp4"
+  },
+  "music": {
+    "file": "fixed/cancun-sega-genesis.mp3",
+    "authorized": true,
+    "provenance": "If Playboi Carti's \"Cancun\" was on the Sega Genesis (INSTRUMENTAL) — https://www.youtube.com/watch?v=-zdI0S0Vuzs",
+    "volume": 0.2,
+    "attribution": "Background music: Playboi Carti - Cancun (Sega Genesis Instrumental)"
+  },
+  "steps": [
+    {
+      "id": "proof-first",
+      "kind": "hero",
+      "number": "1",
+      "label": "See the finished result",
+      "background": "lime",
+      "durationSeconds": 4.5,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "otaku-explainer/final-result.mp4",
+        "startSeconds": 0,
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Official proof media sourced from final-result.mp4."
+      }
+    },
+    {
+      "id": "social-proof",
+      "kind": "social-proof",
+      "number": "2",
+      "label": "Compare with the viral format",
+      "windowTitle": "Terminal — Compare with the viral format",
+      "background": "lime",
+      "durationSeconds": 10.433333333333334,
+      "narration": {
+        "file": "otaku-explainer/step-02.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.842,
+          "text": "Look at this viral anime explainer breaking"
+        },
+        {
+          "start": 2.842,
+          "end": 4.729,
+          "text": "down technical ideas through characters."
+        },
+        {
+          "start": 4.729,
+          "end": 7.371,
+          "text": "Wiggly packages this exact format so your"
+        },
+        {
+          "start": 7.371,
+          "end": 9.637,
+          "text": "coding agent can build it locally."
+        }
+      ],
+      "media": {
+        "type": "image",
+        "file": "otaku-explainer/viral-reference-proof.png",
+        "fit": "contain",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      }
+    },
+    {
+      "id": "choose-format",
+      "kind": "browser",
+      "number": "3",
+      "label": "Copy the coding agent prompt",
+      "windowTitle": "Wiggly — Cartoon Explainer",
+      "background": "lime",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "otaku-explainer/step-03.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.78,
+          "text": "On Wiggly, open the Cartoon Explainer format,"
+        },
+        {
+          "start": 2.78,
+          "end": 4.623,
+          "text": "choose Send to Coding Agent,"
+        },
+        {
+          "start": 4.623,
+          "end": 6.098,
+          "text": "and copy the prompt."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "otaku-explainer/browser-interaction.mp4",
+        "fit": "contain",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      }
+    },
+    {
+      "id": "run-agent",
+      "kind": "terminal",
+      "number": "4",
+      "label": "Paste into your coding agent",
+      "windowTitle": "Coding Agent (Antigravity / Claude Code) — Cartoon Explainer",
+      "background": "blue",
+      "durationSeconds": 8.5,
+      "narration": {
+        "file": "otaku-explainer/step-04.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.732,
+          "text": "Paste the instructions into Antigravity or Claude"
+        },
+        {
+          "start": 2.732,
+          "end": 3.094,
+          "text": "Code."
+        },
+        {
+          "start": 3.094,
+          "end": 5.626,
+          "text": "The agent reads the package and sets"
+        },
+        {
+          "start": 5.626,
+          "end": 7.071,
+          "text": "up your story world."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "otaku-explainer/step-04-intake.mp4",
+        "fit": "cover",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "checkpoint": {
+        "eyebrow": "Your checkpoint",
+        "headline": "The agent is using the packaged compositor—not inventing a slideshow.",
+        "badge": "Verified 0 providers"
+      }
+    },
+    {
+      "id": "review-lessons",
+      "kind": "terminal",
+      "number": "5",
+      "label": "Review the scene plan",
+      "windowTitle": "Antigravity — Scene Plan Review",
+      "background": "blue",
+      "durationSeconds": 8.5,
+      "narration": {
+        "file": "otaku-explainer/step-05.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.92,
+          "text": "Review the character roles and dialogue script"
+        },
+        {
+          "start": 2.92,
+          "end": 3.697,
+          "text": "before rendering."
+        },
+        {
+          "start": 3.697,
+          "end": 6.417,
+          "text": "You stay in complete control of the"
+        },
+        {
+          "start": 6.417,
+          "end": 6.806,
+          "text": "story."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "otaku-explainer/step-05-review.mp4",
+        "fit": "cover",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "checkpoint": {
+        "eyebrow": "Your one checkpoint",
+        "headline": "Review the story world dialogue and character cast.",
+        "badge": "Then approve"
+      }
+    },
+    {
+      "id": "package-breakdown",
+      "kind": "package-breakdown",
+      "number": "6",
+      "label": "Inspect the included assets",
+      "windowTitle": "Terminal — Inspect the included assets",
+      "background": "lime",
+      "durationSeconds": 8.966666666666667,
+      "narration": {
+        "file": "otaku-explainer/step-06.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 3.015,
+          "text": "The package includes transparent character renders,"
+        },
+        {
+          "start": 3.015,
+          "end": 5.361,
+          "text": "story backgrounds, and voice models."
+        },
+        {
+          "start": 5.361,
+          "end": 8.177,
+          "text": "No external image generator is required."
+        }
+      ]
+    },
+    {
+      "id": "any-show",
+      "kind": "any-show",
+      "number": "7",
+      "label": "Create for any cartoon show",
+      "windowTitle": "Terminal — Create for any cartoon show",
+      "background": "lime",
+      "durationSeconds": 12.8,
+      "narration": {
+        "file": "otaku-explainer/step-any-show.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.771,
+          "text": "Want a different show?"
+        },
+        {
+          "start": 1.771,
+          "end": 3.735,
+          "text": "You can pick Danny Phantom,"
+        },
+        {
+          "start": 3.735,
+          "end": 5.306,
+          "text": "SpongeBob, or any cartoon."
+        },
+        {
+          "start": 5.306,
+          "end": 7.27,
+          "text": "The agent searches for characters,"
+        },
+        {
+          "start": 7.27,
+          "end": 8.841,
+          "text": "cuts out transparent renders,"
+        },
+        {
+          "start": 8.841,
+          "end": 11.591,
+          "text": "clones their voices, and writes in their"
+        },
+        {
+          "start": 11.591,
+          "end": 12.379,
+          "text": "exact personality."
+        }
+      ]
+    },
+    {
+      "id": "replacement-value",
+      "kind": "replacement-value",
+      "number": "8",
+      "label": "Verify zero generation fees",
+      "windowTitle": "Terminal — Verify zero generation fees",
+      "background": "lime",
+      "durationSeconds": 9.233333333333333,
+      "narration": {
+        "file": "otaku-explainer/step-07.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.673,
+          "text": "You don't need an image model,"
+        },
+        {
+          "start": 2.673,
+          "end": 5.558,
+          "text": "a video model, or a dedicated GPU."
+        },
+        {
+          "start": 5.558,
+          "end": 8.442,
+          "text": "Everything renders locally with zero API credits."
+        }
+      ]
+    },
+    {
+      "id": "approve-render",
+      "kind": "terminal",
+      "number": "9",
+      "label": "Approve and render the video",
+      "windowTitle": "Coding Agent — Final Render",
+      "background": "blue",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "otaku-explainer/step-08.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.043,
+          "text": "Once you approve the plan,"
+        },
+        {
+          "start": 2.043,
+          "end": 4.623,
+          "text": "the agent runs the local compositor and"
+        },
+        {
+          "start": 4.623,
+          "end": 6.098,
+          "text": "builds the final video."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "otaku-explainer/step-08-render.mp4",
+        "fit": "cover",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "checkpoint": {
+        "eyebrow": "Final MP4",
+        "headline": "Video rendered and verified locally.",
+        "badge": "Ready to post"
+      }
+    },
+    {
+      "id": "finished-output",
+      "kind": "final",
+      "number": "10",
+      "label": "Watch the finished output",
+      "background": "lime",
+      "durationSeconds": 8,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "otaku-explainer/final-result.mp4",
+        "startSeconds": 0,
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Official proof media sourced from final-result.mp4."
+      }
+    },
+    {
+      "id": "scorecard",
+      "kind": "scorecard",
+      "number": "11",
+      "label": "Verify the quality scorecard",
+      "windowTitle": "Terminal — Verify the quality scorecard",
+      "background": "lime",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "otaku-explainer/step-10.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 3.638,
+          "text": "Every video passes thirteen automated quality checks"
+        },
+        {
+          "start": 3.638,
+          "end": 5.603,
+          "text": "for audio sync, dimensions,"
+        },
+        {
+          "start": 5.603,
+          "end": 6.585,
+          "text": "and timing."
+        }
+      ]
+    },
+    {
+      "id": "checklist",
+      "kind": "checklist",
+      "number": "12",
+      "label": "Start with the beginner checklist",
+      "windowTitle": "Terminal — Start with the beginner checklist",
+      "background": "cream",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "otaku-explainer/step-11.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.371,
+          "text": "To make your own,"
+        },
+        {
+          "start": 1.371,
+          "end": 3.42,
+          "text": "pick a topic, choose a story world,"
+        },
+        {
+          "start": 3.42,
+          "end": 5.469,
+          "text": "and run the prompt in your favorite"
+        },
+        {
+          "start": 5.469,
+          "end": 6.054,
+          "text": "coding agent."
+        }
+      ]
+    },
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "number": "13",
+      "label": "Replace three separate tools",
+      "windowTitle": "Terminal — Replace three separate tools",
+      "background": "lime",
+      "durationSeconds": 7.533333333333333,
+      "narration": {
+        "file": "otaku-explainer/step-12.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.829,
+          "text": "Wiggly replaces drawing tools,"
+        },
+        {
+          "start": 1.829,
+          "end": 3.866,
+          "text": "voice subscriptions, and video editors."
+        },
+        {
+          "start": 3.866,
+          "end": 6.717,
+          "text": "The link to get started is below."
+        }
+      ]
+    }
+  ]
+}
