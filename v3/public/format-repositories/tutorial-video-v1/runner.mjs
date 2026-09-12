@@ -272,10 +272,20 @@ end tell
       spawnSync("open", ["-a", "QuickTime Player", resolved], { stdio: "ignore" });
       return true;
     }
+  } else if (process.platform === "win32") {
+    // Windows: Close any open media player instances that might hold an NTFS file lock on the target file
+    try {
+      // Gracefully close Windows Media Player or Movies & TV if active
+      spawnSync("powershell", ["-Command", `Stop-Process -Name "wmplayer", "Video.UI" -ErrorAction SilentlyContinue`], { stdio: "ignore" });
+    } catch {}
+    // Open fresh file using default system video player
+    spawnSync("cmd", ["/c", "start", "", resolved], { stdio: "ignore" });
+    console.log(`[wiggly] Opened ${path.relative(ROOT, resolved)} in default Windows media player.`);
+    return true;
   } else {
-    // Linux/Windows fallback
-    const opener = process.platform === "win32" ? "start" : "xdg-open";
-    spawnSync(opener, [resolved], { stdio: "ignore" });
+    // Linux fallback
+    spawnSync("xdg-open", [resolved], { stdio: "ignore" });
+    console.log(`[wiggly] Opened ${path.relative(ROOT, resolved)} via xdg-open.`);
     return true;
   }
 }
