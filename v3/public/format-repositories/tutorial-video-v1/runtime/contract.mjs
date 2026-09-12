@@ -5,7 +5,7 @@ import path from "node:path";
 export const VIDEO = Object.freeze({ width: 1920, height: 1080, fps: 30 });
 export const ALLOWED_STEP_KINDS = Object.freeze([
   "hero", "browser", "terminal", "media", "final", "end",
-  "social-proof", "package-breakdown", "replacement-value", "scorecard", "checklist", "workflow"
+  "social-proof", "package-breakdown", "any-show", "replacement-value", "scorecard", "checklist", "workflow"
 ]);
 export const ALLOWED_BACKGROUNDS = Object.freeze(["lime", "blue", "cream"]);
 
@@ -128,7 +128,7 @@ export function validateTutorialInput(input, { mediaRoot }) {
       }
       media = { ...media, startSeconds, fit };
     }
-    if (!["end", "package-breakdown", "replacement-value", "scorecard", "checklist", "workflow"].includes(rawStep.kind)) {
+    if (!["end", "package-breakdown", "any-show", "replacement-value", "scorecard", "checklist", "workflow"].includes(rawStep.kind)) {
       assert(media, `${id}.media is required for ${rawStep.kind} sections.`);
     }
 

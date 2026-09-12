@@ -333,11 +333,19 @@ export async function make(options = {}) {
     }
   };
 
+  const isOtaku = targetSlug.includes("otaku") || (harvested.format.name || "").toLowerCase().includes("cartoon");
+
   // Step 2: Social Proof (8.5s)
   const socialProofMedia = harvested.media.socialProofStill || {
-    file: `${targetSlug}/mugsyclips-profile.png`,
+    file: existsSync(path.join(MEDIA_ROOT, "fixed", "viral-benchmark.png"))
+      ? "fixed/viral-benchmark.png"
+      : "mugsy-explains/mugsyclips-profile.png",
     type: "image"
   };
+  const step2Text = isOtaku
+    ? `Look at this viral anime explainer breaking down technical ideas through characters. Wiggly packages this exact format so your coding agent can build it locally.`
+    : `Look at Mugsy Clips on Instagram with thirty-five thousand followers. Wiggly packages this exact comparison format so your coding agent can build it locally.`;
+
   const step2Result = await buildNarratedTutorialStep({
     id: "social-proof",
     number: 2,
@@ -346,7 +354,7 @@ export async function make(options = {}) {
     background: "lime",
     mediaPath: socialProofMedia.file,
     mediaType: "image",
-    narrationText: `Look at Mugsy Clips on Instagram with thirty-five thousand followers. Wiggly packages this exact comparison format so your coding agent can build it locally.`,
+    narrationText: step2Text,
     audioRelPath: `${targetSlug}/step-02.wav`,
     audioFullPath: path.join(audioOutputDir, "step-02.wav"),
     voice: "zach",
@@ -355,6 +363,10 @@ export async function make(options = {}) {
 
   // Step 3: Browser (Copy prompt) (7.5s)
   const browserMedia = harvested.media.browserVideo || harvested.media.browserStill;
+  const step3Text = isOtaku
+    ? `On Wiggly, open the Cartoon Explainer format, choose Send to Coding Agent, and copy the prompt.`
+    : `On Wiggly, open the Mugsy Explains format, choose Send to Coding Agent, and copy the prompt.`;
+
   const step3Result = await buildNarratedTutorialStep({
     id: "choose-format",
     number: 3,
@@ -364,7 +376,7 @@ export async function make(options = {}) {
     background: "lime",
     mediaPath: browserMedia.file,
     mediaType: browserMedia.type,
-    narrationText: `On Wiggly, open the Mugsy Explains format, choose Send to Coding Agent, and copy the prompt.`,
+    narrationText: step3Text,
     audioRelPath: `${targetSlug}/step-03.wav`,
     audioFullPath: path.join(audioOutputDir, "step-03.wav"),
     voice: "zach",
@@ -373,6 +385,10 @@ export async function make(options = {}) {
 
   // Step 4: Terminal (Paste into agent) (8.5s)
   const intakeMedia = harvested.media.intakeVideo || harvested.media.terminalVideo || harvested.media.terminalStill;
+  const step4Text = isOtaku
+    ? `Paste the instructions into Antigravity or Claude Code. The agent reads the package and sets up your story world.`
+    : `Paste the instructions into Antigravity or Claude Code. The agent reads the package and sets up your lessons.`;
+
   const step4Result = await buildNarratedTutorialStep({
     id: "run-agent",
     number: 4,
@@ -383,7 +399,7 @@ export async function make(options = {}) {
     mediaPath: intakeMedia.file,
     mediaType: intakeMedia.type,
     mediaFit: "cover",
-    narrationText: `Paste the instructions into Antigravity or Claude Code. The agent reads the package and sets up your lessons.`,
+    narrationText: step4Text,
     audioRelPath: `${targetSlug}/step-04.wav`,
     audioFullPath: path.join(audioOutputDir, "step-04.wav"),
     voice: "zach",
@@ -400,17 +416,21 @@ export async function make(options = {}) {
 
   // Step 5: Review Lessons Checkpoint (8.5s)
   const reviewMedia = harvested.media.reviewVideo || harvested.media.terminalVideo || harvested.media.terminalStill;
+  const step5Text = isOtaku
+    ? `Review the character roles and dialogue script before rendering. You stay in complete control of the story.`
+    : `Review the three comparative lessons and character poses before rendering. You stay in control of the creative output.`;
+
   const step5Result = await buildNarratedTutorialStep({
     id: "review-lessons",
     number: 5,
-    label: "Review the lesson plan",
+    label: isOtaku ? "Review the scene plan" : "Review the lesson plan",
     kind: "terminal",
-    windowTitle: `Antigravity — Lesson Review`,
+    windowTitle: isOtaku ? `Antigravity — Scene Plan Review` : `Antigravity — Lesson Review`,
     background: "blue",
     mediaPath: reviewMedia.file,
     mediaType: reviewMedia.type,
     mediaFit: "cover",
-    narrationText: `Review the three comparative lessons and character poses before rendering. You stay in control of the creative output.`,
+    narrationText: step5Text,
     audioRelPath: `${targetSlug}/step-05.wav`,
     audioFullPath: path.join(audioOutputDir, "step-05.wav"),
     voice: "zach",
@@ -419,20 +439,28 @@ export async function make(options = {}) {
   if (reviewMedia && reviewMedia.type === "video" && reviewMedia.durationSeconds && step5Result.step.durationSeconds > reviewMedia.durationSeconds) {
     step5Result.step.durationSeconds = Math.floor(reviewMedia.durationSeconds * 30) / 30;
   }
-  step5Result.step.checkpoint = {
+  step5Result.step.checkpoint = isOtaku ? {
+    eyebrow: "Your one checkpoint",
+    headline: "Review the story world dialogue and character cast.",
+    badge: "Then approve"
+  } : {
     eyebrow: "Your one checkpoint",
     headline: "Review the 3 comparative lessons and character poses.",
     badge: "Then approve"
   };
 
   // Step 6: Package Breakdown (8.0s)
+  const step6Text = isOtaku
+    ? `The package includes transparent character renders, story backgrounds, and voice models. No external image generator is required.`
+    : `The package includes five expressive cartoon poses and the handwritten Virgil font. No external image generator is required.`;
+
   const step6Result = await buildNarratedTutorialStep({
     id: "package-breakdown",
     number: 6,
     label: "Inspect the included assets",
     kind: "package-breakdown",
     background: "lime",
-    narrationText: `The package includes five expressive cartoon poses and the handwritten Virgil font. No external image generator is required.`,
+    narrationText: step6Text,
     audioRelPath: `${targetSlug}/step-06.wav`,
     audioFullPath: path.join(audioOutputDir, "step-06.wav"),
     voice: "zach",
@@ -514,13 +542,17 @@ export async function make(options = {}) {
   });
 
   // Step 11: Beginner Checklist (7.5s)
+  const step11Text = isOtaku
+    ? `To make your own, pick a topic, choose a story world, and run the prompt in your favorite coding agent.`
+    : `To make your own, pick a topic, choose three lessons, and run the prompt in your favorite coding agent.`;
+
   const step11Result = await buildNarratedTutorialStep({
     id: "checklist",
     number: 11,
     label: "Start with the beginner checklist",
     kind: "checklist",
     background: "cream",
-    narrationText: `To make your own, pick a topic, choose three lessons, and run the prompt in your favorite coding agent.`,
+    narrationText: step11Text,
     audioRelPath: `${targetSlug}/step-11.wav`,
     audioFullPath: path.join(audioOutputDir, "step-11.wav"),
     voice: "zach",

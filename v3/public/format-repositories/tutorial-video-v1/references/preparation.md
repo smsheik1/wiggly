@@ -12,6 +12,7 @@ technical detail in the run receipt.
 3. Capture the real workflow: the Format page and the coding-agent/terminal
    action that copies, runs, and checks the Repo. Use the host agent's browser
    or recording capability and record the source and authorization.
+   - **Modal Dismiss Rule:** Never delete modal elements in the DOM. Always click the native close button (`[aria-label="Close"]`). Deleting the modal leaves the dark backdrop scrim active; clicking the real button restores full native brightness.
 4. Write short action-led narration that matches the captured actions. Use the
    same target name and avoid filler. Show the finished result first, then the
    path to reproduce it, then a visible checkpoint.
