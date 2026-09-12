@@ -127,8 +127,10 @@ node runner.mjs render --input=my-tutorial.json --output=my-tutorial.mp4
 node runner.mjs inspect --input=my-tutorial.mp4 --report=quality-report.json
 ```
 
-### Live Render Visibility for Coding Agents
-Whenever running `node runner.mjs render`, the runtime generates an interactive Generative UI widget at `progress.html`. In AI agent environments (Antigravity, Cursor, Claude Code), the agent **must** immediately surface this live HUD widget inline in the chat using `<agent-embed src="file:///.../render_progress.html"></agent-embed>` to give the user live real-time visual progress during the render.
+### Live Render Visibility & Autonomous Review for Coding Agents
+Whenever running `node runner.mjs render`, the runtime generates an interactive Generative UI widget at `progress.html`. In AI agent environments (Antigravity, Cursor, Claude Code):
+1. The agent **must** immediately surface this live HUD widget inline in the chat using `<agent-embed src="file:///.../render_progress.html"></agent-embed>` to give the user live visual feedback during the multi-minute Remotion render.
+2. The moment the render finishes and inspection passes, the agent **must automatically execute `open -a "QuickTime Player" <path>`** so the final video immediately opens on the user's screen without requiring manual clicks or terminal copy-pastes.
 
 ## Multi-Platform Social Distribution (Optional)
 
