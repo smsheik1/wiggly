@@ -41,9 +41,14 @@ considered whether all these validation rules are needed at this stage?"
 
 ✅ `L30-44: shrink: manual loop builds dict. dict(zip(keys, values)), 1 line.`
 
-## Scoring
+## Scoring & Worthiness Verdict
 
-End with the only metric that matters: `net: -<N> lines possible.`
+End with the metric and an explicit **Worthiness Verdict** so the user immediately knows if cutting this actually speeds up the agent or is just cosmetic bikeshedding:
+
+1. `net: -<N> lines possible.`
+2. **Worthiness Verdict:**
+   - **WORTH IT:** Meaningful complexity cut (e.g. removes an unnecessary npm package, eliminates a 50-line speculative factory, speeds up agent comprehension/token context, or cuts error surfaces).
+   - **NOT WORTH IT (Lean already):** Minor cosmetic shrinking (e.g. shaving 3 lines of readable JSX, clever array tricks, or micro-optimizations that won't speed up the agent or user). Recommendation: `Lean already. Ship.`
 
 If there is nothing to cut, say `Lean already. Ship.` and stop.
 
