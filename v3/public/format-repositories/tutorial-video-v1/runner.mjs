@@ -243,6 +243,43 @@ export function inspect(inputFile, reportFile) {
   return report;
 }
 
+export function openVideoInPlayer(videoPath) {
+  const resolved = path.resolve(videoPath);
+  if (!existsSync(resolved)) throw new Error(`Video file does not exist: ${resolved}`);
+  const filename = path.basename(resolved);
+
+  if (process.platform === "darwin") {
+    // macOS: Close any stale open document with this name in QuickTime to bust the buffer cache, then re-open and play from 00:00
+    const script = `
+tell application "QuickTime Player"
+    activate
+    repeat with d in (every document whose name is "${filename}")
+        close d saving no
+    end repeat
+    set movieDoc to open POSIX file "${resolved}"
+    tell movieDoc
+        set current time to 0
+        play
+    end tell
+end tell
+    `.trim();
+    try {
+      execFileSync("osascript", ["-e", script], { stdio: "ignore" });
+      console.log(`[wiggly] Opened ${path.relative(ROOT, resolved)} in QuickTime Player from 00:00.`);
+      return true;
+    } catch {
+      // Fall back to standard open command
+      spawnSync("open", ["-a", "QuickTime Player", resolved], { stdio: "ignore" });
+      return true;
+    }
+  } else {
+    // Linux/Windows fallback
+    const opener = process.platform === "win32" ? "start" : "xdg-open";
+    spawnSync(opener, [resolved], { stdio: "ignore" });
+    return true;
+  }
+}
+
 export function finalize(inputFile, reportFile, reviewFile, outputFile) {
   const input = path.resolve(inputFile);
   const reportPath = path.resolve(reportFile);
@@ -680,6 +717,7 @@ if (path.resolve(process.argv[1] || "") === fileURLToPath(import.meta.url)) {
       copyFileSync(path.join(ROOT, "fixtures", "template", "input.json"), output);
       console.log(`Created ${output}`);
     } else if (command === "render") await render(requiredArgument("input"), requiredArgument("output"));
+    else if (command === "open") openVideoInPlayer(requiredArgument("input"));
     else if (command === "inspect") inspect(requiredArgument("input"), argument("report"));
     else if (command === "finalize") finalize(requiredArgument("input"), requiredArgument("report"), requiredArgument("review"), argument("output"));
     else if (command === "smoke") await smoke();
