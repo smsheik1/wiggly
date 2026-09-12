@@ -255,10 +255,10 @@
       "id": "any-show",
       "kind": "any-show",
       "number": "7",
-      "label": "Create for any cartoon show",
-      "windowTitle": "Terminal — Create for any cartoon show",
+      "label": "Works with any cartoon or anime",
+      "windowTitle": "Terminal — Works with any cartoon or anime",
       "background": "lime",
-      "durationSeconds": 12.8,
+      "durationSeconds": 16.0,
       "narration": {
         "file": "otaku-explainer/step-any-show.wav",
         "startSeconds": 0.2,
@@ -268,37 +268,42 @@
       "captions": [
         {
           "start": 0.2,
-          "end": 1.771,
-          "text": "Want a different show?"
+          "end": 2.637,
+          "text": "You're not stuck with only these characters."
         },
         {
-          "start": 1.771,
-          "end": 3.735,
-          "text": "You can pick Danny Phantom,"
+          "start": 2.637,
+          "end": 5.074,
+          "text": "This Wiggly format works with any cartoon"
         },
         {
-          "start": 3.735,
-          "end": 5.306,
-          "text": "SpongeBob, or any cartoon."
+          "start": 5.074,
+          "end": 6.118,
+          "text": "show or anime."
         },
         {
-          "start": 5.306,
-          "end": 7.27,
-          "text": "The agent searches for characters,"
+          "start": 6.118,
+          "end": 8.555,
+          "text": "If you pick a show that isn't"
         },
         {
-          "start": 7.27,
-          "end": 8.841,
-          "text": "cuts out transparent renders,"
+          "start": 8.555,
+          "end": 10.992,
+          "text": "in the repo, the agent searches for"
         },
         {
-          "start": 8.841,
-          "end": 11.591,
+          "start": 10.992,
+          "end": 12.385,
+          "text": "characters, grabs transparent cutouts,"
+        },
+        {
+          "start": 12.385,
+          "end": 14.822,
           "text": "clones their voices, and writes in their"
         },
         {
-          "start": 11.591,
-          "end": 12.379,
+          "start": 14.822,
+          "end": 15.519,
           "text": "exact personality."
         }
       ]
@@ -385,16 +390,16 @@
       "kind": "final",
       "number": "10",
       "label": "Watch the finished output",
-      "background": "lime",
+      "background": "cream",
       "durationSeconds": 8,
       "nativeAudio": true,
       "media": {
         "type": "video",
-        "file": "otaku-explainer/final-result.mp4",
+        "file": "otaku-explainer/danny-apis.mp4",
         "startSeconds": 0,
         "fit": "contain",
         "authorized": true,
-        "provenance": "Official proof media sourced from final-result.mp4."
+        "provenance": "Official Danny Phantom API lesson proof video from Wiggly Format Lab."
       }
     },
     {
@@ -403,7 +408,7 @@
       "number": "11",
       "label": "Verify the quality scorecard",
       "windowTitle": "Terminal — Verify the quality scorecard",
-      "background": "lime",
+      "background": "cream",
       "durationSeconds": 7.5,
       "narration": {
         "file": "otaku-explainer/step-10.wav",
@@ -472,7 +477,7 @@
       "number": "13",
       "label": "Replace three separate tools",
       "windowTitle": "Terminal — Replace three separate tools",
-      "background": "lime",
+      "background": "cream",
       "durationSeconds": 7.533333333333333,
       "narration": {
         "file": "otaku-explainer/step-12.wav",

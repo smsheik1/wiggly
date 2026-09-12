@@ -127,6 +127,9 @@ node runner.mjs render --input=my-tutorial.json --output=my-tutorial.mp4
 node runner.mjs inspect --input=my-tutorial.mp4 --report=quality-report.json
 ```
 
+### Live Render Visibility for Coding Agents
+Whenever running `node runner.mjs render`, the runtime generates an interactive Generative UI widget at `progress.html`. In AI agent environments (Antigravity, Cursor, Claude Code), the agent **must** immediately surface this live HUD widget inline in the chat using `<agent-embed src="file:///.../render_progress.html"></agent-embed>` to give the user live real-time visual progress during the render.
+
 ## Multi-Platform Social Distribution (Optional)
 
 When a tutorial video is rendered and approved, the agent can distribute it across YouTube, Instagram, TikTok, and X via the packaged `runtime/publish.mjs` CLI or connected Buffer MCP tools:
