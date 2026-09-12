@@ -330,6 +330,8 @@ export async function make(options = {}) {
   const skipRender = options.skipRender ?? (process.argv.includes("--skip-render") || process.argv.includes("--dry-run"));
   const outputFile = options.output || argument("output", path.join(ROOT, "outputs", `${targetSlug}-tutorial.mp4`));
   const recipeOption = options.recipe || argument("recipe");
+  const payoffDurationOption = options.payoffDuration !== undefined ? Number(options.payoffDuration) : (argument("payoff-duration") ? Number(argument("payoff-duration")) : undefined);
+  const payoffStartOption = options.payoffStart !== undefined ? Number(options.payoffStart) : (argument("payoff-start") ? Number(argument("payoff-start")) : undefined);
 
   console.log(`[make] Starting autonomous 1-click tutorial generator for: ${targetSlug} (audience: ${audience})`);
 
@@ -555,19 +557,38 @@ export async function make(options = {}) {
     badge: "Ready to post"
   };
 
-  // Step 9: Finished Output Payoff (8.0s)
+  // Step 9: Finished Output Payoff (dynamically adapted to format proof)
+  const availableProofDur = (harvested.media.proofVideo && harvested.media.proofVideo.durationSeconds) || proofFullDuration || 25.0;
+  let payoffDuration = 18.0;
+  let payoffStart = 0;
+
+  if (payoffDurationOption !== undefined) {
+    payoffDuration = payoffDurationOption;
+  } else if (isOtaku) {
+    payoffDuration = 26.0;
+  } else if (availableProofDur > 0) {
+    // Play up to 25 seconds or the full remaining proof length
+    payoffDuration = Math.min(25.0, Math.max(12.0, Math.floor(availableProofDur * 30) / 30));
+  }
+
+  if (payoffStartOption !== undefined) {
+    payoffStart = payoffStartOption;
+  } else if (isOtaku && availableProofDur >= 50) {
+    payoffStart = 26.5;
+  }
+
   const step9Proof = {
     id: "finished-output",
     kind: "final",
     number: "9",
     label: "Watch the finished output",
-    background: "lime",
-    durationSeconds: 8.0,
+    background: isOtaku ? "cream" : "lime",
+    durationSeconds: payoffDuration,
     nativeAudio: true,
     media: {
       type: "video",
       file: harvested.media.proofVideo.file,
-      startSeconds: 0,
+      startSeconds: payoffStart,
       fit: "contain",
       authorized: true,
       provenance: harvested.media.proofVideo.provenance
