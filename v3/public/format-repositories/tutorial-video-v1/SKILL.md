@@ -53,7 +53,7 @@ A score $\ge 85$ (`PASS`) is required for release.
 
 To autonomously build a complete tutorial without manual screen recording or manual voiceover typing:
 ```bash
-node runner.mjs make --target=<format-slug> [--audience=creator|developer] [--skip-render]
+node runner.mjs make --target=<format-slug> [--audience=creator|developer] [--payoff-duration=26] [--payoff-start=0] [--skip-render]
 # Example:
 node runner.mjs make --target=mugsy-explains
 ```
