@@ -605,33 +605,39 @@ Download and extract into a new workspace. Report the exact published Format ver
 
     if (isOtaku) {
       responseHtml = `
-        <div class="resp-title">Format Intake Complete ✓</div>
-        <p><strong>Published Format:</strong> <code>${formatSlug} (v1.2.0)</code> • <strong>Story Worlds:</strong> Naruto, Yu-Gi-Oh, Danny Phantom packaged.</p>
-        <div style="margin-top: 14px; font-weight: 600; color: #fff; font-size: 15px;">What topic and story world would you like to create?</div>
-        <ul class="option-list">
-          <li id="opt1" class="selectable"><strong>• Compilers vs Interpreters</strong> <span class="dim">(Naruto world: Kakashi teaches Naruto & Orochimaru)</span></li>
-          <li><strong>• Proof of Work vs Proof of Stake</strong> <span class="dim">(Yu-Gi-Oh world: Kaiba vs Yugi duel)</span></li>
-          <li><strong>• RAM vs Solid State Storage</strong> <span class="dim">(Danny Phantom: Fenton ghost portal energy)</span></li>
-        </ul>
+        <div class="resp-title">Cartoon Explainer Repo Launched ✓</div>
+        <p style="font-size: 16px; color: #f4f4f5; line-height: 1.5; margin-top: 4px;">
+          You've launched the <strong>Cartoon Explainer Repo</strong>. Verified 3 packaged story worlds (Naruto, Danny Phantom, Yu-Gi-Oh) with zero external API fees.
+        </p>
+        <div style="margin-top: 14px; font-weight: 700; color: #38bdf8; font-size: 15px;">
+          What topic do you want to create a video for today?
+        </div>
+        <div id="user-reply-box" class="user-reply-msg">
+          <span class="user-reply-tag">USER</span>
+          <span id="typewriter-text"></span><span class="type-cursor">|</span>
+        </div>
       `;
     } else {
       responseHtml = `
-        <div class="resp-title">Format Intake Complete ✓</div>
-        <p><strong>Published Format:</strong> <code>${formatSlug} (v0.3.0)</code> • <strong>Runtime:</strong> 5 cartoon poses verified, 0 provider fees.</p>
-        <div style="margin-top: 14px; font-weight: 600; color: #fff; font-size: 15px;">What 3-lesson comparison would you like to create?</div>
-        <ul class="option-list">
-          <li id="opt1" class="selectable"><strong>• Sourdough vs Store-Bought Bread</strong> <span class="dim">(Fermentation, wild yeast, digestion)</span></li>
-          <li><strong>• Cold Brew vs Iced Coffee</strong> <span class="dim">(Acidity, extraction chemistry, caffeine)</span></li>
-          <li><strong>• Mechanical vs Membrane Keyboards</strong> <span class="dim">(Switches, tactile lifespan, fatigue)</span></li>
-        </ul>
+        <div class="resp-title">${formatName} Repo Launched ✓</div>
+        <p style="font-size: 16px; color: #f4f4f5; line-height: 1.5; margin-top: 4px;">
+          You've launched the <strong>${formatName} Repo</strong>. Verified official runtime with zero provider fees.
+        </p>
+        <div style="margin-top: 14px; font-weight: 700; color: #38bdf8; font-size: 15px;">
+          What topic do you want to create a video for today?
+        </div>
+        <div id="user-reply-box" class="user-reply-msg">
+          <span class="user-reply-tag">USER</span>
+          <span id="typewriter-text"></span><span class="type-cursor">|</span>
+        </div>
       `;
     }
     cursorStart = { x: 250, y: 220 };
-    cursorTarget = { x: 380, y: 340 };
+    cursorTarget = { x: 720, y: 395 };
     clickTarget = true;
   } else if (isReview) {
     if (isOtaku) {
-      userText = `Let's do Compilers vs Interpreters in the Naruto world. Write the Socratic dialogue, verify our retention score, and show me the scene plan before rendering.`;
+      userText = `I want Naruto to explain how MCP servers work for high school students! Write the Socratic dialogue, verify our retention score, and show me the scene plan before rendering.`;
 
       toolsHtml = `
         <div class="tool-row">
@@ -853,6 +859,45 @@ Download and extract into a new workspace. Report the exact published Format ver
     opacity: 1;
     transform: translateY(0);
   }
+  .user-reply-msg {
+    margin-top: 18px;
+    background: #27272a;
+    border: 1.5px solid #38bdf8;
+    border-radius: 12px;
+    padding: 12px 18px;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);
+    width: fit-content;
+    max-width: 90%;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .user-reply-msg.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .user-reply-tag {
+    background: #38bdf8;
+    color: #09090b;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+  }
+  .type-cursor {
+    animation: blink 0.8s infinite;
+    color: #38bdf8;
+    font-weight: 700;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
   .resp-title {
     color: #ffffff;
     font-size: 18px;
@@ -1005,25 +1050,38 @@ Download and extract into a new workspace. Report the exact published Format ver
     const progressFill = document.querySelector('.progress-fill');
     const opt1 = document.getElementById('opt1');
 
+    const userReplyBox = document.getElementById('user-reply-box');
+    const typewriterText = document.getElementById('typewriter-text');
+    const replyString = "I want Naruto to explain how MCP servers work for high school students!";
+
     setTimeout(() => {
       tools.classList.add('visible');
       if (progressFill) progressFill.classList.add('done');
-    }, 900);
+    }, 800);
 
     setTimeout(() => {
       response.classList.add('visible');
-    }, 1800);
+    }, 1600);
 
     setTimeout(() => {
       cursor.style.left = '${cursorTarget.x}px';
       cursor.style.top = '${cursorTarget.y}px';
-    }, 3000);
+    }, 2400);
 
-    ${clickTarget ? `
-    setTimeout(() => {
-      if (opt1) opt1.classList.add('active');
-    }, 4000);
-    ` : ''}
+    if (userReplyBox && typewriterText) {
+      setTimeout(() => {
+        userReplyBox.classList.add('visible');
+        let idx = 0;
+        const interval = setInterval(() => {
+          if (idx < replyString.length) {
+            typewriterText.innerText += replyString[idx];
+            idx++;
+          } else {
+            clearInterval(interval);
+          }
+        }, 45);
+      }, 3100);
+    }
   </script>
 </body>
 </html>`;
