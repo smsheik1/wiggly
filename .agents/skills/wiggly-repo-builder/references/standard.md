@@ -198,13 +198,13 @@ For a new lesson, record the behavior, root cause, smallest general rule, and ev
 
 **Evidence:** Capturing `@_otaku_explains_` by removing `div[role="dialog"]` created dark, murky channel screenshots. Clicking Instagram's native `Close` button cleanly tore down the scrim and captured a crisp, bright 2560x1920 proof at 100% saturation.
 
-### 23. Surface live render progress via interactive Generative UI embeds
+### 23. Surface live render progress via interactive Generative UI and auto-open upon completion
 
-**Rule:** Every video render command must emit an interactive Generative UI progress artifact (`progress.html`) alongside `progress.json`. Agents running inside Antigravity, Cursor, Claude Code, or Codex must immediately surface this live HUD widget inline via `<agent-embed>` when a render begins, instead of dumping static ANSI terminal text.
+**Rule:** Every video render command must emit an interactive Generative UI progress artifact (`progress.html`) alongside `progress.json`. Agents running inside Antigravity, Cursor, Claude Code, or Codex must immediately surface this live HUD widget inline via `<agent-embed>` when a render begins. Furthermore, as soon as the render finishes and passes inspection, the agent **must automatically execute `open -a "QuickTime Player" <path>` (or system default player)** so the user can immediately review the video without having to manually copy paths or run shell commands.
 
-**Why:** Terminal ANSI sequences buffer or collapse in IDE background tasks, leaving the user with zero visibility during multi-minute Remotion renders. An interactive Generative UI embed provides real-time frame counts, elapsed/ETA timers, visual stage indicators, and smooth progress bar animation directly in the chat stream.
+**Why:** Terminal ANSI sequences buffer or collapse in IDE background tasks, leaving the user with zero visibility during multi-minute Remotion renders. Sandboxed browser iframes cannot directly spawn native OS apps due to browser security restrictions. Having the agent display the live Generative UI HUD during the render and then autonomously launch QuickTime upon completion provides a seamless, zero-friction developer experience.
 
-**Evidence:** When rendering the 111-second `otaku-explainer.mp4` master, terminal logs stayed stuck at 31% before jumping to 47%. Embedding `render_progress.html` with real-time frame interpolation and live progress polling gave the user an immediate, live-updating visual HUD inside the chat.
+**Evidence:** In the 111-second `otaku-explainer.mp4` render, embedding `render_progress.html` provided real-time visual progress inside the chat. Automatically invoking `open -a "QuickTime Player"` upon task completion popped the video up immediately on macOS for instant creative review.
 
 ## Still testing
 
