@@ -391,12 +391,12 @@
       "number": "10",
       "label": "Watch the finished output",
       "background": "cream",
-      "durationSeconds": 8,
+      "durationSeconds": 26,
       "nativeAudio": true,
       "media": {
         "type": "video",
         "file": "otaku-explainer/danny-apis.mp4",
-        "startSeconds": 0,
+        "startSeconds": 26.5,
         "fit": "contain",
         "authorized": true,
         "provenance": "Official Danny Phantom API lesson proof video from Wiggly Format Lab."

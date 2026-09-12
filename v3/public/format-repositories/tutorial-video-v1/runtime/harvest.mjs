@@ -628,7 +628,7 @@ Download and extract into a new workspace. Report the exact published Format ver
         </div>
         <div id="user-reply-box" class="user-reply-msg">
           <span class="user-reply-tag">USER</span>
-          <span id="typewriter-text"></span><span class="type-cursor">|</span>
+          <span id="typewriter-text" style="white-space: pre-wrap;"></span><span class="type-cursor">|</span>
         </div>
       `;
     }
@@ -706,7 +706,7 @@ Download and extract into a new workspace. Report the exact published Format ver
     cursorStart = { x: 320, y: 180 };
     cursorTarget = { x: 580, y: 295 };
   } else if (isRender) {
-    userText = `Approved. Render the final MP4 with the ${formatName} local Remotion compositor.`;
+    userText = `Looks awesome! Let's render the video.`;
 
     toolsHtml = `
       <div class="tool-row">
@@ -736,6 +736,8 @@ Download and extract into a new workspace. Report the exact published Format ver
     cursorTarget = { x: 350, y: 310 };
     clickTarget = true;
   }
+
+  const showPromptArrow = isReview || isRender;
 
   return `<!DOCTYPE html>
 <html>
@@ -795,6 +797,14 @@ Download and extract into a new workspace. Report the exact published Format ver
     overflow: hidden;
     position: relative;
   }
+  .prompt-callout-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    width: fit-content;
+    max-width: 1620px;
+  }
   .user-msg {
     background: #27272a;
     border: 1px solid #3f3f46;
@@ -805,7 +815,36 @@ Download and extract into a new workspace. Report the exact published Format ver
     line-height: 1.5;
     white-space: pre-wrap;
     box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-    max-width: 1550px;
+    max-width: 1380px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .user-msg.highlighted {
+    border: 2.5px solid #ef4444;
+    box-shadow: 0 0 24px rgba(239, 68, 68, 0.4), 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .red-arrow-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: bounceRight 1.2s infinite ease-in-out;
+    filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.6));
+    flex-shrink: 0;
+  }
+  @keyframes bounceRight {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-14px); }
+  }
+  .arrow-label {
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    padding: 6px 14px;
+    border-radius: 999px;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.5);
+    white-space: nowrap;
+    text-transform: uppercase;
   }
   .tools-container {
     display: flex;
@@ -1030,7 +1069,17 @@ Download and extract into a new workspace. Report the exact published Format ver
   </div>
 
   <div class="content">
-    <div class="user-msg">${userText}</div>
+    <div class="prompt-callout-wrapper">
+      <div class="user-msg ${showPromptArrow ? 'highlighted' : ''}">${userText}</div>
+      ${showPromptArrow ? `
+        <div class="red-arrow-indicator">
+          <svg width="68" height="42" viewBox="0 0 68 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M64 21H12M12 21L28 6M12 21L28 36" stroke="#ef4444" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="arrow-label">YOUR PROMPT</span>
+        </div>
+      ` : ''}
+    </div>
 
     <div class="tools-container" id="tools">
       ${toolsHtml}
@@ -1074,7 +1123,7 @@ Download and extract into a new workspace. Report the exact published Format ver
         let idx = 0;
         const interval = setInterval(() => {
           if (idx < replyString.length) {
-            typewriterText.innerText += replyString[idx];
+            typewriterText.textContent += replyString[idx];
             idx++;
           } else {
             clearInterval(interval);

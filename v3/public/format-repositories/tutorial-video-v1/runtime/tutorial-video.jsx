@@ -491,13 +491,6 @@ function AnyShowShowcase({ step, format }) {
         </div>
       </div>
 
-      <div style={{ position: "absolute", left: 84, right: 84, bottom: 125, background: "rgba(8,11,9,.92)", border: "2px solid rgba(196,255,57,.4)", borderRadius: 16, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: enter }}>
-        <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.lime }}>
-          Google Image Search (Serper) • Transparent Cutouts • Fish Audio Voices • In-Character Lore
-        </div>
-        <div style={{ fontSize: 15, fontWeight: 900, background: COLORS.lime, color: COLORS.ink, padding: "6px 14px", borderRadius: 999 }}>100% AUTONOMOUS</div>
-      </div>
-
       {step.captions.length ? <Caption cues={step.captions} /> : null}
     </AbsoluteFill>
   );
@@ -603,65 +596,163 @@ function BeginnerChecklist({ step, format }) {
     { label: "CLAUDE CODE", logo: "fixed/agent-logos/claude.svg", bg: "#fff", color: "#D97757" },
     { label: "CURSOR", logo: "fixed/agent-logos/cursor.svg", bg: "#fff", color: "#000" },
   ];
+  const otakuWorlds = [
+    {
+      title: "Naruto (Ninja Lore)",
+      desc: "Jutsu scrolls, chakra mana, shinobi exams & fight tactics.",
+      badge: "SHINOBI LORE",
+      img: "otaku-explainer/characters/naruto.png",
+      accent: "#f97316",
+    },
+    {
+      title: "Yu-Gi-Oh (Duel Logic)",
+      desc: "Card rules, tribute summons, trap cards & board states.",
+      badge: "DUEL MONSTERS",
+      img: "otaku-explainer/characters/yugi.png",
+      accent: "#eab308",
+    },
+    {
+      title: "Danny Phantom (Ghost Zone)",
+      desc: "Ectoplasm energy, Fenton tech & spectral powers.",
+      badge: "GHOST ZONE",
+      img: "otaku-explainer/characters/danny-phantom.webp",
+      accent: "#22c55e",
+    },
+  ];
+  const genericLessons = [
+    {
+      title: "1 • Rules vs Prompts",
+      desc: "Hard guardrails beat vague prompt hopes every time.",
+      badge: "FOUNDATION",
+      accent: "#38bdf8",
+    },
+    {
+      title: "2 • Examples vs Luck",
+      desc: "Few-shot reference assets ensure deterministic outputs.",
+      badge: "ACCURACY",
+      accent: "#a855f7",
+    },
+    {
+      title: "3 • Tests vs Hope",
+      desc: "Automated receipts prove the pipeline actually finished.",
+      badge: "VERIFICATION",
+      accent: "#22c55e",
+    },
+  ];
   const isCream = (step.background || "lime") === "cream";
   const textColor = isCream ? COLORS.ink : COLORS.white;
   const eyebrowColor = isCream ? COLORS.ink : COLORS.lime;
+
   return (
     <AbsoluteFill style={{ color: textColor, fontFamily: FONT }}>
       <GridBackground variant={step.background || "lime"} />
       <StepBadge number={step.number} label={step.label} light={isCream} />
       
-      <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
+      <div style={{ position: "absolute", left: 84, top: 112, opacity: enter }}>
         <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: eyebrowColor, opacity: 0.6 }}>BEGINNER CHECKLIST</div>
-        <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
+        <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
           {isOtaku ? "Pick a topic, story world, and coding agent." : "Pick a topic, three lessons, and a coding agent."}
         </div>
       </div>
 
-      <div style={{ position: "absolute", left: 84, right: 84, top: 225, height: 490, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, opacity: enter }}>
-        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 18px 45px rgba(0,0,0,.08)" : undefined, display: "flex", flexDirection: "column" }}>
-          <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>1 • PICK A TOPIC</div>
-          <div style={{ marginTop: 14, fontSize: 24, fontWeight: 900 }}>{isOtaku ? "Compilers vs Interpreters" : "Prompt vs Format"}</div>
-          <div style={{ marginTop: 8, fontSize: 15, color: "#475569", lineHeight: 1.4 }}>{isOtaku ? "Teach any complex technical or creative idea through familiar character lore." : "Start with any creative or technical concept with 3 A-vs-B differences."}</div>
-          <div style={{ marginTop: "auto", padding: "12px 16px", background: "#f1f5f9", borderRadius: 12, fontSize: 14, fontWeight: 700, color: COLORS.ink }}>{isOtaku ? "e.g. Proof of Work, RAM vs Disk" : "e.g. CGI vs VFX, Rules vs Luck"}</div>
+      <div style={{ position: "absolute", left: 84, right: 84, top: 200, bottom: 90, display: "flex", flexDirection: "column", gap: 18, opacity: enter }}>
+        {/* Top 3 Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, flex: 1.15 }}>
+          <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 20, padding: "20px 24px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 14px 35px rgba(0,0,0,.06)" : undefined, display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>1 • PICK A TOPIC</div>
+            <div style={{ marginTop: 8, fontSize: 23, fontWeight: 900 }}>{isOtaku ? "Compilers vs Interpreters" : "Prompt vs Format"}</div>
+            <div style={{ marginTop: 6, fontSize: 14, color: "#475569", lineHeight: 1.4 }}>{isOtaku ? "Teach any complex technical or creative idea through familiar character lore." : "Start with any creative or technical concept with 3 A-vs-B differences."}</div>
+            <div style={{ marginTop: "auto", padding: "10px 14px", background: "#f1f5f9", borderRadius: 10, fontSize: 13, fontWeight: 700, color: COLORS.ink }}>{isOtaku ? "e.g. Proof of Work, RAM vs Disk" : "e.g. CGI vs VFX, Rules vs Luck"}</div>
+          </div>
+
+          <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 20, padding: "20px 24px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 14px 35px rgba(0,0,0,.06)" : undefined, display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>{isOtaku ? "2 • CHOOSE STORY WORLD" : "2 • CHOOSE 3 LESSONS"}</div>
+            <div style={{ marginTop: 8, fontSize: 23, fontWeight: 900 }}>{isOtaku ? "3 Pre-Configured Worlds" : "3 Socratic Beats"}</div>
+            <div style={{ marginTop: 6, fontSize: 14, color: "#475569", lineHeight: 1.4 }}>
+              {isOtaku ? "Select from battle-tested shonen universes or bring your own cartoon cast." : "Structure into 3 bite-sized lessons that build tension toward the punchline."}
+            </div>
+            <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "rgba(196,255,57,0.18)", border: `1.5px solid ${COLORS.lime}`, borderRadius: 10 }}>
+              <span style={{ fontSize: 12, fontWeight: 900, color: COLORS.ink, letterSpacing: ".05em" }}>SEE STORY CARDS BELOW ↓</span>
+            </div>
+          </div>
+
+          <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 20, padding: "20px 24px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 14px 35px rgba(0,0,0,.06)" : undefined, display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>3 • USE A CODING AGENT</div>
+            <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {agents.map((ag) => (
+                <div key={ag.label} style={{ background: "#0f172a", borderRadius: 10, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 28, height: 28, background: ag.bg, borderRadius: 7, display: "grid", placeItems: "center", padding: 4, flexShrink: 0 }}>
+                    <Img src={staticFile(ag.logo)} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  </div>
+                  <div style={{ color: "#fff", fontSize: 11, fontWeight: 800, letterSpacing: ".04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ag.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: "auto", fontSize: 12, color: "#64748b", textAlign: "center", fontWeight: 600 }}>Terminal & media access</div>
+          </div>
         </div>
 
-        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 18px 45px rgba(0,0,0,.08)" : undefined, display: "flex", flexDirection: "column" }}>
-          <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>{isOtaku ? "2 • CHOOSE STORY WORLD" : "2 • CHOOSE 3 LESSONS"}</div>
+        {/* Bottom 3 Stacked Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, flex: 1.1 }}>
           {isOtaku ? (
-            <div style={{ marginTop: 14, fontSize: 20, fontWeight: 900, display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>1. Naruto (Ninja Lore)</div>
-              <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>2. Yu-Gi-Oh (Duel Logic)</div>
-              <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>3. Danny Phantom (Ghost Zone)</div>
-            </div>
+            otakuWorlds.map((world, idx) => (
+              <div
+                key={world.title}
+                style={{
+                  background: "#fff",
+                  color: COLORS.ink,
+                  borderRadius: 20,
+                  padding: "16px 20px",
+                  border: `2px solid ${world.accent}`,
+                  boxShadow: isCream ? "0 12px 30px rgba(0,0,0,.06)" : "0 8px 24px rgba(0,0,0,.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <div style={{ width: 84, height: 84, borderRadius: 16, background: "#0f172a", padding: 6, flexShrink: 0, display: "grid", placeItems: "center", border: "1px solid rgba(0,0,0,.1)" }}>
+                  <Img src={staticFile(world.img)} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ background: world.accent, color: "#000", fontSize: 10, fontWeight: 950, padding: "2px 8px", borderRadius: 999, letterSpacing: ".06em" }}>
+                      {world.badge}
+                    </span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: "#64748b" }}>WORLD {idx + 1}</span>
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: COLORS.ink, letterSpacing: "-.02em" }}>{world.title}</div>
+                  <div style={{ fontSize: 13, color: "#475569", lineHeight: 1.35 }}>{world.desc}</div>
+                </div>
+              </div>
+            ))
           ) : (
-            <div style={{ marginTop: 14, fontSize: 20, fontWeight: 900, display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>1. Rules vs Prompts</div>
-              <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>2. Examples vs Luck</div>
-              <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>3. Tests vs Hope</div>
-            </div>
+            genericLessons.map((les) => (
+              <div
+                key={les.title}
+                style={{
+                  background: "#fff",
+                  color: COLORS.ink,
+                  borderRadius: 20,
+                  padding: "16px 20px",
+                  border: `2px solid ${les.accent}`,
+                  boxShadow: isCream ? "0 12px 30px rgba(0,0,0,.06)" : "0 8px 24px rgba(0,0,0,.25)",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                <span style={{ width: "fit-content", background: les.accent, color: "#000", fontSize: 10, fontWeight: 950, padding: "2px 8px", borderRadius: 999, letterSpacing: ".06em" }}>
+                  {les.badge}
+                </span>
+                <div style={{ fontSize: 18, fontWeight: 900, color: COLORS.ink }}>{les.title}</div>
+                <div style={{ fontSize: 13, color: "#475569", lineHeight: 1.35 }}>{les.desc}</div>
+              </div>
+            ))
           )}
         </div>
-
-        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 18px 45px rgba(0,0,0,.08)" : undefined, display: "flex", flexDirection: "column" }}>
-          <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>3 • USE A CODING AGENT</div>
-          <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            {agents.map((ag) => (
-              <div key={ag.label} style={{ background: "#0f172a", borderRadius: 12, padding: "14px 10px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                <div style={{ width: 44, height: 44, background: ag.bg, borderRadius: 10, display: "grid", placeItems: "center", padding: 6 }}>
-                  <Img src={staticFile(ag.logo)} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                </div>
-                <div style={{ color: "#fff", fontSize: 11, fontWeight: 800, letterSpacing: ".06em", textAlign: "center" }}>{ag.label}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop: "auto", fontSize: 14, color: "#64748b", textAlign: "center" }}>Terminal & media access</div>
-        </div>
-      </div>
-
-      <div style={{ position: "absolute", left: 84, right: 84, bottom: 125, background: COLORS.lime, color: COLORS.ink, borderRadius: 16, padding: "18px 26px", border: `3px solid ${COLORS.ink}`, display: "flex", justifyContent: "space-between", alignItems: "center", opacity: enter }}>
-        <div style={{ fontSize: 22, fontWeight: 900 }}>Start with a topic you want to teach, and your coding agent handles the rest.</div>
-        <div style={{ fontSize: 16, fontWeight: 950, background: COLORS.ink, color: COLORS.lime, padding: "6px 16px", borderRadius: 999 }}>READY TO RUN</div>
       </div>
 
       {step.captions.length ? <Caption cues={step.captions} /> : null}
