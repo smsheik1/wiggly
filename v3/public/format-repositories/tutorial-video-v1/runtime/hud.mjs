@@ -245,6 +245,10 @@ export function createProgressHud(options = {}) {
           <span class="text-[11px] font-mono text-[var(--muted-foreground)] truncate max-w-[200px]" id="output-path-label">${jsonPayload.videoPath || "outputs/otaku-explainer.mp4"}</span>
         </div>
 
+        <!-- Toast Banner -->
+        <div id="hud-toast" class="opacity-0 pointer-events-none transition-opacity duration-200 absolute left-1/2 -translate-x-1/2 -top-10 bg-[#080b09] border border-[#c4ff39] text-[#c4ff39] text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-50">
+        </div>
+
         <div class="relative inline-block text-left">
           <!-- Main Open Button -->
           <div class="inline-flex rounded-xl shadow-sm">
@@ -295,18 +299,52 @@ export function createProgressHud(options = {}) {
       }
     });
 
+    function copyTextToClipboard(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      }
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      return new Promise((res, rej) => {
+        document.execCommand('copy') ? res() : rej();
+        textArea.remove();
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('hud-toast');
+      if (!toast) return;
+      toast.innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
     function handleAction(type) {
       document.getElementById('dropup-menu').classList.add('hidden');
       if (type === 'copy') {
-        navigator.clipboard.writeText(videoFilePath);
-        const label = document.getElementById('copy-btn-text');
-        label.innerText = 'Copied!';
-        setTimeout(() => { label.innerText = 'Copy Video Path'; }, 1800);
+        copyTextToClipboard(videoFilePath).then(() => {
+          showToast('✓ Video path copied to clipboard!');
+        }).catch(() => {
+          prompt('Copy video file path:', videoFilePath);
+        });
       } else if (type === 'quicktime') {
-        // Triggers native URL protocol or alert instructions
-        window.open('file://' + videoFilePath, '_blank');
+        copyTextToClipboard('open -a "QuickTime Player" "' + videoFilePath + '"').then(() => {
+          showToast('✓ Copied terminal command: open with QuickTime');
+        });
       } else if (type === 'finder') {
-        navigator.clipboard.writeText(videoFilePath);
+        copyTextToClipboard('open -R "' + videoFilePath + '"').then(() => {
+          showToast('✓ Copied terminal command: reveal in Finder');
+        });
       }
     }
 
