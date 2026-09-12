@@ -37,8 +37,19 @@ function amplitude(bytes,hz,start=0.8,duration=0.4){
  for(let n=0;n<count;n++){const sample=bytes.readFloatLE((offset+n)*4),angle=2*Math.PI*hz*n/48000;re+=sample*Math.cos(angle);im+=sample*Math.sin(angle);}
  return 2*Math.hypot(re,im)/count;
 }
-test('official renderer mixes a quieter bed, preserves dialogue and carries credit',async()=>{
- const input=withMusic(),inputPath=path.join(scratch,'episode.json'),output=path.join(scratch,'episode.mp4');
+test('music defaults duckUnderDialogue to false unless explicitly true',async()=>{
+ const input=withMusic();
+ const result=await validate(input,root);
+ assert.equal(result.music.duckUnderDialogue,false);
+ input.music.duckUnderDialogue=true;
+ const resultDucked=await validate(input,root);
+ assert.equal(resultDucked.music.duckUnderDialogue,true);
+});
+
+test('official renderer mixes music bed with ducking enabled when requested',async()=>{
+ const input=withMusic();
+ input.music.duckUnderDialogue=true;
+ const inputPath=path.join(scratch,'episode.json'),output=path.join(scratch,'episode.mp4');
  await writeFile(inputPath,JSON.stringify(input));const receipt=await render(inputPath,output);
  const decoded=pcm(output),voice=amplitude(decoded,220),music=amplitude(decoded,83);
  assert.ok(voice>0.1&&voice<0.14,`Voice gain changed: ${voice}`);
@@ -50,4 +61,11 @@ test('official renderer mixes a quieter bed, preserves dialogue and carries cred
  assert.ok(Math.abs(Number(probe.format.duration)-8)<0.08);assert.equal(probe.format.tags.comment,input.music.attribution);
  assert.equal(receipt.music.attribution,input.music.attribution);assert.equal(receipt.music.duckedUnderDialogue,true);assert.equal(receipt.music.sha256.length,64);
  assert.deepEqual([receipt.width,receipt.height],[1080,1920]);
+});
+
+test('official renderer mixes flat music bed by default without ducking',async()=>{
+ const input=withMusic();
+ const inputPath=path.join(scratch,'episode-noduck.json'),output=path.join(scratch,'episode-noduck.mp4');
+ await writeFile(inputPath,JSON.stringify(input));const receipt=await render(inputPath,output);
+ assert.equal(receipt.music.duckedUnderDialogue,false);
 });

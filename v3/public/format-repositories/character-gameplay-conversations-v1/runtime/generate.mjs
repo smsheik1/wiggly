@@ -10,8 +10,8 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 
 // Popular community voice models preset cache for instant zero-latency lookup
 const VOICE_PRESETS = {
-  'batman': { id: 'ef549174cea246468ce32b00afa6affa', name: 'BATMAN', universe: 'DC' },
-  'kevin conroy': { id: 'ef549174cea246468ce32b00afa6affa', name: 'BATMAN', universe: 'DC' },
+  'batman': { id: '46a27a4d536d4dc888ea73563df935a7', name: 'BATMAN', universe: 'DC' },
+  'kevin conroy': { id: '46a27a4d536d4dc888ea73563df935a7', name: 'BATMAN', universe: 'DC' },
   'robin': { id: 'bc748d906c524a91bbb88e87f2bac62b', name: 'ROBIN', universe: 'DC' },
   'tim drake': { id: 'bc748d906c524a91bbb88e87f2bac62b', name: 'ROBIN', universe: 'DC' },
   'nightwing': { id: '5ff622f2dd30418ebb5bce8c1b920bdf', name: 'NIGHTWING', universe: 'DC' },
@@ -527,11 +527,11 @@ async function ensureGameplay(requestedGameplay, char1, char2) {
     },
     turns: processedTurns,
     music: opts.music ? {
-      file: 'assets/audio/yeat-if-we-being-real.mp3',
+      file: 'assets/dark-fog-excerpt.mp3',
       authorized: true,
-      provenance: 'Yeat - If We Being Real (Instrumental starting at 0:28)',
+      provenance: 'Dark Fog by Kevin MacLeod, CC BY 4.0; see MUSIC-CREDITS.md.',
       volume: 0.12,
-      attribution: 'Instrumental bed: Yeat - If We Being Real (used for pacing under dialogue)'
+      attribution: 'Dark Fog by Kevin MacLeod (incompetech.com), CC BY 4.0'
     } : undefined
   };
 
