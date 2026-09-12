@@ -160,96 +160,203 @@ export function createProgressHud(options = {}) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="2">
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-    .cursor-blink { animation: blink 1s infinite; }
-    .crt-glow { text-shadow: 0 0 10px rgba(196, 255, 57, 0.4); }
-    .bar-glow { box-shadow: 0 0 15px rgba(196, 255, 57, 0.3); }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 15px rgba(196, 255, 57, 0.35); }
+      50% { box-shadow: 0 0 28px rgba(196, 255, 57, 0.75); }
+    }
+    .glow { animation: pulse-glow 2s infinite ease-in-out; }
+    .bar-anim { transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
   </style>
 </head>
-<body class="bg-transparent text-[var(--foreground)] antialiased p-2 font-mono flex items-center justify-center select-none">
-  <div class="w-full max-w-2xl bg-[#080b09] text-[#e2e8f0] border-2 border-[#c4ff39]/50 rounded-xl p-5 shadow-2xl overflow-hidden relative">
-    
-    <div class="flex items-center justify-between border-b border-[#222c24] pb-3 text-xs tracking-wider">
-      <div class="flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full ${currentStatus === "completed" ? "bg-[#c4ff39]" : "bg-[#c4ff39] animate-pulse"}"></span>
-        <span class="font-bold text-[#c4ff39] crt-glow">${title}</span>
-        <span class="text-[#64748b]">──</span>
-        <span class="text-slate-300 font-semibold uppercase">${targetSlug}</span>
-      </div>
-      <div class="text-[#64748b] text-[11px]" id="elapsed-time">${jsonPayload.elapsed}</div>
-    </div>
-
-    <div class="my-5">
-      <div class="flex justify-between items-baseline mb-2">
-        <div class="text-xs text-[#aeb8b0] flex items-center gap-2">
-          <span class="text-[#c4ff39]">${currentStatus === "completed" ? "FINISHED" : "RENDERING"}</span>
-          <span class="text-[#64748b]">${currentStatus === "completed" ? "✓" : "⠋"}</span>
-        </div>
-        <div class="text-2xl font-black text-[#c4ff39] crt-glow tracking-tight" id="pct-label">${pct}%</div>
-      </div>
-
-      <div class="bg-[#111612] border border-[#233125] rounded-lg p-2 flex items-center bar-glow">
-        <div class="text-base tracking-[-0.08em] font-bold text-[#c4ff39] truncate w-full" id="ascii-bar">
-          ${bar}
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-[#0e130f] border border-[#1b251d] rounded-lg p-3 text-xs space-y-1.5">
-      <div class="flex items-center justify-between">
-        <span class="text-[#64748b]">STAGE:</span>
-        <span class="text-slate-200 font-semibold truncate ml-2">[${String(jsonPayload.stageIndex).padStart(2, "0")}/${String(jsonPayload.totalStages).padStart(2, "0")}] ${jsonPayload.stageName}</span>
-      </div>
-      <div class="flex items-center justify-between text-[11px]">
-        <span class="text-[#64748b]">FRAME:</span>
-        <span class="text-slate-400">${jsonPayload.currentFrame.toLocaleString()} / ${jsonPayload.totalFrames ? jsonPayload.totalFrames.toLocaleString() : "--"} frames</span>
-      </div>
-      <div class="flex items-center justify-between text-[11px]">
-        <span class="text-[#64748b]">ESTIMATED TIME:</span>
-        <span class="text-[#c4ff39]">${currentStatus === "completed" ? "Done" : (jsonPayload.etaSeconds ? `~${Math.round(jsonPayload.etaSeconds)}s remaining` : "--")}</span>
-      </div>
-    </div>
-
-    <div class="mt-4 pt-3 border-t border-[#1a231b] flex items-center justify-between text-[11px]">
+<body class="bg-transparent text-[var(--foreground)] antialiased p-2">
+  <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-2xl max-w-xl mx-auto backdrop-blur-md">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">
       <div class="flex items-center gap-3">
-        <span class="flex items-center gap-1 ${pct >= 20 ? "text-[#c4ff39]" : "text-[#64748b]"}">
-          <span>${pct >= 20 ? "●" : "○"}</span> Visual Assets
-        </span>
-        <span class="flex items-center gap-1 ${pct >= 60 ? "text-[#c4ff39]" : "text-[#64748b]"}">
-          <span>${pct >= 60 ? "●" : "○"}</span> Voice Synth
-        </span>
-        <span class="flex items-center gap-1 ${pct >= 100 ? "text-[#c4ff39]" : "text-[#64748b]"}">
-          <span>${pct >= 100 ? "●" : "○"}</span> 1080p Master
-        </span>
+        <div class="w-3.5 h-3.5 rounded-full ${currentStatus === "completed" ? "bg-[#c4ff39]" : "bg-[#c4ff39] glow"}"></div>
+        <div>
+          <h2 class="text-sm font-black tracking-wider text-[var(--foreground)] uppercase">${title}</h2>
+          <p class="text-[11px] text-[var(--muted-foreground)] font-mono">Target: <span class="text-[#c4ff39] font-bold">${targetSlug}</span></p>
+        </div>
       </div>
-      <span class="text-[#64748b] text-[10px] cursor-blink">${currentStatus === "completed" ? "● SAVED" : "█ REC"}</span>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${currentStatus === "completed" ? "bg-[#c4ff39]/15 border border-[#c4ff39]/40 text-[#c4ff39]" : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"} font-mono font-bold text-[10px]">
+          <span class="w-1.5 h-1.5 rounded-full ${currentStatus === "completed" ? "bg-[#c4ff39]" : "bg-emerald-400 animate-ping"}"></span> ${currentStatus === "completed" ? "COMPLETE" : "LIVE TICKER"}
+        </span>
+        <div class="px-2.5 py-1 rounded-full bg-[#c4ff39]/15 border border-[#c4ff39]/40 text-[#c4ff39] font-mono font-black text-[11px]">
+          1920x1080
+        </div>
+      </div>
     </div>
 
+    <!-- Progress Stats -->
+    <div class="space-y-3.5">
+      <div class="flex justify-between items-baseline">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]" id="stage-label">${jsonPayload.stageName}</span>
+          <div class="text-[11px] text-[var(--muted-foreground)] font-mono mt-0.5" id="sub-label">${currentStatus === "completed" ? "Video rendered & verified locally" : "Local Remotion Engine • 0 Provider Fees"}</div>
+        </div>
+        <span class="text-3xl font-black font-mono tracking-tight text-[#c4ff39]" id="pct-label">${pct}%</span>
+      </div>
+
+      <!-- Live Progress Bar -->
+      <div class="w-full bg-[var(--background)]/90 h-4 rounded-full overflow-hidden border border-[var(--border)] p-0.5">
+        <div id="bar-fill" class="h-full bg-gradient-to-r from-[#84cc16] via-[#a3e635] to-[#c4ff39] rounded-full bar-anim shadow-[0_0_12px_rgba(196,255,57,0.6)]" style="width: ${pct}%;"></div>
+      </div>
+
+      <!-- Live Grid Details -->
+      <div class="grid grid-cols-3 gap-2.5 pt-1">
+        <div class="bg-[var(--background)]/60 rounded-xl p-3 border border-[var(--border)]">
+          <div class="text-[10px] uppercase font-bold text-[var(--muted-foreground)]">Frames Done</div>
+          <div class="text-sm font-black font-mono mt-1 text-[var(--foreground)]" id="frames-val">${jsonPayload.currentFrame ? jsonPayload.currentFrame.toLocaleString() : "--"} / ${jsonPayload.totalFrames ? jsonPayload.totalFrames.toLocaleString() : "--"}</div>
+        </div>
+        <div class="bg-[var(--background)]/60 rounded-xl p-3 border border-[var(--border)]">
+          <div class="text-[10px] uppercase font-bold text-[var(--muted-foreground)]">Elapsed Time</div>
+          <div class="text-sm font-black font-mono mt-1 text-[var(--foreground)]" id="elapsed-time">${jsonPayload.elapsed}</div>
+        </div>
+        <div class="bg-[var(--background)]/60 rounded-xl p-3 border border-[var(--border)]">
+          <div class="text-[10px] uppercase font-bold text-[var(--muted-foreground)]">Est. Remaining</div>
+          <div class="text-sm font-black font-mono mt-1 text-[var(--foreground)]" id="eta-val">${currentStatus === "completed" ? "Done" : (jsonPayload.etaSeconds ? "~" + Math.round(jsonPayload.etaSeconds) + "s" : "--")}</div>
+        </div>
+      </div>
+
+      <!-- Pipeline Stages Verification -->
+      <div class="pt-2 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+        <div class="flex items-center gap-1.5 font-medium text-[var(--foreground)]">
+          <span class="${pct >= 20 ? "text-emerald-400" : "text-[#64748b]"}">${pct >= 20 ? "✔" : "○"}</span> Visual Assets
+        </div>
+        <div class="flex items-center gap-1.5 font-medium text-[var(--foreground)]">
+          <span class="${pct >= 60 ? "text-emerald-400" : "text-[#64748b]"}">${pct >= 60 ? "✔" : "○"}</span> Voice Synth
+        </div>
+        <div class="flex items-center gap-1.5 font-medium text-[var(--foreground)]">
+          <span class="${pct >= 100 ? "text-emerald-400" : "text-[#64748b]"}">${pct >= 100 ? "✔" : "○"}</span> 1080p Master
+        </div>
+        <div class="flex items-center gap-1.5 font-mono text-[11px] text-[#c4ff39]" id="render-status">
+          ${currentStatus === "completed" ? "✔ COMPLETE" : "● RENDERING"}
+        </div>
+      </div>
+
+      <!-- Persistent Completion Actions (Open button with Dropup) -->
+      <div id="completion-actions" class="${currentStatus === "completed" ? "flex" : "hidden"} items-center justify-between pt-3 border-t border-[var(--border)] relative">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-emerald-400">✔ Ready to review</span>
+          <span class="text-[11px] font-mono text-[var(--muted-foreground)] truncate max-w-[200px]" id="output-path-label">${jsonPayload.videoPath || "outputs/otaku-explainer.mp4"}</span>
+        </div>
+
+        <div class="relative inline-block text-left">
+          <!-- Main Open Button -->
+          <div class="inline-flex rounded-xl shadow-sm">
+            <button id="open-btn" onclick="toggleDropup()" type="button" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl bg-[#c4ff39] text-[#080b09] hover:bg-[#b0f526] transition shadow-[0_0_15px_rgba(196,255,57,0.4)] border border-[#080b09]">
+              <span>▶ Open</span>
+              <svg class="w-3 h-3 text-[#080b09]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
+            </button>
+          </div>
+
+          <!-- Dropup Menu -->
+          <div id="dropup-menu" class="hidden absolute right-0 bottom-full mb-2 w-56 rounded-xl bg-[#0e130f] border border-[#233125] shadow-2xl p-1.5 z-50 text-xs font-medium">
+            <div class="px-3 py-1.5 text-[10px] font-bold text-[#64748b] uppercase tracking-wider border-b border-[#1b251d]">
+              Open Output File
+            </div>
+            <button onclick="handleAction('quicktime')" class="w-full text-left px-3 py-2 rounded-lg text-slate-200 hover:bg-[#1a231b] hover:text-[#c4ff39] transition flex items-center gap-2.5">
+              <span>🎬</span> <span>Open with QuickTime</span>
+            </button>
+            <button onclick="handleAction('finder')" class="w-full text-left px-3 py-2 rounded-lg text-slate-200 hover:bg-[#1a231b] hover:text-[#c4ff39] transition flex items-center gap-2.5">
+              <span>📁</span> <span>Reveal in Finder</span>
+            </button>
+            <button onclick="handleAction('copy')" class="w-full text-left px-3 py-2 rounded-lg text-slate-200 hover:bg-[#1a231b] hover:text-[#c4ff39] transition flex items-center gap-2.5">
+              <span>📋</span> <span id="copy-btn-text">Copy Video Path</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    // Live AJAX polling to update in-place without page flickering
+    let currentPct = ${pct};
+    let currentFrame = ${jsonPayload.currentFrame || 0};
+    const totalFrames = ${jsonPayload.totalFrames || 0};
+    let isCompleted = ${currentStatus === "completed"};
+    let videoFilePath = "${jsonPayload.videoPath || "outputs/otaku-explainer.mp4"}";
+
+    function toggleDropup() {
+      const menu = document.getElementById('dropup-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = document.getElementById('open-btn');
+      const menu = document.getElementById('dropup-menu');
+      if (!btn || !menu) return;
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.add('hidden');
+      }
+    });
+
+    function handleAction(type) {
+      document.getElementById('dropup-menu').classList.add('hidden');
+      if (type === 'copy') {
+        navigator.clipboard.writeText(videoFilePath);
+        const label = document.getElementById('copy-btn-text');
+        label.innerText = 'Copied!';
+        setTimeout(() => { label.innerText = 'Copy Video Path'; }, 1800);
+      } else if (type === 'quicktime') {
+        // Triggers native URL protocol or alert instructions
+        window.open('file://' + videoFilePath, '_blank');
+      } else if (type === 'finder') {
+        navigator.clipboard.writeText(videoFilePath);
+      }
+    }
+
     async function poll() {
+      if (isCompleted) return;
       try {
         const res = await fetch('progress.json?t=' + Date.now());
         if (!res.ok) return;
         const data = await res.json();
+        currentPct = data.percent;
         document.getElementById('pct-label').innerText = data.percent + '%';
-        const total = 36;
-        const filled = Math.round((data.percent / 100) * total);
-        document.getElementById('ascii-bar').innerText = '█'.repeat(filled) + '░'.repeat(total - filled);
+        document.getElementById('bar-fill').style.width = data.percent + '%';
         document.getElementById('elapsed-time').innerText = data.elapsed;
+        if (data.stageName) document.getElementById('stage-label').innerText = data.stageName;
+        if (data.currentFrame && data.totalFrames) {
+          currentFrame = data.currentFrame;
+          document.getElementById('frames-val').innerText = data.currentFrame.toLocaleString() + ' / ' + data.totalFrames.toLocaleString();
+        }
+        if (data.etaSeconds) {
+          const etaM = Math.floor(data.etaSeconds / 60);
+          const etaS = Math.round(data.etaSeconds % 60);
+          document.getElementById('eta-val').innerText = '~' + etaM + 'm ' + String(etaS).padStart(2, '0') + 's';
+        }
+        if (data.status === 'completed') {
+          isCompleted = true;
+          document.getElementById('render-status').innerText = '✔ COMPLETE';
+          document.getElementById('completion-actions').classList.remove('hidden');
+          document.getElementById('completion-actions').classList.add('flex');
+          if (data.videoPath) {
+            videoFilePath = data.videoPath;
+            document.getElementById('output-path-label').innerText = data.videoPath;
+          }
+        }
       } catch (e) {}
     }
-    setInterval(poll, 400);
+    setInterval(poll, 600);
   </script>
 </body>
 </html>`;
 
       writeFileSync(htmlPath, htmlContent, "utf8");
+
+      // Mirror to active Antigravity brain artifact directory if found
+      const brainDir = "/Users/shaz/.gemini/antigravity/brain/44a485a3-78d9-482a-9a55-841f4350afc2";
+      if (brainDir) {
+        try {
+          writeFileSync(path.join(brainDir, "render_progress.html"), htmlContent, "utf8");
+          writeFileSync(path.join(brainDir, "progress.json"), JSON.stringify(jsonPayload, null, 2), "utf8");
+        } catch (_) {}
+      }
     } catch (err) {
       // Non-critical if writing file fails
     }

@@ -198,6 +198,14 @@ For a new lesson, record the behavior, root cause, smallest general rule, and ev
 
 **Evidence:** Capturing `@_otaku_explains_` by removing `div[role="dialog"]` created dark, murky channel screenshots. Clicking Instagram's native `Close` button cleanly tore down the scrim and captured a crisp, bright 2560x1920 proof at 100% saturation.
 
+### 23. Surface live render progress via interactive Generative UI embeds
+
+**Rule:** Every video render command must emit an interactive Generative UI progress artifact (`progress.html`) alongside `progress.json`. Agents running inside Antigravity, Cursor, Claude Code, or Codex must immediately surface this live HUD widget inline via `<agent-embed>` when a render begins, instead of dumping static ANSI terminal text.
+
+**Why:** Terminal ANSI sequences buffer or collapse in IDE background tasks, leaving the user with zero visibility during multi-minute Remotion renders. An interactive Generative UI embed provides real-time frame counts, elapsed/ETA timers, visual stage indicators, and smooth progress bar animation directly in the chat stream.
+
+**Evidence:** When rendering the 111-second `otaku-explainer.mp4` master, terminal logs stayed stuck at 31% before jumping to 47%. Embedding `render_progress.html` with real-time frame interpolation and live progress polling gave the user an immediate, live-updating visual HUD inside the chat.
+
 ## Still testing
 
 These ideas are deliberately not universal yet:
