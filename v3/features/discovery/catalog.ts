@@ -2428,7 +2428,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
     goal: "teach",
     media: {
       kind: "video",
-      src: "/format-repositories/otaku-explainer-v1/outputs/naruto-compilers.mp4",
+      src: "/format-repositories/otaku-explainer-v1/goldens/naruto-compilers.mp4",
       poster: "/discovery/naruto-compilers.jpg",
       durationLabel: "75 sec",
     },
@@ -2450,7 +2450,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
     goal: "teach",
     media: {
       kind: "video",
-      src: "/format-repositories/otaku-explainer-v1/outputs/naruto-mcp.mp4",
+      src: "/format-repositories/otaku-explainer-v1/goldens/naruto-mcp.mp4",
       poster: "/discovery/naruto-mcp.jpg",
       durationLabel: "63 sec",
     },
@@ -2471,7 +2471,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
     goal: "teach",
     media: {
       kind: "video",
-      src: "/format-repositories/otaku-explainer-v1/outputs/yugioh-compilers.mp4",
+      src: "/format-repositories/otaku-explainer-v1/goldens/yugioh-compilers.mp4",
       poster: "/discovery/yugioh-compilers.jpg",
       durationLabel: "64 sec",
     },
@@ -2492,7 +2492,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
     goal: "teach",
     media: {
       kind: "video",
-      src: "/format-repositories/otaku-explainer-v1/outputs/danny-apis.mp4",
+      src: "/format-repositories/otaku-explainer-v1/goldens/danny-apis.mp4",
       poster: "/discovery/danny-apis.jpg",
       durationLabel: "70 sec",
     },
@@ -2514,7 +2514,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
     goal: "teach",
     media: {
       kind: "video",
-      src: "/format-repositories/otaku-explainer-v1/outputs/naruto-apis.mp4",
+      src: "/format-repositories/otaku-explainer-v1/goldens/naruto-apis.mp4",
       poster: "/discovery/naruto-apis.jpg",
       durationLabel: "68 sec",
     },
@@ -2535,7 +2535,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
     goal: "teach",
     media: {
       kind: "video",
-      src: "/format-repositories/otaku-explainer-v1/outputs/spongebob-evs.mp4",
+      src: "/format-repositories/otaku-explainer-v1/goldens/spongebob-evs.mp4",
       poster: "/discovery/spongebob-evs.jpg",
       durationLabel: "62 sec",
     },

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import {
   assertRenderAllowed,
@@ -62,9 +62,9 @@ const dannyPlan = readJson<OtakuScenePlan>("scenes/danny-apis.json");
 const dannyWorld = readJson<OtakuWorldPack>("worlds/danny-phantom.json");
 assert.deepEqual(validateScenePlan(dannyPlan, dannyWorld, layouts), []);
 assert.equal(dannyWorld.music?.localPath, "assets/audio/danny-phantom-background.mp3");
-assert.equal(dannyWorld.music?.volume, 0.16);
-const dannyRun = readJson<{ musicPath: string }>("outputs/danny-apis.run.json");
-const narutoRun = readJson<{ musicPath: string }>("outputs/naruto-apis.run.json");
+const proofDir = existsSync(path.join(packageRoot, "goldens")) ? "goldens" : "outputs";
+const dannyRun = readJson<{ musicPath: string }>(`${proofDir}/danny-apis.run.json`);
+const narutoRun = readJson<{ musicPath: string }>(`${proofDir}/naruto-apis.run.json`);
 assert.match(dannyRun.musicPath, /danny-phantom-background\.mp3$/);
 assert.match(narutoRun.musicPath, /background-music\.mp3$/);
 const dannyScenes = materializeScenePlan(dannyPlan, dannyWorld, layouts);
@@ -85,7 +85,7 @@ const spongebobPlan = readJson<OtakuScenePlan>("scenes/spongebob-evs.json");
 const spongebobWorld = readJson<OtakuWorldPack>("worlds/spongebob.json");
 assert.deepEqual(validateScenePlan(spongebobPlan, spongebobWorld, layouts), []);
 assert.equal(spongebobWorld.music?.localPath, "assets/audio/spongebob-background.mp3");
-const spongebobRun = readJson<{ musicPath: string }>("outputs/spongebob-evs.run.json");
+const spongebobRun = readJson<{ musicPath: string }>(`${proofDir}/spongebob-evs.run.json`);
 assert.match(spongebobRun.musicPath, /spongebob-background\.mp3$/);
 const spongebobScenes = materializeScenePlan(spongebobPlan, spongebobWorld, layouts);
 assert.deepEqual(

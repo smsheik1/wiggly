@@ -103,13 +103,14 @@ for (const assetId of ["yugi", "kaiba"]) {
   assert.equal(opaqueBorderPixels, 0, `${assetId} must not keep a fake checkerboard background.`);
 }
 
+const proofDir = existsSync(path.join(packageRoot, "goldens")) ? "goldens" : "outputs";
 const bundledAudioProofIds = ["naruto-compilers", "naruto-mcp", "yugioh-compilers"];
 for (const sourceId of bundledAudioProofIds) {
   const run = readJson<{
     renderer: string;
     rendererVersion: string;
     scenes: Array<{ audioPath?: string; durationMs?: number }>;
-  }>(`outputs/${sourceId}.run.json`);
+  }>(`${proofDir}/${sourceId}.run.json`);
   assert.equal(run.renderer, format.renderer);
   assert.match(run.rendererVersion, /^otaku-format-renderer@/);
   assert.equal(run.scenes.length, readJson<{ scenes: SourceScene[] }>(`scenes/${sourceId}.json`).scenes.length);
@@ -117,7 +118,7 @@ for (const sourceId of bundledAudioProofIds) {
     assert.ok((scene.durationMs || 0) > 2_000);
     assert.ok(scene.audioPath && existsSync(path.resolve("public", scene.audioPath)));
   }
-  assert.ok(existsSync(path.join(packageRoot, "outputs", `${sourceId}.mp4`)), `${sourceId} is missing its proof video.`);
+  assert.ok(existsSync(path.join(packageRoot, proofDir, `${sourceId}.mp4`)), `${sourceId} is missing its proof video.`);
 }
 
 const repositoryPage = readFileSync("app/format-lab/otaku-explainer/OtakuFormatRepositoryClient.tsx", "utf8");
