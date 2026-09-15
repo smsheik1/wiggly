@@ -1,0 +1,21 @@
+{
+  "attempt": 2,
+  "automaticChecks": {
+    "videoExists": true,
+    "contactSheetExists": true,
+    "dimensionsAre720x1280": true,
+    "durationMatchesScenes": true,
+    "everySceneHasAudio": true,
+    "attemptLimitRespected": true
+  },
+  "creativeReview": {
+    "lessonAccurate": true,
+    "dialogueNatural": true,
+    "charactersGrounded": true,
+    "textFits": true,
+    "audioClear": true,
+    "analogyMakesSense": true
+  },
+  "problems": [],
+  "status": "pass"
+}

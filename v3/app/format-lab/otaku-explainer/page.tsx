@@ -88,10 +88,16 @@ function readRepositoryFiles() {
 }
 
 function readOutputRuns() {
-  return readdirSync(path.join(packagePath, "outputs"))
+  const dirName = existsSync(path.join(packagePath, "goldens"))
+    ? "goldens"
+    : existsSync(path.join(packagePath, "outputs"))
+      ? "outputs"
+      : null;
+  if (!dirName) return [];
+  return readdirSync(path.join(packagePath, dirName))
     .filter((name) => name.endsWith(".run.json"))
     .sort()
-    .map((name) => readJson<RunRecord>(`outputs/${name}`));
+    .map((name) => readJson<RunRecord>(`${dirName}/${name}`));
 }
 
 function readAgentRuns() {
