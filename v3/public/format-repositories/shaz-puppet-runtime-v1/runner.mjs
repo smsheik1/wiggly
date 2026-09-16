@@ -14,6 +14,7 @@ import {
   generateTranscript,
   validateTranscriptionAudio,
 } from "./runtime/transcription.mjs";
+import { deriveMultiShotPlan } from "./runtime/multi-shot-timeline.mjs";
 import {
   MAX_OUTPUT_FRAMES,
   execute,
@@ -260,6 +261,18 @@ async function init(args) {
         segmentCount: transcriptState.transcript.segments.length,
         wordCount: transcriptState.transcript.words.length,
       };
+      // If input is multi-shot and shots array is omitted, automatically derive it from the transcript!
+      if (isMultiShot && (!Array.isArray(input.shots) || input.shots.length === 0)) {
+        const derived = deriveMultiShotPlan({
+          transcript: transcriptState.transcript,
+          audioDurationSeconds: sequenceAudioFrames / 24,
+          defaultBackgroundId: input.defaultBackgroundId ?? "sisters-room",
+        });
+        input.title = input.title ?? derived.title;
+        input.totalDurationFrames = sequenceAudioFrames;
+        input.shots = derived.shots;
+      }
+
       const shouldGenerateLipSync = (isAudioSequence && lipSyncMode !== "off")
         || (isMultiShot && input.shots?.some((s) => s.shotType === "talk-to-camera") && lipSyncMode !== "off");
       if (shouldGenerateLipSync) {
