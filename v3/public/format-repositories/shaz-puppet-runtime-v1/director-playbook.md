@@ -31,8 +31,24 @@ In this version of the format, the director has access to:
   - Chapter title moments, rhetorical questions, or dramatic pauses in the voiceover.
 - **Duration guidelines:** Typically 1.5 to 3.5 seconds. Enough time for the viewer to easily read the phrase while hearing it spoken.
 
-### 3. `commentary` *(Coming soon)*
-- Inset topic frame / board where Shaz gestures towards an external subject or graphic.
+### 3. `chibi-commentary` (Chibi Shaz Reaction & Topic Commentary)
+- **What it is:** Chibi Shaz pops in from the bottom right corner with a 2-frame smear whip, reacting to and presenting an on-screen Topic Card or image.
+- **Available Poses:** `talk-excited-1`, `talk-excited-2`, `talk-gesture-1`, `talk-gesture-2`, `talk-smile`, `present-open`, `present-gesture`, `think-chin`, `think-down`, `shrug-smile`, `listen-side`, `talk-laugh`, `point-side`, `point-up`, `celebrate`.
+- **On-The-Fly Topic Card Generation:**
+  - The Director can specify a `card` object directly in the shot to generate a custom vector card on the fly:
+    ```json
+    "card": {
+      "badge": "CATEGORY BADGE",
+      "headline": "SHORT PUNCHY TITLE",
+      "quote": "Memorable quote or takeaway",
+      "theme": "warm-red | cold-blue | energy-orange | deep-purple | emerald-green | sunburst-gold",
+      "icon": "trophy | puppy | clash | burger | question | heart-paw | idea | star"
+    }
+    ```
+- **When to use:**
+  - Topic explanations, breakdowns, theories, or reactions where visual grounding helps the viewer follow.
+  - Comedic reaction moments where a pose (like `think-chin` or `shrug-smile`) amplifies the voiceover.
+- **Duration guidelines:** Typically 2.0 to 5.0 seconds.
 
 ### 4. `b-roll` *(Coming soon)*
 - Full-screen scene illustrations or narrative story art over voiceover.

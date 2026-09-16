@@ -65,6 +65,19 @@
             "type": "string",
             "description": "Image path or background for the topic being commented on"
           },
+          "card": {
+            "type": "object",
+            "description": "Declarative vector topic card to generate on-the-fly",
+            "required": ["badge", "headline"],
+            "properties": {
+              "badge": { "type": "string", "maxLength": 40 },
+              "headline": { "type": "string", "maxLength": 50 },
+              "quote": { "type": "string", "maxLength": 80 },
+              "theme": { "enum": ["warm-red", "cold-blue", "energy-orange", "deep-purple", "emerald-green", "sunburst-gold"] },
+              "icon": { "enum": ["burger", "puppy", "clash", "trophy", "question", "heart-paw", "idea", "star"] },
+              "image": { "type": "string" }
+            }
+          },
           "startFrame": {
             "type": "integer",
             "minimum": 0

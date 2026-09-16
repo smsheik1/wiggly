@@ -7,6 +7,7 @@ import sharp from "sharp";
 import { execute, sha256, writeJson } from "./run-common.mjs";
 import { renderRigFrame } from "./rig-v2-renderer.mjs";
 import { renderTextCardFrame, wordsVisibleAtFrame } from "./text-card-renderer.mjs";
+import { renderTopicCard } from "./topic-card-renderer.mjs";
 import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
@@ -148,7 +149,26 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
       } else if (shot.shotType === "chibi-commentary") {
         // Resolve topic media background
         let topicBgBuffer = bgBuffer;
-        if (shot.topicMedia) {
+        if (shot.card && typeof shot.card === "object") {
+          // On-the-fly vector topic card generation
+          let innerImageBuffer = null;
+          if (shot.card.image) {
+            const innerImagePath = path.resolve(runDirectory, shot.card.image);
+            if (await fs.access(innerImagePath).then(() => true).catch(() => false)) {
+              innerImageBuffer = await fs.readFile(innerImagePath);
+            }
+          }
+          topicBgBuffer = await renderTopicCard({
+            badge: shot.card.badge ?? "TOPIC",
+            headline: shot.card.headline ?? "",
+            quote: shot.card.quote ?? "",
+            theme: shot.card.theme ?? "warm-red",
+            icon: shot.card.icon ?? "trophy",
+            innerImageBuffer,
+            width: 1280,
+            height: 720,
+          });
+        } else if (shot.topicMedia) {
           const topicMediaPath = path.resolve(runDirectory, shot.topicMedia);
           if (await fs.access(topicMediaPath).then(() => true).catch(() => false)) {
             topicBgBuffer = await sharp(topicMediaPath)

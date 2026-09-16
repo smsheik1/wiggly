@@ -73,6 +73,7 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       "highlights",
       "chibiPose",
       "topicMedia",
+      "card",
       "rationale",
     ], `shots[${index}]`);
 
@@ -104,6 +105,18 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       const chibiPoses = new Set((assets.chibiFrames?.poses ?? []).map((p) => p.id));
       if (shot.chibiPose && !chibiPoses.has(shot.chibiPose)) {
         throw new Error(`shots[${index}].chibiPose '${shot.chibiPose}' is not a registered chibi pose`);
+      }
+      if (shot.card !== undefined) {
+        if (typeof shot.card !== "object" || shot.card === null) {
+          throw new Error(`shots[${index}].card must be an object`);
+        }
+        exactKeys(shot.card, ["badge", "headline", "quote", "theme", "icon", "image"], `shots[${index}].card`);
+        if (typeof shot.card.badge !== "string" || shot.card.badge.trim().length < 1) {
+          throw new Error(`shots[${index}].card.badge must be a non-empty string`);
+        }
+        if (typeof shot.card.headline !== "string" || shot.card.headline.trim().length < 1) {
+          throw new Error(`shots[${index}].card.headline must be a non-empty string`);
+        }
       }
     }
 
@@ -142,6 +155,7 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       highlights: shot.highlights ?? [],
       chibiPose: shot.chibiPose ?? "present-open",
       topicMedia: shot.topicMedia ?? null,
+      card: shot.card ?? null,
       rationale: shot.rationale ?? null,
     });
   }
