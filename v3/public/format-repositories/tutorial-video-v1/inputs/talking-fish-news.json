@@ -1,0 +1,466 @@
+{
+  "schemaVersion": 2,
+  "seed": "talking-fish-news-1789500794402",
+  "title": "Make a Talking Fish News video with Wiggly",
+  "audience": "A first-time creator who wants to generate videos without writing code",
+  "format": {
+    "name": "Talking Fish News",
+    "slug": "talking-fish-news",
+    "promise": "Turn one sourced current story into a deadpan vertical fish-news report.",
+    "url": "https://wiggly.agentenamel.com/formats/talking-fish-news",
+    "outputLabel": "talking-fish-news.mp4"
+  },
+  "music": {
+    "file": "fixed/cancun-sega-genesis.mp3",
+    "authorized": true,
+    "provenance": "If Playboi Carti's \"Cancun\" was on the Sega Genesis (INSTRUMENTAL) — https://www.youtube.com/watch?v=-zdI0S0Vuzs",
+    "volume": 0.2,
+    "attribution": "Background music: Playboi Carti - Cancun (Sega Genesis Instrumental)"
+  },
+  "steps": [
+    {
+      "id": "proof-first",
+      "kind": "hero",
+      "number": "1",
+      "label": "See the finished result",
+      "background": "emerald",
+      "durationSeconds": 4.5,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "talking-fish-news/final-result.mp4",
+        "startSeconds": 0,
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Official proof media sourced from final-result.mp4."
+      }
+    },
+    {
+      "id": "social-proof",
+      "kind": "social-proof",
+      "number": "2",
+      "label": "Compare with the viral format",
+      "windowTitle": "Terminal — Compare with the viral format",
+      "background": "cream",
+      "durationSeconds": 11.666666666666666,
+      "narration": {
+        "file": "talking-fish-news/step-02.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.869,
+          "text": "Look at News Talking Fish on Instagram"
+        },
+        {
+          "start": 2.869,
+          "end": 4.775,
+          "text": "with forty five thousand followers."
+        },
+        {
+          "start": 4.775,
+          "end": 7.444,
+          "text": "Wiggly packages this exact talking fish news"
+        },
+        {
+          "start": 7.444,
+          "end": 10.113,
+          "text": "format so your coding agent can build"
+        },
+        {
+          "start": 10.113,
+          "end": 10.875,
+          "text": "it locally."
+        }
+      ],
+      "media": {
+        "type": "image",
+        "file": "talking-fish-news/creator-proof.png",
+        "fit": "contain",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      }
+    },
+    {
+      "id": "choose-format",
+      "kind": "browser",
+      "number": "3",
+      "label": "Copy the coding agent prompt",
+      "windowTitle": "Wiggly — Talking Fish News",
+      "background": "amber",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "talking-fish-news/step-03.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.738,
+          "text": "On Wiggly, open the Talking Fish News"
+        },
+        {
+          "start": 2.738,
+          "end": 4.913,
+          "text": "format, choose Send to Coding Agent,"
+        },
+        {
+          "start": 4.913,
+          "end": 6.364,
+          "text": "and copy the prompt."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "talking-fish-news/browser-interaction.mp4",
+        "fit": "contain",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      }
+    },
+    {
+      "id": "run-agent",
+      "kind": "terminal",
+      "number": "4",
+      "label": "Paste into your coding agent",
+      "windowTitle": "Coding Agent (Antigravity / Claude Code) — Talking Fish News",
+      "background": "lime",
+      "durationSeconds": 8.833333333333334,
+      "narration": {
+        "file": "talking-fish-news/step-04.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.945,
+          "text": "Paste the instructions into Antigravity or Claude"
+        },
+        {
+          "start": 2.945,
+          "end": 3.337,
+          "text": "Code."
+        },
+        {
+          "start": 3.337,
+          "end": 6.082,
+          "text": "The agent reads the package and configures"
+        },
+        {
+          "start": 6.082,
+          "end": 8.044,
+          "text": "your talking fish news pipeline."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "talking-fish-news/step-04-intake.mp4",
+        "fit": "cover",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "checkpoint": {
+        "eyebrow": "Your checkpoint",
+        "headline": "The agent is using the packaged compositor—not inventing a slideshow.",
+        "badge": "Verified 0 providers"
+      }
+    },
+    {
+      "id": "review-lessons",
+      "kind": "terminal",
+      "number": "5",
+      "label": "Review the story and evidence",
+      "windowTitle": "Antigravity — Story & Evidence Review",
+      "background": "magenta",
+      "durationSeconds": 8.633333333333333,
+      "narration": {
+        "file": "talking-fish-news/step-05.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.725,
+          "text": "Review the sourced story,"
+        },
+        {
+          "start": 1.725,
+          "end": 4.393,
+          "text": "four script beats, and official evidence before"
+        },
+        {
+          "start": 4.393,
+          "end": 4.774,
+          "text": "rendering."
+        },
+        {
+          "start": 4.774,
+          "end": 7.442,
+          "text": "You stay in complete control of the"
+        },
+        {
+          "start": 7.442,
+          "end": 7.823,
+          "text": "report."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "talking-fish-news/step-05-review.mp4",
+        "fit": "cover",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "checkpoint": {
+        "eyebrow": "Your one checkpoint",
+        "headline": "Review the sourced story, 4-beat script, and official evidence.",
+        "badge": "Then approve"
+      }
+    },
+    {
+      "id": "package-breakdown",
+      "kind": "package-breakdown",
+      "number": "6",
+      "label": "Inspect the included assets",
+      "windowTitle": "Terminal — Inspect the included assets",
+      "background": "amber",
+      "durationSeconds": 9.033333333333333,
+      "narration": {
+        "file": "talking-fish-news/step-06.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 3.319,
+          "text": "The package includes the deadpan fish anchor"
+        },
+        {
+          "start": 3.319,
+          "end": 5.101,
+          "text": "rig, official evidence frame,"
+        },
+        {
+          "start": 5.101,
+          "end": 8.221,
+          "text": "and underwater stage with zero API fees."
+        }
+      ]
+    },
+    {
+      "id": "replacement-value",
+      "kind": "replacement-value",
+      "number": "7",
+      "label": "Verify zero generation fees",
+      "windowTitle": "Terminal — Verify zero generation fees",
+      "background": "emerald",
+      "durationSeconds": 9.033333333333333,
+      "narration": {
+        "file": "talking-fish-news/step-07.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.606,
+          "text": "You don't need an image model,"
+        },
+        {
+          "start": 2.606,
+          "end": 5.413,
+          "text": "a video model, or a dedicated GPU."
+        },
+        {
+          "start": 5.413,
+          "end": 8.221,
+          "text": "Everything renders locally with zero API credits."
+        }
+      ]
+    },
+    {
+      "id": "approve-render",
+      "kind": "terminal",
+      "number": "8",
+      "label": "Approve and render the video",
+      "windowTitle": "Coding Agent — Final Render",
+      "background": "lime",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "talking-fish-news/step-08.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.946,
+          "text": "Once you approve the plan,"
+        },
+        {
+          "start": 1.946,
+          "end": 4.391,
+          "text": "the agent runs the local compositor and"
+        },
+        {
+          "start": 4.391,
+          "end": 5.789,
+          "text": "builds the final video."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "talking-fish-news/step-08-render.mp4",
+        "fit": "cover",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "checkpoint": {
+        "eyebrow": "Final MP4",
+        "headline": "Video rendered and verified locally.",
+        "badge": "Ready to post"
+      }
+    },
+    {
+      "id": "finished-output",
+      "kind": "final",
+      "number": "9",
+      "label": "Watch the finished output",
+      "background": "magenta",
+      "durationSeconds": 18.533333333333335,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "talking-fish-news/final-result.mp4",
+        "startSeconds": 0,
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Official proof media sourced from final-result.mp4."
+      }
+    },
+    {
+      "id": "scorecard",
+      "kind": "scorecard",
+      "number": "10",
+      "label": "Verify the quality scorecard",
+      "windowTitle": "Terminal — Verify the quality scorecard",
+      "background": "emerald",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "talking-fish-news/step-10.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 3.471,
+          "text": "Every video passes thirteen automated quality checks"
+        },
+        {
+          "start": 3.471,
+          "end": 5.34,
+          "text": "for audio sync, dimensions,"
+        },
+        {
+          "start": 5.34,
+          "end": 6.275,
+          "text": "and timing."
+        }
+      ]
+    },
+    {
+      "id": "checklist",
+      "kind": "checklist",
+      "number": "11",
+      "label": "Start with the beginner checklist",
+      "windowTitle": "Terminal — Start with the beginner checklist",
+      "background": "magenta",
+      "durationSeconds": 8.7,
+      "narration": {
+        "file": "talking-fish-news/step-11.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.541,
+          "text": "To make your own,"
+        },
+        {
+          "start": 1.541,
+          "end": 3.217,
+          "text": "pick a sourced news story,"
+        },
+        {
+          "start": 3.217,
+          "end": 4.893,
+          "text": "provide an official evidence visual,"
+        },
+        {
+          "start": 4.893,
+          "end": 7.24,
+          "text": "and run the prompt in your favorite"
+        },
+        {
+          "start": 7.24,
+          "end": 7.912,
+          "text": "coding agent."
+        }
+      ]
+    },
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "number": "12",
+      "label": "Replace three separate tools",
+      "windowTitle": "Terminal — Replace three separate tools",
+      "background": "amber",
+      "durationSeconds": 7.633333333333334,
+      "narration": {
+        "file": "talking-fish-news/step-12.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.863,
+          "text": "Wiggly replaces drawing tools,"
+        },
+        {
+          "start": 1.863,
+          "end": 3.941,
+          "text": "voice subscriptions, and video editors."
+        },
+        {
+          "start": 3.941,
+          "end": 6.85,
+          "text": "The link to get started is below."
+        }
+      ]
+    }
+  ]
+}

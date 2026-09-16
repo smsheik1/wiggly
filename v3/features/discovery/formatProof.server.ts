@@ -28,7 +28,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Fan-favorite characters trade lines over Arkham Knight and Spider-Man 2 gameplay with timed captions and ducked music—assembled into vertical 9:16 Shorts.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/character-gameplay-conversations-v1/format.json",
-    repositoryHref: "https://github.com/smsheik1/wiggly-character-gameplay-conversations/releases/download/v0.3.0/character-gameplay-conversations-0.3.0.zip",
+    repositoryHref: "/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.3.0.zip",
     technicalHref: "/format-repositories/character-gameplay-conversations-v1/BENCHMARK.md",
     historicalProofVersions: ["0.1.1", "0.1.2", "0.1.3", "0.1.4", "0.2.0"],
     whatStays: ["A persistent title and question", "Real gameplay beneath the conversation", "Speaker labels and timed dialogue captions", "One local renderer for same-universe casts and crossovers"],
@@ -54,7 +54,7 @@ const formatConfigs: FormatProfileConfig[] = [
     lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-roast-me-conversations",
     manifestPath: "format-repositories/roast-me-conversations-v1/format.json",
-    repositoryHref: "https://github.com/smsheik1/wiggly-roast-me-conversations/releases/download/v0.3.0/roast-me-conversations-0.3.0.zip",
+    repositoryHref: "/format-repositories/roast-me-conversations-v1/downloads/roast-me-conversations-0.3.0.zip",
     technicalHref: "/format-repositories/roast-me-conversations-v1/BENCHMARK.md",
     historicalProofVersions: ["0.1.0", "0.2.0"],
     whatStays: [
@@ -104,7 +104,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Turn a reference video into a reusable Wiggly Repo with your coding agent. Inspect the ingredients, approve the blueprint, then build and test the recipe.",
     lastUpdated: "September 2026",
     manifestPath: "format-repositories/repo-builder-v1/format.json",
-    repositoryHref: "https://github.com/smsheik1/wiggly-repo-builder/releases/download/v0.1.1/wiggly-repo-builder-0.1.1.zip",
+    repositoryHref: "/format-repositories/repo-builder-v1/downloads/wiggly-repo-builder-0.1.1.zip",
     technicalHref: "/format-repositories/repo-builder-v1/PROOF-REPORT.md",
     whatStays: [
       "Local reference intake, evidence hashes, and optional transcription",
@@ -134,7 +134,7 @@ const formatConfigs: FormatProfileConfig[] = [
     lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-tutorial-video",
     manifestPath: "format-repositories/tutorial-video-v1/format.json",
-    repositoryHref: "https://github.com/smsheik1/wiggly-tutorial-video/releases/download/v0.4.0/wiggly-tutorial-video-format-kit-0.4.0.zip",
+    repositoryHref: "/format-repositories/tutorial-video-v1/downloads/wiggly-tutorial-video-format-kit-0.4.0.zip",
     technicalHref: "/format-repositories/tutorial-video-v1/PROOF-REPORT.md",
     whatStays: [
       "The finished Wiggly result appears before the explanation",
@@ -183,7 +183,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Turn your brand into a Lego music video: one original song, a miniature world, and three cinematic scenes.",
     lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-lego-music-video",
-    repositoryHref: "https://github.com/smsheik1/wiggly-lego-music-video/releases/download/v0.1.0/wiggly-lego-music-video-format-kit.zip",
+    repositoryHref: "/format-repositories/lego-music-video-v1/downloads/wiggly-lego-music-video-format-kit.zip",
     manifestPath: "format-repositories/lego-music-video-v1/format.json",
     whatStays: ["A brand ad told through a song", "One coherent Lego world and recurring hero object", "Three lyric-led moving scenes", "Vertical video with brand identity and lyric captions"],
     whatChanges: ["The brand and buyer truth", "The music direction and lyrics", "The miniature world and its characters", "The three visual events and final payoff"],
@@ -514,7 +514,7 @@ const formatConfigs: FormatProfileConfig[] = [
     lastUpdated: "August 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-bikini-bottom-dance-off",
     technicalHref: "/format-lab/character-dance-lab",
-    repositoryHref: "https://github.com/smsheik1/wiggly-bikini-bottom-dance-off/releases/download/v0.17.0/wiggly-bikini-bottom-dance-off-format-kit.zip",
+    repositoryHref: "/format-repositories/bikini-bottom-dance-off-v1/downloads/wiggly-bikini-bottom-dance-off-format-kit.zip",
     manifestPath: "format-repositories/bikini-bottom-dance-off-v1/format.json",
     whatStays: [
       "A three-beep countdown with no music underneath",
@@ -570,7 +570,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Send your coding agent a video link or local clip. It prepares the dialogue for your approval, then turns it into a talking Dog-and-Bunny video with the included characters and backgrounds.",
     lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-animal-conversations",
-    repositoryHref: "https://github.com/smsheik1/wiggly-animal-conversations/releases/download/v0.17.0/wiggly-animal-conversations-format-kit-0.17.0.zip",
+    repositoryHref: "/format-repositories/animal-conversations-v1/downloads/wiggly-animal-conversations-format-kit.zip",
     manifestPath: "format-repositories/animal-conversations-v1/format.json",
     historicalProofVersions: ["0.15.1", "0.16.2"],
     whatStays: [
@@ -618,7 +618,7 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Give Shaz a voice track and pick a room. The kit reads the words locally, lip-syncs the mouth, and gives a fresh agent five artist-reviewed gestures for the moments that matter.",
     lastUpdated: "August 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-shaz-puppet-runtime",
-    repositoryHref: "https://github.com/smsheik1/wiggly-shaz-puppet-runtime/releases/download/v0.4.0/wiggly-shaz-puppet-runtime-format-kit.zip",
+    repositoryHref: "/format-repositories/shaz-puppet-runtime-v1/downloads/wiggly-shaz-puppet-runtime-format-kit.zip",
     manifestPath: "format-repositories/shaz-puppet-runtime-v1/format.json",
     historicalProofVersions: ["0.2.0"],
     whatStays: [

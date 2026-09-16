@@ -1,0 +1,460 @@
+{
+  "schemaVersion": 2,
+  "title": "Make a Animate Shaz video with Wiggly",
+  "audience": "A first-time creator who wants to generate videos without writing code",
+  "format": {
+    "name": "Animate Shaz",
+    "slug": "shaz-puppet-runtime",
+    "promise": "Animate the 2D Shaz puppet locally with speech, lip-sync, and reviewed gestures in 4 built-in rooms with zero fees.",
+    "url": "https://wiggly.agentenamel.com/formats/shaz-puppet-runtime",
+    "outputLabel": "shaz-puppet-runtime.mp4"
+  },
+  "music": {
+    "file": "fixed/cancun-sega-genesis.mp3",
+    "authorized": true,
+    "provenance": "If Playboi Carti's \"Cancun\" was on the Sega Genesis (INSTRUMENTAL) — https://www.youtube.com/watch?v=-zdI0S0Vuzs",
+    "volume": 0.2,
+    "attribution": "Background music: Playboi Carti - Cancun (Sega Genesis Instrumental)"
+  },
+  "steps": [
+    {
+      "id": "proof-first",
+      "kind": "hero",
+      "number": "1",
+      "label": "See the finished result",
+      "background": "lime",
+      "durationSeconds": 4.5,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "shaz-puppet-runtime/final-result.mp4",
+        "startSeconds": 0,
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Official proof media sourced from final-result.mp4."
+      }
+    },
+    {
+      "id": "social-proof",
+      "kind": "social-proof",
+      "number": "2",
+      "label": "Compare with the viral format",
+      "windowTitle": "Terminal — Compare with the viral format",
+      "background": "lime",
+      "durationSeconds": 9.766666666666667,
+      "narration": {
+        "file": "shaz-puppet-runtime/step-02.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.991,
+          "text": "Look at this viral animated character rig."
+        },
+        {
+          "start": 2.991,
+          "end": 5.782,
+          "text": "Wiggly packages Shaz's fully articulated 2D puppet"
+        },
+        {
+          "start": 5.782,
+          "end": 8.573,
+          "text": "so your coding agent can animate him"
+        },
+        {
+          "start": 8.573,
+          "end": 8.973,
+          "text": "locally."
+        }
+      ],
+      "media": {
+        "type": "image",
+        "file": "shaz-puppet-runtime/poses/confident.png",
+        "fit": "contain",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Official 2D puppet rig character pose for Animate Shaz."
+      }
+    },
+    {
+      "id": "choose-format",
+      "kind": "browser",
+      "number": "3",
+      "label": "Copy the coding agent prompt",
+      "windowTitle": "Wiggly — Animate Shaz",
+      "background": "lime",
+      "durationSeconds": 7.5,
+      "narration": {
+        "file": "shaz-puppet-runtime/step-03.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.993,
+          "text": "On Wiggly, open the Animate Shaz format,"
+        },
+        {
+          "start": 2.993,
+          "end": 4.988,
+          "text": "choose Send to Coding Agent,"
+        },
+        {
+          "start": 4.988,
+          "end": 6.585,
+          "text": "and copy the prompt."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "shaz-puppet-runtime/browser-interaction.mp4",
+        "fit": "contain",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      }
+    },
+    {
+      "id": "run-agent",
+      "kind": "terminal",
+      "number": "4",
+      "label": "Paste into your coding agent",
+      "windowTitle": "Coding Agent (Antigravity / Claude Code) — Animate Shaz",
+      "background": "blue",
+      "durationSeconds": 8.5,
+      "narration": {
+        "file": "shaz-puppet-runtime/step-04.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 3.096,
+          "text": "Paste the instructions into Antigravity or Claude"
+        },
+        {
+          "start": 3.096,
+          "end": 3.51,
+          "text": "Code."
+        },
+        {
+          "start": 3.51,
+          "end": 6.406,
+          "text": "The agent reads the package and initializes"
+        },
+        {
+          "start": 6.406,
+          "end": 7.646,
+          "text": "the puppet runtime."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "shaz-puppet-runtime/step-04-intake.mp4",
+        "fit": "cover",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "checkpoint": {
+        "eyebrow": "Your checkpoint",
+        "headline": "The agent is using the packaged Toon Boom puppet runtime—not inventing video frames.",
+        "badge": "Verified 0 providers"
+      }
+    },
+    {
+      "id": "review-lessons",
+      "kind": "terminal",
+      "number": "5",
+      "label": "Review the voice and gestures",
+      "windowTitle": "Antigravity — Audio & Gesture Review",
+      "background": "blue",
+      "durationSeconds": 9.466666666666667,
+      "narration": {
+        "file": "shaz-puppet-runtime/step-05.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.812,
+          "text": "Supply your audio track."
+        },
+        {
+          "start": 1.812,
+          "end": 4.633,
+          "text": "The local Whisper model transcribes word timings,"
+        },
+        {
+          "start": 4.633,
+          "end": 6.245,
+          "text": "Cherry generates lip sync,"
+        },
+        {
+          "start": 6.245,
+          "end": 8.663,
+          "text": "and you review gestures before rendering."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "shaz-puppet-runtime/step-05-review.mp4",
+        "fit": "cover",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "checkpoint": {
+        "eyebrow": "Your one checkpoint",
+        "headline": "Review the local transcript, lip-sync cues, and background room.",
+        "badge": "Then approve"
+      }
+    },
+    {
+      "id": "package-breakdown",
+      "kind": "package-breakdown",
+      "number": "6",
+      "label": "Inspect the included assets",
+      "windowTitle": "Terminal — Inspect the included assets",
+      "background": "lime",
+      "durationSeconds": 9.5,
+      "narration": {
+        "file": "shaz-puppet-runtime/step-06.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 3.036,
+          "text": "The package includes five artist-reviewed gestures,"
+        },
+        {
+          "start": 3.036,
+          "end": 6.345,
+          "text": "four background environments, and full phoneme mouth"
+        },
+        {
+          "start": 6.345,
+          "end": 8.708,
+          "text": "drawings with zero API credits."
+        }
+      ]
+    },
+    {
+      "id": "replacement-value",
+      "kind": "replacement-value",
+      "number": "7",
+      "label": "Verify zero generation fees",
+      "windowTitle": "Terminal — Verify zero generation fees",
+      "background": "lime",
+      "durationSeconds": 9.633333333333333,
+      "narration": {
+        "file": "shaz-puppet-runtime/step-07.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.846,
+          "text": "You don't need Runway,"
+        },
+        {
+          "start": 1.846,
+          "end": 3.903,
+          "text": "ElevenLabs, or an image model."
+        },
+        {
+          "start": 3.903,
+          "end": 5.96,
+          "text": "The puppet rig, lip-sync engine,"
+        },
+        {
+          "start": 5.96,
+          "end": 8.84,
+          "text": "and local compositor run with zero fees."
+        }
+      ]
+    },
+    {
+      "id": "approve-render",
+      "kind": "terminal",
+      "number": "8",
+      "label": "Approve and render the video",
+      "windowTitle": "Coding Agent — Final Render",
+      "background": "blue",
+      "durationSeconds": 7.833333333333333,
+      "narration": {
+        "file": "shaz-puppet-runtime/step-08.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.333,
+          "text": "Once you approve the plan,"
+        },
+        {
+          "start": 2.333,
+          "end": 5.32,
+          "text": "the agent runs the local renderer and"
+        },
+        {
+          "start": 5.32,
+          "end": 7.027,
+          "text": "builds the broadcast-quality MP4."
+        }
+      ],
+      "media": {
+        "type": "video",
+        "file": "shaz-puppet-runtime/step-08-render.mp4",
+        "fit": "cover",
+        "startSeconds": 0,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "checkpoint": {
+        "eyebrow": "Final MP4",
+        "headline": "Video rendered and verified locally at 1280x720 24fps.",
+        "badge": "Ready to post"
+      }
+    },
+    {
+      "id": "finished-output",
+      "kind": "final",
+      "number": "9",
+      "label": "Watch the finished output",
+      "background": "lime",
+      "durationSeconds": 25,
+      "nativeAudio": true,
+      "media": {
+        "type": "video",
+        "file": "shaz-puppet-runtime/final-result.mp4",
+        "startSeconds": 0,
+        "fit": "contain",
+        "authorized": true,
+        "provenance": "Official proof media sourced from final-result.mp4."
+      }
+    },
+    {
+      "id": "scorecard",
+      "kind": "scorecard",
+      "number": "10",
+      "label": "Verify the quality scorecard",
+      "windowTitle": "Terminal — Verify the quality scorecard",
+      "background": "lime",
+      "durationSeconds": 8.7,
+      "narration": {
+        "file": "shaz-puppet-runtime/step-10.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 3.375,
+          "text": "Every video passes thirteen automated quality checks"
+        },
+        {
+          "start": 3.375,
+          "end": 5.643,
+          "text": "for lip sync, frame rate,"
+        },
+        {
+          "start": 5.643,
+          "end": 7.912,
+          "text": "dimensions, and zero provider leaks."
+        }
+      ]
+    },
+    {
+      "id": "checklist",
+      "kind": "checklist",
+      "number": "11",
+      "label": "Start with the beginner checklist",
+      "windowTitle": "Terminal — Start with the beginner checklist",
+      "background": "cream",
+      "durationSeconds": 7.966666666666667,
+      "narration": {
+        "file": "shaz-puppet-runtime/step-11.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 1.465,
+          "text": "To make your own,"
+        },
+        {
+          "start": 1.465,
+          "end": 2.73,
+          "text": "provide any audio file,"
+        },
+        {
+          "start": 2.73,
+          "end": 4.628,
+          "text": "pick one of four background rooms,"
+        },
+        {
+          "start": 4.628,
+          "end": 6.842,
+          "text": "and run the prompt in your coding"
+        },
+        {
+          "start": 6.842,
+          "end": 7.16,
+          "text": "agent."
+        }
+      ]
+    },
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "number": "12",
+      "label": "Replace three separate tools",
+      "windowTitle": "Terminal — Replace three separate tools",
+      "background": "lime",
+      "durationSeconds": 9.066666666666666,
+      "narration": {
+        "file": "shaz-puppet-runtime/step-12.wav",
+        "startSeconds": 0.2,
+        "authorized": true,
+        "provenance": "Synthesized tutorial voiceover (Zach D. Films style)"
+      },
+      "captions": [
+        {
+          "start": 0.2,
+          "end": 2.747,
+          "text": "Wiggly replaces complex 2D rigging software,"
+        },
+        {
+          "start": 2.747,
+          "end": 5.294,
+          "text": "voice lip-sync subscriptions, and video editors."
+        },
+        {
+          "start": 5.294,
+          "end": 8.265,
+          "text": "The link to get started is below."
+        }
+      ]
+    }
+  ]
+}

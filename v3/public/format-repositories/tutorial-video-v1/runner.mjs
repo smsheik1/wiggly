@@ -10,7 +10,6 @@ import { renderMedia, selectComposition } from "@remotion/renderer";
 import { loadAndValidateInput, probeMedia, VIDEO } from "./runtime/contract.mjs";
 import { critiqueTutorialScript, formatCritiqueReport } from "./runtime/critique.mjs";
 import { harvestTargetAssets } from "./runtime/harvest.mjs";
-import { createProgressHud } from "./runtime/hud.mjs";
 import { buildNarratedTutorialStep } from "./runtime/voice.mjs";
 
 export const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -76,7 +75,7 @@ export function doctor() {
   return result;
 }
 
-export async function render(inputFile, outputFile, existingHud = null) {
+export async function render(inputFile, outputFile) {
   if (!checkBinary(ffmpeg) || !checkBinary(ffprobe)) throw new Error("Render requires FFmpeg and FFprobe on PATH.");
   if (!checkLocalhostPort()) throw new Error("Render needs permission to bind a localhost port for Remotion's local browser. Grant that local sandbox permission before starting the render; this is not a network or provider call.");
   const inputPath = path.resolve(inputFile);
@@ -84,24 +83,6 @@ export async function render(inputFile, outputFile, existingHud = null) {
   if (path.extname(output).toLowerCase() !== ".mp4") throw new Error("Output must be an .mp4 file.");
   mkdirSync(path.dirname(output), { recursive: true });
   const prepared = validateInput(inputPath);
-
-  const hud = existingHud || createProgressHud({
-    title: "WIGGLY COMPOSITOR",
-    targetSlug: path.basename(inputFile, ".json"),
-    rootDir: ROOT,
-    totalStages: 2
-  });
-
-  const totalFrames = prepared.durationInFrames || Math.round(prepared.durationSeconds * 30);
-
-  hud.update({
-    stageIndex: 1,
-    totalStages: 2,
-    stageName: "Bundling Remotion React composition...",
-    percent: 5,
-    totalFrames
-  });
-
   let lastBundleProgress = -1;
   const serveUrl = await bundle({
     entryPoint: ENTRY,
@@ -110,21 +91,13 @@ export async function render(inputFile, outputFile, existingHud = null) {
       const percent = Math.floor(progress / 10) * 10;
       if (percent !== lastBundleProgress) {
         lastBundleProgress = percent;
-        hud.update({
-          stageIndex: 1,
-          totalStages: 2,
-          stageName: `Bundling Remotion composition (${percent}%)`,
-          percent: Math.round(percent * 0.15),
-          totalFrames
-        });
+        console.log(`Bundle ${percent}%`);
       }
     },
   });
   const browserExecutable = bundledBrowser || undefined;
   const composition = await selectComposition({ serveUrl, id: "TutorialVideo", inputProps: prepared, browserExecutable });
   let lastRenderProgress = -1;
-  const renderStartTime = Date.now();
-
   await renderMedia({
     serveUrl,
     composition,
@@ -140,18 +113,7 @@ export async function render(inputFile, outputFile, existingHud = null) {
       const percent = Math.floor(progress * 10) * 10;
       if (percent !== lastRenderProgress) {
         lastRenderProgress = percent;
-        const currentFrame = Math.round(progress * totalFrames);
-        const elapsedSec = (Date.now() - renderStartTime) / 1000;
-        const etaSeconds = progress > 0 ? (elapsedSec / progress) * (1 - progress) : 0;
-        hud.update({
-          stageIndex: 2,
-          totalStages: 2,
-          stageName: `Rendering H.264 video frames (${Math.round(progress * 100)}%)`,
-          percent: Math.round(15 + progress * 80),
-          currentFrame,
-          totalFrames,
-          etaSeconds
-        });
+        console.log(`Render ${percent}%`);
       }
     },
   });
@@ -159,13 +121,6 @@ export async function render(inputFile, outputFile, existingHud = null) {
   if (metadata.video?.width !== VIDEO.width || metadata.video?.height !== VIDEO.height) throw new Error("Rendered output is not 1920x1080.");
   if (!metadata.audio) throw new Error("Rendered output is missing audio.");
   if (Math.abs(metadata.durationSeconds - prepared.durationSeconds) > 0.12) throw new Error(`Rendered duration ${metadata.durationSeconds.toFixed(3)}s does not match the ingredient timeline ${prepared.durationSeconds.toFixed(3)}s.`);
-
-  if (!existingHud) {
-    hud.finish({
-      videoPath: path.relative(ROOT, output),
-      durationSeconds: metadata.durationSeconds
-    });
-  }
   const receipt = {
     schemaVersion: 1,
     formatVersion: "0.3.0",
@@ -243,53 +198,6 @@ export function inspect(inputFile, reportFile) {
   return report;
 }
 
-export function openVideoInPlayer(videoPath) {
-  const resolved = path.resolve(videoPath);
-  if (!existsSync(resolved)) throw new Error(`Video file does not exist: ${resolved}`);
-  const filename = path.basename(resolved);
-
-  if (process.platform === "darwin") {
-    // macOS: Close any stale open document with this name in QuickTime to bust the buffer cache, then re-open and play from 00:00
-    const script = `
-tell application "QuickTime Player"
-    activate
-    repeat with d in (every document whose name is "${filename}")
-        close d saving no
-    end repeat
-    set movieDoc to open POSIX file "${resolved}"
-    tell movieDoc
-        set current time to 0
-        play
-    end tell
-end tell
-    `.trim();
-    try {
-      execFileSync("osascript", ["-e", script], { stdio: "ignore" });
-      console.log(`[wiggly] Opened ${path.relative(ROOT, resolved)} in QuickTime Player from 00:00.`);
-      return true;
-    } catch {
-      // Fall back to standard open command
-      spawnSync("open", ["-a", "QuickTime Player", resolved], { stdio: "ignore" });
-      return true;
-    }
-  } else if (process.platform === "win32") {
-    // Windows: Close any open media player instances that might hold an NTFS file lock on the target file
-    try {
-      // Gracefully close Windows Media Player or Movies & TV if active
-      spawnSync("powershell", ["-Command", `Stop-Process -Name "wmplayer", "Video.UI" -ErrorAction SilentlyContinue`], { stdio: "ignore" });
-    } catch {}
-    // Open fresh file using default system video player
-    spawnSync("cmd", ["/c", "start", "", resolved], { stdio: "ignore" });
-    console.log(`[wiggly] Opened ${path.relative(ROOT, resolved)} in default Windows media player.`);
-    return true;
-  } else {
-    // Linux fallback
-    spawnSync("xdg-open", [resolved], { stdio: "ignore" });
-    console.log(`[wiggly] Opened ${path.relative(ROOT, resolved)} via xdg-open.`);
-    return true;
-  }
-}
-
 export function finalize(inputFile, reportFile, reviewFile, outputFile) {
   const input = path.resolve(inputFile);
   const reportPath = path.resolve(reportFile);
@@ -330,34 +238,15 @@ export async function make(options = {}) {
   const skipRender = options.skipRender ?? (process.argv.includes("--skip-render") || process.argv.includes("--dry-run"));
   const outputFile = options.output || argument("output", path.join(ROOT, "outputs", `${targetSlug}-tutorial.mp4`));
   const recipeOption = options.recipe || argument("recipe");
-  const payoffDurationOption = options.payoffDuration !== undefined ? Number(options.payoffDuration) : (argument("payoff-duration") ? Number(argument("payoff-duration")) : undefined);
-  const payoffStartOption = options.payoffStart !== undefined ? Number(options.payoffStart) : (argument("payoff-start") ? Number(argument("payoff-start")) : undefined);
 
   console.log(`[make] Starting autonomous 1-click tutorial generator for: ${targetSlug} (audience: ${audience})`);
 
-  const hud = createProgressHud({
-    title: "WIGGLY TUTORIAL MAKER",
-    targetSlug,
-    rootDir: ROOT,
-    totalStages: 5
-  });
-
   // 1. Harvest Visual Assets
-  hud.update({
-    stageIndex: 1,
-    totalStages: 5,
-    stageName: `Harvesting visual assets & proof for ${targetSlug}...`,
-    percent: 10
-  });
+  console.log(`[make] [1/5] Harvesting assets for ${targetSlug}...`);
   const harvested = await harvestTargetAssets({ targetSlug, repoRoot: ROOT });
 
   // 2. Synthesize Audio & Build Narrated Steps with Content-Driven Boundaries
-  hud.update({
-    stageIndex: 2,
-    totalStages: 5,
-    stageName: "Synthesizing voiceovers & microsecond caption timings...",
-    percent: 25
-  });
+  console.log(`[make] [2/5] Synthesizing voiceover and calculating microsecond caption timings...`);
   const audioOutputDir = path.join(MEDIA_ROOT, targetSlug);
   mkdirSync(audioOutputDir, { recursive: true });
 
@@ -382,19 +271,11 @@ export async function make(options = {}) {
     }
   };
 
-  const isOtaku = targetSlug.includes("otaku") || (harvested.format.name || "").toLowerCase().includes("cartoon");
-
   // Step 2: Social Proof (8.5s)
   const socialProofMedia = harvested.media.socialProofStill || {
-    file: existsSync(path.join(MEDIA_ROOT, "fixed", "viral-benchmark.png"))
-      ? "fixed/viral-benchmark.png"
-      : "mugsy-explains/mugsyclips-profile.png",
+    file: `${targetSlug}/mugsyclips-profile.png`,
     type: "image"
   };
-  const step2Text = isOtaku
-    ? `Look at this viral anime explainer breaking down technical ideas through characters. Wiggly packages this exact format so your coding agent can build it locally.`
-    : `Look at Mugsy Clips on Instagram with thirty-five thousand followers. Wiggly packages this exact comparison format so your coding agent can build it locally.`;
-
   const step2Result = await buildNarratedTutorialStep({
     id: "social-proof",
     number: 2,
@@ -403,7 +284,7 @@ export async function make(options = {}) {
     background: "lime",
     mediaPath: socialProofMedia.file,
     mediaType: "image",
-    narrationText: step2Text,
+    narrationText: `Look at Mugsy Clips on Instagram with thirty-five thousand followers. Wiggly packages this exact comparison format so your coding agent can build it locally.`,
     audioRelPath: `${targetSlug}/step-02.wav`,
     audioFullPath: path.join(audioOutputDir, "step-02.wav"),
     voice: "zach",
@@ -412,10 +293,6 @@ export async function make(options = {}) {
 
   // Step 3: Browser (Copy prompt) (7.5s)
   const browserMedia = harvested.media.browserVideo || harvested.media.browserStill;
-  const step3Text = isOtaku
-    ? `On Wiggly, open the Cartoon Explainer format, choose Send to Coding Agent, and copy the prompt.`
-    : `On Wiggly, open the Mugsy Explains format, choose Send to Coding Agent, and copy the prompt.`;
-
   const step3Result = await buildNarratedTutorialStep({
     id: "choose-format",
     number: 3,
@@ -425,7 +302,7 @@ export async function make(options = {}) {
     background: "lime",
     mediaPath: browserMedia.file,
     mediaType: browserMedia.type,
-    narrationText: step3Text,
+    narrationText: `On Wiggly, open the Mugsy Explains format, choose Send to Coding Agent, and copy the prompt.`,
     audioRelPath: `${targetSlug}/step-03.wav`,
     audioFullPath: path.join(audioOutputDir, "step-03.wav"),
     voice: "zach",
@@ -434,10 +311,6 @@ export async function make(options = {}) {
 
   // Step 4: Terminal (Paste into agent) (8.5s)
   const intakeMedia = harvested.media.intakeVideo || harvested.media.terminalVideo || harvested.media.terminalStill;
-  const step4Text = isOtaku
-    ? `Paste the instructions into Antigravity or Claude Code. The agent reads the package and sets up your story world.`
-    : `Paste the instructions into Antigravity or Claude Code. The agent reads the package and sets up your lessons.`;
-
   const step4Result = await buildNarratedTutorialStep({
     id: "run-agent",
     number: 4,
@@ -448,7 +321,7 @@ export async function make(options = {}) {
     mediaPath: intakeMedia.file,
     mediaType: intakeMedia.type,
     mediaFit: "cover",
-    narrationText: step4Text,
+    narrationText: `Paste the instructions into Antigravity or Claude Code. The agent reads the package and sets up your lessons.`,
     audioRelPath: `${targetSlug}/step-04.wav`,
     audioFullPath: path.join(audioOutputDir, "step-04.wav"),
     voice: "zach",
@@ -465,21 +338,17 @@ export async function make(options = {}) {
 
   // Step 5: Review Lessons Checkpoint (8.5s)
   const reviewMedia = harvested.media.reviewVideo || harvested.media.terminalVideo || harvested.media.terminalStill;
-  const step5Text = isOtaku
-    ? `Review the character roles and dialogue script before rendering. You stay in complete control of the story.`
-    : `Review the three comparative lessons and character poses before rendering. You stay in control of the creative output.`;
-
   const step5Result = await buildNarratedTutorialStep({
     id: "review-lessons",
     number: 5,
-    label: isOtaku ? "Review the scene plan" : "Review the lesson plan",
+    label: "Review the lesson plan",
     kind: "terminal",
-    windowTitle: isOtaku ? `Antigravity — Scene Plan Review` : `Antigravity — Lesson Review`,
+    windowTitle: `Antigravity — Lesson Review`,
     background: "blue",
     mediaPath: reviewMedia.file,
     mediaType: reviewMedia.type,
     mediaFit: "cover",
-    narrationText: step5Text,
+    narrationText: `Review the three comparative lessons and character poses before rendering. You stay in control of the creative output.`,
     audioRelPath: `${targetSlug}/step-05.wav`,
     audioFullPath: path.join(audioOutputDir, "step-05.wav"),
     voice: "zach",
@@ -488,28 +357,20 @@ export async function make(options = {}) {
   if (reviewMedia && reviewMedia.type === "video" && reviewMedia.durationSeconds && step5Result.step.durationSeconds > reviewMedia.durationSeconds) {
     step5Result.step.durationSeconds = Math.floor(reviewMedia.durationSeconds * 30) / 30;
   }
-  step5Result.step.checkpoint = isOtaku ? {
-    eyebrow: "Your one checkpoint",
-    headline: "Review the story world dialogue and character cast.",
-    badge: "Then approve"
-  } : {
+  step5Result.step.checkpoint = {
     eyebrow: "Your one checkpoint",
     headline: "Review the 3 comparative lessons and character poses.",
     badge: "Then approve"
   };
 
   // Step 6: Package Breakdown (8.0s)
-  const step6Text = isOtaku
-    ? `The package includes transparent character renders, story backgrounds, and voice models. No external image generator is required.`
-    : `The package includes five expressive cartoon poses and the handwritten Virgil font. No external image generator is required.`;
-
   const step6Result = await buildNarratedTutorialStep({
     id: "package-breakdown",
     number: 6,
     label: "Inspect the included assets",
     kind: "package-breakdown",
     background: "lime",
-    narrationText: step6Text,
+    narrationText: `The package includes five expressive cartoon poses and the handwritten Virgil font. No external image generator is required.`,
     audioRelPath: `${targetSlug}/step-06.wav`,
     audioFullPath: path.join(audioOutputDir, "step-06.wav"),
     voice: "zach",
@@ -557,38 +418,19 @@ export async function make(options = {}) {
     badge: "Ready to post"
   };
 
-  // Step 9: Finished Output Payoff (dynamically adapted to format proof)
-  const availableProofDur = (harvested.media.proofVideo && harvested.media.proofVideo.durationSeconds) || proofFullDuration || 25.0;
-  let payoffDuration = 18.0;
-  let payoffStart = 0;
-
-  if (payoffDurationOption !== undefined) {
-    payoffDuration = payoffDurationOption;
-  } else if (isOtaku) {
-    payoffDuration = 26.0;
-  } else if (availableProofDur > 0) {
-    // Play up to 25 seconds or the full remaining proof length
-    payoffDuration = Math.min(25.0, Math.max(12.0, Math.floor(availableProofDur * 30) / 30));
-  }
-
-  if (payoffStartOption !== undefined) {
-    payoffStart = payoffStartOption;
-  } else if (isOtaku && availableProofDur >= 50) {
-    payoffStart = 26.5;
-  }
-
+  // Step 9: Finished Output Payoff (8.0s)
   const step9Proof = {
     id: "finished-output",
     kind: "final",
     number: "9",
     label: "Watch the finished output",
-    background: isOtaku ? "cream" : "lime",
-    durationSeconds: payoffDuration,
+    background: "lime",
+    durationSeconds: 8.0,
     nativeAudio: true,
     media: {
       type: "video",
       file: harvested.media.proofVideo.file,
-      startSeconds: payoffStart,
+      startSeconds: 0,
       fit: "contain",
       authorized: true,
       provenance: harvested.media.proofVideo.provenance
@@ -610,17 +452,13 @@ export async function make(options = {}) {
   });
 
   // Step 11: Beginner Checklist (7.5s)
-  const step11Text = isOtaku
-    ? `To make your own, pick a topic, choose a story world, and run the prompt in your favorite coding agent.`
-    : `To make your own, pick a topic, choose three lessons, and run the prompt in your favorite coding agent.`;
-
   const step11Result = await buildNarratedTutorialStep({
     id: "checklist",
     number: 11,
     label: "Start with the beginner checklist",
     kind: "checklist",
-    background: "cream",
-    narrationText: step11Text,
+    background: "lime",
+    narrationText: `To make your own, pick a topic, choose three lessons, and run the prompt in your favorite coding agent.`,
     audioRelPath: `${targetSlug}/step-11.wav`,
     audioFullPath: path.join(audioOutputDir, "step-11.wav"),
     voice: "zach",
@@ -686,12 +524,6 @@ export async function make(options = {}) {
   console.log(`[make] Wrote generated tutorial recipe to ${path.relative(ROOT, inputFilePath)}`);
 
   // 3. Critique Script
-  hud.update({
-    stageIndex: 3,
-    totalStages: 5,
-    stageName: "Evaluating 5-Law Retention Critique...",
-    percent: 35
-  });
   console.log(`[make] [3/5] Running 5-law script critique linter...`);
   const critique = critiqueTutorialScript(inputJson);
   console.log(formatCritiqueReport(critique));
@@ -700,33 +532,18 @@ export async function make(options = {}) {
   }
 
   // 4. Validate Contract
-  hud.update({
-    stageIndex: 4,
-    totalStages: 5,
-    stageName: "Validating timeline and ingredient contracts...",
-    percent: 40
-  });
   console.log(`[make] [4/5] Validating timeline and ingredient contracts...`);
   const validated = validateInput(inputFilePath);
 
   if (skipRender) {
     console.log(`[make] [5/5] Skipped render (--skip-render or --dry-run active). Recipe and assets ready!`);
-    hud.finish({
-      videoPath: path.relative(ROOT, inputFilePath),
-      durationSeconds: validated.durationSeconds
-    });
     return { status: "ready", input: inputFilePath, critique, validated };
   }
 
   // 5. Render & Inspect
   console.log(`[make] [5/5] Rendering official 1080p composition...`);
-  const renderResult = await render(inputFilePath, outputFile, hud);
+  const renderResult = await render(inputFilePath, outputFile);
   const inspection = inspect(outputFile);
-
-  hud.finish({
-    videoPath: path.relative(ROOT, outputFile),
-    durationSeconds: inspection.metadata?.durationSeconds || validated.durationSeconds
-  });
 
   return {
     status: "completed",
@@ -748,7 +565,6 @@ if (path.resolve(process.argv[1] || "") === fileURLToPath(import.meta.url)) {
       copyFileSync(path.join(ROOT, "fixtures", "template", "input.json"), output);
       console.log(`Created ${output}`);
     } else if (command === "render") await render(requiredArgument("input"), requiredArgument("output"));
-    else if (command === "open") openVideoInPlayer(requiredArgument("input"));
     else if (command === "inspect") inspect(requiredArgument("input"), argument("report"));
     else if (command === "finalize") finalize(requiredArgument("input"), requiredArgument("report"), requiredArgument("review"), argument("output"));
     else if (command === "smoke") await smoke();
