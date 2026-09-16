@@ -54,8 +54,24 @@
             "enum": [
               "talk-to-camera",
               "text-card",
-              "chibi-commentary"
+              "chibi-commentary",
+              "b-roll"
             ]
+          },
+          "motion": {
+            "enum": [
+              "zoom-in",
+              "zoom-out",
+              "pan-left",
+              "pan-right",
+              "pan-up",
+              "pan-down"
+            ],
+            "description": "Ken Burns camera motion for b-roll shot; defaults to zoom-in"
+          },
+          "brollMedia": {
+            "type": "string",
+            "description": "Optional custom concept image for b-roll shot; defaults to scene background"
           },
           "chibiPose": {
             "type": "string",
