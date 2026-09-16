@@ -12,6 +12,7 @@ const output = path.join(downloads, `${archiveName}.zip`);
 const checksumOutput = `${output}.sha256`;
 const excludedNames = new Set(["node_modules", ".runtime-cache", ".DS_Store", ".git"]);
 const packagedPropFiles = new Set(["phone.svg", "crossed-arms-pose.png"]);
+const packagedFontFiles = new Set(["GROBOLD.ttf"]);
 const packagedBackgroundFiles = new Set([
   "living-room.png",
   "map-photo-zone.png",
@@ -48,6 +49,14 @@ export function include(source) {
     parts[1] === "props" &&
     parts.length > 2 &&
     !packagedPropFiles.has(parts.slice(2).join(path.sep))
+  ) {
+    return false;
+  }
+  if (
+    parts[0] === "assets" &&
+    parts[1] === "fonts" &&
+    parts.length > 2 &&
+    !packagedFontFiles.has(parts.slice(2).join(path.sep))
   ) {
     return false;
   }

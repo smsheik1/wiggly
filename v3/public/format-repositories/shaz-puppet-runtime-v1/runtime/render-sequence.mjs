@@ -6,6 +6,7 @@ import sharp from "sharp";
 
 import { execute, sha256, validateRun, writeJson } from "./run-common.mjs";
 import { renderRigFrame } from "./rig-v2-renderer.mjs";
+import { renderMultiShot } from "./render-multi-shot.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
 const PERFORMANCE_STAGE_VIEW = Object.freeze({ scale: 1.33, offset: [0.12, 0.142] });
@@ -149,6 +150,9 @@ async function renderSequence({ root, runDirectory }) {
   const validated = await validateRun({ root, runDirectory });
   if (validated.mode === "performance") {
     return renderPerformance({ root, runDirectory, validated });
+  }
+  if (validated.mode === "multi-shot") {
+    return renderMultiShot({ root, runDirectory, validated });
   }
   const isAudioSequence = validated.mode === "audio-sequence";
   const output = path.join(runDirectory, "final.mp4");

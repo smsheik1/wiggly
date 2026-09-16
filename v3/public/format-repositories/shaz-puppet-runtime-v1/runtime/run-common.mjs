@@ -12,6 +12,10 @@ import {
   loadMotionPacketRegistry,
   validatePerformancePlan,
 } from "./motion-packets.mjs";
+import {
+  MULTI_SHOT_SCHEMA,
+  validateMultiShotPlan,
+} from "./multi-shot-timeline.mjs";
 import { loadManifest } from "./rig-v2-renderer.mjs";
 import { validateTranscriptEvidence } from "./transcription.mjs";
 
@@ -501,6 +505,101 @@ async function validateRun({ root, runDirectory }) {
       timeline,
       background,
       backgroundPath,
+      receipt,
+    };
+  }
+  if (input.schemaVersion === MULTI_SHOT_SCHEMA) {
+    const audioPath = path.resolve(runDirectory, input.audioFile ?? "");
+    if (path.dirname(audioPath) !== path.resolve(runDirectory)) {
+      throw new Error("multi-shot input.audioFile must name a file directly inside the run folder");
+    }
+    if (!input.audioFile || !(await exists(audioPath))) {
+      throw new Error(`multi-shot audio is missing: ${input.audioFile || "(unset)"}`);
+    }
+    const audioProbe = probeMedia(audioPath);
+    const audioStream = audioProbe.streams?.find((stream) => stream.codec_type === "audio");
+    const audioDurationSeconds = measuredAudioDuration(audioProbe);
+    if (!audioStream) throw new Error("the staged multi-shot file has no audio stream");
+    if (!(audioDurationSeconds > 0)) throw new Error("the staged multi-shot audio duration could not be measured");
+    if (!input.transcript) throw new Error("multi-shot input requires generated transcript evidence");
+    const transcription = await validateTranscriptEvidence({
+      root,
+      runDirectory,
+      audioPath,
+      config: input.transcript,
+    });
+    const assets = await readJson(path.join(root, "assets.json"));
+    const timeline = validateMultiShotPlan(input, {
+      audioDurationSeconds,
+      defaultBackgroundId: assets.defaultBackgroundId,
+      assets,
+      transcript: transcription.transcript,
+    });
+
+    const cueFile = path.join(runDirectory, "cherry-lipsync.tsv");
+    let lipSync = null;
+    if (await exists(cueFile)) {
+      const cueSha256 = await sha256(cueFile);
+      const cherry = await loadCherryEngine(root);
+      const parsed = parseCherryTsv(await fs.readFile(cueFile, "utf8"), {
+        totalFrames: timeline.totalFrames,
+        fps: 24,
+      });
+      lipSync = {
+        cueFile: "cherry-lipsync.tsv",
+        cueSha256,
+        frameDrawings: parsed.frameDrawings,
+        receipt: {
+          engine: "cherry-lip-sync",
+          engineVersion: cherry.manifest.engine.version,
+          execution: "node-wasi-preview1",
+          cueSource: "bundled-wasi-engine",
+          cueFile: "cherry-lipsync.tsv",
+          cueSha256,
+          sourceAudioSha256: await sha256(audioPath),
+          fps: 24,
+        },
+      };
+    }
+
+    const receipt = {
+      schemaVersion: 2,
+      status: "pass",
+      mode: "multi-shot-timeline",
+      validatedAt: new Date().toISOString(),
+      formatVersion: (await readJson(path.join(root, "format.json"))).version,
+      inputSha256: await sha256(inputPath),
+      sourceXstageSha256: manifest.source.sha256,
+      poseRegistrySha256: registry.sha256,
+      artistRenderedFramesUsed: false,
+      totalFrames: timeline.totalFrames,
+      durationSeconds: timeline.durationSeconds,
+      audio: {
+        file: input.audioFile,
+        sha256: await sha256(audioPath),
+        codec: audioStream.codec_name,
+        durationSeconds: audioDurationSeconds,
+      },
+      transcript: transcription.receipt,
+      ...(lipSync ? { lipSync: lipSync.receipt } : {}),
+      shots: timeline.shots,
+      providerCalls: 0,
+      estimatedCost: "$0",
+    };
+    await writeJson(path.join(runDirectory, "validation-receipt.json"), receipt);
+    return {
+      mode: "multi-shot",
+      input,
+      inputPath,
+      audioPath,
+      audioProbe,
+      transcription,
+      manifest,
+      manifestPath,
+      registry,
+      timeline,
+      assets,
+      lipSync,
       receipt,
     };
   }

@@ -16,5 +16,6 @@
   "backgroundSelection": "Audio-backed sequences resolve their explicit backgroundId from assets.json. Semantic performance inputs may select the same registered IDs and default to assets.defaultBackgroundId when omitted. Background changes are input data rendered through the same character renderer and fixed stage view.",
   "supportingMediaZone": "map-photo-zone contains a clean empty wall area reserved in metadata for a future supporting-media feature. This Format does not accept, crop, place, or render supporting media there.",
   "camera": "Fixed; no zoom, pan, slide, or Ken Burns motion.",
-  "characterFraming": "Shaz is a waist-up rig. In audio-backed compositions the hoodie must continue below the bottom canvas edge in every frame, so its rounded lower boundary never reveals the missing legs. The same fixed stage view must also preserve clear left and right margins across every used action."
+  "characterFraming": "Shaz is a waist-up rig. In audio-backed compositions the hoodie must continue below the bottom canvas edge in every frame, so its rounded lower boundary never reveals the missing legs. The same fixed stage view must also preserve clear left and right margins across every used action.",
+  "multiShotTimeline": "shaz-multi-shot-v1 composes contiguous shots (talk-to-camera, text-card) over continuous audio with zero frame gaps or desyncs. Text cards render bold typography with colored phrase highlights centered on the wall zone of the registered background."
 }

@@ -7,6 +7,36 @@
     { "id": "phone", "path": "assets/props/phone.svg", "sha256": "aadcadb428f4f63ad54ed9575e5120a8519a3520af3b2460714a337a1fd21975", "usage": "look-at-phone" },
     { "id": "crossed-arms-pose", "path": "assets/props/crossed-arms-pose.png", "sha256": "73e73755a77822989fd466ab6fe79591b176bbe9ea68940a46359c999a84e311", "usage": "arms-crossed-skeptical registered pose drawing" }
   ],
+  "fonts": [
+    {
+      "id": "grobold",
+      "label": "Grobold",
+      "path": "assets/fonts/GROBOLD.ttf",
+      "sha256": "98e9c349709da1cd410d65b2954d30e355c154a8ea52004ecbe6eb0d8205d040"
+    }
+  ],
+  "chibiFrames": {
+    "enterSmear": "assets/chibi/Timeline 1_0000In.png",
+    "exitSmear": "assets/chibi/Timeline 1_0016.png",
+    "defaultPose": "assets/chibi/Timeline 1_0001.png",
+    "poses": [
+      { "id": "talk-excited-1", "path": "assets/chibi/Timeline 1_0001.png", "sha256": "3a62161ac035aa384fcbe6d328f93597214cfeb3acb9a8dae77ebf4af511a789" },
+      { "id": "talk-excited-2", "path": "assets/chibi/Timeline 1_0002.png", "sha256": "ebd13b2ee1be1302229dcdba518929f752e1395691bd8be6697500839f1b2140" },
+      { "id": "talk-gesture-1", "path": "assets/chibi/Timeline 1_0003x.png", "sha256": "f9e048db18069e9eec67f73799361c0272185a1f6fbc35ab3e3ad61ee80c8c08" },
+      { "id": "talk-gesture-2", "path": "assets/chibi/Timeline 1_0004x.png", "sha256": "bc9ac3dc9ea613e55e41306e4f544e438cc74a6cce81d1d67baedaac3ad664d1" },
+      { "id": "talk-smile", "path": "assets/chibi/Timeline 1_0005.png", "sha256": "cddfeafe8fab3917849fc2dc3d04815bde40f0808973ec6cc9412d69687a56a6" },
+      { "id": "present-open", "path": "assets/chibi/Timeline 1_0006.png", "sha256": "4b2806264d5c90f301ab9d6ff3f0096d8ae2d06351bdbe2ff1b4490569328ccf" },
+      { "id": "present-gesture", "path": "assets/chibi/Timeline 1_0007x.png", "sha256": "2e6df260897ec0322b094e700f3dd6fa3596edf1b117b3d009ceab74799b0bef" },
+      { "id": "think-chin", "path": "assets/chibi/Timeline 1_0008.png", "sha256": "6b81a085a25594e4baa428f0fb9d445c78d53fdd9642c33b94f7886ebd2733a1" },
+      { "id": "think-down", "path": "assets/chibi/Timeline 1_0009.png", "sha256": "1952a78616c27c7dda994a7856f51007225a1b197a8ddb739c4bba5128d2fff0" },
+      { "id": "shrug-smile", "path": "assets/chibi/Timeline 1_0010.png", "sha256": "c93df506d1093c0a743b9505439fa4e4e8880a4c5daa7c2df03d4f7d10ea0973" },
+      { "id": "listen-side", "path": "assets/chibi/Timeline 1_0011.png", "sha256": "d3049a1584a8776d9440e8548d36fd7732d644491df1ceff6984fa2dd8ae95b3" },
+      { "id": "talk-laugh", "path": "assets/chibi/Timeline 1_0012.png", "sha256": "34d735b8671bc248623d981abc68761acd21a99e5c396a63d8d3732d5d593960" },
+      { "id": "point-side", "path": "assets/chibi/Timeline 1_0013.png", "sha256": "f089284aa9554ac394d715880a97b336a8793e6e59e96801450b001153959684" },
+      { "id": "point-up", "path": "assets/chibi/Timeline 1_0014.png", "sha256": "0ed3fc06f79cf871cd72bf737d02dea0c690f17e4302eb6e4579908788156362" },
+      { "id": "celebrate", "path": "assets/chibi/Timeline 1_0015.png", "sha256": "8ad3803a53d938ca7dc5636cddd6f3beccdc122a7e49dc2589136160746a7e58" }
+    ]
+  },
   "backgrounds": [
     {
       "id": "sisters-room",

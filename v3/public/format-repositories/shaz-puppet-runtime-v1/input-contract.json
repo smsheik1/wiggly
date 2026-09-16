@@ -104,6 +104,7 @@
     "Lip-sync changes only the Mouth drawing. Init generates cues locally by default for an audio-backed sequence, accepts a supplied exact-audio TSV, or disables mouth animation only when --lipsync=off is explicit.",
     "The transcript is planning evidence, not animation data. It may inform pose choice and timing, but it cannot change rig controls, drawings, camera, audio, or rendering by itself.",
     "Every expressive entry in an audio-backed sequence is tied to one exact transcript word and frame. Init rejects the complete plan when the regenerated transcript SHA does not match planningTranscriptSha256.",
-    "The Photo Zone background is a fixed clean background in this release. Its reserved supporting-media bounds are metadata only; no overlay input is accepted or rendered."
+    "The Photo Zone background is a fixed clean background in this release. Its reserved supporting-media bounds are metadata only; no overlay input is accepted or rendered.",
+    "Multi-shot sequences use shaz-multi-shot-v1 (defined in shot-sheet-contract.json) to compose contiguous talk-to-camera and text-card shots with director-guided pacing."
   ]
 }

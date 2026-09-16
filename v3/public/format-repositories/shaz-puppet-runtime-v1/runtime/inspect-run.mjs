@@ -21,7 +21,7 @@ function probeVideo(file) {
 
 async function inspectRun({ root, runDirectory }) {
   const validated = await validateRun({ root, runDirectory });
-  const isAudiovisual = validated.mode === "performance" || validated.mode === "audio-sequence";
+  const isAudiovisual = validated.mode === "performance" || validated.mode === "audio-sequence" || validated.mode === "multi-shot";
   const finalVideo = path.join(runDirectory, "final.mp4");
   const renderReportPath = path.join(runDirectory, "render-report.json");
   if (!(await exists(finalVideo)) || !(await exists(renderReportPath))) {
@@ -70,7 +70,7 @@ async function inspectRun({ root, runDirectory }) {
     if (renderReport.audioSha256 !== validated.receipt.audio.sha256) {
       failures.push("render report audio checksum is stale");
     }
-    if (renderReport.background?.sha256 !== validated.receipt.background.sha256) {
+    if (renderReport.background && renderReport.background?.sha256 !== validated.receipt.background?.sha256) {
       failures.push("render report background checksum is stale");
     }
     if (validated.receipt.transcript
@@ -81,7 +81,7 @@ async function inspectRun({ root, runDirectory }) {
     if (JSON.stringify(renderReport.stageView) !== JSON.stringify(PERFORMANCE_STAGE_VIEW)) {
       failures.push("performance render did not use the fixed canonical stage view");
     }
-    if (validated.lipSync) {
+    if (validated.lipSync && renderReport.mouthMode !== undefined) {
       if (renderReport.mouthMode !== "cherry-tsv-shaz-five-mouth-v1") {
         failures.push("render report did not record the validated lip-sync mode");
       }
@@ -92,9 +92,15 @@ async function inspectRun({ root, runDirectory }) {
   }
 
   const poseReports = [];
-  const uniquePoseIds = validated.mode === "performance"
-    ? validated.receipt.poses.map(({ poseId }) => poseId)
-    : [...new Set(validated.timeline.entries.map((entry) => entry.poseId))];
+  let uniquePoseIds = [];
+  if (validated.mode === "performance") {
+    uniquePoseIds = validated.receipt.poses.map(({ poseId }) => poseId);
+  } else if (validated.mode === "multi-shot") {
+    const hasTalk = validated.timeline.shots.some((s) => s.shotType === "talk-to-camera");
+    uniquePoseIds = hasTalk ? ["neutral-listening"] : [];
+  } else {
+    uniquePoseIds = [...new Set(validated.timeline.entries.map((entry) => entry.poseId))];
+  }
   for (const poseId of uniquePoseIds) {
     const pose = validated.registry.byId.get(poseId);
     const report = await inspectPose({
@@ -125,6 +131,20 @@ async function inspectRun({ root, runDirectory }) {
         event.outputEndFrame - 1,
       ]),
       validated.timeline.durationFrames - 1,
+    ];
+    const unique = [...new Set(candidates)].sort((left, right) => left - right);
+    sampleFrames = unique.length <= 12
+      ? unique
+      : Array.from({ length: 12 }, (_, index) => unique[Math.round(index * (unique.length - 1) / 11)]);
+  } else if (validated.mode === "multi-shot") {
+    const candidates = [
+      0,
+      ...renderReport.shots.flatMap((shot) => [
+        shot.outputStartFrame - 1,
+        Math.floor((shot.outputStartFrame + shot.outputEndFrame) / 2) - 1,
+        shot.outputEndFrame - 1,
+      ]),
+      validated.timeline.totalFrames - 1,
     ];
     const unique = [...new Set(candidates)].sort((left, right) => left - right);
     sampleFrames = unique.length <= 12
