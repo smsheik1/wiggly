@@ -27,7 +27,10 @@ for (const slug of discoveryFormatSlugs) {
   if (format.packagePath) {
     packaged++;
     assert.ok(
-      format.repositoryHref && existsSync(`public${format.repositoryHref}`),
+      format.repositoryHref &&
+        (format.repositoryHref.startsWith("http://") ||
+          format.repositoryHref.startsWith("https://") ||
+          existsSync(`public${format.repositoryHref}`)),
       `${slug}: visible download must exist.`,
     );
     const handoff = buildDiscoveryHandoffPrompt(

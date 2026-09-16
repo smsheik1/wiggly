@@ -194,7 +194,7 @@ function Hero({ step, format }) {
         style={{
           position: "absolute",
           left: "50%",
-          top: "50%",
+          top: "52%",
           transform: `translate(-50%, -50%) scale(${interpolate(enter, [0, 1], [0.94, 1])})`,
           width: 480,
           height: 854,
@@ -208,6 +208,7 @@ function Hero({ step, format }) {
       >
         <Media step={step} framed={false} />
       </div>
+      <StepBadge number={step.number} label={step.label} />
     </AbsoluteFill>
   );
 }
@@ -231,19 +232,27 @@ function EndCard({ step, format }) {
 function SocialProof({ step, format }) {
   const frame = useCurrentFrame();
   const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
-  const isOtaku = (format.slug || "").includes("otaku") || (format.name || "").toLowerCase().includes("cartoon");
   return (
     <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
       <GridBackground variant={step.background || "lime"} />
-      <div style={{ position: "absolute", left: 84, right: 84, top: 110, height: 810, display: "grid", gridTemplateColumns: "1fr 90px 1fr", alignItems: "center", gap: 24, opacity: enter }}>
+      <StepBadge number={step.number} label={step.label} />
+      
+      <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
+        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>WHAT WIGGLY DOES</div>
+        <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
+          A ready-made video format your coding agent can run.
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, top: 215, height: 690, display: "grid", gridTemplateColumns: "1fr 90px 1fr", alignItems: "center", gap: 24, opacity: enter }}>
         <div style={{ height: "100%", background: "#fff", borderRadius: 24, overflow: "hidden", border: "2px solid rgba(255,255,255,.25)", boxShadow: "0 24px 70px rgba(0,0,0,.5)", position: "relative" }}>
           <div style={{ position: "absolute", left: 24, top: 18, zIndex: 10, display: "flex", alignItems: "center", gap: 10, background: "rgba(0,0,0,.85)", padding: "6px 14px", borderRadius: 999, color: "#fff", fontSize: 14, fontWeight: 800 }}>
-            <span>{isOtaku ? "@_otaku_explains_ — ORIGINAL" : "@mugsyclips — ORIGINAL"}</span>
+            <span>@mugsyclips — ORIGINAL</span>
           </div>
-          <Img src={staticFile(step.media?.file || (isOtaku ? "otaku-explainer/viral-reference-proof.png" : "mugsy-explains/mugsyclips-profile.png"))} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }} />
+          <Img src={staticFile(step.media?.file || "mugsy-explains/mugsyclips-profile.png")} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }} />
           <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "16px 20px", background: "linear-gradient(to top, rgba(0,0,0,.92), transparent)", color: "#fff" }}>
-            <div style={{ fontSize: 18, fontWeight: 850 }}>{isOtaku ? "Otaku Explains Viral Concept" : "Mugsy Explains Viral Concept"}</div>
-            <div style={{ fontSize: 14, color: "#cbd5e1", marginTop: 2 }}>{isOtaku ? "21.1K Followers • 40,300+ Likes on DBMS Naruto Breakdown" : "35.1K Followers • Millions of Views on A-vs-B Comparisons"}</div>
+            <div style={{ fontSize: 18, fontWeight: 850 }}>Mugsy Explains Viral Concept</div>
+            <div style={{ fontSize: 14, color: "#cbd5e1", marginTop: 2 }}>35.1K Followers • Millions of Views on A-vs-B Comparisons</div>
           </div>
         </div>
 
@@ -256,10 +265,14 @@ function SocialProof({ step, format }) {
 
         <div style={{ height: "100%", background: "#111513", borderRadius: 24, overflow: "hidden", border: `2px solid ${COLORS.lime}`, boxShadow: "0 24px 70px rgba(0,0,0,.6)", position: "relative", display: "grid", placeItems: "center" }}>
           <div style={{ position: "absolute", left: 24, top: 18, zIndex: 10, display: "flex", alignItems: "center", gap: 10, background: COLORS.lime, padding: "6px 14px", borderRadius: 999, color: COLORS.ink, fontSize: 14, fontWeight: 900 }}>
-            <span>WIGGLY — {(format.name || "FORMAT").toUpperCase()}</span>
+            <span>WIGGLY — MUGSY EXPLAINS</span>
           </div>
-          <div style={{ width: 360, height: 640, borderRadius: 20, overflow: "hidden", border: "2px solid rgba(255,255,255,.2)" }}>
-            <OffthreadVideo src={staticFile(`${format.slug}/final-result.mp4`)} startFrom={0} muted={true} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ width: 330, height: 586, borderRadius: 20, overflow: "hidden", border: "2px solid rgba(255,255,255,.2)" }}>
+            <OffthreadVideo src={staticFile("mugsy-explains/final-result.mp4")} startFrom={0} muted={true} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "16px 20px", background: "linear-gradient(to top, rgba(0,0,0,.92), transparent)", color: "#fff" }}>
+            <div style={{ fontSize: 18, fontWeight: 850 }}>100% Deterministic Code</div>
+            <div style={{ fontSize: 14, color: COLORS.lime, marginTop: 2 }}>Packaged poses + handwriting + audio sync</div>
           </div>
         </div>
       </div>
@@ -272,22 +285,13 @@ function SocialProof({ step, format }) {
 function PackageBreakdown({ step, format }) {
   const frame = useCurrentFrame();
   const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
-  const isOtaku = (format.slug || "").includes("otaku") || (format.name || "").toLowerCase().includes("cartoon");
-
-  const poses = isOtaku ? [
-    { name: "NARUTO", file: "otaku-explainer/characters/naruto.png", label: "Learner: Explains in plain words" },
-    { name: "KAKASHI", file: "otaku-explainer/characters/kakashi.png", label: "Guide: Technical accuracy" },
-    { name: "OROCHIMARU", file: "otaku-explainer/characters/orochimaru.png", label: "Challenger: Edge-cases" },
-    { name: "YUGI", file: "otaku-explainer/characters/yugi.png", label: "Yu-Gi-Oh Pack: Strategist" },
-    { name: "KAIBA", file: "otaku-explainer/characters/kaiba.png", label: "Yu-Gi-Oh Pack: Rival" },
-  ] : [
+  const poses = [
     { name: "COFFEE EXPLAIN", file: "mugsy-explains/poses/coffee-explain.png", label: "Pose 1: Intro / Hook" },
     { name: "POINT LEFT", file: "mugsy-explains/poses/point-left.png", label: "Pose 2: Contrast A" },
     { name: "POINT RIGHT", file: "mugsy-explains/poses/point-right.png", label: "Pose 3: Contrast B" },
     { name: "QUESTION", file: "mugsy-explains/poses/question.png", label: "Pose 4: Lesson Reveal" },
     { name: "RAISE HAND", file: "mugsy-explains/poses/raise-hand.png", label: "Pose 5: Conclusion" },
   ];
-
   return (
     <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
       <GridBackground variant={step.background || "lime"} />
@@ -296,7 +300,7 @@ function PackageBreakdown({ step, format }) {
       <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
         <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>COMPLETE WIGGLY PACKAGE</div>
         <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
-          {isOtaku ? "Story worlds, character cast, and voices — included." : "Characters, poses, and handwriting — included."}
+          Characters, poses, and handwriting — included.
         </div>
       </div>
 
@@ -306,189 +310,19 @@ function PackageBreakdown({ step, format }) {
 
       <div style={{ position: "absolute", left: 84, right: 84, top: 220, display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, opacity: enter }}>
         {poses.map((p) => (
-          <div key={p.name} style={{ background: "#fff", borderRadius: 20, padding: "16px 12px 14px", border: "2px solid rgba(255,255,255,.4)", boxShadow: "0 18px 50px rgba(0,0,0,.4)", display: "flex", flexDirection: "column", alignItems: "center", position: "relative", overflow: "hidden" }}>
-            {/* Header with Name & Role Pill for 100% clarity and zero overlap */}
-            <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10, marginBottom: 8 }}>
-              <div style={{ fontSize: 17, fontWeight: 950, color: "#000", letterSpacing: "-.02em" }}>{p.name}</div>
-              <div style={{ marginTop: 4, fontSize: 11, fontWeight: 800, color: "#0f172a", background: "#e2e8f0", padding: "3px 8px", borderRadius: 999, textAlign: "center", lineHeight: 1.2, maxWidth: "100%" }}>
-                {p.label}
-              </div>
-            </div>
-            
-            <div style={{ height: 320, width: "100%", display: "grid", placeItems: "center", position: "relative" }}>
+          <div key={p.name} style={{ background: "#fff", borderRadius: 20, padding: "16px 12px", border: "2px solid rgba(255,255,255,.3)", boxShadow: "0 18px 50px rgba(0,0,0,.4)", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ height: 350, width: "100%", display: "grid", placeItems: "center" }}>
               <Img src={staticFile(p.file)} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
             </div>
+            <div style={{ marginTop: 14, fontSize: 15, fontWeight: 900, color: COLORS.ink }}>{p.name}</div>
+            <div style={{ marginTop: 2, fontSize: 12, fontWeight: 600, color: "#64748b" }}>{p.label}</div>
           </div>
         ))}
       </div>
 
       <div style={{ position: "absolute", left: 84, right: 84, bottom: 125, background: "rgba(8,11,9,.9)", border: "2px solid rgba(196,255,57,.4)", borderRadius: 16, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: enter }}>
-        <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.lime }}>
-          {isOtaku ? "Transparent Character Renders • Story World Backgrounds • Active Speaker Glow" : "5 Expressive Poses • Virgil Handwritten Font • Dual-Panel Dynamic Layout"}
-        </div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.lime }}>5 Expressive Poses • Virgil Handwritten Font • Dual-Panel Dynamic Layout</div>
         <div style={{ fontSize: 15, fontWeight: 900, background: COLORS.lime, color: COLORS.ink, padding: "6px 14px", borderRadius: 999 }}>$0 GENERATION FEES</div>
-      </div>
-
-      {step.captions.length ? <Caption cues={step.captions} /> : null}
-    </AbsoluteFill>
-  );
-}
-
-function AnyShowShowcase({ step, format }) {
-  const frame = useCurrentFrame();
-  const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
-
-  // 4 sequential pipeline progression stages across 480 frames (~16s)
-  // Stage 1 (0-110 frames): Google Image Search (Serper) -> Raw image results
-  // Stage 2 (110-210 frames): Alpha transparent cutout detection & isolate
-  // Stage 3 (210-310 frames): Fish Audio voice matching & soundwave pulse
-  // Stage 4 (310-480 frames): Story background assembly & dialogue balloon pop
-  const stage1Active = frame >= 15;
-  const stage2Active = frame >= 115;
-  const stage3Active = frame >= 225;
-  const stage4Active = frame >= 335;
-
-  const charScale = spring({ frame: frame - 115, fps: 30, config: { damping: 14, stiffness: 140 } });
-  const bgFade = interpolate(frame, [335, 365], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const bubblePop = spring({ frame: frame - 370, fps: 30, config: { damping: 12, stiffness: 160 } });
-
-  return (
-    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
-      <GridBackground variant={step.background || "lime"} />
-      <StepBadge number={step.number} label={step.label} />
-      
-      <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
-        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>NOT STUCK TO ONE SHOW</div>
-        <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
-          Works with any cartoon show or anime.
-        </div>
-      </div>
-
-      <div style={{ position: "absolute", right: 84, top: 130, opacity: enter, background: COLORS.lime, color: COLORS.ink, padding: "8px 18px", borderRadius: 999, fontWeight: 950, fontSize: 14, letterSpacing: ".06em", display: "flex", alignItems: "center", gap: 8 }}>
-        <span>✔ GOOGLE IMAGE SEARCH VIA SERPER</span>
-      </div>
-
-      <div style={{ position: "absolute", left: 84, right: 84, top: 220, height: 490, display: "grid", gridTemplateColumns: "1.05fr 1.35fr", gap: 28, opacity: enter }}>
-        {/* LEFT COLUMN: The Agent's Live Pipeline Execution */}
-        <div style={{ background: "rgba(10, 15, 12, 0.95)", borderRadius: 22, padding: "26px 24px", border: "2px solid rgba(255,255,255,.15)", boxShadow: "0 20px 60px rgba(0,0,0,.5)", display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ fontSize: 13, fontWeight: 900, color: COLORS.lime, letterSpacing: ".1em", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span>AGENT RUNTIME PIPELINE</span>
-            <span style={{ fontSize: 12, color: "#94a3b8", fontFamily: MONO }}>TARGET: DANNY PHANTOM</span>
-          </div>
-
-          {/* Step 1: Serper Image Search */}
-          <div style={{ background: stage1Active ? "rgba(196,255,57,0.08)" : "rgba(255,255,255,0.03)", border: stage1Active ? `1.5px solid ${COLORS.lime}` : "1.5px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", transition: "all 0.3s ease" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 24, height: 24, borderRadius: 12, background: stage1Active ? COLORS.lime : "#334155", color: COLORS.ink, display: "grid", placeItems: "center", fontSize: 13, fontWeight: 950 }}>1</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: stage1Active ? "#fff" : "#64748b" }}>Google Image Search (via Serper)</div>
-            </div>
-            <div style={{ marginTop: 6, fontSize: 13, color: stage1Active ? "#94a3b8" : "#475569", fontFamily: MONO }}>
-              🔍 "Danny Phantom full body transparent png render"
-            </div>
-          </div>
-
-          {/* Step 2: Transparent PNG Cutout */}
-          <div style={{ background: stage2Active ? "rgba(196,255,57,0.08)" : "rgba(255,255,255,0.03)", border: stage2Active ? `1.5px solid ${COLORS.lime}` : "1.5px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", transition: "all 0.3s ease" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 24, height: 24, borderRadius: 12, background: stage2Active ? COLORS.lime : "#334155", color: COLORS.ink, display: "grid", placeItems: "center", fontSize: 13, fontWeight: 950 }}>2</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: stage2Active ? "#fff" : "#64748b" }}>Alpha Channel Cutout Verification</div>
-            </div>
-            <div style={{ marginTop: 6, fontSize: 13, color: stage2Active ? "#94a3b8" : "#475569", fontFamily: MONO }}>
-              ✔ Clean alpha transparency • Zero white halo • Grounded
-            </div>
-          </div>
-
-          {/* Step 3: Fish Audio Voice Matching */}
-          <div style={{ background: stage3Active ? "rgba(196,255,57,0.08)" : "rgba(255,255,255,0.03)", border: stage3Active ? `1.5px solid ${COLORS.lime}` : "1.5px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", transition: "all 0.3s ease" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 24, height: 24, borderRadius: 12, background: stage3Active ? COLORS.lime : "#334155", color: COLORS.ink, display: "grid", placeItems: "center", fontSize: 13, fontWeight: 950 }}>3</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: stage3Active ? "#fff" : "#64748b" }}>Fish Audio Voice Model Pairing</div>
-            </div>
-            <div style={{ marginTop: 6, fontSize: 13, color: stage3Active ? "#94a3b8" : "#475569", fontFamily: MONO }}>
-              🎙️ ID: 14f06ac475944bb7a0ef5cc958f07462 (Free tier)
-            </div>
-          </div>
-
-          {/* Step 4: Story Lore & Lesson Script */}
-          <div style={{ background: stage4Active ? "rgba(196,255,57,0.08)" : "rgba(255,255,255,0.03)", border: stage4Active ? `1.5px solid ${COLORS.lime}` : "1.5px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", transition: "all 0.3s ease" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 24, height: 24, borderRadius: 12, background: stage4Active ? COLORS.lime : "#334155", color: COLORS.ink, display: "grid", placeItems: "center", fontSize: 13, fontWeight: 950 }}>4</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: stage4Active ? "#fff" : "#64748b" }}>Character Personality & World Lore</div>
-            </div>
-            <div style={{ marginTop: 6, fontSize: 13, color: stage4Active ? "#94a3b8" : "#475569", fontFamily: MONO }}>
-              💬 Danny (Learner) + Tucker (Guide) • Fenton Portal = API Doorway
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: Live Stage Assembling Visually */}
-        <div style={{ background: "#fff", borderRadius: 22, border: "2px solid rgba(255,255,255,.4)", boxShadow: "0 20px 60px rgba(0,0,0,.5)", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          {/* Header Bar */}
-          <div style={{ padding: "12px 18px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 10, height: 10, borderRadius: 5, background: "#22c55e" }}></span>
-              <span style={{ fontSize: 13, fontWeight: 900, color: COLORS.ink, letterSpacing: ".04em" }}>LIVE CANVASES / ASSET COMPOSITION</span>
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 800, background: COLORS.lime, color: COLORS.ink, padding: "3px 8px", borderRadius: 999 }}>
-              {stage4Active ? "STAGE 4: SCENE ASSEMBLED" : stage3Active ? "STAGE 3: VOICE MATCHED" : stage2Active ? "STAGE 2: TRANSPARENCY VERIFIED" : "STAGE 1: SEARCHING GOOGLE"}
-            </span>
-          </div>
-
-          {/* Visual Assembly Box */}
-          <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-            {/* Checkerboard layer to prove transparency */}
-            <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(45deg, #e2e8f0 25%, transparent 25%), linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e2e8f0 75%), linear-gradient(-45deg, transparent 75%, #e2e8f0 75%)", backgroundSize: "20px 20px", backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px" }} />
-
-            {/* Stage 4 Background Fade-in (Amity Park) */}
-            {stage4Active ? (
-              <div style={{ position: "absolute", inset: 0, opacity: bgFade }}>
-                <Img src={staticFile("otaku-explainer/bg-amity-park.webp")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.15)" }} />
-              </div>
-            ) : null}
-
-            {/* Character Stage: Danny Phantom */}
-            {stage1Active ? (
-              <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, top: 0, display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 10 }}>
-                <div style={{ height: "92%", display: "flex", alignItems: "flex-end", transform: `scale(${Math.max(0.6, Math.min(1, charScale))})` }}>
-                  <Img src={staticFile("otaku-explainer/characters/danny-phantom.webp")} style={{ maxHeight: "100%", objectFit: "contain", filter: "drop-shadow(0 10px 25px rgba(0,0,0,0.5))" }} />
-                </div>
-              </div>
-            ) : null}
-
-            {/* Stage 3 Voice Waveform Pill Overlay */}
-            {stage3Active && !stage4Active ? (
-              <div style={{ position: "absolute", left: 24, right: 24, top: 20, zIndex: 25, background: "rgba(8,11,9,0.95)", border: `2px solid ${COLORS.lime}`, borderRadius: 14, padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 20 }}>🎙️</span>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 900, color: "#fff" }}>Fish Audio Model Matched</div>
-                    <div style={{ fontSize: 11, color: COLORS.lime, fontFamily: MONO }}>Danny Phantom (Youthful / Energetic)</div>
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
-                  {[16, 28, 40, 22, 34, 18, 30, 14].map((h, i) => (
-                    <div key={i} style={{ width: 4, height: h * (0.6 + 0.4 * Math.sin((frame + i * 4) * 0.3)), background: COLORS.lime, borderRadius: 2 }} />
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {/* Stage 4 Dialogue Speech Bubble Pop */}
-            {stage4Active ? (
-              <div style={{ position: "absolute", left: 30, right: 30, top: 20, zIndex: 25, transform: `scale(${Math.max(0.7, Math.min(1, bubblePop))})` }}>
-                <div style={{ background: "#fff", borderRadius: 18, padding: "14px 20px", boxShadow: "0 14px 40px rgba(0,0,0,0.3)", border: "2px solid #000", position: "relative" }}>
-                  <div style={{ fontSize: 12, fontWeight: 900, color: "#64748b", letterSpacing: ".06em", marginBottom: 2 }}>DANNY PHANTOM • LEARNER</div>
-                  <div style={{ fontSize: 16, fontWeight: 900, color: COLORS.ink, lineHeight: 1.3 }}>
-                    "Tucker, how do two apps talk without giving each other full access?"
-                  </div>
-                  {/* Bubble pointer triangle */}
-                  <div style={{ position: "absolute", bottom: -12, left: 60, width: 0, height: 0, borderLeft: "10px solid transparent", borderRight: "10px solid transparent", borderTop: "12px solid #fff" }} />
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </div>
       </div>
 
       {step.captions.length ? <Caption cues={step.captions} /> : null}
@@ -540,9 +374,6 @@ function ReplacementValue({ step, format }) {
 function Scorecard({ step, format }) {
   const frame = useCurrentFrame();
   const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
-  const isCream = (step.background || "lime") === "cream";
-  const textColor = isCream ? COLORS.ink : COLORS.white;
-  const eyebrowColor = isCream ? COLORS.ink : COLORS.lime;
   const items = [
     { name: "VIDEO", status: "PASSED", sub: "1920x1080 30fps" },
     { name: "AUDIO", status: "PASSED", sub: "Clean 48kHz stereo" },
@@ -550,24 +381,24 @@ function Scorecard({ step, format }) {
     { name: "FINAL MP4", status: "PASSED", sub: "Verified 0 providers" }
   ];
   return (
-    <AbsoluteFill style={{ color: textColor, fontFamily: FONT }}>
+    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
       <GridBackground variant={step.background || "lime"} />
-      <StepBadge number={step.number} label={step.label} light={isCream} />
+      <StepBadge number={step.number} label={step.label} />
       
       <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
-        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: eyebrowColor, opacity: isCream ? 0.6 : 1 }}>ONE FINAL SCORE</div>
+        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>ONE FINAL SCORE</div>
         <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
           Everything gets checked.
         </div>
       </div>
 
-      <div style={{ position: "absolute", right: 84, top: 120, fontSize: 64, fontWeight: 950, color: isCream ? COLORS.ink : COLORS.lime, opacity: enter }}>
+      <div style={{ position: "absolute", right: 84, top: 120, fontSize: 64, fontWeight: 950, color: COLORS.lime, opacity: enter }}>
         13/13
       </div>
 
       <div style={{ position: "absolute", left: 84, right: 84, top: 230, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, opacity: enter }}>
         {items.map((it) => (
-          <div key={it.name} style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "32px 24px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 18px 45px rgba(0,0,0,.08)" : "0 20px 60px rgba(0,0,0,.45)" }}>
+          <div key={it.name} style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "32px 24px", border: "2px solid rgba(255,255,255,.4)", boxShadow: "0 20px 60px rgba(0,0,0,.45)" }}>
             <div style={{ width: 44, height: 44, borderRadius: 22, background: COLORS.lime, color: COLORS.ink, display: "grid", placeItems: "center", fontSize: 22, fontWeight: 950 }}>✔</div>
             <div style={{ marginTop: 20, fontSize: 22, fontWeight: 950 }}>{it.name}</div>
             <div style={{ marginTop: 4, fontSize: 15, fontWeight: 800, color: "#15803d" }}>{it.status}</div>
@@ -589,170 +420,52 @@ function Scorecard({ step, format }) {
 function BeginnerChecklist({ step, format }) {
   const frame = useCurrentFrame();
   const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
-  const isOtaku = (format.slug || "").includes("otaku") || (format.name || "").toLowerCase().includes("cartoon");
-  const agents = [
-    { label: "ANTIGRAVITY", logo: "fixed/agent-logos/antigravity.svg", bg: "#fff", color: "#4285F4" },
-    { label: "CODEX", logo: "fixed/agent-logos/codex.svg", bg: "#fff", color: "#000" },
-    { label: "CLAUDE CODE", logo: "fixed/agent-logos/claude.svg", bg: "#fff", color: "#D97757" },
-    { label: "CURSOR", logo: "fixed/agent-logos/cursor.svg", bg: "#fff", color: "#000" },
-  ];
-  const otakuWorlds = [
-    {
-      title: "Naruto (Ninja Lore)",
-      desc: "Jutsu scrolls, chakra mana, shinobi exams & fight tactics.",
-      badge: "SHINOBI LORE",
-      img: "otaku-explainer/characters/naruto.png",
-      accent: "#f97316",
-    },
-    {
-      title: "Yu-Gi-Oh (Duel Logic)",
-      desc: "Card rules, tribute summons, trap cards & board states.",
-      badge: "DUEL MONSTERS",
-      img: "otaku-explainer/characters/yugi.png",
-      accent: "#eab308",
-    },
-    {
-      title: "Danny Phantom (Ghost Zone)",
-      desc: "Ectoplasm energy, Fenton tech & spectral powers.",
-      badge: "GHOST ZONE",
-      img: "otaku-explainer/characters/danny-phantom.webp",
-      accent: "#22c55e",
-    },
-  ];
-  const genericLessons = [
-    {
-      title: "1 • Rules vs Prompts",
-      desc: "Hard guardrails beat vague prompt hopes every time.",
-      badge: "FOUNDATION",
-      accent: "#38bdf8",
-    },
-    {
-      title: "2 • Examples vs Luck",
-      desc: "Few-shot reference assets ensure deterministic outputs.",
-      badge: "ACCURACY",
-      accent: "#a855f7",
-    },
-    {
-      title: "3 • Tests vs Hope",
-      desc: "Automated receipts prove the pipeline actually finished.",
-      badge: "VERIFICATION",
-      accent: "#22c55e",
-    },
-  ];
-  const isCream = (step.background || "lime") === "cream";
-  const textColor = isCream ? COLORS.ink : COLORS.white;
-  const eyebrowColor = isCream ? COLORS.ink : COLORS.lime;
-
+  const agents = ["ANTIGRAVITY", "CODEX", "CLAUDE CODE", "CURSOR"];
   return (
-    <AbsoluteFill style={{ color: textColor, fontFamily: FONT }}>
+    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
       <GridBackground variant={step.background || "lime"} />
-      <StepBadge number={step.number} label={step.label} light={isCream} />
+      <StepBadge number={step.number} label={step.label} />
       
-      <div style={{ position: "absolute", left: 84, top: 112, opacity: enter }}>
-        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: eyebrowColor, opacity: 0.6 }}>BEGINNER CHECKLIST</div>
-        <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
-          {isOtaku ? "Pick a topic, story world, and coding agent." : "Pick a topic, three lessons, and a coding agent."}
+      <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
+        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>BEGINNER CHECKLIST</div>
+        <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
+          Pick a topic, three lessons, and a coding agent.
         </div>
       </div>
 
-      <div style={{ position: "absolute", left: 84, right: 84, top: 200, bottom: 90, display: "flex", flexDirection: "column", gap: 18, opacity: enter }}>
-        {/* Top 3 Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, flex: 1.15 }}>
-          <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 20, padding: "20px 24px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 14px 35px rgba(0,0,0,.06)" : undefined, display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>1 • PICK A TOPIC</div>
-            <div style={{ marginTop: 8, fontSize: 23, fontWeight: 900 }}>{isOtaku ? "Compilers vs Interpreters" : "Prompt vs Format"}</div>
-            <div style={{ marginTop: 6, fontSize: 14, color: "#475569", lineHeight: 1.4 }}>{isOtaku ? "Teach any complex technical or creative idea through familiar character lore." : "Start with any creative or technical concept with 3 A-vs-B differences."}</div>
-            <div style={{ marginTop: "auto", padding: "10px 14px", background: "#f1f5f9", borderRadius: 10, fontSize: 13, fontWeight: 700, color: COLORS.ink }}>{isOtaku ? "e.g. Proof of Work, RAM vs Disk" : "e.g. CGI vs VFX, Rules vs Luck"}</div>
-          </div>
+      <div style={{ position: "absolute", left: 84, right: 84, top: 225, height: 490, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, opacity: enter }}>
+        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: "2px solid rgba(255,255,255,.4)", display: "flex", flexDirection: "column" }}>
+          <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>1 • PICK A TOPIC</div>
+          <div style={{ marginTop: 14, fontSize: 24, fontWeight: 900 }}>Prompt vs Format</div>
+          <div style={{ marginTop: 8, fontSize: 15, color: "#475569", lineHeight: 1.4 }}>Start with any creative or technical concept with 3 A-vs-B differences.</div>
+          <div style={{ marginTop: "auto", padding: "12px 16px", background: "#f1f5f9", borderRadius: 12, fontSize: 14, fontWeight: 700, color: COLORS.ink }}>e.g. CGI vs VFX, Rules vs Luck</div>
+        </div>
 
-          <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 20, padding: "20px 24px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 14px 35px rgba(0,0,0,.06)" : undefined, display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>{isOtaku ? "2 • CHOOSE STORY WORLD" : "2 • CHOOSE 3 LESSONS"}</div>
-            <div style={{ marginTop: 8, fontSize: 23, fontWeight: 900 }}>{isOtaku ? "3 Pre-Configured Worlds" : "3 Socratic Beats"}</div>
-            <div style={{ marginTop: 6, fontSize: 14, color: "#475569", lineHeight: 1.4 }}>
-              {isOtaku ? "Select from battle-tested shonen universes or bring your own cartoon cast." : "Structure into 3 bite-sized lessons that build tension toward the punchline."}
-            </div>
-            <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "rgba(196,255,57,0.18)", border: `1.5px solid ${COLORS.lime}`, borderRadius: 10 }}>
-              <span style={{ fontSize: 12, fontWeight: 900, color: COLORS.ink, letterSpacing: ".05em" }}>SEE STORY CARDS BELOW ↓</span>
-            </div>
-          </div>
-
-          <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 20, padding: "20px 24px", border: isCream ? "1px solid rgba(0,0,0,.12)" : "2px solid rgba(255,255,255,.4)", boxShadow: isCream ? "0 14px 35px rgba(0,0,0,.06)" : undefined, display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>3 • USE A CODING AGENT</div>
-            <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {agents.map((ag) => (
-                <div key={ag.label} style={{ background: "#0f172a", borderRadius: 10, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 28, height: 28, background: ag.bg, borderRadius: 7, display: "grid", placeItems: "center", padding: 4, flexShrink: 0 }}>
-                    <Img src={staticFile(ag.logo)} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                  </div>
-                  <div style={{ color: "#fff", fontSize: 11, fontWeight: 800, letterSpacing: ".04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ag.label}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: "auto", fontSize: 12, color: "#64748b", textAlign: "center", fontWeight: 600 }}>Terminal & media access</div>
+        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: "2px solid rgba(255,255,255,.4)", display: "flex", flexDirection: "column" }}>
+          <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>2 • CHOOSE 3 LESSONS</div>
+          <div style={{ marginTop: 14, fontSize: 20, fontWeight: 900, display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>1. Rules vs Prompts</div>
+            <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>2. Examples vs Luck</div>
+            <div style={{ padding: "10px 14px", background: "#f8fafc", borderRadius: 10, borderLeft: `4px solid ${COLORS.lime}` }}>3. Tests vs Hope</div>
           </div>
         </div>
 
-        {/* Bottom 3 Stacked Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, flex: 1.1 }}>
-          {isOtaku ? (
-            otakuWorlds.map((world, idx) => (
-              <div
-                key={world.title}
-                style={{
-                  background: "#fff",
-                  color: COLORS.ink,
-                  borderRadius: 20,
-                  padding: "16px 20px",
-                  border: `2px solid ${world.accent}`,
-                  boxShadow: isCream ? "0 12px 30px rgba(0,0,0,.06)" : "0 8px 24px rgba(0,0,0,.25)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 16,
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-              >
-                <div style={{ width: 84, height: 84, borderRadius: 16, background: "#0f172a", padding: 6, flexShrink: 0, display: "grid", placeItems: "center", border: "1px solid rgba(0,0,0,.1)" }}>
-                  <Img src={staticFile(world.img)} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ background: world.accent, color: "#000", fontSize: 10, fontWeight: 950, padding: "2px 8px", borderRadius: 999, letterSpacing: ".06em" }}>
-                      {world.badge}
-                    </span>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: "#64748b" }}>WORLD {idx + 1}</span>
-                  </div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: COLORS.ink, letterSpacing: "-.02em" }}>{world.title}</div>
-                  <div style={{ fontSize: 13, color: "#475569", lineHeight: 1.35 }}>{world.desc}</div>
-                </div>
+        <div style={{ background: "#fff", color: COLORS.ink, borderRadius: 22, padding: "26px", border: "2px solid rgba(255,255,255,.4)", display: "flex", flexDirection: "column" }}>
+          <div style={{ fontSize: 13, fontWeight: 950, color: "#64748b", letterSpacing: ".08em" }}>3 • USE A CODING AGENT</div>
+          <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {agents.map((ag) => (
+              <div key={ag} style={{ background: "#0f172a", color: "#fff", borderRadius: 12, padding: "16px 10px", textAlign: "center", fontSize: 13, fontWeight: 800 }}>
+                🤖 {ag}
               </div>
-            ))
-          ) : (
-            genericLessons.map((les) => (
-              <div
-                key={les.title}
-                style={{
-                  background: "#fff",
-                  color: COLORS.ink,
-                  borderRadius: 20,
-                  padding: "16px 20px",
-                  border: `2px solid ${les.accent}`,
-                  boxShadow: isCream ? "0 12px 30px rgba(0,0,0,.06)" : "0 8px 24px rgba(0,0,0,.25)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  gap: 6,
-                }}
-              >
-                <span style={{ width: "fit-content", background: les.accent, color: "#000", fontSize: 10, fontWeight: 950, padding: "2px 8px", borderRadius: 999, letterSpacing: ".06em" }}>
-                  {les.badge}
-                </span>
-                <div style={{ fontSize: 18, fontWeight: 900, color: COLORS.ink }}>{les.title}</div>
-                <div style={{ fontSize: 13, color: "#475569", lineHeight: 1.35 }}>{les.desc}</div>
-              </div>
-            ))
-          )}
+            ))}
+          </div>
+          <div style={{ marginTop: "auto", fontSize: 14, color: "#64748b", textAlign: "center" }}>Terminal & media access</div>
         </div>
+      </div>
+
+      <div style={{ position: "absolute", left: 84, right: 84, bottom: 125, background: COLORS.lime, color: COLORS.ink, borderRadius: 16, padding: "18px 26px", border: `3px solid ${COLORS.ink}`, display: "flex", justifyContent: "space-between", alignItems: "center", opacity: enter }}>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>Start with a topic you want to teach, and your coding agent handles the rest.</div>
+        <div style={{ fontSize: 16, fontWeight: 950, background: COLORS.ink, color: COLORS.lime, padding: "6px 16px", borderRadius: 999 }}>READY TO RUN</div>
       </div>
 
       {step.captions.length ? <Caption cues={step.captions} /> : null}
@@ -763,16 +476,13 @@ function BeginnerChecklist({ step, format }) {
 function WorkflowReplacement({ step, format }) {
   const frame = useCurrentFrame();
   const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
-  const isCream = (step.background || "lime") === "cream";
-  const textColor = isCream ? COLORS.ink : COLORS.white;
-  const eyebrowColor = isCream ? COLORS.ink : COLORS.lime;
   return (
-    <AbsoluteFill style={{ color: textColor, fontFamily: FONT }}>
+    <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
       <GridBackground variant={step.background || "lime"} />
-      <StepBadge number={step.number} label={step.label} light={isCream} />
+      <StepBadge number={step.number} label={step.label} />
       
       <div style={{ position: "absolute", left: 84, top: 125, opacity: enter }}>
-        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: eyebrowColor, opacity: isCream ? 0.6 : 1 }}>THE WHOLE WORKFLOW</div>
+        <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: ".15em", color: COLORS.lime }}>THE WHOLE WORKFLOW</div>
         <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-.04em", marginTop: 4 }}>
           One package replaces three separate tools.
         </div>
@@ -781,7 +491,7 @@ function WorkflowReplacement({ step, format }) {
       <div style={{ position: "absolute", left: 84, right: 84, top: 240, height: 460, display: "grid", gridTemplateColumns: "1fr 90px 1.4fr", alignItems: "center", gap: 20, opacity: enter }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           {["ILLUSTRATION / DRAWING TOOL", "VOICE MODEL SUBSCRIPTION", "TIMELINE VIDEO EDITOR"].map((tool) => (
-            <div key={tool} style={{ background: "#fff", color: COLORS.ink, borderRadius: 16, padding: "22px 28px", fontSize: 19, fontWeight: 900, border: isCream ? "1px solid rgba(0,0,0,.12)" : undefined, boxShadow: isCream ? "0 10px 30px rgba(0,0,0,.08)" : "0 10px 30px rgba(0,0,0,.3)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div key={tool} style={{ background: "#fff", color: COLORS.ink, borderRadius: 16, padding: "22px 28px", fontSize: 19, fontWeight: 900, boxShadow: "0 10px 30px rgba(0,0,0,.3)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span>{tool}</span>
               <span style={{ color: "#ef4444", fontWeight: 950 }}>✕</span>
             </div>
@@ -789,7 +499,7 @@ function WorkflowReplacement({ step, format }) {
         </div>
 
         <div style={{ display: "grid", placeItems: "center" }}>
-          <div style={{ width: 64, height: 64, borderRadius: 32, background: COLORS.lime, color: COLORS.ink, display: "grid", placeItems: "center", fontSize: 32, fontWeight: 950, border: `2px solid ${COLORS.ink}`, boxShadow: "0 0 30px rgba(196,255,57,.5)" }}>
+          <div style={{ width: 64, height: 64, borderRadius: 32, background: COLORS.lime, color: COLORS.ink, display: "grid", placeItems: "center", fontSize: 32, fontWeight: 950, boxShadow: "0 0 30px rgba(196,255,57,.5)" }}>
             →
           </div>
         </div>
@@ -806,9 +516,9 @@ function WorkflowReplacement({ step, format }) {
         </div>
       </div>
 
-      <div style={{ position: "absolute", left: 84, right: 84, bottom: 125, background: isCream ? "rgba(255,255,255,.95)" : "rgba(8,11,9,.95)", border: isCream ? `2px solid ${COLORS.ink}` : "2px solid rgba(255,255,255,.2)", borderRadius: 16, padding: "18px 26px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: enter, boxShadow: isCream ? "0 10px 30px rgba(0,0,0,.08)" : undefined }}>
-        <div style={{ fontSize: 20, fontWeight: 700, color: isCream ? COLORS.ink : "#fff" }}>To try your own format, copy the prompt on Wiggly below.</div>
-        <div style={{ fontSize: 16, fontWeight: 950, background: COLORS.lime, color: COLORS.ink, padding: "8px 20px", borderRadius: 999, border: `2px solid ${COLORS.ink}` }}>{format.url}</div>
+      <div style={{ position: "absolute", left: 84, right: 84, bottom: 125, background: "rgba(8,11,9,.95)", border: "2px solid rgba(255,255,255,.2)", borderRadius: 16, padding: "18px 26px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: enter }}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>To try your own format, copy the prompt on Wiggly below.</div>
+        <div style={{ fontSize: 16, fontWeight: 950, background: COLORS.lime, color: COLORS.ink, padding: "8px 20px", borderRadius: 999 }}>{format.url}</div>
       </div>
 
       {step.captions.length ? <Caption cues={step.captions} /> : null}
@@ -819,11 +529,10 @@ function WorkflowReplacement({ step, format }) {
 function FinalResult({ step, format }) {
   const frame = useCurrentFrame();
   const enter = spring({ frame, fps: 30, config: { damping: 18, stiffness: 150 } });
-  const isCream = (step.background || "lime") === "cream";
   return (
     <AbsoluteFill style={{ color: COLORS.white, fontFamily: FONT }}>
       <GridBackground variant={step.background || "lime"} />
-      <StepBadge number={step.number} label={step.label} light={isCream} />
+      <StepBadge number={step.number} label={step.label} />
       
       <div style={{
         position: "absolute",
@@ -868,7 +577,6 @@ function StepVisual({ step, format }) {
   if (step.kind === "hero") return <Hero step={step} format={format} />;
   if (step.kind === "social-proof") return <SocialProof step={step} format={format} />;
   if (step.kind === "package-breakdown") return <PackageBreakdown step={step} format={format} />;
-  if (step.kind === "any-show") return <AnyShowShowcase step={step} format={format} />;
   if (step.kind === "replacement-value") return <ReplacementValue step={step} format={format} />;
   if (step.kind === "scorecard") return <Scorecard step={step} format={format} />;
   if (step.kind === "checklist") return <BeginnerChecklist step={step} format={format} />;

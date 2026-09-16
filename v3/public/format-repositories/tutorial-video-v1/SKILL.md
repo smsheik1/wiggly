@@ -53,7 +53,7 @@ A score $\ge 85$ (`PASS`) is required for release.
 
 To autonomously build a complete tutorial without manual screen recording or manual voiceover typing:
 ```bash
-node runner.mjs make --target=<format-slug> [--audience=creator|developer] [--payoff-duration=26] [--payoff-start=0] [--skip-render]
+node runner.mjs make --target=<format-slug> [--audience=creator|developer] [--skip-render]
 # Example:
 node runner.mjs make --target=mugsy-explains
 ```
@@ -126,11 +126,6 @@ node runner.mjs validate --input=my-tutorial.json
 node runner.mjs render --input=my-tutorial.json --output=my-tutorial.mp4
 node runner.mjs inspect --input=my-tutorial.mp4 --report=quality-report.json
 ```
-
-### Live Render Visibility & Autonomous Review for Coding Agents
-Whenever running `node runner.mjs render`, the runtime generates an interactive Generative UI widget at `progress.html`. In AI agent environments (Antigravity, Cursor, Claude Code):
-1. The agent **must** immediately surface this live HUD widget inline in the chat using `<agent-embed url="file:///.../render_progress.html" height="260" title="Wiggly Render HUD"></agent-embed>` to give the user live visual feedback during the multi-minute Remotion render.
-2. The moment the render finishes and inspection passes, the agent **must automatically execute `node runner.mjs open --input=<path>`** (or the cache-busting AppleScript). Never use raw `open -a "QuickTime Player"` without closing previous documents first; macOS QuickTime will hold onto the stale file descriptor and freeze playback at the previous pause point. `node runner.mjs open` automatically handles closing stale buffers, reloading from disk, resetting playhead to 00:00, and playing immediately.
 
 ## Multi-Platform Social Distribution (Optional)
 
