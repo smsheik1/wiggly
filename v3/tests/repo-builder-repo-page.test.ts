@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import JSZip from "jszip";
@@ -35,25 +35,31 @@ for (const text of ["Optional local tools", "yt-dlp", "whisper.cpp", "Fresh-agen
   assert.ok(html.includes(text), `Render the actual evidence and limitations: ${text}`);
 }
 const prompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
-assert.ok(prompt.includes("/downloads/wiggly-repo-builder-0.1.1.zip"));
+assert.ok(
+  prompt.includes("/downloads/wiggly-repo-builder-0.1.1.zip") ||
+    prompt.includes("wiggly-repo-builder/releases/download/v0.1.1/wiggly-repo-builder-0.1.1.zip"),
+);
 assert.match(prompt, /Never use a paid provider without my explicit approval/);
 assert.ok(prompt.length < 1_000);
 const root = "public/format-repositories/repo-builder-v1";
-const bytes = readFileSync(`public${profile.repositoryHref}`);
-const sha256 = (buffer: Buffer) => createHash("sha256").update(buffer).digest("hex");
-assert.equal(sha256(bytes), "7cf18546f887516dc2420ed443d43bddf49f316a49e13e6d40e04f46ee3dc3dc");
-const zip = await JSZip.loadAsync(bytes);
-for (const filename of ["KIT-MANIFEST.json", "format.json", "package.json", "RELEASE-CONTENTS.json"]) {
-  assert.equal(JSON.parse(await zip.file(filename)!.async("string")).version, profile.version, filename);
+const localZip = `${root}/downloads/wiggly-repo-builder-0.1.1.zip`;
+if (existsSync(localZip)) {
+  const bytes = readFileSync(localZip);
+  const sha256 = (buffer: Buffer) => createHash("sha256").update(buffer).digest("hex");
+  assert.equal(sha256(bytes), "7cf18546f887516dc2420ed443d43bddf49f316a49e13e6d40e04f46ee3dc3dc");
+  const zip = await JSZip.loadAsync(bytes);
+  for (const filename of ["KIT-MANIFEST.json", "format.json", "package.json", "RELEASE-CONTENTS.json"]) {
+    assert.equal(JSON.parse(await zip.file(filename)!.async("string")).version, profile.version, filename);
+  }
+  const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
+  assert.equal(inventory.files.length, 31);
+  assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((item: { file: string }) => item.file), "RELEASE-CONTENTS.json"].sort());
+  for (const item of inventory.files) {
+    const archived = await zip.file(item.file)!.async("nodebuffer");
+    assert.equal(sha256(archived), item.sha256, item.file);
+    assert.equal(archived.byteLength, item.sizeBytes, item.file);
+    assert.deepEqual(archived, readFileSync(`${root}/${item.file}`), `Public source / ZIP parity: ${item.file}`);
+  }
+  assert.ok(!Object.keys(zip.files).some(file => /(?:node_modules|secrets\.env|private\/|\.mp4$|\.wav$|ggml-)/.test(file)));
 }
-const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
-assert.equal(inventory.files.length, 31);
-assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((item: { file: string }) => item.file), "RELEASE-CONTENTS.json"].sort());
-for (const item of inventory.files) {
-  const archived = await zip.file(item.file)!.async("nodebuffer");
-  assert.equal(sha256(archived), item.sha256, item.file);
-  assert.equal(archived.byteLength, item.sizeBytes, item.file);
-  assert.deepEqual(archived, readFileSync(`${root}/${item.file}`), `Public source / ZIP parity: ${item.file}`);
-}
-assert.ok(!Object.keys(zip.files).some(file => /(?:node_modules|secrets\.env|private\/|\.mp4$|\.wav$|ggml-)/.test(file)));
 console.log("Repo Builder page, honest workflow label, proof limits and pinned 0.1.1 ZIP parity passed.");

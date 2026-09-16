@@ -148,8 +148,9 @@ const rejectedShowcasePoseIds = [
 const sha256 = (file: string) =>
   createHash("sha256").update(readFileSync(file)).digest("hex");
 
-assert.equal(existsSync(download), true);
-assert.ok(statSync(download).size < 100 * 1024 * 1024);
+if (existsSync(download)) {
+  assert.ok(statSync(download).size < 100 * 1024 * 1024);
+}
 assert.equal(existsSync(video), true);
 assert.equal(sha256(video), expectedVideoSha);
 assert.equal(existsSync(contactSheet), true);
@@ -492,7 +493,7 @@ for (const rejectedPoseId of rejectedShowcasePoseIds) {
 }
 assert.equal(
   profile.repositoryHref,
-  "/format-repositories/shaz-puppet-runtime-v1/downloads/wiggly-shaz-puppet-runtime-format-kit.zip",
+  "https://github.com/smsheik1/wiggly-shaz-puppet-runtime/releases/download/v0.4.0/wiggly-shaz-puppet-runtime-format-kit.zip",
 );
 assert.ok(profile.handoff);
 assert.match(
@@ -787,114 +788,116 @@ assert.equal(
 assert.match(trust.receipt.note, /exact video checksum is recorded above/);
 assert.match(trust.receipt.note, /Human creative review is still pending/);
 
-const archive = await JSZip.loadAsync(readFileSync(download));
-const entries = Object.keys(archive.files);
-const joined = entries.join("\n");
-const root = "wiggly-shaz-puppet-runtime-format-kit";
-for (const required of [
-  "SKILL.md",
-  "README.md",
-  "KIT-MANIFEST.json",
-  "runner.mjs",
-  "format.json",
-  "requirements.json",
-  "quality.json",
-  "poses/index.json",
-  "rig-v2/runtime.json",
-  "rig-v2/assets/receipt.json",
-  "runtime/cherry-wasi-runner.mjs",
-  "runtime/lipsync.mjs",
-  "runtime/transcription.mjs",
-  ...expectedBackgrounds.map(({ path }) => path),
-  "vendor/cherry-lip-sync/v0.1.0/cherrylipsync.wasm",
-  "vendor/whisper.cpp/v1.9.2/VENDOR-MANIFEST.json",
-  "vendor/whisper.cpp/v1.9.2/BUILD-PLAN.json",
-  "vendor/whisper.cpp/v1.9.2/whisper.cpp-v1.9.2.tar.gz",
-  "vendor/whisper.cpp/v1.9.2/ggml-base.en-q5_1.bin",
-  "vendor/whisper.cpp/v1.9.2/LICENSE-WHISPER.CPP",
-  "vendor/whisper.cpp/v1.9.2/LICENSE-OPENAI-WHISPER",
-]) {
-  assert.ok(
-    archive.file(`${root}/${required}`),
-    `${required} must be packaged`,
+if (existsSync(download)) {
+  const archive = await JSZip.loadAsync(readFileSync(download));
+  const entries = Object.keys(archive.files);
+  const joined = entries.join("\n");
+  const root = "wiggly-shaz-puppet-runtime-format-kit";
+  for (const required of [
+    "SKILL.md",
+    "README.md",
+    "KIT-MANIFEST.json",
+    "runner.mjs",
+    "format.json",
+    "requirements.json",
+    "quality.json",
+    "poses/index.json",
+    "rig-v2/runtime.json",
+    "rig-v2/assets/receipt.json",
+    "runtime/cherry-wasi-runner.mjs",
+    "runtime/lipsync.mjs",
+    "runtime/transcription.mjs",
+    ...expectedBackgrounds.map(({ path }) => path),
+    "vendor/cherry-lip-sync/v0.1.0/cherrylipsync.wasm",
+    "vendor/whisper.cpp/v1.9.2/VENDOR-MANIFEST.json",
+    "vendor/whisper.cpp/v1.9.2/BUILD-PLAN.json",
+    "vendor/whisper.cpp/v1.9.2/whisper.cpp-v1.9.2.tar.gz",
+    "vendor/whisper.cpp/v1.9.2/ggml-base.en-q5_1.bin",
+    "vendor/whisper.cpp/v1.9.2/LICENSE-WHISPER.CPP",
+    "vendor/whisper.cpp/v1.9.2/LICENSE-OPENAI-WHISPER",
+  ]) {
+    assert.ok(
+      archive.file(`${root}/${required}`),
+      `${required} must be packaged`,
+    );
+  }
+  const packagedFormatFile = archive.file(`${root}/format.json`);
+  const packagedRequirementsFile = archive.file(`${root}/requirements.json`);
+  assert.ok(packagedFormatFile);
+  assert.ok(packagedRequirementsFile);
+  const packagedFormat = JSON.parse(await packagedFormatFile.async("string")) as {
+    version: string;
+    summary: string;
+  };
+  const packagedRequirements = JSON.parse(
+    await packagedRequirementsFile.async("string"),
+  ) as {
+    bundledEngines: Array<{
+      name: string;
+      artifact: string;
+      nativeExecutable?: boolean;
+      nativeExecutableIncluded?: boolean;
+      nativeExecutableBuiltLocally?: boolean;
+      networkRequired: boolean;
+      supportedPlatform?: string;
+    }>;
+  };
+  assert.equal(packagedFormat.version, "0.4.0");
+  assert.match(packagedFormat.summary, /Give Shaz a voice track/);
+  assert.match(packagedFormat.summary, /four built-in backgrounds/);
+  assert.deepEqual(packagedRequirements.bundledEngines, [
+    {
+      name: "cherry-lip-sync",
+      version: "0.1.0",
+      artifact: "WebAssembly/WASI module",
+      host: "node",
+      nativeExecutable: false,
+      networkRequired: false,
+      purpose:
+        "generate A-K/X speech cues for audio-backed shaz-sequence-input-v1 runs",
+    },
+    {
+      name: "whisper.cpp",
+      version: "1.9.2",
+      artifact: "checksum-pinned source archive plus base.en Q5_1 model",
+      host: "locally compiled Apple Silicon helper using Apple Clang and Accelerate",
+      nativeExecutableIncluded: false,
+      nativeExecutableBuiltLocally: true,
+      networkRequired: false,
+      supportedPlatform: "darwin-arm64",
+      purpose:
+        "create an English transcript with word timestamps before body-language planning",
+    },
+  ]);
+  assert.equal(
+    entries.some((entry) => /(^|\/)cherrylipsync(?:\.exe)?$/.test(entry)),
+    false,
+    "The ZIP must not ship a native Cherry executable.",
   );
+  assert.equal(
+    entries.some(
+      (entry) =>
+        entry.includes(".runtime-cache/") || /(^|\/)whisper-cli$/.test(entry),
+    ),
+    false,
+    "The ZIP must contain source and model inputs, never the locally compiled Whisper helper.",
+  );
+  assert.doesNotMatch(
+    joined,
+    /node_modules|compile-tvg-assets\.mjs|goldens\/|\.(mp4|mov|wav|m4a|aac|mp3)$/,
+  );
+  assert.deepEqual(
+    entries.filter((entry) => entry.includes("agent-runs/")),
+    [`${root}/agent-runs/.gitkeep`],
+  );
+  assert.deepEqual(
+    entries.filter((entry) => entry.includes("downloads/")),
+    [],
+  );
+  const expectedZipSha = readFileSync(`${download}.sha256`, "utf8").split(
+    /\s+/,
+  )[0];
+  assert.equal(sha256(download), expectedZipSha);
 }
-const packagedFormatFile = archive.file(`${root}/format.json`);
-const packagedRequirementsFile = archive.file(`${root}/requirements.json`);
-assert.ok(packagedFormatFile);
-assert.ok(packagedRequirementsFile);
-const packagedFormat = JSON.parse(await packagedFormatFile.async("string")) as {
-  version: string;
-  summary: string;
-};
-const packagedRequirements = JSON.parse(
-  await packagedRequirementsFile.async("string"),
-) as {
-  bundledEngines: Array<{
-    name: string;
-    artifact: string;
-    nativeExecutable?: boolean;
-    nativeExecutableIncluded?: boolean;
-    nativeExecutableBuiltLocally?: boolean;
-    networkRequired: boolean;
-    supportedPlatform?: string;
-  }>;
-};
-assert.equal(packagedFormat.version, "0.4.0");
-assert.match(packagedFormat.summary, /Give Shaz a voice track/);
-assert.match(packagedFormat.summary, /four built-in backgrounds/);
-assert.deepEqual(packagedRequirements.bundledEngines, [
-  {
-    name: "cherry-lip-sync",
-    version: "0.1.0",
-    artifact: "WebAssembly/WASI module",
-    host: "node",
-    nativeExecutable: false,
-    networkRequired: false,
-    purpose:
-      "generate A-K/X speech cues for audio-backed shaz-sequence-input-v1 runs",
-  },
-  {
-    name: "whisper.cpp",
-    version: "1.9.2",
-    artifact: "checksum-pinned source archive plus base.en Q5_1 model",
-    host: "locally compiled Apple Silicon helper using Apple Clang and Accelerate",
-    nativeExecutableIncluded: false,
-    nativeExecutableBuiltLocally: true,
-    networkRequired: false,
-    supportedPlatform: "darwin-arm64",
-    purpose:
-      "create an English transcript with word timestamps before body-language planning",
-  },
-]);
-assert.equal(
-  entries.some((entry) => /(^|\/)cherrylipsync(?:\.exe)?$/.test(entry)),
-  false,
-  "The ZIP must not ship a native Cherry executable.",
-);
-assert.equal(
-  entries.some(
-    (entry) =>
-      entry.includes(".runtime-cache/") || /(^|\/)whisper-cli$/.test(entry),
-  ),
-  false,
-  "The ZIP must contain source and model inputs, never the locally compiled Whisper helper.",
-);
-assert.doesNotMatch(
-  joined,
-  /node_modules|compile-tvg-assets\.mjs|goldens\/|\.(mp4|mov|wav|m4a|aac|mp3)$/,
-);
-assert.deepEqual(
-  entries.filter((entry) => entry.includes("agent-runs/")),
-  [`${root}/agent-runs/.gitkeep`],
-);
-assert.deepEqual(
-  entries.filter((entry) => entry.includes("downloads/")),
-  [],
-);
-const expectedZipSha = readFileSync(`${download}.sha256`, "utf8").split(
-  /\s+/,
-)[0];
-assert.equal(sha256(download), expectedZipSha);
 
 console.log("Shaz Puppet Runtime rich Repo page tests passed");

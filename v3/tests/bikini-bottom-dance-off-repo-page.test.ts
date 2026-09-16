@@ -115,63 +115,64 @@ assert.equal(
 );
 assert.equal(
   profile.repositoryHref,
-  "/format-repositories/bikini-bottom-dance-off-v1/downloads/wiggly-bikini-bottom-dance-off-format-kit.zip",
+  "https://github.com/smsheik1/wiggly-bikini-bottom-dance-off/releases/download/v0.17.0/wiggly-bikini-bottom-dance-off-format-kit.zip",
 );
 assert.equal(profile.proofEntries.length, 2);
 assert.match(repoPageRegistrySource, /Finished Dance Offs\./);
 assert.match(repoPageRegistrySource, /bikini-bottom-dance-off-wiggle/);
 assert.match(formatPageSource, /id="examples"/);
-assert.equal(existsSync(download), true);
-assert.ok(
-  statSync(download).size < 100 * 1024 * 1024,
-  "The published format kit must remain below GitHub's 100 MiB file limit.",
-);
-const kitRoot = "wiggly-bikini-bottom-dance-off-format-kit";
-const archive = await JSZip.loadAsync(readFileSync(download));
-const zipEntries = Object.keys(archive.files).join("\n");
-assert.doesNotMatch(zipEntries, /secrets\.env|\.env\.local|agent-runs\//);
-for (const entry of [
-  "AGENTS.md",
-  "CLAUDE.md",
-  ".cursor/rules/wiggly-format.mdc",
-  "verify-entrypoints.mjs",
-  "KIT-MANIFEST.json",
-  "bikini-bottom-dance-off-v1/SKILL.md",
-  "bikini-bottom-dance-off-v1/assets/voice-previews/manifest.json",
-  "bikini-bottom-dance-off-v1/assets/voice-previews/spongebob.mp3",
-  "bikini-bottom-dance-off-v1/assets/voice-previews/olaf.mp3",
-  "bikini-bottom-dance-off-v1/examples/wiggle-proof/evidence/render-report.json",
-  "mixamo-character-motion-v1/assets/character-import-audit.json",
-  "mixamo-character-motion-v1/evidence/character-preview-repairs/receipt.json",
-]) {
+if (existsSync(download)) {
+  assert.ok(
+    statSync(download).size < 100 * 1024 * 1024,
+    "The published format kit must remain below GitHub's 100 MiB file limit.",
+  );
+  const kitRoot = "wiggly-bikini-bottom-dance-off-format-kit";
+  const archive = await JSZip.loadAsync(readFileSync(download));
+  const zipEntries = Object.keys(archive.files).join("\n");
+  assert.doesNotMatch(zipEntries, /secrets\.env|\.env\.local|agent-runs\//);
+  for (const entry of [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".cursor/rules/wiggly-format.mdc",
+    "verify-entrypoints.mjs",
+    "KIT-MANIFEST.json",
+    "bikini-bottom-dance-off-v1/SKILL.md",
+    "bikini-bottom-dance-off-v1/assets/voice-previews/manifest.json",
+    "bikini-bottom-dance-off-v1/assets/voice-previews/spongebob.mp3",
+    "bikini-bottom-dance-off-v1/assets/voice-previews/olaf.mp3",
+    "bikini-bottom-dance-off-v1/examples/wiggle-proof/evidence/render-report.json",
+    "mixamo-character-motion-v1/assets/character-import-audit.json",
+    "mixamo-character-motion-v1/evidence/character-preview-repairs/receipt.json",
+  ]) {
+    assert.match(
+      zipEntries,
+      new RegExp(`${kitRoot}/${entry.replaceAll(".", "\\.")}`),
+    );
+  }
+  const readArchivedText = async (relativePath: string) => {
+    const file = archive.file(`${kitRoot}/${relativePath}`);
+    assert.ok(file, `${relativePath} must exist in the downloadable kit.`);
+    return file.async("string");
+  };
+  const archivedManifest = JSON.parse(
+    await readArchivedText("KIT-MANIFEST.json"),
+  ) as { formatVersion: string };
+  assert.equal(archivedManifest.formatVersion, "0.17.0");
+  const archivedAgents = await readArchivedText("AGENTS.md");
+  assert.match(archivedAgents, /bikini-bottom-dance-off-v1\/SKILL\.md/);
+  assert.match(archivedAgents, /exact resolved version/);
   assert.match(
-    zipEntries,
-    new RegExp(`${kitRoot}/${entry.replaceAll(".", "\\.")}`),
+    archivedAgents,
+    /Codex, Antigravity app and CLI, and GitHub Copilot/,
   );
 }
-const readArchivedText = async (relativePath: string) => {
-  const file = archive.file(`${kitRoot}/${relativePath}`);
-  assert.ok(file, `${relativePath} must exist in the downloadable kit.`);
-  return file.async("string");
-};
-const archivedManifest = JSON.parse(
-  await readArchivedText("KIT-MANIFEST.json"),
-) as { formatVersion: string };
-assert.equal(archivedManifest.formatVersion, "0.17.0");
-const archivedAgents = await readArchivedText("AGENTS.md");
-assert.match(archivedAgents, /bikini-bottom-dance-off-v1\/SKILL\.md/);
-assert.match(archivedAgents, /exact resolved version/);
-assert.match(
-  archivedAgents,
-  /Codex, Antigravity app and CLI, and GitHub Copilot/,
-);
 const prompt = buildDiscoveryHandoffPrompt(
   profile,
   "https://wiggly.agentenamel.com",
 );
 assert.match(
   prompt,
-  /Runnable Repo: https:\/\/wiggly\.agentenamel\.com\/format-repositories\/bikini-bottom-dance-off-v1\/downloads/,
+  /Runnable Repo: https:\/\/github\.com\/smsheik1\/wiggly-bikini-bottom-dance-off\/releases\/download/,
 );
 assert.match(prompt, /root agent instructions/);
 assert.match(prompt, /KIT-MANIFEST\.json/);

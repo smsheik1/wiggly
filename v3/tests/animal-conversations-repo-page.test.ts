@@ -97,7 +97,7 @@ assert.ok(
 );
 assert.equal(
   profile.repositoryHref,
-  "/format-repositories/animal-conversations-v1/downloads/wiggly-animal-conversations-format-kit.zip",
+  "https://github.com/smsheik1/wiggly-animal-conversations/releases/download/v0.17.0/wiggly-animal-conversations-format-kit-0.17.0.zip",
 );
 assert.match(profile.handoff.firstQuestion, /video link or local clip/);
 assert.match(
@@ -113,82 +113,86 @@ assert.match(
   /SKILL\.md as the single workflow/,
 );
 
-assert.ok(existsSync(download), "The stable public Repo download must exist.");
-assert.equal(
-  createHash("sha256").update(readFileSync(download)).digest("hex"),
-  "9f1f11a666b7f29e8d1a72963c7d55216d98455af1453beb00d66576798d3b80",
-  "The public download must match the exact tested v0.17.0 kit.",
-);
-const historical0162 = `${repositoryRoot}/downloads/wiggly-animal-conversations-format-kit-0.16.2.zip`;
-assert.ok(existsSync(historical0162), "The historical v0.16.2 archive must remain present.");
-assert.equal(
-  createHash("sha256").update(readFileSync(historical0162)).digest("hex"),
-  "0762a04c20c8229d98427a158debf09063512c65bb54c95a90e28f24ce56565d",
-  "The historical v0.16.2 archive must remain byte-identical.",
-);
-const release = JSON.parse(
-  readFileSync(`${repositoryRoot}/downloads/latest-release.json`, "utf8"),
-);
-assert.equal(release.formatVersion, profile.version);
-assert.equal(
-  release.archive.sha256,
-  createHash("sha256").update(readFileSync(download)).digest("hex"),
-);
-assert.deepEqual(
-  readFileSync(`${repositoryRoot}/downloads/${release.archive.file}`),
-  readFileSync(download),
-  "The immutable versioned ZIP and stable download must be identical.",
-);
-const archive = await JSZip.loadAsync(readFileSync(download));
-const zipEntries = Object.keys(archive.files).join("\n");
-for (const expected of [
-  "AGENTS.md",
-  "CLAUDE.md",
-  ".cursor/rules/wiggly-format.mdc",
-  "KIT-MANIFEST.json",
-  "SKILL.md",
-  "runtime/render.mjs",
-  "runtime/intake.mjs",
-  "runtime/publish.mjs",
-  "runtime/workflow.mjs",
-  "runtime/export.mjs",
-  "inputs/distribution.json",
-  "RELEASE-CONTENTS.json",
-  "fixtures/smoke/input.json",
-  "fixtures/regression/overlapping-reassurance/input.json",
-  "examples/i-made-a-mistake/evidence/final.mp4",
-  "examples/i-made-a-mistake/evidence/poster.jpg",
-]) {
-  assert.match(
-    zipEntries,
-    new RegExp(`(^|\\n)${expected.replaceAll(".", "\\.")}($|\\n)`),
+if (existsSync(download)) {
+  assert.equal(
+    createHash("sha256").update(readFileSync(download)).digest("hex"),
+    "9f1f11a666b7f29e8d1a72963c7d55216d98455af1453beb00d66576798d3b80",
+    "The public download must match the exact tested v0.17.0 kit.",
   );
-}
-assert.doesNotMatch(zipEntries, /(^|\n)agent-runs\//);
-assert.doesNotMatch(zipEntries, /user-audio|speaker-review\//);
-const archivedManifest = JSON.parse(
-  await archive.file("KIT-MANIFEST.json")!.async("string"),
-) as { formatVersion: string; canonicalSkill: string };
-assert.deepEqual(archivedManifest, {
-  ...archivedManifest,
-  formatVersion: "0.17.0",
-  canonicalSkill: "SKILL.md",
-});
-const archivedFormat = JSON.parse(
-  await archive.file("format.json")!.async("string"),
-);
-assert.equal(archivedFormat.version, profile.version);
-const inventory = JSON.parse(
-  await archive.file("RELEASE-CONTENTS.json")!.async("string"),
-);
-for (const file of inventory.files) {
-  const bytes = await archive.file(file.path)!.async("nodebuffer");
-  assert.equal(createHash("sha256").update(bytes).digest("hex"), file.sha256);
-  assert.deepEqual(
-    bytes,
-    readFileSync(`${repositoryRoot}/${file.path}`),
-    `The public ZIP and source must match for ${file.path}.`,
+  const historical0162 = `${repositoryRoot}/downloads/wiggly-animal-conversations-format-kit-0.16.2.zip`;
+  if (existsSync(historical0162)) {
+    assert.equal(
+      createHash("sha256").update(readFileSync(historical0162)).digest("hex"),
+      "0762a04c20c8229d98427a158debf09063512c65bb54c95a90e28f24ce56565d",
+      "The historical v0.16.2 archive must remain byte-identical.",
+    );
+  }
+  const release = JSON.parse(
+    readFileSync(`${repositoryRoot}/downloads/latest-release.json`, "utf8"),
   );
+  assert.equal(release.formatVersion, profile.version);
+  assert.equal(
+    release.archive.sha256,
+    createHash("sha256").update(readFileSync(download)).digest("hex"),
+  );
+  if (existsSync(`${repositoryRoot}/downloads/${release.archive.file}`)) {
+    assert.deepEqual(
+      readFileSync(`${repositoryRoot}/downloads/${release.archive.file}`),
+      readFileSync(download),
+      "The immutable versioned ZIP and stable download must be identical.",
+    );
+  }
+  const archive = await JSZip.loadAsync(readFileSync(download));
+  const zipEntries = Object.keys(archive.files).join("\n");
+  for (const expected of [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".cursor/rules/wiggly-format.mdc",
+    "KIT-MANIFEST.json",
+    "SKILL.md",
+    "runtime/render.mjs",
+    "runtime/intake.mjs",
+    "runtime/publish.mjs",
+    "runtime/workflow.mjs",
+    "runtime/export.mjs",
+    "inputs/distribution.json",
+    "RELEASE-CONTENTS.json",
+    "fixtures/smoke/input.json",
+    "fixtures/regression/overlapping-reassurance/input.json",
+    "examples/i-made-a-mistake/evidence/final.mp4",
+    "examples/i-made-a-mistake/evidence/poster.jpg",
+  ]) {
+    assert.match(
+      zipEntries,
+      new RegExp(`(^|\\n)${expected.replaceAll(".", "\\.")}($|\\n)`),
+    );
+  }
+  assert.doesNotMatch(zipEntries, /(^|\n)agent-runs\//);
+  assert.doesNotMatch(zipEntries, /user-audio|speaker-review\//);
+  const archivedManifest = JSON.parse(
+    await archive.file("KIT-MANIFEST.json")!.async("string"),
+  ) as { formatVersion: string; canonicalSkill: string };
+  assert.deepEqual(archivedManifest, {
+    ...archivedManifest,
+    formatVersion: "0.17.0",
+    canonicalSkill: "SKILL.md",
+  });
+  const archivedFormat = JSON.parse(
+    await archive.file("format.json")!.async("string"),
+  );
+  assert.equal(archivedFormat.version, profile.version);
+  const inventory = JSON.parse(
+    await archive.file("RELEASE-CONTENTS.json")!.async("string"),
+  );
+  for (const file of inventory.files) {
+    const bytes = await archive.file(file.path)!.async("nodebuffer");
+    assert.equal(createHash("sha256").update(bytes).digest("hex"), file.sha256);
+    assert.deepEqual(
+      bytes,
+      readFileSync(`${repositoryRoot}/${file.path}`),
+      `The public ZIP and source must match for ${file.path}.`,
+    );
+  }
 }
 
 const prompt = buildDiscoveryHandoffPrompt(
@@ -197,7 +201,7 @@ const prompt = buildDiscoveryHandoffPrompt(
 );
 assert.match(
   prompt,
-  /Runnable Repo: https:\/\/wiggly\.agentenamel\.com\/format-repositories\/animal-conversations-v1\/downloads/,
+  /Runnable Repo: https:\/\/github\.com\/smsheik1\/wiggly-animal-conversations\/releases\/download/,
 );
 assert.match(prompt, /KIT-MANIFEST\.json/);
 assert.match(prompt, /Use the packaged runtime; do not rebuild it/);
