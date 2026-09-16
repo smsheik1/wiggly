@@ -15,6 +15,15 @@
       "sha256": "98e9c349709da1cd410d65b2954d30e355c154a8ea52004ecbe6eb0d8205d040"
     }
   ],
+  "sfx": [
+    {
+      "id": "pop",
+      "label": "Cartoon Pop",
+      "path": "assets/audio/sfx/pop.wav",
+      "sha256": "c954571abb9f7b1df690c006eef1dcd28f8d54ff954e5efc5253bfe4361f1a86",
+      "usage": "punchy comic pop sound for chibi smear entrances and topic card transitions"
+    }
+  ],
   "chibiFrames": {
     "enterSmear": "assets/chibi/Timeline 1_0000In.png",
     "exitSmear": "assets/chibi/Timeline 1_0016.png",

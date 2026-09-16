@@ -19,6 +19,9 @@ const packagedBackgroundFiles = new Set([
   "pure-white.png",
   "sisters-room.png",
 ]);
+const packagedAudioFiles = new Set([
+  "pop.wav",
+]);
 const archiveTimestamp = new Date("2000-01-01T00:00:00.000Z");
 
 async function listFiles(directory) {
@@ -65,6 +68,15 @@ export function include(source) {
     parts[1] === "backgrounds" &&
     parts.length > 2 &&
     !packagedBackgroundFiles.has(parts.slice(2).join(path.sep))
+  ) {
+    return false;
+  }
+  if (
+    parts[0] === "assets" &&
+    parts[1] === "audio" &&
+    parts[2] === "sfx" &&
+    parts.length > 3 &&
+    !packagedAudioFiles.has(parts.slice(3).join(path.sep))
   ) {
     return false;
   }

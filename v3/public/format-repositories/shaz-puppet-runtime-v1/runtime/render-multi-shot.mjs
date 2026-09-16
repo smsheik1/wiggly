@@ -221,21 +221,71 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
       }
     }
 
-    // Encode to mp4 with ffmpeg and attach AAC audio
-    execute("ffmpeg", [
-      "-hide_banner", "-loglevel", "error", "-y",
-      "-framerate", "24",
-      "-i", path.join(scratch, "frame-%06d.png"),
-      "-i", validated.audioPath,
-      "-map", "0:v:0",
-      "-map", "1:a:0",
-      "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
-      "-pix_fmt", "yuv420p", "-r", "24",
-      "-c:a", "aac", "-b:a", "192k",
-      "-t", validated.timeline.audioDurationSeconds.toFixed(6),
-      "-movflags", "+faststart",
-      output,
-    ]);
+    // Collect SFX events across shot transitions
+    const sfxPath = path.join(root, "assets", "audio", "sfx", "pop.wav");
+    let hasSfxAsset = false;
+    try {
+      await fs.access(sfxPath);
+      hasSfxAsset = true;
+    } catch {
+      hasSfxAsset = false;
+    }
+
+    const sfxTriggers = [];
+    if (hasSfxAsset) {
+      for (let i = 0; i < validated.timeline.shots.length; i += 1) {
+        const shot = validated.timeline.shots[i];
+        // Trigger pop at the start of every chibi-commentary or topic-card shot
+        if (shot.shotType === "chibi-commentary" || shot.shotType === "text-card" || shot.card) {
+          const timeMs = Math.round((shot.startFrame / 24) * 1000);
+          if (timeMs >= 0) {
+            sfxTriggers.push({ timeMs, shotId: shot.id, type: shot.shotType });
+          }
+        }
+      }
+    }
+
+    // Encode to mp4 with ffmpeg and mix audio + SFX
+    if (sfxTriggers.length > 0) {
+      let filter = `[1:a]asplit=${sfxTriggers.length}`;
+      filter += sfxTriggers.map((_, i) => `[p${i}]`).join("") + ";";
+      sfxTriggers.forEach((trig, i) => {
+        filter += `[p${i}]adelay=${trig.timeMs}|${trig.timeMs},volume=0.8[s${i}];`;
+      });
+      filter += "[0:a]" + sfxTriggers.map((_, i) => `[s${i}]`).join("") + `amix=inputs=${sfxTriggers.length + 1}:duration=first:dropout_transition=0:normalize=0[aout]`;
+
+      execute("ffmpeg", [
+        "-hide_banner", "-loglevel", "error", "-y",
+        "-framerate", "24",
+        "-i", path.join(scratch, "frame-%06d.png"),
+        "-i", validated.audioPath,
+        "-i", sfxPath,
+        "-filter_complex", filter,
+        "-map", "0:v:0",
+        "-map", "[aout]",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+        "-pix_fmt", "yuv420p", "-r", "24",
+        "-c:a", "aac", "-b:a", "192k",
+        "-t", validated.timeline.audioDurationSeconds.toFixed(6),
+        "-movflags", "+faststart",
+        output,
+      ]);
+    } else {
+      execute("ffmpeg", [
+        "-hide_banner", "-loglevel", "error", "-y",
+        "-framerate", "24",
+        "-i", path.join(scratch, "frame-%06d.png"),
+        "-i", validated.audioPath,
+        "-map", "0:v:0",
+        "-map", "1:a:0",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+        "-pix_fmt", "yuv420p", "-r", "24",
+        "-c:a", "aac", "-b:a", "192k",
+        "-t", validated.timeline.audioDurationSeconds.toFixed(6),
+        "-movflags", "+faststart",
+        output,
+      ]);
+    }
 
     const report = {
       schemaVersion: 2,

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -91,3 +92,16 @@ test("validateMultiShotPlan validates valid shot timeline and rejects gaps", asy
     });
   }, /must equal preceding shot end frame/);
 });
+
+test("registered pop SFX asset exists and matches its asset registry sha256", async () => {
+  const assets = JSON.parse(await fs.readFile(path.join(root, "assets.json"), "utf8"));
+  const popAsset = (assets.sfx ?? []).find(({ id }) => id === "pop");
+  assert.ok(popAsset, "pop sound effect must be registered in assets.json");
+  const popPath = path.join(root, popAsset.path);
+  const exists = await fs.stat(popPath).then(() => true).catch(() => false);
+  assert.equal(exists, true, "pop.wav file must exist in assets/audio/sfx");
+  const bytes = await fs.readFile(popPath);
+  const sha = crypto.createHash("sha256").update(bytes).digest("hex");
+  assert.equal(sha, popAsset.sha256, "pop.wav sha256 must match registered sha");
+});
+
