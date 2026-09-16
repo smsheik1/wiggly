@@ -292,12 +292,12 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
 
     // Encode to mp4 with ffmpeg and mix audio + SFX
     if (sfxTriggers.length > 0) {
-      let filter = `[1:a]asplit=${sfxTriggers.length}`;
+      let filter = `[2:a]asplit=${sfxTriggers.length}`;
       filter += sfxTriggers.map((_, i) => `[p${i}]`).join("") + ";";
       sfxTriggers.forEach((trig, i) => {
         filter += `[p${i}]adelay=${trig.timeMs}|${trig.timeMs},volume=0.8[s${i}];`;
       });
-      filter += "[0:a]" + sfxTriggers.map((_, i) => `[s${i}]`).join("") + `amix=inputs=${sfxTriggers.length + 1}:duration=first:dropout_transition=0:normalize=0[aout]`;
+      filter += "[1:a]" + sfxTriggers.map((_, i) => `[s${i}]`).join("") + `amix=inputs=${sfxTriggers.length + 1}:duration=first:dropout_transition=0:normalize=0[aout]`;
 
       execute("ffmpeg", [
         "-hide_banner", "-loglevel", "error", "-y",
