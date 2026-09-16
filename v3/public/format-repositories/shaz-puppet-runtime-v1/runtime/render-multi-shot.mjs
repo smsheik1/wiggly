@@ -8,6 +8,7 @@ import { execute, sha256, writeJson } from "./run-common.mjs";
 import { renderRigFrame } from "./rig-v2-renderer.mjs";
 import { renderTextCardFrame, wordsVisibleAtFrame } from "./text-card-renderer.mjs";
 import { renderTopicCard } from "./topic-card-renderer.mjs";
+import { renderKenBurnsFrame } from "./broll-renderer.mjs";
 import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
@@ -216,6 +217,50 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           durationFrames: shot.durationFrames,
           chibiPose: shot.chibiPose,
           topicMedia: shot.topicMedia,
+          backgroundId: shot.backgroundId,
+        });
+
+      } else if (shot.shotType === "b-roll") {
+        // Resolve source broll media image buffer
+        let sourceBrollBuffer = bgBuffer;
+        if (shot.brollMedia) {
+          const brollPath = path.resolve(runDirectory, shot.brollMedia);
+          if (await fs.access(brollPath).then(() => true).catch(() => false)) {
+            sourceBrollBuffer = await sharp(brollPath)
+              .resize(1280, 720, { fit: "cover" })
+              .png()
+              .toBuffer();
+          }
+        }
+
+        const motion = shot.motion ?? "zoom-in";
+        for (let f = 0; f < shot.durationFrames; f += 1) {
+          outputFrame += 1;
+          const frameBuffer = await renderKenBurnsFrame({
+            sourceBuffer: sourceBrollBuffer,
+            sourceWidth: 1280,
+            sourceHeight: 720,
+            targetWidth: 1280,
+            targetHeight: 720,
+            motion,
+            localFrame: f,
+            durationFrames: shot.durationFrames,
+          });
+
+          await fs.writeFile(
+            path.join(scratch, `frame-${String(outputFrame).padStart(6, "0")}.png`),
+            frameBuffer,
+          );
+        }
+
+        shotReports.push({
+          id: shot.id,
+          shotType: shot.shotType,
+          outputStartFrame: shot.startFrame + 1,
+          outputEndFrame: shot.endFrameExclusive,
+          durationFrames: shot.durationFrames,
+          brollMedia: shot.brollMedia,
+          motion,
           backgroundId: shot.backgroundId,
         });
       }

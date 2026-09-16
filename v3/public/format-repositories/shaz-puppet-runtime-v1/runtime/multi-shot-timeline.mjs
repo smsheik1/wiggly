@@ -73,6 +73,8 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       "highlights",
       "chibiPose",
       "topicMedia",
+      "brollMedia",
+      "motion",
       "card",
       "rationale",
     ], `shots[${index}]`);
@@ -81,8 +83,8 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       throw new Error(`shots[${index}].id must be a valid lowercase identifier`);
     }
 
-    if (!["talk-to-camera", "text-card", "chibi-commentary"].includes(shot.shotType)) {
-      throw new Error(`shots[${index}].shotType must be 'talk-to-camera', 'text-card', or 'chibi-commentary'`);
+    if (!["talk-to-camera", "text-card", "chibi-commentary", "b-roll"].includes(shot.shotType)) {
+      throw new Error(`shots[${index}].shotType must be 'talk-to-camera', 'text-card', 'chibi-commentary', or 'b-roll'`);
     }
 
     if (shot.startFrame !== currentFrame) {
@@ -141,6 +143,15 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       }
     }
 
+    if (shot.shotType === "b-roll") {
+      if (shot.motion !== undefined) {
+        const allowedMotions = ["zoom-in", "zoom-out", "pan-left", "pan-right", "pan-up", "pan-down"];
+        if (!allowedMotions.includes(shot.motion)) {
+          throw new Error(`shots[${index}].motion must be one of: ${allowedMotions.join(", ")}`);
+        }
+      }
+    }
+
     currentFrame = shot.endFrameExclusive;
 
     validatedShots.push({
@@ -155,6 +166,8 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       highlights: shot.highlights ?? [],
       chibiPose: shot.chibiPose ?? "present-open",
       topicMedia: shot.topicMedia ?? null,
+      brollMedia: shot.brollMedia ?? null,
+      motion: shot.motion ?? "zoom-in",
       card: shot.card ?? null,
       rationale: shot.rationale ?? null,
     });
@@ -307,22 +320,30 @@ export function deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultB
 
     // Rhythm selection:
     // First shot is always talk-to-camera (engaging personal intro)
-    // Even indices alternate between chibi-commentary and text-cards
-    // Odd indices return to talk-to-camera or chibi
+    // Dynamic 4-part rotation:
+    // 0: talk-to-camera
+    // 1: chibi-commentary with vector card
+    // 2: b-roll full-screen illustration with Ken Burns motion (pan-right, zoom-in, pan-left, zoom-out)
+    // 3: text-card punchline or return to talk-to-camera
     let shotType = "talk-to-camera";
+    let brollMotion = "zoom-in";
     if (isFirst) {
       shotType = "talk-to-camera";
-    } else if (bIndex % 3 === 1) {
+    } else if (bIndex % 4 === 1) {
       shotType = "chibi-commentary";
-    } else if (bIndex % 3 === 2) {
-      // 50% chance text-card if short punchy text, otherwise chibi or talk
+    } else if (bIndex % 4 === 2) {
+      shotType = "b-roll";
+      const motions = ["zoom-in", "pan-right", "zoom-out", "pan-left"];
+      brollMotion = motions[Math.floor(bIndex / 2) % motions.length];
+    } else if (bIndex % 4 === 3) {
+      // If short punchy text, use text-card; otherwise return to talk-to-camera
       if (beat.words.length <= 8 && beat.text.length <= 50) {
         shotType = "text-card";
       } else {
         shotType = "talk-to-camera";
       }
     } else {
-      shotType = "chibi-commentary";
+      shotType = "talk-to-camera";
     }
 
     if (shotType === "talk-to-camera") {
@@ -348,6 +369,15 @@ export function deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultB
           theme: semantics.theme,
           icon: semantics.icon,
         },
+      });
+    } else if (shotType === "b-roll") {
+      shots.push({
+        id: shotId,
+        shotType: "b-roll",
+        startFrame: currentFrame,
+        endFrameExclusive: endFrame,
+        backgroundId: defaultBackgroundId,
+        motion: brollMotion,
       });
     } else if (shotType === "text-card") {
       // Pick 1-2 highlight words

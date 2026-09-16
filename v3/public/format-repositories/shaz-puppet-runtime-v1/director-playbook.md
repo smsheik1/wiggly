@@ -50,8 +50,22 @@ In this version of the format, the director has access to:
   - Comedic reaction moments where a pose (like `think-chin` or `shrug-smile`) amplifies the voiceover.
 - **Duration guidelines:** Typically 2.0 to 5.0 seconds.
 
-### 4. `b-roll` *(Coming soon)*
-- Full-screen scene illustrations or narrative story art over voiceover.
+### 4. `b-roll` (Full-Screen Concept Illustration with Ken Burns)
+- **What it is:** Full-screen visual illustrations of the concept, place, or object being discussed, brought to life with dynamic camera motion (pan / zoom).
+- **Available Motions:**
+  - `zoom-in`: Smooth camera push into the center of the illustration (adds focus, intensity, or revelation).
+  - `zoom-out`: Smooth camera pull back (reveals scale, context, or landscape).
+  - `pan-left`: Smooth horizontal tracking from right to left.
+  - `pan-right`: Smooth horizontal tracking from left to right.
+  - `pan-up`: Smooth vertical tilt upward.
+  - `pan-down`: Smooth vertical tilt downward.
+- **Custom Artwork:**
+  - The Director can provide an image path in `brollMedia` (e.g. `"assets/backgrounds/concept-art.png"`).
+  - If omitted, the shot smoothly animates the designated scene background.
+- **When to use:**
+  - Storytelling moments describing a specific scene, world, memory, or complex concept.
+  - Giving visual breathing room when the voiceover paints a picture or dives into descriptive lore.
+- **Duration guidelines:** Typically 2.5 to 5.0 seconds. Long enough for the Ken Burns motion to glide cleanly across the canvas.
 
 ---
 

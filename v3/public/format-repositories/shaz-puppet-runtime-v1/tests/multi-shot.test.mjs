@@ -9,6 +9,10 @@ import sharp from "sharp";
 
 import { renderTextCardFrame } from "../runtime/text-card-renderer.mjs";
 import {
+  calculateKenBurnsCrop,
+  renderKenBurnsFrame,
+} from "../runtime/broll-renderer.mjs";
+import {
   analyzeSentenceSemantics,
   deriveMultiShotPlan,
   validateMultiShotPlan,
@@ -197,6 +201,50 @@ test("deriveMultiShotPlan creates a complete, valid multi-shot plan from transcr
     assert.ok(chibiShot.card.theme);
     assert.ok(chibiShot.card.icon);
   }
+  const brollShot = validated.shots.find((s) => s.shotType === "b-roll");
+  if (brollShot) {
+    assert.ok(brollShot.motion);
+  }
 });
+
+test("calculateKenBurnsCrop calculates accurate crop windows for all motion types", () => {
+  for (const motion of ["zoom-in", "zoom-out", "pan-left", "pan-right", "pan-up", "pan-down"]) {
+    const startCrop = calculateKenBurnsCrop({ motion, progress: 0, sourceWidth: 1280, sourceHeight: 720 });
+    const endCrop = calculateKenBurnsCrop({ motion, progress: 1, sourceWidth: 1280, sourceHeight: 720 });
+
+    assert.ok(startCrop.width > 0 && startCrop.width <= 1280);
+    assert.ok(startCrop.height > 0 && startCrop.height <= 720);
+    assert.ok(startCrop.left >= 0 && startCrop.left + startCrop.width <= 1280);
+    assert.ok(startCrop.top >= 0 && startCrop.top + startCrop.height <= 720);
+
+    assert.ok(endCrop.width > 0 && endCrop.width <= 1280);
+    assert.ok(endCrop.height > 0 && endCrop.height <= 720);
+    assert.ok(endCrop.left >= 0 && endCrop.left + endCrop.width <= 1280);
+    assert.ok(endCrop.top >= 0 && endCrop.top + endCrop.height <= 720);
+  }
+});
+
+test("renderKenBurnsFrame renders valid 1280x720 png buffer", async () => {
+  const bgPath = path.join(root, "assets", "backgrounds", "living-room.png");
+  const bgBuffer = await fs.readFile(bgPath);
+
+  const frameBuffer = await renderKenBurnsFrame({
+    sourceBuffer: bgBuffer,
+    sourceWidth: 1280,
+    sourceHeight: 720,
+    targetWidth: 1280,
+    targetHeight: 720,
+    motion: "pan-right",
+    localFrame: 12,
+    durationFrames: 24,
+  });
+
+  assert(Buffer.isBuffer(frameBuffer));
+  const meta = await sharp(frameBuffer).metadata();
+  assert.equal(meta.width, 1280);
+  assert.equal(meta.height, 720);
+  assert.equal(meta.format, "png");
+});
+
 
 
