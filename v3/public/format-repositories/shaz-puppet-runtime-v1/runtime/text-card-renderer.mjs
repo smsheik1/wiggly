@@ -1,0 +1,157 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import sharp from "sharp";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const groboldFontPath = path.resolve(__dirname, "../assets/fonts/GROBOLD.ttf");
+let cachedFontBase64 = null;
+
+function getGroboldBase64() {
+  if (!cachedFontBase64) {
+    if (fs.existsSync(groboldFontPath)) {
+      cachedFontBase64 = fs.readFileSync(groboldFontPath).toString("base64");
+    }
+  }
+  return cachedFontBase64;
+}
+
+function escapeXml(unsafe) {
+  return unsafe.replace(/[<>&'"]/g, (c) => {
+    switch (c) {
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case "&": return "&amp;";
+      case "'": return "&apos;";
+      case "\"": return "&quot;";
+    }
+  });
+}
+
+/**
+ * Splits text into lines and tokens.
+ * If wordLimit is provided, only the first `wordLimit` words are made visible (the rest omitted or transparent).
+ */
+function buildSvgContent({ text, highlights = [], wordLimit = null, width = 1280, height = 720 }) {
+  const lines = text.split("\n");
+  
+  const fontBase64 = getGroboldBase64();
+  const fontFamily = fontBase64 ? "Grobold, sans-serif" : "sans-serif";
+  const fontSize = 66;
+  const lineHeight = 88;
+  const defaultFill = "#111111";
+
+  const totalTextHeight = lines.length * lineHeight;
+  // Center vertically on the wall area above the floor (floor starts around y=550)
+  const wallCenterY = 320;
+  const startY = wallCenterY - (totalTextHeight / 2) + (fontSize * 0.85);
+
+  let wordCountSeen = 0;
+
+  const tspanLines = lines.map((line, lineIndex) => {
+    // Break line into tokens (words and spaces)
+    const tokens = line.match(/\S+|\s+/g) || [];
+    const segments = [];
+
+    for (const token of tokens) {
+      const isWord = /\S/.test(token);
+      let isVisible = true;
+      if (isWord) {
+        wordCountSeen += 1;
+        if (wordLimit !== null && wordCountSeen > wordLimit) {
+          isVisible = false;
+        }
+      } else if (wordLimit !== null && wordCountSeen >= wordLimit) {
+        isVisible = false;
+      }
+
+      if (!isVisible) continue;
+
+      // Check if token matches any highlight phrase
+      let tokenColor = defaultFill;
+      for (const hl of highlights) {
+        if (hl.phrase.toLowerCase().includes(token.toLowerCase().trim())) {
+          tokenColor = hl.color;
+          break;
+        }
+      }
+
+      segments.push({ text: token, color: tokenColor });
+    }
+
+    if (segments.length === 0) {
+      return "";
+    }
+
+    const renderedSpans = segments
+      .map((seg) => `<tspan fill="${seg.color}">${escapeXml(seg.text)}</tspan>`)
+      .join("");
+
+    return `<text x="${width / 2}" y="${startY + lineIndex * lineHeight}" text-anchor="middle" font-family="${fontFamily}" font-size="${fontSize}px" letter-spacing="0.5px" word-spacing="8px" xml:space="preserve">${renderedSpans}</text>`;
+  }).filter(Boolean);
+
+  const fontFaceDef = fontBase64 ? `
+    <style>
+      @font-face {
+        font-family: "Grobold";
+        src: url("data:font/ttf;base64,${fontBase64}");
+      }
+    </style>
+  ` : "";
+
+  return `
+    <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        ${fontFaceDef}
+      </defs>
+      <g>
+        ${tspanLines.join("\n")}
+      </g>
+    </svg>
+  `;
+}
+
+/**
+ * Computes how many words should be visible at a given frame relative to shot start.
+ * If wordTimings array of startFrames is provided, matches against current frame.
+ * Otherwise, evenly spaces them across entry frames.
+ */
+export function wordsVisibleAtFrame({ totalWords, localFrame, durationFrames, wordFrames = null }) {
+  if (wordFrames && Array.isArray(wordFrames) && wordFrames.length > 0) {
+    let visible = 0;
+    for (let i = 0; i < wordFrames.length; i += 1) {
+      if (localFrame >= wordFrames[i]) {
+        visible = i + 1;
+      }
+    }
+    return Math.min(visible, totalWords);
+  }
+
+  // Natural progressive cadence: pop in all words across the first 65% of the shot,
+  // leaving the remaining 35% of the shot holding the complete sentence before cutting.
+  const popDuration = Math.max(1, Math.floor(durationFrames * 0.65));
+  const framesPerWord = Math.max(2, Math.floor(popDuration / totalWords));
+  const visible = Math.min(totalWords, Math.floor(localFrame / framesPerWord) + 1);
+  return visible;
+}
+
+/**
+ * Renders a single text-card frame over the background image buffer.
+ */
+export async function renderTextCardFrame({
+  backgroundBuffer,
+  text,
+  highlights = [],
+  wordLimit = null,
+  width = 1280,
+  height = 720,
+}) {
+  const svg = buildSvgContent({ text, highlights, wordLimit, width, height });
+  const overlayBuffer = Buffer.from(svg, "utf-8");
+
+  return sharp(backgroundBuffer)
+    .resize(width, height, { fit: "fill" })
+    .composite([{ input: overlayBuffer, top: 0, left: 0 }])
+    .png()
+    .toBuffer();
+}

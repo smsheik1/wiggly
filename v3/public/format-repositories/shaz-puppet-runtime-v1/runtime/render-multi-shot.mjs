@@ -1,0 +1,249 @@
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
+import sharp from "sharp";
+
+import { execute, sha256, writeJson } from "./run-common.mjs";
+import { renderRigFrame } from "./rig-v2-renderer.mjs";
+import { renderTextCardFrame, wordsVisibleAtFrame } from "./text-card-renderer.mjs";
+import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
+
+const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
+
+export async function renderMultiShot({ root, runDirectory, validated }) {
+  const output = path.join(runDirectory, "final.mp4");
+  const scratch = await fs.mkdtemp(path.join(os.tmpdir(), "shaz-multi-shot-"));
+
+  const assetCache = new Map();
+  const propCache = new Map();
+  const frameCache = new Map();
+  const bgCache = new Map();
+
+  const neutralPose = validated.registry.byId.get("neutral-listening");
+  if (!neutralPose) throw new Error("neutral-listening pose is required for talk-to-camera shots");
+
+  const neutralFrame = neutralPose.recipe.durationFrames; // Hold frame
+
+  // Pre-load background buffers
+  for (const bg of validated.assets.backgrounds ?? []) {
+    const bgPath = path.resolve(root, bg.path);
+    const buffer = await sharp(bgPath).resize(1280, 720, { fit: "fill" }).png().toBuffer();
+    bgCache.set(bg.id, buffer);
+  }
+
+  let outputFrame = 0;
+  const shotReports = [];
+
+  try {
+    for (const shot of validated.timeline.shots) {
+      const bgBuffer = bgCache.get(shot.backgroundId);
+      if (!bgBuffer) throw new Error(`background ${shot.backgroundId} not loaded`);
+
+      if (shot.shotType === "text-card") {
+        // Count words in text
+        const wordsInText = (shot.text.match(/\S+/g) || []).length;
+        const textFrameCache = new Map();
+
+        // Check if transcript has matching words for this time window to get exact frame pop-ins
+        let wordFrames = null;
+        if (validated.transcription?.transcript?.words) {
+          const shotStartMs = (shot.startFrame / 24) * 1000;
+          const shotEndMs = (shot.endFrameExclusive / 24) * 1000;
+          const matchedWords = validated.transcription.transcript.words.filter(
+            (w) => w.startMs >= shotStartMs - 100 && w.startMs < shotEndMs + 100,
+          );
+          if (matchedWords.length === wordsInText) {
+            wordFrames = matchedWords.map((w) => Math.max(0, Math.round((w.startMs - shotStartMs) * 24 / 1000)));
+          }
+        }
+
+        for (let f = 0; f < shot.durationFrames; f += 1) {
+          const wordsVisible = wordsVisibleAtFrame({
+            totalWords: wordsInText,
+            localFrame: f,
+            durationFrames: shot.durationFrames,
+            wordFrames,
+          });
+
+          let textBuffer = textFrameCache.get(wordsVisible);
+          if (!textBuffer) {
+            textBuffer = await renderTextCardFrame({
+              backgroundBuffer: bgBuffer,
+              text: shot.text,
+              highlights: shot.highlights,
+              wordLimit: wordsVisible,
+              width: 1280,
+              height: 720,
+            });
+            textFrameCache.set(wordsVisible, textBuffer);
+          }
+
+          outputFrame += 1;
+          await fs.writeFile(
+            path.join(scratch, `frame-${String(outputFrame).padStart(6, "0")}.png`),
+            textBuffer,
+          );
+        }
+
+        shotReports.push({
+          id: shot.id,
+          shotType: shot.shotType,
+          outputStartFrame: shot.startFrame + 1,
+          outputEndFrame: shot.endFrameExclusive,
+          durationFrames: shot.durationFrames,
+          text: shot.text,
+          highlights: shot.highlights,
+          backgroundId: shot.backgroundId,
+        });
+
+      } else if (shot.shotType === "talk-to-camera") {
+        // Render neutral-listening with Cherry mouth sync for each frame in this range
+        for (let f = 0; f < shot.durationFrames; f += 1) {
+          const globalFrame = shot.startFrame + f;
+          const mouthDrawing = validated.lipSync?.frameDrawings[globalFrame] ?? null;
+          const cacheKey = `neutral:${mouthDrawing ?? "source"}`;
+
+          let composedBuffer;
+          if (frameCache.has(cacheKey)) {
+            composedBuffer = frameCache.get(cacheKey);
+          } else {
+            const rendered = await renderRigFrame({
+              manifest: validated.manifest,
+              frame: neutralFrame,
+              assetRoot: path.join(root, "rig-v2", "assets"),
+              propRoot: path.join(root, "assets", "props"),
+              assetCache,
+              propCache,
+              poseRuntime: neutralPose.poseRuntime,
+              background: TRANSPARENT,
+              stageView: PERFORMANCE_STAGE_VIEW,
+              mouthDrawing,
+            });
+
+            composedBuffer = await sharp(bgBuffer)
+              .composite([{ input: rendered.buffer }])
+              .png()
+              .toBuffer();
+
+            frameCache.set(cacheKey, composedBuffer);
+          }
+
+          outputFrame += 1;
+          await fs.writeFile(
+            path.join(scratch, `frame-${String(outputFrame).padStart(6, "0")}.png`),
+            composedBuffer,
+          );
+        }
+
+        shotReports.push({
+          id: shot.id,
+          shotType: shot.shotType,
+          outputStartFrame: shot.startFrame + 1,
+          outputEndFrame: shot.endFrameExclusive,
+          durationFrames: shot.durationFrames,
+          backgroundId: shot.backgroundId,
+        });
+
+      } else if (shot.shotType === "chibi-commentary") {
+        // Resolve topic media background
+        let topicBgBuffer = bgBuffer;
+        if (shot.topicMedia) {
+          const topicMediaPath = path.resolve(runDirectory, shot.topicMedia);
+          if (await fs.access(topicMediaPath).then(() => true).catch(() => false)) {
+            topicBgBuffer = await sharp(topicMediaPath)
+              .resize(1280, 720, { fit: "contain", background: { r: 24, g: 24, b: 27, alpha: 255 } })
+              .png()
+              .toBuffer();
+          }
+        }
+
+        // Resolve chibi pose image path
+        const chibiManifest = validated.assets.chibiFrames ?? {};
+        const enterSmearPath = path.resolve(root, chibiManifest.enterSmear ?? "assets/chibi/Timeline 1_0000In.png");
+        const exitSmearPath = path.resolve(root, chibiManifest.exitSmear ?? "assets/chibi/Timeline 1_0016.png");
+        const poseRecord = (chibiManifest.poses ?? []).find((p) => p.id === shot.chibiPose);
+        const posePath = path.resolve(root, poseRecord?.path ?? chibiManifest.defaultPose ?? "assets/chibi/Timeline 1_0001.png");
+
+        const enterBuffer = await sharp(topicBgBuffer).composite([{ input: enterSmearPath }]).png().toBuffer();
+        const mainPoseBuffer = await sharp(topicBgBuffer).composite([{ input: posePath }]).png().toBuffer();
+        const exitBuffer = await sharp(topicBgBuffer).composite([{ input: exitSmearPath }]).png().toBuffer();
+
+        // Artist reference: enter smear holds for 2 frames, exit smear holds for 2 frames
+        const enterSmearFrames = shot.durationFrames >= 6 ? 2 : (shot.durationFrames >= 3 ? 1 : 0);
+        const exitSmearFrames = shot.durationFrames >= 6 ? 2 : (shot.durationFrames >= 4 ? 1 : 0);
+
+        for (let f = 0; f < shot.durationFrames; f += 1) {
+          outputFrame += 1;
+          let frameToUse = mainPoseBuffer;
+          if (f < enterSmearFrames) {
+            frameToUse = enterBuffer;
+          } else if (f >= shot.durationFrames - exitSmearFrames) {
+            frameToUse = exitBuffer;
+          }
+
+          await fs.writeFile(
+            path.join(scratch, `frame-${String(outputFrame).padStart(6, "0")}.png`),
+            frameToUse,
+          );
+        }
+
+        shotReports.push({
+          id: shot.id,
+          shotType: shot.shotType,
+          outputStartFrame: shot.startFrame + 1,
+          outputEndFrame: shot.endFrameExclusive,
+          durationFrames: shot.durationFrames,
+          chibiPose: shot.chibiPose,
+          topicMedia: shot.topicMedia,
+          backgroundId: shot.backgroundId,
+        });
+      }
+    }
+
+    // Encode to mp4 with ffmpeg and attach AAC audio
+    execute("ffmpeg", [
+      "-hide_banner", "-loglevel", "error", "-y",
+      "-framerate", "24",
+      "-i", path.join(scratch, "frame-%06d.png"),
+      "-i", validated.audioPath,
+      "-map", "0:v:0",
+      "-map", "1:a:0",
+      "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+      "-pix_fmt", "yuv420p", "-r", "24",
+      "-c:a", "aac", "-b:a", "192k",
+      "-t", validated.timeline.audioDurationSeconds.toFixed(6),
+      "-movflags", "+faststart",
+      output,
+    ]);
+
+    const report = {
+      schemaVersion: 2,
+      status: "rendered",
+      mode: "multi-shot-timeline",
+      renderedAt: new Date().toISOString(),
+      inputSha256: validated.receipt.inputSha256,
+      audioSha256: validated.receipt.audio.sha256,
+      sourceXstageSha256: validated.receipt.sourceXstageSha256,
+      artistRenderedFramesUsed: false,
+      renderer: "runtime/render-multi-shot.mjs#renderMultiShot",
+      cameraMotion: false,
+      stageView: PERFORMANCE_STAGE_VIEW,
+      finalVideo: "final.mp4",
+      outputSha256: await sha256(output),
+      totalFrames: validated.timeline.totalFrames,
+      durationSeconds: validated.timeline.durationSeconds,
+      audioDurationSeconds: validated.timeline.audioDurationSeconds,
+      shots: shotReports,
+      ...(validated.receipt.transcript ? { transcript: validated.receipt.transcript } : {}),
+      providerCalls: 0,
+      cost: "$0",
+    };
+
+    await writeJson(path.join(runDirectory, "render-report.json"), report);
+    return { output, report };
+
+  } finally {
+    await fs.rm(scratch, { recursive: true, force: true });
+  }
+}

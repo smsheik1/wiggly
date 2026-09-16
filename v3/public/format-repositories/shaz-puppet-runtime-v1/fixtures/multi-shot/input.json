@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "shaz-multi-shot-v1",
+  "title": "Puppy Parenting - Directed Multi-Shot",
+  "audioFile": "user-audio.wav",
+  "totalDurationFrames": 720,
+  "planningTranscriptSha256": "35a55600eafd90cb352c01e43e477bcddd945eca6dc21cf757049b059188af7b",
+  "shots": [
+    {
+      "id": "intro-talk",
+      "shotType": "talk-to-camera",
+      "startFrame": 0,
+      "endFrameExclusive": 120,
+      "backgroundId": "sisters-room",
+      "rationale": "Direct address to camera establishing the personal setup about friends coming over."
+    },
+    {
+      "id": "transition-no-idea",
+      "shotType": "text-card",
+      "startFrame": 120,
+      "endFrameExclusive": 167,
+      "backgroundId": "sisters-room",
+      "text": "We had no idea\nwhat we were doing.",
+      "highlights": [
+        { "phrase": "no idea", "color": "#00b4d8" }
+      ],
+      "rationale": "Pacing reset and comedic thesis statement highlighting the chaos of getting a puppy."
+    },
+    {
+      "id": "body-discussion",
+      "shotType": "talk-to-camera",
+      "startFrame": 167,
+      "endFrameExclusive": 530,
+      "backgroundId": "sisters-room",
+      "rationale": "Returning to Shaz talking head to deliver the puppy parenting breakdown."
+    },
+    {
+      "id": "chibi-confused-dog",
+      "shotType": "chibi-commentary",
+      "startFrame": 530,
+      "endFrameExclusive": 580,
+      "chibiPose": "shrug-smile",
+      "backgroundId": "sisters-room",
+      "rationale": "Chibi Shaz commentating with entry smear, shrug pose, and exit smear."
+    },
+    {
+      "id": "closing-talk",
+      "shotType": "talk-to-camera",
+      "startFrame": 580,
+      "endFrameExclusive": 720,
+      "backgroundId": "sisters-room",
+      "rationale": "Closing resolution talking to camera."
+    }
+  ]
+}
