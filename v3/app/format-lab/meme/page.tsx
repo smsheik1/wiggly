@@ -70,7 +70,7 @@ export default function MemeFormatPage() {
               </p>
             </div>
             <Button asChild data-testid="download-meme-kit">
-              <a href="/format-repositories/meme-v1/downloads/wiggly-meme-format-kit.zip" download>
+              <a href="https://github.com/smsheik1/wiggly-meme/releases/download/v1.0.0/wiggly-meme-format-kit.zip" download>
                 Download runnable kit
               </a>
             </Button>

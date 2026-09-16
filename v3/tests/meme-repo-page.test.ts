@@ -8,9 +8,9 @@ assert.match(source, /Wiggly \/ Format Lab/);
 assert.match(source, /format-repositories\/meme-v1/);
 assert.match(source, /Download runnable kit/);
 assert.match(source, /Twelve 1080 x 1350 PNGs/);
-assert.equal(
-  existsSync("public/format-repositories/meme-v1/downloads/wiggly-meme-format-kit.zip"),
-  true,
+assert.match(
+  source,
+  /https:\/\/github\.com\/smsheik1\/wiggly-meme\/releases\/download\/.*\.zip|\/format-repositories\/meme-v1\/downloads\/.*\.zip/,
 );
 
 const profile = getDiscoveryFormatProfile("meme");

@@ -81,7 +81,7 @@ export default function ThreeDBreakdownRepositoryPage() {
               <p className="mt-2 text-slate-600">{format.description}</p>
             </div>
             <Button asChild data-testid="download-three-d-format-kit">
-              <a href="/format-repositories/three-d-breakdown-v1/downloads/wiggly-three-d-breakdown-format-kit.zip" download>
+              <a href="https://github.com/smsheik1/wiggly-three-d-breakdown/releases/download/v1.6.0/wiggly-three-d-breakdown-format-kit.zip" download>
                 Download runnable kit
               </a>
             </Button>

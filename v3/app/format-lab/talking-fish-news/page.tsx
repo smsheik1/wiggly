@@ -69,7 +69,7 @@ export default function TalkingFishNewsFormatPage() {
             <p className="mt-4 text-sm font-semibold text-violet-700">One real story in. Five angles to choose from. One inspected vertical report out.</p>
           </div>
           <Button asChild data-testid="download-talking-fish-news-kit">
-            <a href="/format-repositories/talking-fish-news-v1/downloads/wiggly-talking-fish-news-format-kit.zip" download>
+            <a href="https://github.com/smsheik1/wiggly-talking-fish-news/releases/download/v1.0.0/wiggly-talking-fish-news-format-kit.zip" download>
               Download runnable kit
             </a>
           </Button>

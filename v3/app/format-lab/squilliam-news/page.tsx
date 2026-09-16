@@ -111,7 +111,7 @@ export default function SquilliamNewsFormatPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" className="border-cyan-300/40 bg-transparent text-cyan-100 hover:bg-cyan-300/10 hover:text-white" data-testid="download-squilliam-kit">
-              <a href={`${publicRepositoryPath}/downloads/wiggly-squilliam-news-format-kit.zip`} download>Download runnable kit</a>
+              <a href="https://github.com/smsheik1/wiggly-squilliam-news/releases/download/v0.2.1-proof/wiggly-squilliam-news-format-kit.zip" download>Download runnable kit</a>
             </Button>
             <Button asChild variant="secondary" data-testid="download-squilliam-final">
               <a href={finalVideo} download>Download final MP4</a>

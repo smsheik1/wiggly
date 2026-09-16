@@ -70,7 +70,7 @@ export default function VisualizerFormatPage() {
               </p>
             </div>
             <Button asChild data-testid="download-visualizer-kit">
-              <a href="/format-repositories/visualizer-v1/downloads/wiggly-visualizer-format-kit.zip" download>
+              <a href="https://github.com/smsheik1/wiggly-visualizer/releases/download/v1.0.0/wiggly-visualizer-format-kit.zip" download>
                 Download runnable kit
               </a>
             </Button>
