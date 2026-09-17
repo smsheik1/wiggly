@@ -69,6 +69,17 @@ In this version of the format, the director has access to:
        - `shaz-turnaround.jpg`: Multi-angle character model sheet (used for Shaz consistency or kept as anchor).
        - `shaz-style-reference.png`: Aesthetic reference (warm flat palette, bold black outlines, cozy lighting).
     3. **Ken Burns Motion Pairing:** Every generated image is paired with a camera motion preset (`zoom-in`, `zoom-out`, `pan-left`, `pan-right`, `pan-up`, `pan-down`) that matches the narrative energy (e.g. push-in for intimacy/revelation, pan for scale).
+- **Google Flow Browser Automation Protocol:**
+  - **Why:** Leverages the user's active Google AI Pro subscription on `flow.google.com` (with 1,000+ Pro credits) for cutting-edge Nano Banana 2 image generation without incurring extra cloud API costs or hardcoded keys.
+  - **When to use:** Whenever new bespoke B-roll assets are required for a multi-shot video run. If offline or in automated headless CI, the runtime falls back gracefully to animating the registered scene backgrounds with Ken Burns transforms.
+  - **Prerequisite (One-time macOS setup):**
+    - Chrome menu: **View > Developer > Allow JavaScript from Apple Events**.
+    - This allows background AppleScript/DOM automation without hijacking the user's physical mouse cursor or moving windows across spaces.
+  - **Execution Path:**
+    1. Check for active Flow tab in Chrome (`https://flow.google.com/`).
+    2. Inject prompt into the Flow input editor (`div.ProseMirror`).
+    3. Trigger generation and retrieve the resulting generated asset into `agent-runs/<run>/assets/broll/`.
+    4. Link asset path into `brollMedia` on the shot sheet.
 - **When to use:**
   - Storytelling moments describing a specific scene, world, memory, or complex concept.
   - Giving visual breathing room when the voiceover paints a picture or dives into descriptive lore.
