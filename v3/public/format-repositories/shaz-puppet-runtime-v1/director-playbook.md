@@ -62,6 +62,13 @@ In this version of the format, the director has access to:
 - **Custom Artwork:**
   - The Director can provide an image path in `brollMedia` (e.g. `"assets/backgrounds/concept-art.png"`).
   - If omitted, the shot smoothly animates the designated scene background.
+- **Visual Prompting Engine (AI Concept Art / B-roll):**
+  - When generating custom concept art or B-roll for a narrative beat, an LLM agent uses the **Visual Prompt Engine Rules**:
+    1. **Concise Prompts (< 50 words):** Describe only **composition, action, and mood**. Never include art style buzzwords (e.g., do *not* write "2D cartoon", "warm colors", or "thick outlines").
+    2. **Reference Conditioning:** Condition generation on the two canonical reference assets stored in `assets/character/`:
+       - `shaz-turnaround.jpg`: Multi-angle character model sheet (used for Shaz consistency or kept as anchor).
+       - `shaz-style-reference.png`: Aesthetic reference (warm flat palette, bold black outlines, cozy lighting).
+    3. **Ken Burns Motion Pairing:** Every generated image is paired with a camera motion preset (`zoom-in`, `zoom-out`, `pan-left`, `pan-right`, `pan-up`, `pan-down`) that matches the narrative energy (e.g. push-in for intimacy/revelation, pan for scale).
 - **When to use:**
   - Storytelling moments describing a specific scene, world, memory, or complex concept.
   - Giving visual breathing room when the voiceover paints a picture or dives into descriptive lore.
