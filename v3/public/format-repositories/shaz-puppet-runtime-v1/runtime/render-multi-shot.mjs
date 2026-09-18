@@ -188,22 +188,31 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
         const chibiManifest = validated.assets.chibiFrames ?? {};
         const enterSmearPath = path.resolve(root, chibiManifest.enterSmear ?? "assets/chibi/Timeline 1_0000In.png");
         const exitSmearPath = path.resolve(root, chibiManifest.exitSmear ?? "assets/chibi/Timeline 1_0016.png");
+        // Anchor to shot pose (or default present-open)
         const poseRecord = (chibiManifest.poses ?? []).find((p) => p.id === shot.chibiPose);
-        const posePath = path.resolve(root, poseRecord?.path ?? chibiManifest.defaultPose ?? "assets/chibi/Timeline 1_0001.png");
+        const posePath = path.resolve(root, poseRecord?.path ?? chibiManifest.defaultPose ?? "assets/chibi/Timeline 1_0006.png");
 
-        // Load talking cycle frames
-        const talkPoseIds = ["talk-excited-1", "talk-excited-2", "talk-gesture-1", "talk-gesture-2", "talk-smile"];
-        const talkBuffers = [];
-        for (const tid of talkPoseIds) {
-          const rec = (chibiManifest.poses ?? []).find((p) => p.id === tid);
-          if (rec?.path) {
-            const buf = await sharp(topicBgBuffer).composite([{ input: path.resolve(root, rec.path) }]).png().toBuffer();
-            talkBuffers.push(buf);
-          }
-        }
+        // Natural mouth-flap pairs that share the exact same body position/gesture:
+        // - "present-open" (closed) <-> "talk-smile" (open)
+        // - "think-chin" (closed) <-> "think-down" (open)
+        // - "talk-excited-1" (closed) <-> "talk-excited-2" (open)
+        // - "talk-gesture-1" (closed) <-> "talk-gesture-2" (open)
+        const poseSpeakingPairs = {
+          "present-open": "talk-smile",
+          "present-gesture": "talk-smile",
+          "think-chin": "think-down",
+          "talk-excited-1": "talk-excited-2",
+          "talk-gesture-1": "talk-gesture-2",
+          "shrug-smile": "talk-smile",
+        };
+
+        const speakingPoseId = poseSpeakingPairs[shot.chibiPose ?? "present-open"] ?? (shot.chibiPose === "talk-smile" ? "present-open" : "talk-smile");
+        const speakingRecord = (chibiManifest.poses ?? []).find((p) => p.id === speakingPoseId);
+        const speakingPosePath = speakingRecord?.path ? path.resolve(root, speakingRecord.path) : posePath;
 
         const enterBuffer = await sharp(topicBgBuffer).composite([{ input: enterSmearPath }]).png().toBuffer();
         const mainPoseBuffer = await sharp(topicBgBuffer).composite([{ input: posePath }]).png().toBuffer();
+        const speakingPoseBuffer = await sharp(topicBgBuffer).composite([{ input: speakingPosePath }]).png().toBuffer();
         const exitBuffer = await sharp(topicBgBuffer).composite([{ input: exitSmearPath }]).png().toBuffer();
 
         // Artist reference: enter smear holds for 2 frames, exit smear holds for 2 frames
@@ -221,12 +230,13 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
             frameToUse = enterBuffer;
           } else if (f >= shot.durationFrames - exitSmearFrames) {
             frameToUse = exitBuffer;
-          } else if (isSpeaking && talkBuffers.length > 0) {
-            // Animate talking gestures and open mouth shapes at ~6 fps rhythm during active speech
-            const talkIndex = Math.floor((f - enterSmearFrames) / 4) % talkBuffers.length;
-            frameToUse = talkBuffers[talkIndex];
+          } else if (isSpeaking) {
+            // Natural mouth flap: toggle speaking pose frame on a calm 6-frame rhythm (or open when speaking)
+            // This anchors the body gesture firmly while showing natural speech cadence
+            const flapState = Math.floor((f - enterSmearFrames) / 4) % 2;
+            frameToUse = flapState === 1 ? speakingPoseBuffer : mainPoseBuffer;
           } else {
-            // When not speaking (pause or rest), hold designated reaction/presentation pose
+            // When paused / not speaking, hold base pose calmly
             frameToUse = mainPoseBuffer;
           }
 
