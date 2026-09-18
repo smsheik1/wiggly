@@ -19,19 +19,20 @@ export function buildDiscoveryHandoffPrompt(
   }
 
   const formatUrl = absoluteUrl(origin, `/formats/${format.slug}`);
+  const githubRepoLine = format.githubRepo ? `GitHub Repo: ${format.githubRepo}\n` : "";
   const repositoryLine = format.repositoryHref
     ? `Runnable Repo: ${absoluteUrl(origin, format.repositoryHref)}\n`
     : "";
   const sourceOfTruth = format.repositoryHref
-    ? "Download and extract into a new workspace. Follow root agent instructions, SKILL.md, and contracts. Report the published Format version from KIT-MANIFEST.json or format.json before intake."
-    : "Open the Format page and follow SKILL.md as the sole source of truth. Report the published Format version from KIT-MANIFEST.json or format.json before intake.";
+    ? "Download and extract into a new workspace. Follow SKILL.md and root agent instructions. Report published Format version from KIT-MANIFEST.json or format.json."
+    : "Open the Format page and follow SKILL.md as the sole source of truth. Report published Format version from KIT-MANIFEST.json or format.json.";
 
   return `CODING AGENT REQUIRED: If you cannot access this computer's terminal, filesystem, and media files, do not analyze or simulate. Reply only: "Open this in Codex, Claude Code, Antigravity, Cursor, or Copilot CLI."
 
 Let's create this with the latest published Wiggly Format: ${format.name}.
 
 Format page: ${formatUrl}
-${repositoryLine}${sourceOfTruth}
+${githubRepoLine}${repositoryLine}${sourceOfTruth}
 
 Use the packaged runtime; do not rebuild it. Never use a paid provider without my explicit approval. Continue until the Format's validation and quality checks pass, then return its defined deliverables.`;
 }

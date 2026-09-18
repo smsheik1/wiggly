@@ -37,6 +37,7 @@ export type DiscoveryFormatProfile = {
   promise: string;
   lastUpdated: string;
   technicalHref?: string;
+  githubRepo?: string;
   repositoryHref?: string;
   packagePath?: string;
   proofEntries: DiscoveryEntry[];
