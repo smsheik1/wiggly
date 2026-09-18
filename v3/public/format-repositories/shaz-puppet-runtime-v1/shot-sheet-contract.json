@@ -106,6 +106,10 @@
             "type": "string",
             "description": "Registered background from assets.json; defaults to sisters-room"
           },
+          "poseId": {
+            "type": "string",
+            "description": "Pose ID from poses/index.json for talk-to-camera shots (e.g. neutral-listening, present, aha, confident, shrug); defaults to neutral-listening"
+          },
           "text": {
             "type": "string",
             "description": "Text content to render for text-card shot"

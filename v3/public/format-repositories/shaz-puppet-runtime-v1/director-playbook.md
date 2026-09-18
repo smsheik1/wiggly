@@ -17,6 +17,12 @@ In this version of the format, the director has access to:
 
 ### 1. `talk-to-camera` (Shaz Talking Head)
 - **What it is:** Shaz waist-up facing camera with Cherry lip-sync.
+- **Expressive Poses:** You can specify `poseId` (from `poses/index.json`) to give Shaz an emotional stance while speaking with full lip-sync:
+  - `"neutral-listening"`: Calm default baseline listening/talking pose.
+  - `"present"`: Open hand gesture presenting ideas outward (great for intros, explanations).
+  - `"aha"`: Raised index finger with realization (great for key insights, epiphanies, wrap-ups).
+  - `"confident"`: Confident hands-on-hips delivery.
+  - `"shrug"`: Gentle questioning or disbelief stance.
 - **When to use:**
   - Intros, greetings, personal address (*"Hey guys, today I want to talk about..."*).
   - Conversational delivery, personal anecdotes, asking questions to the viewer.
