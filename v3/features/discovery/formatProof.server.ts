@@ -2516,6 +2516,7 @@ export function getDiscoveryFormatProfile(slug: string): DiscoveryFormatProfile 
     promise: config.promise,
     lastUpdated: config.lastUpdated,
     technicalHref: config.technicalHref,
+    githubRepo: config.githubRepo,
     repositoryHref,
     packagePath,
     proofEntries,
