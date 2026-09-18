@@ -17,7 +17,7 @@ function exactKeys(value, allowed, context) {
 /**
  * Validates a multi-shot plan against measured audio and background assets.
  */
-export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBackgroundId, assets, transcript }) {
+export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBackgroundId, assets, poseRegistry, transcript }) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     throw new Error("multi-shot input must be an object");
   }
@@ -69,6 +69,7 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       "startFrame",
       "endFrameExclusive",
       "backgroundId",
+      "poseId",
       "text",
       "highlights",
       "chibiPose",
@@ -101,6 +102,13 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
     const backgroundId = shot.backgroundId ?? defaultBackgroundId ?? "sisters-room";
     if (!registeredBackgroundIds.has(backgroundId)) {
       throw new Error(`shots[${index}].backgroundId '${backgroundId}' is not a registered background`);
+    }
+
+    if (shot.shotType === "talk-to-camera") {
+      const poseId = shot.poseId ?? "neutral-listening";
+      if (poseRegistry?.byId && !poseRegistry.byId.has(poseId)) {
+        throw new Error(`shots[${index}].poseId '${poseId}' is not a registered puppet pose`);
+      }
     }
 
     if (shot.shotType === "chibi-commentary") {
@@ -162,6 +170,7 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       endFrameExclusive: shot.endFrameExclusive,
       durationFrames,
       backgroundId,
+      poseId: shot.shotType === "talk-to-camera" ? (shot.poseId ?? "neutral-listening") : null,
       text: shot.text ?? null,
       highlights: shot.highlights ?? [],
       chibiPose: shot.chibiPose ?? "present-open",

@@ -100,11 +100,15 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
         });
 
       } else if (shot.shotType === "talk-to-camera") {
-        // Render neutral-listening with Cherry mouth sync for each frame in this range
+        const poseId = shot.poseId ?? "neutral-listening";
+        const pose = validated.registry.byId.get(poseId) ?? neutralPose;
+        const holdFrame = pose.recipe.durationFrames; // Apex / hold frame of the pose
+
+        // Render chosen pose with Cherry mouth sync for each frame in this range
         for (let f = 0; f < shot.durationFrames; f += 1) {
           const globalFrame = shot.startFrame + f;
           const mouthDrawing = validated.lipSync?.frameDrawings[globalFrame] ?? null;
-          const cacheKey = `neutral:${mouthDrawing ?? "source"}`;
+          const cacheKey = `${poseId}:${mouthDrawing ?? "source"}`;
 
           let composedBuffer;
           if (frameCache.has(cacheKey)) {
@@ -112,12 +116,12 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           } else {
             const rendered = await renderRigFrame({
               manifest: validated.manifest,
-              frame: neutralFrame,
+              frame: holdFrame,
               assetRoot: path.join(root, "rig-v2", "assets"),
               propRoot: path.join(root, "assets", "props"),
               assetCache,
               propCache,
-              poseRuntime: neutralPose.poseRuntime,
+              poseRuntime: pose.poseRuntime,
               background: TRANSPARENT,
               stageView: PERFORMANCE_STAGE_VIEW,
               mouthDrawing,
@@ -144,6 +148,7 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           outputStartFrame: shot.startFrame + 1,
           outputEndFrame: shot.endFrameExclusive,
           durationFrames: shot.durationFrames,
+          poseId,
           backgroundId: shot.backgroundId,
         });
 
@@ -179,12 +184,23 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           }
         }
 
-        // Resolve chibi pose image path
+        // Resolve chibi pose image paths
         const chibiManifest = validated.assets.chibiFrames ?? {};
         const enterSmearPath = path.resolve(root, chibiManifest.enterSmear ?? "assets/chibi/Timeline 1_0000In.png");
         const exitSmearPath = path.resolve(root, chibiManifest.exitSmear ?? "assets/chibi/Timeline 1_0016.png");
         const poseRecord = (chibiManifest.poses ?? []).find((p) => p.id === shot.chibiPose);
         const posePath = path.resolve(root, poseRecord?.path ?? chibiManifest.defaultPose ?? "assets/chibi/Timeline 1_0001.png");
+
+        // Load talking cycle frames
+        const talkPoseIds = ["talk-excited-1", "talk-excited-2", "talk-gesture-1", "talk-gesture-2", "talk-smile"];
+        const talkBuffers = [];
+        for (const tid of talkPoseIds) {
+          const rec = (chibiManifest.poses ?? []).find((p) => p.id === tid);
+          if (rec?.path) {
+            const buf = await sharp(topicBgBuffer).composite([{ input: path.resolve(root, rec.path) }]).png().toBuffer();
+            talkBuffers.push(buf);
+          }
+        }
 
         const enterBuffer = await sharp(topicBgBuffer).composite([{ input: enterSmearPath }]).png().toBuffer();
         const mainPoseBuffer = await sharp(topicBgBuffer).composite([{ input: posePath }]).png().toBuffer();
@@ -196,11 +212,22 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
 
         for (let f = 0; f < shot.durationFrames; f += 1) {
           outputFrame += 1;
+          const globalFrame = shot.startFrame + f;
+          const mouthDrawing = validated.lipSync?.frameDrawings[globalFrame] ?? null;
+          const isSpeaking = mouthDrawing !== null && mouthDrawing !== "1";
+
           let frameToUse = mainPoseBuffer;
           if (f < enterSmearFrames) {
             frameToUse = enterBuffer;
           } else if (f >= shot.durationFrames - exitSmearFrames) {
             frameToUse = exitBuffer;
+          } else if (isSpeaking && talkBuffers.length > 0) {
+            // Animate talking gestures and open mouth shapes at ~6 fps rhythm during active speech
+            const talkIndex = Math.floor((f - enterSmearFrames) / 4) % talkBuffers.length;
+            frameToUse = talkBuffers[talkIndex];
+          } else {
+            // When not speaking (pause or rest), hold designated reaction/presentation pose
+            frameToUse = mainPoseBuffer;
           }
 
           await fs.writeFile(

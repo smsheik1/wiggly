@@ -533,6 +533,7 @@ async function validateRun({ root, runDirectory }) {
       audioDurationSeconds,
       defaultBackgroundId: assets.defaultBackgroundId,
       assets,
+      poseRegistry: registry,
       transcript: transcription.transcript,
     });
 
