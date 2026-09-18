@@ -56,17 +56,101 @@ function parseCherryTsv(text, { fps = 24, totalFrames }) {
     throw new Error("Cherry cues extend beyond the output duration");
   }
 
-  const frameDrawings = [];
-  const frameSymbols = [];
-  let cueIndex = 0;
+  // ─── PRO ANIMATION RULES (Cherry Lipsync Studio) ───────────────────────────
+  // Rule 0: Anticipation Offset (2 frames early so mouth opens as speech begins)
+  const anticipationOffset = 2 / fps;
+  const rawSymbols = [];
+
   for (let frame = 0; frame < totalFrames; frame += 1) {
     const timeSeconds = frame / fps;
-    while (cueIndex + 1 < cues.length && cues[cueIndex + 1].timeSeconds <= timeSeconds + 1e-9) {
-      cueIndex += 1;
+    const futureTs = timeSeconds + anticipationOffset;
+    let shape = "X";
+    for (const cue of cues) {
+      if (cue.timeSeconds <= futureTs + 1e-9) {
+        shape = cue.symbol;
+      } else {
+        break;
+      }
     }
-    frameDrawings.push(cues[cueIndex].mouthDrawing);
-    frameSymbols.push(cues[cueIndex].symbol);
+    rawSymbols.push(shape);
   }
+
+  const processedSymbols = [...rawSymbols];
+
+  // Rule 2: Minimum Hold (Ensure no shape holds for fewer than 2 frames)
+  const minHoldFrames = 2;
+  let i = 0;
+  while (i < totalFrames) {
+    const current = processedSymbols[i];
+    const start = i;
+    while (i < totalFrames && processedSymbols[i] === current) i += 1;
+    const length = i - start;
+    if (length < minHoldFrames && start > 0 && current !== "X" && current !== "A") {
+      const prevShape = processedSymbols[start - 1];
+      for (let j = start; j < i; j += 1) {
+        processedSymbols[j] = prevShape;
+      }
+    }
+  }
+
+  // Rule 6: Suppress Short Silences (Avoid clamping shut on quick gaps between words)
+  const minSilenceFrames = 4;
+  i = 0;
+  while (i < totalFrames) {
+    if (processedSymbols[i] === "X") {
+      const startX = i;
+      while (i < totalFrames && processedSymbols[i] === "X") i += 1;
+      if (i - startX < minSilenceFrames && startX > 0) {
+        const prevShape = processedSymbols[startX - 1];
+        for (let j = startX; j < i; j += 1) {
+          processedSymbols[j] = prevShape;
+        }
+      }
+    } else {
+      i += 1;
+    }
+  }
+
+  // Rule 3: MBP Pop (Ensure bilabials A/M/B/P hold cleanly for 2 frames)
+  const mbpPopFrames = 2;
+  i = 0;
+  while (i < totalFrames) {
+    if (processedSymbols[i] === "A") {
+      const startA = i;
+      while (i < totalFrames && processedSymbols[i] === "A") i += 1;
+      if (i - startA < mbpPopFrames) {
+        const endA = Math.min(totalFrames, startA + mbpPopFrames);
+        for (let j = startA; j < endA; j += 1) {
+          processedSymbols[j] = "A";
+        }
+        i = startA + mbpPopFrames;
+      }
+    } else {
+      i += 1;
+    }
+  }
+
+  // Rule 1: Tail Hold (Hold mouth open 2 frames into silence before closing)
+  const tailHoldFrames = 2;
+  i = 0;
+  while (i < totalFrames - 1) {
+    if (processedSymbols[i] !== "X" && processedSymbols[i] !== "A" && processedSymbols[i + 1] === "X") {
+      const prev = processedSymbols[i];
+      const maxJ = Math.min(tailHoldFrames + 1, totalFrames - i);
+      for (let j = 1; j < maxJ; j += 1) {
+        if (processedSymbols[i + j] === "X") {
+          processedSymbols[i + j] = prev;
+        }
+      }
+      i += tailHoldFrames;
+    } else {
+      i += 1;
+    }
+  }
+
+  const frameSymbols = processedSymbols;
+  const frameDrawings = frameSymbols.map((sym) => SHAZ_FIVE_MOUTH_V1[sym] ?? "1");
+
   // End every reusable block on the canonical resting mouth. This changes only
   // the final video frame and prevents an open-mouth freeze at the cut.
   frameDrawings[totalFrames - 1] = SHAZ_FIVE_MOUTH_V1.X;
