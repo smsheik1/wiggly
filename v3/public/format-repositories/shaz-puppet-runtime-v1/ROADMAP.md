@@ -11,6 +11,8 @@ This is the working order for the Shaz Wiggly Repo. Read it before adding a capa
 - Audio-backed sequences can use five real rig mouth shapes generated locally by the bundled Cherry 0.1.0 engine. A supplied exact-audio Cherry TSV and an explicit no-lip-sync option remain available.
 - Every audio-backed run creates a local English transcript with word timestamps before planning. The package includes the pinned whisper.cpp source and model, compiles its small Apple-silicon helper locally, and uploads nothing.
 - Four fixed backgrounds ship with the kit: Sisters Room, Living Room, Photo Zone, and Pure White. Sisters Room is the default. Every room uses the same camera and waist-up Shaz placement.
+- **Multi-Shot Video (`shaz-multi-shot-v1`):** composes contiguous shots (`talk-to-camera`, `text-card`, `chibi-commentary`, `b-roll`) over continuous audio without frame gaps or desyncs.
+- **Chibi Choreography & Animation Physics Engine:** synthesizes dynamic squash, stretch, anticipation, and settle cushions across LLM-choreographed routines (`["present-card", "think-chin", "shrug-open"]`). Zero keyword heuristics or emotion fallbacks.
 - The runtime validates the plan, renders through one character renderer, inspects the finished media, and requires human review before delivery.
 
 ## Registered, but not ready for automatic use

@@ -13,6 +13,7 @@ Use this kit to turn a voice track into a Shaz talking scene or to build a short
 
 - **Talk to Camera:** the normal choice for direct-to-audience speech. `sequencePreset: "talk-to-camera"` measures the audio, holds `neutral-listening` for the full line, and lets Cherry change only the mouth. Do not invent a pose or calculate frames.
 - **Reviewed gesture sequence:** arrange the five artist-reviewed gestures listed below, then follow the complete run workflow.
+- **Multi-Shot Video (`shaz-multi-shot-v1`):** high-retention directed video composing four shot types (`talk-to-camera`, `text-card`, `chibi-commentary`, `b-roll`) over continuous audio. Read `director-playbook.md` and `shot-sheet-contract.json`. The Director LLM choreographs `chibiRoutine` sequences using classical squash/stretch cushions.
 - **Action repair or authoring:** work on exactly one action. Read `references/rig-animation-playbook.md` completely and follow the author-and-learn loop. Do not repair several unapproved actions at once.
 
 ## Which actions may be used
@@ -45,6 +46,7 @@ The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-a
 
 4. Choose the input:
    - For ordinary dialogue, copy `fixtures/talk-to-camera/input.json`. Supply no `sequence`, `durationFrames`, or frame math. Initialization derives one exact-length `neutral-listening` hold from the audio, with lip-sync required.
+   - For a multi-shot directed video, copy `fixtures/multi-shot/input.json` or author a `shaz-multi-shot-v1` plan following `director-playbook.md`. Arrange `talk-to-camera`, `text-card`, `chibi-commentary` (with `chibiRoutine`), and `b-roll` shots.
    - For body language, write a `sequence` with the five reviewed gesture IDs above. Use `neutral-listening` only as the calm default or connective tissue. Use explicit `holdFrames` and `gapFrames`. The last action must use `gapFrames: 0`.
    - Choose `sisters-room`, `living-room`, `map-photo-zone`, or `pure-white` from `assets.json`. Name `backgroundId` explicitly for an audio-backed sequence. A semantic performance input may omit it and use `assets.defaultBackgroundId`. Never invent a background ID.
    - `map-photo-zone` is only a clean fixed room in this release. Its empty area is reserved for future supporting media; do not add, crop, or position an image or video there.
