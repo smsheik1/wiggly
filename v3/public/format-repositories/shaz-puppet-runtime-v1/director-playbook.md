@@ -63,23 +63,28 @@ In this version of the format, the director has access to:
   - The Director can provide an image path in `brollMedia` (e.g. `"assets/backgrounds/concept-art.png"`).
   - If omitted, the shot smoothly animates the designated scene background.
 - **Visual Prompting Engine (AI Concept Art / B-roll):**
-  - When generating custom concept art or B-roll for a narrative beat, an LLM agent uses the **Visual Prompt Engine Rules**:
-    1. **Concise Prompts (< 50 words):** Describe only **composition, action, and mood**. Never include art style buzzwords (e.g., do *not* write "2D cartoon", "warm colors", or "thick outlines").
-    2. **Reference Conditioning:** Condition generation on the two canonical reference assets stored in `assets/character/`:
-       - `shaz-turnaround.jpg`: Multi-angle character model sheet (used for Shaz consistency or kept as anchor).
-       - `shaz-style-reference.png`: Aesthetic reference (warm flat palette, bold black outlines, cozy lighting).
+  - When generating custom concept art or B-roll for a narrative beat in Google Flow:
+    1. **Agent Instructions Setup in Flow (Mandatory):**
+       - In Google Flow, open the **Agent instructions** drawer (top-right next to Settings) and ensure both canonical reference images are attached and toggled **ON** (`checked = true`):
+         - **Style Reference** (`shaz-style-reference.png`): *"Clean 2D flat cartoon cel animation with bold, clean, uniform black outlines and solid flat color fills. Simple circular cartoon eyes, simple curved bean mouth, no cross-hatching, no colored pencil texture, no wood grain, no painterly realism. Warm saturated palette (yellow-orange, coral red, tan, salmon). Minimalist flat graphic backgrounds with simple geometry."*
+         - **Character Reference** (`shaz-turnaround.jpg`): *"Maintain exact character model consistency for Shaz: light tan skin, fluffy medium-brown hair, expressive large cartoon eyes with black pupils, salmon-pink striped hooded sweatshirt with high neck and front drawstrings, light cyan/teal pants, slip-on shoes. Keep character anatomy, proportions, and minimalist 2D cartoon style identical across all poses and camera angles."*
+    2. **Prompting Structure (Cel Anchor + Explicit Negative Constraints):**
+       - Flow's default diffusion prior defaults to textured storybook/painterly illustrations if unguided.
+       - Every prompt MUST explicitly reinforce the cel medium:
+         `"2D flat animation art style matching the active Style Reference and Character Turnaround instructions: [Subject / Action / Scene], flat solid colors, bold clean black outlines, simple graphic background, no texture, no hatch shading"`
     3. **Ken Burns Motion Pairing:** Every generated image is paired with a camera motion preset (`zoom-in`, `zoom-out`, `pan-left`, `pan-right`, `pan-up`, `pan-down`) that matches the narrative energy (e.g. push-in for intimacy/revelation, pan for scale).
 - **Google Flow Browser Automation Protocol:**
-  - **Why:** Leverages the user's active Google AI Pro subscription on `flow.google.com` (with 1,000+ Pro credits) for cutting-edge Nano Banana 2 image generation without incurring extra cloud API costs or hardcoded keys.
+  - **Why:** Leverages the user's active Google AI Pro subscription on `flow.google.com` (with 1,000+ Pro credits) for cutting-edge image generation without incurring extra cloud API costs or hardcoded keys.
   - **When to use:** Whenever new bespoke B-roll assets are required for a multi-shot video run. If offline or in automated headless CI, the runtime falls back gracefully to animating the registered scene backgrounds with Ken Burns transforms.
   - **Prerequisite (One-time macOS setup):**
     - Chrome menu: **View > Developer > Allow JavaScript from Apple Events**.
     - This allows background AppleScript/DOM automation without hijacking the user's physical mouse cursor or moving windows across spaces.
   - **Execution Path:**
-    1. Check for active Flow tab in Chrome (`https://flow.google.com/`).
-    2. Inject prompt into the Flow input editor (`div.ProseMirror`).
-    3. Trigger generation and retrieve the resulting generated asset into `agent-runs/<run>/assets/broll/`.
-    4. Link asset path into `brollMedia` on the shot sheet.
+    1. Verify active Flow tab in Chrome (`https://flow.google.com/`).
+    2. Ensure both **Style Reference** and **Character Turnaround** instructions in Flow are toggled active.
+    3. Inject prompt into the Flow input editor (`div.ProseMirror`) with the required flat cel reinforcement tags.
+    4. Retrieve the resulting high-res generation into `agent-runs/<run>/assets/broll/`.
+    5. Link asset path into `brollMedia` on the shot sheet.
 - **When to use:**
   - Storytelling moments describing a specific scene, world, memory, or complex concept.
   - Giving visual breathing room when the voiceover paints a picture or dives into descriptive lore.
