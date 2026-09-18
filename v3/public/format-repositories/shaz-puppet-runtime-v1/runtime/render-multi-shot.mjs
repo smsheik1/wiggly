@@ -185,60 +185,76 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
         }
 
         // Resolve chibi pose image paths
-        const chibiManifest = validated.assets.chibiFrames ?? {};
-        const enterSmearPath = path.resolve(root, chibiManifest.enterSmear ?? "assets/chibi/Timeline 1_0000In.png");
-        const exitSmearPath = path.resolve(root, chibiManifest.exitSmear ?? "assets/chibi/Timeline 1_0016.png");
-        // Anchor to shot pose (or default present-open)
-        const poseRecord = (chibiManifest.poses ?? []).find((p) => p.id === shot.chibiPose);
-        const posePath = path.resolve(root, poseRecord?.path ?? chibiManifest.defaultPose ?? "assets/chibi/Timeline 1_0006.png");
+        // Classical Animation Timeline: Anticipation, Squash, Stretch, and Bouncy Pose Hopping
+        // Extracted directly from the human animator's reference:
+        // Transition frames (1-2 frames) provide squash & anticipation; hold frames deliver acting presence.
+        const artistTimeline = [
+          { file: "Timeline 1_0000In.png", frames: 2 }, // enter smear
+          { file: "Timeline 1_0001.png", frames: 2 },   // squash / anticipation
+          { file: "Timeline 1_0002.png", frames: 1 },   // settle
+          { file: "Timeline 1_0003x.png", weight: 35 }, // hold 1: talk gesture
+          { file: "Timeline 1_0004x.png", frames: 2 },  // anticipation windup
+          { file: "Timeline 1_0005.png", weight: 30 },  // hold 2: talk smile (presenting)
+          { file: "Timeline 1_0006.png", frames: 2 },   // breakdown / head turn
+          { file: "Timeline 1_0007x.png", frames: 2 },  // arm raise anticipation
+          { file: "Timeline 1_0008.png", weight: 25 },  // hold 3: think chin
+          { file: "Timeline 1_0009.png", frames: 2 },   // transition step
+          { file: "Timeline 1_0010.png", frames: 2 },   // shrug step
+          { file: "Timeline 1_0011.png", weight: 25 },  // hold 4: listen / smile side
+          { file: "Timeline 1_0012.png", frames: 2 },   // point anticipation
+          { file: "Timeline 1_0013.png", weight: 20 },  // hold 5: point side
+          { file: "Timeline 1_0014.png", frames: 1 },   // exit windup
+          { file: "Timeline 1_0015.png", frames: 2 },   // celebrate apex leap
+          { file: "Timeline 1_0016.png", frames: 2 },   // exit smear
+        ];
 
-        // Natural mouth-flap pairs that share the exact same body position/gesture:
-        // - "present-open" (closed) <-> "talk-smile" (open)
-        // - "think-chin" (closed) <-> "think-down" (open)
-        // - "talk-excited-1" (closed) <-> "talk-excited-2" (open)
-        // - "talk-gesture-1" (closed) <-> "talk-gesture-2" (open)
-        const poseSpeakingPairs = {
-          "present-open": "talk-smile",
-          "present-gesture": "talk-smile",
-          "think-chin": "think-down",
-          "talk-excited-1": "talk-excited-2",
-          "talk-gesture-1": "talk-gesture-2",
-          "shrug-smile": "talk-smile",
-        };
+        // Cache all 17 raw chibi buffers composited over the topic background
+        const chibiBufferMap = new Map();
+        for (const item of artistTimeline) {
+          if (!chibiBufferMap.has(item.file)) {
+            const itemPath = path.resolve(root, "assets/chibi", item.file);
+            const buf = await sharp(topicBgBuffer).composite([{ input: itemPath }]).png().toBuffer();
+            chibiBufferMap.set(item.file, buf);
+          }
+        }
 
-        const speakingPoseId = poseSpeakingPairs[shot.chibiPose ?? "present-open"] ?? (shot.chibiPose === "talk-smile" ? "present-open" : "talk-smile");
-        const speakingRecord = (chibiManifest.poses ?? []).find((p) => p.id === speakingPoseId);
-        const speakingPosePath = speakingRecord?.path ? path.resolve(root, speakingRecord.path) : posePath;
+        // Build exact frame schedule scaled dynamically to shot.durationFrames
+        const fixedFrames = artistTimeline.filter((k) => k.frames).reduce((acc, k) => acc + k.frames, 0);
+        const holdWeightTotal = artistTimeline.filter((k) => k.weight).reduce((acc, k) => acc + k.weight, 0);
+        const framesForHolds = Math.max(0, shot.durationFrames - fixedFrames);
 
-        const enterBuffer = await sharp(topicBgBuffer).composite([{ input: enterSmearPath }]).png().toBuffer();
-        const mainPoseBuffer = await sharp(topicBgBuffer).composite([{ input: posePath }]).png().toBuffer();
-        const speakingPoseBuffer = await sharp(topicBgBuffer).composite([{ input: speakingPosePath }]).png().toBuffer();
-        const exitBuffer = await sharp(topicBgBuffer).composite([{ input: exitSmearPath }]).png().toBuffer();
+        const schedule = [];
+        let allocatedHolds = 0;
+        const holdEntries = artistTimeline.filter((k) => k.weight);
 
-        // Artist reference: enter smear holds for 2 frames, exit smear holds for 2 frames
-        const enterSmearFrames = shot.durationFrames >= 6 ? 2 : (shot.durationFrames >= 3 ? 1 : 0);
-        const exitSmearFrames = shot.durationFrames >= 6 ? 2 : (shot.durationFrames >= 4 ? 1 : 0);
+        for (const item of artistTimeline) {
+          if (item.frames) {
+            for (let i = 0; i < item.frames; i += 1) schedule.push(item.file);
+          } else if (item.weight) {
+            const isLastHold = item === holdEntries.at(-1);
+            let duration = Math.max(1, Math.round((item.weight / holdWeightTotal) * framesForHolds));
+            if (isLastHold) {
+              duration = Math.max(1, framesForHolds - allocatedHolds);
+            } else {
+              allocatedHolds += duration;
+            }
+            for (let i = 0; i < duration; i += 1) schedule.push(item.file);
+          }
+        }
+
+        // Pad or trim if duration differs slightly due to rounding
+        while (schedule.length < shot.durationFrames) {
+          // Pad inside the middle hold
+          schedule.splice(Math.floor(schedule.length / 2), 0, "Timeline 1_0005.png");
+        }
+        if (schedule.length > shot.durationFrames) {
+          schedule.length = shot.durationFrames;
+        }
 
         for (let f = 0; f < shot.durationFrames; f += 1) {
           outputFrame += 1;
-          const globalFrame = shot.startFrame + f;
-          const mouthDrawing = validated.lipSync?.frameDrawings[globalFrame] ?? null;
-          const isSpeaking = mouthDrawing !== null && mouthDrawing !== "1";
-
-          let frameToUse = mainPoseBuffer;
-          if (f < enterSmearFrames) {
-            frameToUse = enterBuffer;
-          } else if (f >= shot.durationFrames - exitSmearFrames) {
-            frameToUse = exitBuffer;
-          } else if (isSpeaking) {
-            // Natural mouth flap: toggle speaking pose frame on a calm 6-frame rhythm (or open when speaking)
-            // This anchors the body gesture firmly while showing natural speech cadence
-            const flapState = Math.floor((f - enterSmearFrames) / 4) % 2;
-            frameToUse = flapState === 1 ? speakingPoseBuffer : mainPoseBuffer;
-          } else {
-            // When paused / not speaking, hold base pose calmly
-            frameToUse = mainPoseBuffer;
-          }
+          const chosenFile = schedule[f] ?? "Timeline 1_0005.png";
+          const frameToUse = chibiBufferMap.get(chosenFile) ?? topicBgBuffer;
 
           await fs.writeFile(
             path.join(scratch, `frame-${String(outputFrame).padStart(6, "0")}.png`),
