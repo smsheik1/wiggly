@@ -17,6 +17,10 @@ import {
   deriveMultiShotPlan,
   validateMultiShotPlan,
 } from "../runtime/multi-shot-timeline.mjs";
+import {
+  buildChibiSchedule,
+  normalizeChibiHold,
+} from "../runtime/chibi-choreography.mjs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
@@ -113,24 +117,24 @@ test("registered pop SFX asset exists and matches its asset registry sha256", as
   assert.equal(sha, popAsset.sha256, "pop.wav sha256 must match registered sha");
 });
 
-test("analyzeSentenceSemantics detects themes, icons, and chibi reaction poses", () => {
+test("analyzeSentenceSemantics detects themes, icons, and physical chibi holds", () => {
   const burger = analyzeSentenceSemantics("She made free burgers for us");
   assert.equal(burger.theme, "warm-red");
   assert.equal(burger.icon, "burger");
   assert.equal(burger.badge, "HOMEMADE");
-  assert.equal(burger.chibiPose, "talk-laugh");
+  assert.equal(burger.chibiPose, "talk-gesture");
 
   const puppy = analyzeSentenceSemantics("Having a puppy is way harder than it looks");
   assert.equal(puppy.theme, "cold-blue");
   assert.equal(puppy.icon, "puppy");
   assert.equal(puppy.badge, "REALITY CHECK");
-  assert.equal(puppy.chibiPose, "think-down");
+  assert.equal(puppy.chibiPose, "think-chin");
 
   const rule = analyzeSentenceSemantics("The golden rule of dog training");
   assert.equal(rule.theme, "emerald-green");
   assert.equal(rule.icon, "trophy");
   assert.equal(rule.badge, "THE GOLDEN RULE");
-  assert.equal(rule.chibiPose, "celebrate");
+  assert.equal(rule.chibiPose, "point-emphasis");
 });
 
 test("deriveMultiShotPlan creates a complete, valid multi-shot plan from transcript", async () => {
@@ -246,5 +250,73 @@ test("renderKenBurnsFrame renders valid 1280x720 png buffer", async () => {
   assert.equal(meta.format, "png");
 });
 
+test("buildChibiSchedule synthesizes entrance, cushions, holds, and exit leap", () => {
+  const routine = ["present-card", "think-chin", "shrug-open"];
+  const durationFrames = 96; // 4 seconds at 24fps
+  const schedule = buildChibiSchedule({ routine, durationFrames });
 
+  assert.equal(schedule.length, durationFrames);
 
+  // Entrance smear + squash + settle
+  assert.equal(schedule[0], "Timeline 1_0000In.png");
+  assert.equal(schedule[1], "Timeline 1_0000In.png");
+  assert.equal(schedule[2], "Timeline 1_0001.png");
+  assert.equal(schedule[3], "Timeline 1_0001.png");
+  assert.equal(schedule[4], "Timeline 1_0002.png");
+
+  // Holds exist
+  assert.ok(schedule.includes("Timeline 1_0005.png"), "must include present-card hold");
+  assert.ok(schedule.includes("Timeline 1_0008.png"), "must include think-chin hold");
+  assert.ok(schedule.includes("Timeline 1_0011.png"), "must include shrug-open hold");
+
+  // Cushions exist between holds
+  assert.ok(schedule.includes("Timeline 1_0006.png"), "must include head-turn breakdown to think-chin");
+  assert.ok(schedule.includes("Timeline 1_0007x.png"), "must include arm-lift anticipation to think-chin");
+  assert.ok(schedule.includes("Timeline 1_0009.png"), "must include hand-drop transition to shrug");
+  assert.ok(schedule.includes("Timeline 1_0010.png"), "must include shrug step");
+
+  // Exit windup + apex leap + smear
+  assert.equal(schedule.at(-5), "Timeline 1_0014.png");
+  assert.equal(schedule.at(-4), "Timeline 1_0015.png");
+  assert.equal(schedule.at(-3), "Timeline 1_0015.png");
+  assert.equal(schedule.at(-2), "Timeline 1_0016.png");
+  assert.equal(schedule.at(-1), "Timeline 1_0016.png");
+});
+
+test("validateMultiShotPlan accepts explicit LLM chibiRoutine", async () => {
+  const assets = JSON.parse(await fs.readFile(path.join(root, "assets.json"), "utf8"));
+  const audioDurationSeconds = 4.0; // 96 frames
+
+  const planWithRoutine = {
+    schemaVersion: "shaz-multi-shot-v1",
+    title: "Choreographed Chibi Routine",
+    audioFile: "user-audio.wav",
+    totalDurationFrames: 96,
+    shots: [
+      {
+        id: "shot-1",
+        shotType: "chibi-commentary",
+        startFrame: 0,
+        endFrameExclusive: 96,
+        backgroundId: "sisters-room",
+        chibiRoutine: ["present-card", "think-chin", "shrug-open"],
+        card: {
+          badge: "ANALYSIS",
+          headline: "THE REAL LESSON",
+          quote: "Mom was right all along.",
+          theme: "warm-red",
+          icon: "star",
+        },
+      },
+    ],
+  };
+
+  const validated = validateMultiShotPlan(planWithRoutine, {
+    audioDurationSeconds,
+    defaultBackgroundId: "sisters-room",
+    assets,
+  });
+
+  assert.equal(validated.totalFrames, 96);
+  assert.deepEqual(validated.shots[0].chibiRoutine, ["present-card", "think-chin", "shrug-open"]);
+});

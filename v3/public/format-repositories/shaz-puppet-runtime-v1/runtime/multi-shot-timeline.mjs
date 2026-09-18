@@ -73,6 +73,7 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       "text",
       "highlights",
       "chibiPose",
+      "chibiRoutine",
       "topicMedia",
       "brollMedia",
       "motion",
@@ -112,9 +113,26 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
     }
 
     if (shot.shotType === "chibi-commentary") {
-      const chibiPoses = new Set((assets.chibiFrames?.poses ?? []).map((p) => p.id));
-      if (shot.chibiPose && !chibiPoses.has(shot.chibiPose)) {
+      const allowedChibiPoses = new Set([
+        ...(assets.chibiFrames?.poses ?? []).map((p) => p.id),
+        "talk-gesture",
+        "present-card",
+        "think-chin",
+        "shrug-open",
+        "point-emphasis",
+      ]);
+      if (shot.chibiPose && !allowedChibiPoses.has(shot.chibiPose)) {
         throw new Error(`shots[${index}].chibiPose '${shot.chibiPose}' is not a registered chibi pose`);
+      }
+      if (shot.chibiRoutine !== undefined) {
+        if (!Array.isArray(shot.chibiRoutine) || shot.chibiRoutine.length === 0) {
+          throw new Error(`shots[${index}].chibiRoutine must be a non-empty array of pose IDs`);
+        }
+        for (const pose of shot.chibiRoutine) {
+          if (!allowedChibiPoses.has(pose)) {
+            throw new Error(`shots[${index}].chibiRoutine pose '${pose}' is not a valid chibi hold pose`);
+          }
+        }
       }
       if (shot.card !== undefined) {
         if (typeof shot.card !== "object" || shot.card === null) {
@@ -173,7 +191,8 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       poseId: shot.shotType === "talk-to-camera" ? (shot.poseId ?? "neutral-listening") : null,
       text: shot.text ?? null,
       highlights: shot.highlights ?? [],
-      chibiPose: shot.chibiPose ?? "present-open",
+      chibiPose: shot.chibiPose ?? "present-card",
+      chibiRoutine: Array.isArray(shot.chibiRoutine) ? shot.chibiRoutine : [shot.chibiPose ?? "present-card"],
       topicMedia: shot.topicMedia ?? null,
       brollMedia: shot.brollMedia ?? null,
       motion: shot.motion ?? "zoom-in",
@@ -213,22 +232,22 @@ export function analyzeSentenceSemantics(text) {
     theme = "warm-red";
     icon = "burger";
     badge = "HOMEMADE";
-    chibiPose = "talk-laugh";
+    chibiPose = "talk-gesture";
   } else if (/\b(rule|rules|train|training|discipline|disciplined|champion|trophy|win|best|master)\b/i.test(lower)) {
     theme = "emerald-green";
     icon = "trophy";
     badge = "THE GOLDEN RULE";
-    chibiPose = "celebrate";
+    chibiPose = "point-emphasis";
   } else if (/\b(chaos|clash|clashes|different|fight|versus|argue|disagree|styles)\b/i.test(lower)) {
     theme = "energy-orange";
     icon = "clash";
     badge = "THE CLASH";
-    chibiPose = "shrug-smile";
+    chibiPose = "shrug-open";
   } else if (/\b(puppy|puppies|dog|dogs|pet|pets|cat|cats|animal|animals|bark)\b/i.test(lower)) {
     theme = "cold-blue";
     icon = "puppy";
     badge = "REALITY CHECK";
-    chibiPose = "think-down";
+    chibiPose = "think-chin";
   } else if (/\b(confused|confusion|why|what|how|lost|question|unsure)\b/i.test(lower)) {
     theme = "deep-purple";
     icon = "question";
@@ -238,12 +257,12 @@ export function analyzeSentenceSemantics(text) {
     theme = "sunburst-gold";
     icon = "heart-paw";
     badge = "THE BEST";
-    chibiPose = "present-open";
+    chibiPose = "present-card";
   } else if (/\b(idea|ideas|think|thought|realize|discovery|aha)\b/i.test(lower)) {
     theme = "sunburst-gold";
     icon = "idea";
     badge = "BIG IDEA";
-    chibiPose = "point-up";
+    chibiPose = "point-emphasis";
   }
 
   // Derive a punchy 2-4 word uppercase headline
@@ -371,6 +390,7 @@ export function deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultB
         endFrameExclusive: endFrame,
         backgroundId: defaultBackgroundId,
         chibiPose: semantics.chibiPose,
+        chibiRoutine: [semantics.chibiPose],
         card: {
           badge: semantics.badge,
           headline: semantics.headline,

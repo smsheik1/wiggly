@@ -75,7 +75,35 @@
           },
           "chibiPose": {
             "type": "string",
-            "description": "Pose ID from assets.json#chibiFrames; defaults to present-open"
+            "description": "Legacy single pose ID from assets.json#chibiFrames; defaults to present-card"
+          },
+          "chibiRoutine": {
+            "type": "array",
+            "description": "Physical hold sequence choreographed by the LLM Director: talk-gesture, present-card, think-chin, shrug-open, point-emphasis. Connectors (squash/stretch/anticipation) are synthesized dynamically.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "talk-gesture",
+                "present-card",
+                "think-chin",
+                "shrug-open",
+                "point-emphasis",
+                "talk-excited-1",
+                "talk-excited-2",
+                "talk-gesture-1",
+                "talk-gesture-2",
+                "talk-smile",
+                "present-open",
+                "present-gesture",
+                "think-down",
+                "shrug-smile",
+                "listen-side",
+                "talk-laugh",
+                "point-side",
+                "point-up",
+                "celebrate"
+              ]
+            }
           },
           "topicMedia": {
             "type": "string",

@@ -38,8 +38,21 @@ In this version of the format, the director has access to:
 - **Duration guidelines:** Typically 1.5 to 3.5 seconds. Enough time for the viewer to easily read the phrase while hearing it spoken.
 
 ### 3. `chibi-commentary` (Chibi Shaz Reaction & Topic Commentary)
-- **What it is:** Chibi Shaz pops in from the bottom right corner with a 2-frame smear whip, reacting to and presenting an on-screen Topic Card or image.
-- **Available Poses:** `talk-excited-1`, `talk-excited-2`, `talk-gesture-1`, `talk-gesture-2`, `talk-smile`, `present-open`, `present-gesture`, `think-chin`, `think-down`, `shrug-smile`, `listen-side`, `talk-laugh`, `point-side`, `point-up`, `celebrate`.
+- **What it is:** Chibi Shaz pops in with classical squash/stretch animation physics to react to, explain, and emphasize on-screen Topic Cards or media.
+- **Physical Hold Vocabulary (Acting Presence):**
+  These poses are NOT emotion buckets—they are physical kinetic postures that match speech rhythms:
+  - `"talk-gesture"`: Front-facing conversational anchor; relaxed open elbows (casual explanation / baseline).
+  - `"present-card"`: Body angled left, right arm extended pointing toward card/topic (introducing a concept or graphic).
+  - `"think-chin"`: Head tilted down, hand propping up chin (pondering, deliberating, recalling, or confusion).
+  - `"shrug-open"`: Shoulders raised, hands open to sides (acknowledging reality, playful disbelief, "what can you do?").
+  - `"point-emphasis"`: Arm extended pointing forward/side (decisive takeaway, rule enforcement, emphatic conclusion).
+- **Choreographing with `chibiRoutine`:**
+  - The Director LLM can choreograph a sequence of 1 to 3 holds across the shot duration in `chibiRoutine`:
+    ```json
+    "chibiRoutine": ["present-card", "think-chin", "shrug-open"]
+    ```
+  - The runtime automatically synthesizes the 1-2 frame squash, anticipation windup, recoil, and smear cushions connecting each hold, along with the smear entrance and apex exit leap.
+  - If only a single hold is needed for short shots, provide `chibiRoutine: ["present-card"]` or `"chibiPose": "present-card"`.
 - **On-The-Fly Topic Card Generation:**
   - The Director can specify a `card` object directly in the shot to generate a custom vector card on the fly:
     ```json
@@ -53,7 +66,7 @@ In this version of the format, the director has access to:
     ```
 - **When to use:**
   - Topic explanations, breakdowns, theories, or reactions where visual grounding helps the viewer follow.
-  - Comedic reaction moments where a pose (like `think-chin` or `shrug-smile`) amplifies the voiceover.
+  - Comedic reaction moments where physical acting (like presenting then shrugging) amplifies the voiceover.
 - **Duration guidelines:** Typically 2.0 to 5.0 seconds.
 
 ### 4. `b-roll` (Full-Screen Concept Illustration with Ken Burns)

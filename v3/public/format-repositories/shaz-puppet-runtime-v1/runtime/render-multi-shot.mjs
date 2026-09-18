@@ -9,6 +9,7 @@ import { renderRigFrame } from "./rig-v2-renderer.mjs";
 import { renderTextCardFrame, wordsVisibleAtFrame } from "./text-card-renderer.mjs";
 import { renderTopicCard } from "./topic-card-renderer.mjs";
 import { renderKenBurnsFrame } from "./broll-renderer.mjs";
+import { buildChibiSchedule } from "./chibi-choreography.mjs";
 import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
@@ -184,71 +185,19 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           }
         }
 
-        // Resolve chibi pose image paths
-        // Classical Animation Timeline: Anticipation, Squash, Stretch, and Bouncy Pose Hopping
-        // Extracted directly from the human animator's reference:
-        // Transition frames (1-2 frames) provide squash & anticipation; hold frames deliver acting presence.
-        const artistTimeline = [
-          { file: "Timeline 1_0000In.png", frames: 2 }, // enter smear
-          { file: "Timeline 1_0001.png", frames: 2 },   // squash / anticipation
-          { file: "Timeline 1_0002.png", frames: 1 },   // settle
-          { file: "Timeline 1_0003x.png", weight: 35 }, // hold 1: talk gesture
-          { file: "Timeline 1_0004x.png", frames: 2 },  // anticipation windup
-          { file: "Timeline 1_0005.png", weight: 30 },  // hold 2: talk smile (presenting)
-          { file: "Timeline 1_0006.png", frames: 2 },   // breakdown / head turn
-          { file: "Timeline 1_0007x.png", frames: 2 },  // arm raise anticipation
-          { file: "Timeline 1_0008.png", weight: 25 },  // hold 3: think chin
-          { file: "Timeline 1_0009.png", frames: 2 },   // transition step
-          { file: "Timeline 1_0010.png", frames: 2 },   // shrug step
-          { file: "Timeline 1_0011.png", weight: 25 },  // hold 4: listen / smile side
-          { file: "Timeline 1_0012.png", frames: 2 },   // point anticipation
-          { file: "Timeline 1_0013.png", weight: 20 },  // hold 5: point side
-          { file: "Timeline 1_0014.png", frames: 1 },   // exit windup
-          { file: "Timeline 1_0015.png", frames: 2 },   // celebrate apex leap
-          { file: "Timeline 1_0016.png", frames: 2 },   // exit smear
-        ];
+        // Resolve chibi pose image paths dynamically using the Choreography Engine
+        const schedule = buildChibiSchedule({
+          routine: shot.chibiRoutine ?? (shot.chibiPose ? [shot.chibiPose] : ["present-card"]),
+          durationFrames: shot.durationFrames,
+        });
 
-        // Cache all 17 raw chibi buffers composited over the topic background
+        // Cache required chibi frames composited over the topic background
         const chibiBufferMap = new Map();
-        for (const item of artistTimeline) {
-          if (!chibiBufferMap.has(item.file)) {
-            const itemPath = path.resolve(root, "assets/chibi", item.file);
-            const buf = await sharp(topicBgBuffer).composite([{ input: itemPath }]).png().toBuffer();
-            chibiBufferMap.set(item.file, buf);
-          }
-        }
-
-        // Build exact frame schedule scaled dynamically to shot.durationFrames
-        const fixedFrames = artistTimeline.filter((k) => k.frames).reduce((acc, k) => acc + k.frames, 0);
-        const holdWeightTotal = artistTimeline.filter((k) => k.weight).reduce((acc, k) => acc + k.weight, 0);
-        const framesForHolds = Math.max(0, shot.durationFrames - fixedFrames);
-
-        const schedule = [];
-        let allocatedHolds = 0;
-        const holdEntries = artistTimeline.filter((k) => k.weight);
-
-        for (const item of artistTimeline) {
-          if (item.frames) {
-            for (let i = 0; i < item.frames; i += 1) schedule.push(item.file);
-          } else if (item.weight) {
-            const isLastHold = item === holdEntries.at(-1);
-            let duration = Math.max(1, Math.round((item.weight / holdWeightTotal) * framesForHolds));
-            if (isLastHold) {
-              duration = Math.max(1, framesForHolds - allocatedHolds);
-            } else {
-              allocatedHolds += duration;
-            }
-            for (let i = 0; i < duration; i += 1) schedule.push(item.file);
-          }
-        }
-
-        // Pad or trim if duration differs slightly due to rounding
-        while (schedule.length < shot.durationFrames) {
-          // Pad inside the middle hold
-          schedule.splice(Math.floor(schedule.length / 2), 0, "Timeline 1_0005.png");
-        }
-        if (schedule.length > shot.durationFrames) {
-          schedule.length = shot.durationFrames;
+        const uniqueFiles = new Set(schedule);
+        for (const file of uniqueFiles) {
+          const itemPath = path.resolve(root, "assets/chibi", file);
+          const buf = await sharp(topicBgBuffer).composite([{ input: itemPath }]).png().toBuffer();
+          chibiBufferMap.set(file, buf);
         }
 
         for (let f = 0; f < shot.durationFrames; f += 1) {
