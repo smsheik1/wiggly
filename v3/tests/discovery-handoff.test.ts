@@ -67,7 +67,7 @@ assert.match(
   threeDPrompt,
   /https:\/\/wiggly\.agentenamel\.com\/formats\/three-d-breakdown/,
 );
-assert.match(threeDPrompt, /exact published Format version/);
+assert.match(threeDPrompt, /SKILL\.md/);
 assert.match(
   threeDPrompt,
   /Never use a paid provider without my explicit approval/,
@@ -179,28 +179,15 @@ assert.ok(
   "Saved ads should reuse the existing anonymous browser storage.",
 );
 assert.equal(handoffSource.includes("<Sheet"), false);
+assert.equal(handoffSource.includes("<DropdownMenu"), false);
 assert.ok(
-  handoffSource.includes("Send to Coding Agent") &&
-    handoffSource.includes("Send to Codex"),
+  handoffSource.includes("Copy Agent Prompt") &&
+    handoffSource.includes("Copied prompt!"),
 );
-assert.ok(
-  handoffSource.includes("Open Antigravity app") &&
-    handoffSource.includes('label: "Antigravity CLI"') &&
-    handoffSource.includes("Copy for another coding agent") &&
-    handoffSource.includes("Coding agent required") &&
-    handoffSource.includes("Regular ChatGPT and Claude chat cannot run this."),
-);
+assert.ok(handoffSource.includes("format_handoff_started"));
 assert.equal(handoffSource.includes('feedback ?? "Send to Agent"'), false);
 assert.equal(handoffSource.includes("Copy prompt for any agent"), false);
 assert.equal(handoffSource.includes("Gemini CLI"), false);
-assert.ok(
-  handoffSource.includes(
-    "window.location.href = buildCodexHandoffUrl(prompt())",
-  ),
-);
-assert.ok(
-  handoffSource.includes("window.location.href = buildAntigravityAppUrl()"),
-);
 assert.equal(
   /fetch\(|Replicate|Seedance|Fish Audio/.test(handoffSource),
   false,

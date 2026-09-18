@@ -1,30 +1,10 @@
 "use client";
 
-import { Bot, Check, ChevronUp, Clipboard, ExternalLink, Terminal } from "lucide-react";
+import { Bot, Check, Copy } from "lucide-react";
 import posthog from "posthog-js";
 import { useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  buildAntigravityAppUrl,
-  buildCodexHandoffUrl,
-  buildDiscoveryCliCommand,
-  buildDiscoveryHandoffPrompt,
-  type DiscoveryCliAgent,
-} from "./handoff";
+import { buildDiscoveryHandoffPrompt } from "./handoff";
 import type { DiscoveryFormatProfile } from "./types";
-
-const cliAgents: Array<{ id: DiscoveryCliAgent; label: string }> = [
-  { id: "antigravity-cli", label: "Antigravity CLI" },
-  { id: "claude-code", label: "Claude Code" },
-  { id: "cursor", label: "Cursor" },
-  { id: "github-copilot", label: "GitHub Copilot CLI" },
-];
 
 export function DiscoveryFormatHandoff({
   format,
@@ -45,100 +25,38 @@ export function DiscoveryFormatHandoff({
     window.setTimeout(() => setFeedback(null), 2400);
   };
 
-  const openCodex = () => {
+  const copyPrompt = async () => {
     posthog.capture("format_handoff_started", {
-      destination: "codex",
-      format_slug: format.slug,
-    });
-    window.location.href = buildCodexHandoffUrl(prompt());
-  };
-
-  const openAntigravity = async () => {
-    posthog.capture("format_handoff_started", {
-      destination: "antigravity",
+      destination: "coding-agent",
       format_slug: format.slug,
     });
     try {
       await navigator.clipboard.writeText(prompt());
-      showFeedback("Prompt copied · opening Antigravity");
-    } catch {
-      showFeedback("Opening Antigravity");
-    }
-    window.location.href = buildAntigravityAppUrl();
-  };
-
-  const copyText = async (value: string, message: string) => {
-    try {
-      await navigator.clipboard.writeText(value);
-      showFeedback(message);
+      showFeedback("Copied prompt!");
     } catch {
       showFeedback("Copy failed");
     }
   };
 
-  const copyCliCommand = async (agent: DiscoveryCliAgent, label: string) => {
-    posthog.capture("format_handoff_started", {
-      destination: agent,
-      format_slug: format.slug,
-    });
-    await copyText(buildDiscoveryCliCommand(agent, prompt()), `${label} command copied`);
-  };
-
-  const copyAgentPrompt = async () => {
-    posthog.capture("format_handoff_started", {
-      destination: "other-agent",
-      format_slug: format.slug,
-    });
-    await copyText(prompt(), "Coding agent prompt copied");
-  };
-
-  const actionMenu = (tone: "lime" | "dark" = "lime") => (
+  return (
     <div className={compact ? "w-full" : "shrink-0"}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-md border-2 border-[#080817] px-5 text-sm font-black shadow-[4px_4px_0_#080817] ${
-              compact ? "w-full" : ""
-            } ${tone === "dark" ? "bg-[#080817] text-white shadow-[5px_5px_0_#52d6ff]" : "bg-[#c9ff55] text-[#080817]"}`}
-          >
-            {feedback ? <Check className="size-4" aria-hidden="true" /> : <Bot className="size-4" aria-hidden="true" />}
-            <span>{feedback ?? "Send to Coding Agent"}</span>
-            <ChevronUp className="size-4" aria-hidden="true" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="top" align="start">
-          <div className="max-w-72 px-3 pb-2 pt-1">
-            <p className="text-xs font-black uppercase tracking-[0.14em]">Coding agent required</p>
-            <p className="mt-1 text-xs font-bold leading-4 text-[#667087]">
-              Regular ChatGPT and Claude chat cannot run this. Choose a coding agent below.
-            </p>
-          </div>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={openCodex}>
-            <ExternalLink className="size-4" aria-hidden="true" />
-            Send to Codex
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => void openAntigravity()}>
-            <ExternalLink className="size-4" aria-hidden="true" />
-            Open Antigravity app
-          </DropdownMenuItem>
-          {cliAgents.map((agent) => (
-            <DropdownMenuItem key={agent.id} onSelect={() => void copyCliCommand(agent.id, agent.label)}>
-              <Terminal className="size-4" aria-hidden="true" />
-              Copy for {agent.label}
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => void copyAgentPrompt()}>
-            <Clipboard className="size-4" aria-hidden="true" />
-            Copy for another coding agent
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <span className="sr-only" aria-live="polite">{feedback}</span>
+      <button
+        type="button"
+        onClick={() => void copyPrompt()}
+        className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-md border-2 border-[#080817] px-5 text-sm font-black shadow-[4px_4px_0_#080817] transition-transform active:translate-x-0.5 active:translate-y-0.5 ${
+          compact ? "w-full" : ""
+        } ${tone === "dark" ? "bg-[#080817] text-white shadow-[5px_5px_0_#52d6ff]" : "bg-[#c9ff55] text-[#080817]"}`}
+      >
+        {feedback ? (
+          <Check className="size-4" aria-hidden="true" />
+        ) : (
+          <Copy className="size-4" aria-hidden="true" />
+        )}
+        <span>{feedback ?? "Copy Agent Prompt"}</span>
+      </button>
+      <span className="sr-only" aria-live="polite">
+        {feedback}
+      </span>
     </div>
   );
-
-  return actionMenu(tone);
 }
