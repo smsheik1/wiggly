@@ -10,8 +10,7 @@ test-results/
 output/
 tmp/
 v3/.maker-analysis-venv/
-v3/public/format-repositories/otaku-explainer-v1/agent-runs/
-v3/public/format-repositories/lego-music-video-v1/agent-runs/
+v3/public/format-repositories/*/agent-runs/
 playwright-report/
 .playwright-cli/
 **/.playwright-cli/
