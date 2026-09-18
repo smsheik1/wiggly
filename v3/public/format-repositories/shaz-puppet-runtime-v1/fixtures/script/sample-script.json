@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "shaz-script-v1",
+  "title": "What Puppy Parenting Taught Us",
+  "targetDurationSeconds": 30,
+  "research": {
+    "primaryInsight": "A puppy exposes the house's lack of internal consistency rather than its obedience.",
+    "counterintuitiveAngle": "We thought getting a puppy was about training the dog, but it actually exposed which human has the least discipline in the house.",
+    "concreteFactOrStory": "Leo chewed two pairs of sneakers in 48 hours and figured out who gives unauthorized treats in under two minutes."
+  },
+  "hook": {
+    "formula": "uncomfortable-truth",
+    "text": "Most people think getting a puppy brings a family closer together. But in reality, a dog is only as well trained as the least disciplined person in the house."
+  },
+  "beats": [
+    {
+      "id": "beat-01",
+      "connector": "THEREFORE",
+      "shotTypeSuggestion": "text-card",
+      "text": "We had no idea what we were doing.",
+      "impliedQuestion": "What went wrong with the puppy?"
+    },
+    {
+      "id": "beat-02",
+      "connector": "BUT",
+      "shotTypeSuggestion": "b-roll",
+      "text": "From day one, Leo figured out that every person had a completely different set of rules.",
+      "impliedQuestion": "How did Leo react to different rules?"
+    },
+    {
+      "id": "beat-03",
+      "connector": "THEREFORE",
+      "shotTypeSuggestion": "chibi-commentary",
+      "text": "He chewed sneakers, ignored commands, and played us against each other.",
+      "impliedQuestion": "What was the final lesson?"
+    }
+  ],
+  "landing": {
+    "type": "reframe",
+    "text": "So thank you Leo. You were the best dog—we were just chaotic roommates."
+  }
+}

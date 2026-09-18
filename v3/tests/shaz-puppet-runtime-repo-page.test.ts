@@ -752,6 +752,28 @@ for (const mapping of ["A · X", "B · G · I · J", "C · H", "D", "E · F · K
   );
 }
 assert.match(includedAssetsSource, /swaps between five mouth drawings/);
+assert.match(includedAssetsSource, /shaz-multi-shot-palette/);
+assert.match(includedAssetsSource, /The 4-Shot Studio Palette/);
+assert.match(includedAssetsSource, /talk-to-camera/);
+assert.match(includedAssetsSource, /text-card/);
+assert.match(includedAssetsSource, /chibi-commentary/);
+assert.match(includedAssetsSource, /b-roll/);
+assert.match(includedAssetsSource, /shaz-chibi-acting-physics/);
+assert.match(includedAssetsSource, /Chibi Acting: The 5 Core Physical Holds/);
+for (const chibiPose of [
+  "talk-gesture",
+  "present-card",
+  "think-chin",
+  "shrug-open",
+  "point-emphasis",
+]) {
+  assert.match(
+    includedAssetsSource,
+    new RegExp(chibiPose),
+  );
+}
+assert.match(includedAssetsSource, /Classical Animation Pipeline/);
+assert.match(includedAssetsSource, /Zero keyword fallbacks/);
 assert.match(
   connectionsSource,
   /No subscriptions\. No API keys\. It runs on Apple silicon\./,

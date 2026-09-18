@@ -26,6 +26,7 @@ const formatConfigs: FormatProfileConfig[] = [
   {
     slug: "character-gameplay-conversations",
     promise: "Fan-favorite characters trade lines over Arkham Knight and Spider-Man 2 gameplay with timed captions and ducked music—assembled into vertical 9:16 Shorts.",
+    lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-character-gameplay-conversations",
     manifestPath: "format-repositories/character-gameplay-conversations-v1/format.json",
     repositoryHref: "https://github.com/smsheik1/wiggly-character-gameplay-conversations/releases/download/v0.3.0/character-gameplay-conversations-0.3.0.zip",
@@ -102,6 +103,7 @@ const formatConfigs: FormatProfileConfig[] = [
   {
     slug: "repo-builder",
     promise: "Turn a reference video into a reusable Wiggly Repo with your coding agent. Inspect the ingredients, approve the blueprint, then build and test the recipe.",
+    lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-repo-builder",
     manifestPath: "format-repositories/repo-builder-v1/format.json",
     repositoryHref: "https://github.com/smsheik1/wiggly-repo-builder/releases/download/v0.1.1/wiggly-repo-builder-0.1.1.zip",

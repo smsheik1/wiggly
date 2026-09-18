@@ -55,9 +55,11 @@ assert.ok(
 );
 assert.match(prompt, /Never use a paid provider without my explicit approval/);
 const root = `public/${profile.packagePath}`;
-const localArchive = profile.repositoryHref.startsWith("http")
+assert.ok(profile.repositoryHref, "repositoryHref should exist");
+const repositoryHref = profile.repositoryHref;
+const localArchive = repositoryHref.startsWith("http")
   ? `${root}/downloads/character-gameplay-conversations-0.3.0.zip`
-  : `public${profile.repositoryHref}`;
+  : `public${repositoryHref}`;
 
 if (existsSync(localArchive)) {
   const zip = await JSZip.loadAsync(readFileSync(localArchive));

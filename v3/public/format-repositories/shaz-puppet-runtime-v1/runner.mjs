@@ -9,12 +9,15 @@ import sharp from "sharp";
 import { generateCherryCues, verifyCherryEngine } from "./runtime/cherry.mjs";
 import { inspectRun } from "./runtime/inspect-run.mjs";
 import { renderSequence } from "./runtime/render-sequence.mjs";
-import {
-  ensureWhisperEngine,
-  generateTranscript,
-  validateTranscriptionAudio,
-} from "./runtime/transcription.mjs";
+import { ensureWhisperEngine, generateTranscript, validateTranscriptionAudio } from "./runtime/transcription.mjs";
 import { deriveMultiShotPlan } from "./runtime/multi-shot-timeline.mjs";
+import { runScriptLinter } from "./runtime/validate-script.mjs";
+import {
+  DEFAULT_SUBREDDITS,
+  createCandidateCard,
+  extractPostComments,
+  fetchSubredditRss,
+} from "./runtime/scout-trends.mjs";
 import {
   MAX_OUTPUT_FRAMES,
   execute,
@@ -39,6 +42,8 @@ function usage() {
   return `Usage:
   node runner.mjs check
   node runner.mjs smoke
+  node runner.mjs scout [--subreddit=name] [--limit=5] [--with-comments]
+  node runner.mjs lint:script --script=/absolute/path/script.json
   node runner.mjs lipsync --audio=/absolute/path/audio --output=/absolute/path/cherry.tsv
   node runner.mjs transcribe --audio=/absolute/path/audio --output=/absolute/path/transcript.json
   node runner.mjs init --run=<id> --input=/absolute/path/input.json [--audio=/absolute/path/audio] [--lipsync=off] [--lipsync-cues=/absolute/path/cherry.tsv]
@@ -515,6 +520,40 @@ async function main() {
   const args = parseArgs(values);
   if (command === "check") return check();
   if (command === "smoke") return smoke();
+  if (command === "scout") {
+    const subreddits = args.subreddit ? [args.subreddit] : DEFAULT_SUBREDDITS;
+    const limit = Math.max(1, Number.parseInt(args.limit || "3", 10));
+    const withComments = Boolean(args["with-comments"]);
+    const results = [];
+
+    for (const sub of subreddits) {
+      try {
+        const posts = await fetchSubredditRss(sub, "hot");
+        for (const post of posts.slice(0, limit)) {
+          let comments = [];
+          if (withComments) {
+            comments = await extractPostComments(post.link, 3);
+          }
+          results.push(createCandidateCard(post, comments));
+        }
+      } catch (err) {
+        console.error(`[scout] Warning: failed to fetch r/${sub}: ${err.message}`);
+      }
+    }
+
+    if (args.output) {
+      await writeJson(args.output, results);
+    }
+    console.log(JSON.stringify(results, null, 2));
+    return results;
+  }
+  if (command === "lint:script") {
+    const scriptPath = args.script;
+    if (!scriptPath) throw new Error("lint:script requires --script=/path/to/script.json");
+    const result = await runScriptLinter(scriptPath);
+    console.log(JSON.stringify(result, null, 2));
+    return result;
+  }
   if (command === "lipsync") return lipsync(args);
   if (command === "transcribe") return transcribe(args);
   if (command === "init") return init(args);

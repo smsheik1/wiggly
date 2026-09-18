@@ -229,6 +229,244 @@ export function ShazPuppetRuntimeIncludedAssets({
           </div>
         </div>
         <div
+          className="mt-8 border-2 border-[#080817] bg-[#fffdf8] p-5 shadow-[5px_5px_0_#080817]"
+          data-testid="shaz-multi-shot-palette"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#31566e]">
+              Multi-shot timeline engine
+            </p>
+            <span className="border-2 border-[#080817] bg-[#c9ff55] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em]">
+              4 shot types
+            </span>
+          </div>
+          <h3 className="mt-2 text-[clamp(26px,3.8vw,38px)] font-black leading-none tracking-[-0.03em]">
+            The 4-Shot Studio Palette
+          </h3>
+          <p className="mt-3 max-w-[760px] text-sm font-bold leading-6 text-[#596176]">
+            Every episode moves between four visual modes directed by the LLM
+            timeline planner. Shot cuts assemble deterministically at 24fps with
+            cross-dissolve and cut transitions.
+          </p>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <article className="flex flex-col justify-between border-2 border-[#080817] bg-white p-4 shadow-[3px_3px_0_#080817]">
+              <div>
+                <div className="inline-flex items-center gap-1.5 border-2 border-[#080817] bg-[#52d6ff] px-2 py-0.5 font-mono text-[10px] font-black uppercase">
+                  <span>01</span>
+                  <span>talk-to-camera</span>
+                </div>
+                <h4 className="mt-3 text-base font-black leading-tight">
+                  Direct Presentation
+                </h4>
+                <p className="mt-2 text-xs font-bold leading-5 text-[#596176]">
+                  A-roll host delivery with Cherry phoneme lip-sync against
+                  curated studio backgrounds.
+                </p>
+              </div>
+              <div className="mt-4 border-t border-[#080817]/20 pt-2 font-mono text-[10px] font-bold text-[#31566e]">
+                Primary narration
+              </div>
+            </article>
+
+            <article className="flex flex-col justify-between border-2 border-[#080817] bg-white p-4 shadow-[3px_3px_0_#080817]">
+              <div>
+                <div className="inline-flex items-center gap-1.5 border-2 border-[#080817] bg-[#ffd9e9] px-2 py-0.5 font-mono text-[10px] font-black uppercase">
+                  <span>02</span>
+                  <span>text-card</span>
+                </div>
+                <h4 className="mt-3 text-base font-black leading-tight">
+                  Kinetic Typography
+                </h4>
+                <p className="mt-2 text-xs font-bold leading-5 text-[#596176]">
+                  Full-screen headline card with high-contrast accent pill
+                  highlights for core takeaways.
+                </p>
+              </div>
+              <div className="mt-4 border-t border-[#080817]/20 pt-2 font-mono text-[10px] font-bold text-[#9a315f]">
+                Big ideas & hooks
+              </div>
+            </article>
+
+            <article className="flex flex-col justify-between border-2 border-[#080817] bg-white p-4 shadow-[3px_3px_0_#080817]">
+              <div>
+                <div className="inline-flex items-center gap-1.5 border-2 border-[#080817] bg-[#c9ff55] px-2 py-0.5 font-mono text-[10px] font-black uppercase">
+                  <span>03</span>
+                  <span>chibi-commentary</span>
+                </div>
+                <h4 className="mt-3 text-base font-black leading-tight">
+                  Chibi Commentary
+                </h4>
+                <p className="mt-2 text-xs font-bold leading-5 text-[#596176]">
+                  Animated mini puppet with floating vector topic cards,
+                  bounce entrances, and expressive holds.
+                </p>
+              </div>
+              <div className="mt-4 border-t border-[#080817]/20 pt-2 font-mono text-[10px] font-bold text-[#263446]">
+                Sidebars & reactions
+              </div>
+            </article>
+
+            <article className="flex flex-col justify-between border-2 border-[#080817] bg-white p-4 shadow-[3px_3px_0_#080817]">
+              <div>
+                <div className="inline-flex items-center gap-1.5 border-2 border-[#080817] bg-[#f5f1e8] px-2 py-0.5 font-mono text-[10px] font-black uppercase">
+                  <span>04</span>
+                  <span>b-roll</span>
+                </div>
+                <h4 className="mt-3 text-base font-black leading-tight">
+                  Cinematic B-Roll
+                </h4>
+                <p className="mt-2 text-xs font-bold leading-5 text-[#596176]">
+                  Curated story illustrations brought to life with 6
+                  cinematic Ken Burns camera pan and zoom motions.
+                </p>
+              </div>
+              <div className="mt-4 border-t border-[#080817]/20 pt-2 font-mono text-[10px] font-bold text-[#667087]">
+                Visual storytelling
+              </div>
+            </article>
+          </div>
+        </div>
+        <div
+          className="mt-8 border-2 border-[#080817] bg-[#fff0f7] p-5 shadow-[5px_5px_0_#080817]"
+          data-testid="shaz-chibi-acting-physics"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#9a315f]">
+              Chibi choreography & classical animation
+            </p>
+            <span className="border-2 border-[#080817] bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#9a315f]">
+              Squash · Stretch · Anticipation
+            </span>
+          </div>
+          <h3 className="mt-2 text-[clamp(26px,3.8vw,38px)] font-black leading-none tracking-[-0.03em]">
+            Chibi Acting: The 5 Core Physical Holds
+          </h3>
+          <p className="mt-3 max-w-[780px] text-sm font-bold leading-6 text-[#596176]">
+            Instead of raw frame flipping, Chibi Shaz delivers on five physical
+            acting holds. The runtime&apos;s classical animation physics engine
+            dynamically inserts squash, stretch, anticipation, and settle
+            cushions (1–2 frames each) so transitions feel organic, elastic, and
+            weighty at 24fps.
+          </p>
+
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            <article className="border-2 border-[#080817] bg-white p-3 shadow-[3px_3px_0_#080817]">
+              <div className="relative aspect-square overflow-hidden border-2 border-[#080817] bg-[#ffd9e9]">
+                <Image
+                  src={`${formatAssetRoot}/assets/chibi-showcase/talk-gesture.png`}
+                  alt="Chibi Shaz talk-gesture acting pose"
+                  fill
+                  sizes="(min-width: 1024px) 180px, (min-width: 640px) 240px, 100vw"
+                  className="object-cover object-top"
+                />
+              </div>
+              <div className="mt-2.5">
+                <span className="font-mono text-[9px] font-black uppercase tracking-wider text-[#9a315f]">
+                  01 · Hold
+                </span>
+                <h4 className="text-sm font-black leading-tight">talk-gesture</h4>
+                <p className="mt-1 text-[11px] font-bold leading-4 text-[#667087]">
+                  Natural conversational speaking pose with open hands and lively tilt.
+                </p>
+              </div>
+            </article>
+
+            <article className="border-2 border-[#080817] bg-white p-3 shadow-[3px_3px_0_#080817]">
+              <div className="relative aspect-square overflow-hidden border-2 border-[#080817] bg-[#ffd9e9]">
+                <Image
+                  src={`${formatAssetRoot}/assets/chibi-showcase/present-card.png`}
+                  alt="Chibi Shaz present-card acting pose"
+                  fill
+                  sizes="(min-width: 1024px) 180px, (min-width: 640px) 240px, 100vw"
+                  className="object-cover object-top"
+                />
+              </div>
+              <div className="mt-2.5">
+                <span className="font-mono text-[9px] font-black uppercase tracking-wider text-[#9a315f]">
+                  02 · Hold
+                </span>
+                <h4 className="text-sm font-black leading-tight">present-card</h4>
+                <p className="mt-1 text-[11px] font-bold leading-4 text-[#667087]">
+                  Two-handed forward presentation directing viewer attention to topic cards.
+                </p>
+              </div>
+            </article>
+
+            <article className="border-2 border-[#080817] bg-white p-3 shadow-[3px_3px_0_#080817]">
+              <div className="relative aspect-square overflow-hidden border-2 border-[#080817] bg-[#ffd9e9]">
+                <Image
+                  src={`${formatAssetRoot}/assets/chibi-showcase/think-chin.png`}
+                  alt="Chibi Shaz think-chin acting pose"
+                  fill
+                  sizes="(min-width: 1024px) 180px, (min-width: 640px) 240px, 100vw"
+                  className="object-cover object-top"
+                />
+              </div>
+              <div className="mt-2.5">
+                <span className="font-mono text-[9px] font-black uppercase tracking-wider text-[#9a315f]">
+                  03 · Hold
+                </span>
+                <h4 className="text-sm font-black leading-tight">think-chin</h4>
+                <p className="mt-1 text-[11px] font-bold leading-4 text-[#667087]">
+                  Pensive contemplation with chin touch, head tilt, and thoughtful gaze.
+                </p>
+              </div>
+            </article>
+
+            <article className="border-2 border-[#080817] bg-white p-3 shadow-[3px_3px_0_#080817]">
+              <div className="relative aspect-square overflow-hidden border-2 border-[#080817] bg-[#ffd9e9]">
+                <Image
+                  src={`${formatAssetRoot}/assets/chibi-showcase/shrug-open.png`}
+                  alt="Chibi Shaz shrug-open acting pose"
+                  fill
+                  sizes="(min-width: 1024px) 180px, (min-width: 640px) 240px, 100vw"
+                  className="object-cover object-top"
+                />
+              </div>
+              <div className="mt-2.5">
+                <span className="font-mono text-[9px] font-black uppercase tracking-wider text-[#9a315f]">
+                  04 · Hold
+                </span>
+                <h4 className="text-sm font-black leading-tight">shrug-open</h4>
+                <p className="mt-1 text-[11px] font-bold leading-4 text-[#667087]">
+                  Expressive palms-up shrug for humorous commentary, honest admissions, or questions.
+                </p>
+              </div>
+            </article>
+
+            <article className="border-2 border-[#080817] bg-white p-3 shadow-[3px_3px_0_#080817]">
+              <div className="relative aspect-square overflow-hidden border-2 border-[#080817] bg-[#ffd9e9]">
+                <Image
+                  src={`${formatAssetRoot}/assets/chibi-showcase/point-emphasis.png`}
+                  alt="Chibi Shaz point-emphasis acting pose"
+                  fill
+                  sizes="(min-width: 1024px) 180px, (min-width: 640px) 240px, 100vw"
+                  className="object-cover object-top"
+                />
+              </div>
+              <div className="mt-2.5">
+                <span className="font-mono text-[9px] font-black uppercase tracking-wider text-[#9a315f]">
+                  05 · Hold
+                </span>
+                <h4 className="text-sm font-black leading-tight">point-emphasis</h4>
+                <p className="mt-1 text-[11px] font-bold leading-4 text-[#667087]">
+                  Direct index finger point delivering punchlines, warnings, or strong emphasis.
+                </p>
+              </div>
+            </article>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-2 border-[#080817] bg-white p-3 text-xs font-bold text-[#596176]">
+            <div>
+              <strong className="text-[#080817]">Classical Animation Pipeline:</strong>{" "}
+              Every hold transition dynamically runs squash (0.92x scale), anticipation (-10px dip), and elastic overshoot settle cushions.
+            </div>
+            <div className="font-mono text-[11px] text-[#9a315f]">
+              Zero keyword fallbacks · LLM director planned
+            </div>
+          </div>
+        </div>
+        <div
           className="mt-8 border-2 border-[#080817] bg-[#fff0f7] p-4 shadow-[5px_5px_0_#080817] sm:p-5"
           data-testid="shaz-mouth-shape-kit"
         >

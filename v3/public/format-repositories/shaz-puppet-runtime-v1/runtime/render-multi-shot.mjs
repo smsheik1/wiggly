@@ -103,13 +103,15 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
       } else if (shot.shotType === "talk-to-camera") {
         const poseId = shot.poseId ?? "neutral-listening";
         const pose = validated.registry.byId.get(poseId) ?? neutralPose;
-        const holdFrame = pose.recipe.durationFrames; // Apex / hold frame of the pose
+        const totalRecipeFrames = pose.recipe.durationFrames || 1;
 
-        // Render chosen pose with Cherry mouth sync for each frame in this range
+        // Render animated pose leading to apex hold, with Cherry mouth sync for each frame
         for (let f = 0; f < shot.durationFrames; f += 1) {
           const globalFrame = shot.startFrame + f;
           const mouthDrawing = validated.lipSync?.frameDrawings[globalFrame] ?? null;
-          const cacheKey = `${poseId}:${mouthDrawing ?? "source"}`;
+          // Step through the recipe frames (1-indexed) into the hold pose
+          const poseFrame = Math.min(f + 1, totalRecipeFrames);
+          const cacheKey = `${poseId}:${poseFrame}:${mouthDrawing ?? "source"}`;
 
           let composedBuffer;
           if (frameCache.has(cacheKey)) {
@@ -117,7 +119,7 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           } else {
             const rendered = await renderRigFrame({
               manifest: validated.manifest,
-              frame: holdFrame,
+              frame: poseFrame,
               assetRoot: path.join(root, "rig-v2", "assets"),
               propRoot: path.join(root, "assets", "props"),
               assetCache,
