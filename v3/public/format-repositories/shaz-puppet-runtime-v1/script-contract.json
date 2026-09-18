@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ShazScriptContractV1",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "title",
+    "targetDurationSeconds",
+    "research",
+    "hook",
+    "beats",
+    "landing"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "shaz-script-v1"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "targetDurationSeconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 300,
+      "description": "Expected video length in seconds (e.g. 30 for 30s Short, 60 for 1m video)"
+    },
+    "research": {
+      "type": "object",
+      "required": ["primaryInsight", "counterintuitiveAngle", "concreteFactOrStory"],
+      "properties": {
+        "primaryInsight": { "type": "string", "minLength": 10 },
+        "counterintuitiveAngle": { "type": "string", "minLength": 10 },
+        "concreteFactOrStory": { "type": "string", "minLength": 10 }
+      }
+    },
+    "hook": {
+      "type": "object",
+      "required": ["formula", "text"],
+      "properties": {
+        "formula": {
+          "enum": [
+            "uncomfortable-truth",
+            "surprising-stat",
+            "personal-confession",
+            "setup-payoff-tease"
+          ]
+        },
+        "text": { "type": "string", "minLength": 15 }
+      }
+    },
+    "beats": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "required": ["id", "connector", "text", "impliedQuestion"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^beat-[0-9]{2}$"
+          },
+          "connector": {
+            "enum": ["THEREFORE", "BUT", "NONE"],
+            "description": "Causality connector leading from previous beat. Must be THEREFORE or BUT for all beats after the first beat."
+          },
+          "shotTypeSuggestion": {
+            "enum": ["talk-to-camera", "text-card", "chibi-commentary", "b-roll"]
+          },
+          "text": { "type": "string", "minLength": 5 },
+          "impliedQuestion": { "type": "string", "minLength": 5 }
+        }
+      }
+    },
+    "landing": {
+      "type": "object",
+      "required": ["type", "text"],
+      "properties": {
+        "type": {
+          "enum": ["reframe", "challenge", "twist", "question"]
+        },
+        "text": { "type": "string", "minLength": 10 }
+      }
+    }
+  }
+}

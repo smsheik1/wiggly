@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 1,
+  "kind": "wiggly-format",
+  "slug": "character-gameplay-conversations",
+  "version": "0.3.0",
+  "review": {
+    "status": "approved",
+    "reviewer": "User",
+    "notes": "After requesting background music and receiving the playable music preview, the user said: cool looks good to me. This records qualitative baseline acceptance, not an invented per-channel score or agent hearing claim. The reference interpretation was user-assisted; Shorts/music are maintainer refinements of the original blind-agent episode. The chosen bed is an alternative, not the original song."
+  },
+  "publication": "local-only",
+  "checks": "integrity-and-structure-not-creative-certification",
+  "files": [
+    {
+      "file": ".gitignore",
+      "sha256": "9bac419cc896a5681493af139a6a738decead079117fa1ad57f1969d4b77a410",
+      "sizeBytes": 176,
+      "mode": "0644"
+    },
+    {
+      "file": "AGENTS.md",
+      "sha256": "73ef12fca1cbbf0a55988a467a13b5f34df044cba17a0d6e65f32b8949c88d65",
+      "sizeBytes": 288,
+      "mode": "0644"
+    },
+    {
+      "file": "BENCHMARK.md",
+      "sha256": "35e20d7e2f39e2c45e054de9b3e85e850dc8669c2c5b2aeb20968be1f0bd3f72",
+      "sizeBytes": 9996,
+      "mode": "0644"
+    },
+    {
+      "file": "CLAUDE.md",
+      "sha256": "7a7c7f9b76d41df5be620911caf6494dfae45f4c92eb4d84a2e5dd50b0420cb2",
+      "sizeBytes": 179,
+      "mode": "0644"
+    },
+    {
+      "file": "FORMAT-REPO.json",
+      "sha256": "309d37c83d5937ed53d10671b526bb8eb603371887675c178063e88c0d11142b",
+      "sizeBytes": 4316,
+      "mode": "0644"
+    },
+    {
+      "file": "KIT-MANIFEST.json",
+      "sha256": "a91e9943b4a8a1cc72798cdf9269bf99015fbdb34a6461cc15c2bf87ced0fbdf",
+      "sizeBytes": 344,
+      "mode": "0644"
+    },
+    {
+      "file": "MUSIC-CREDITS.md",
+      "sha256": "5807ea6e0cdf70dfc8d8502856e9307a48ed9401dd0a3f9cbaf4e81e21458374",
+      "sizeBytes": 476,
+      "mode": "0644"
+    },
+    {
+      "file": "PUBLICATION.json",
+      "sha256": "e713a231830c4c59f6157ed3dfcd2e253181e14344b53d8c5ac07a5cac315195",
+      "sizeBytes": 2461,
+      "mode": "0644"
+    },
+    {
+      "file": "README.md",
+      "sha256": "226bbd5bfc1d5103f02de6f2a2f581a5197bce2f7d60e0eeff6451b103fc3710",
+      "sizeBytes": 9350,
+      "mode": "0644"
+    },
+    {
+      "file": "SKILL.md",
+      "sha256": "9a6a10eb02bc2fd0b63dc051bb598a41597d7ef09222e8378b4d0b31a34c2953",
+      "sizeBytes": 17255,
+      "mode": "0644"
+    },
+    {
+      "file": "assets.json",
+      "sha256": "395326dddf47a3db69995c5879724864949c44196f19b96761d7f32f38670d03",
+      "sizeBytes": 1098,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/bright.wav",
+      "sha256": "4b3f542b4ef64f36e0623eb3575baa323aaf51d88ac6f2b9937256c8dfb7b702",
+      "sizeBytes": 192078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/cool.mp4",
+      "sha256": "5ac8a30660ead26b1e84253845e8179e137068c55a03a1404e23f3f404ae47f6",
+      "sizeBytes": 65349,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/high.wav",
+      "sha256": "aac5dc69dd34403e505f80abf52836101dc986195d45f8d8db34e84e0048d0c7",
+      "sizeBytes": 192078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/low.wav",
+      "sha256": "718807b3b122e6ebd675dc291b90babacf784242ac6392df4ec397b22c9834fb",
+      "sizeBytes": 192078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/sfx/glitch-whoosh.wav",
+      "sha256": "2c024a9d02a6c280006f87f1adaada90ab55a71ab85e123537282ecc7056e372",
+      "sizeBytes": 38886,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/soft.wav",
+      "sha256": "eaaff3c15b694595665213bf863afa1d2673d374708341c61b497d9de698e800",
+      "sizeBytes": 192078,
+      "mode": "0644"
+    },
+    {
+      "file": "assets/warm.mp4",
+      "sha256": "238f6b95a2fc1e943bc543e8e00727c1d67aa42cd50d4139efbe2074e10642a2",
+      "sizeBytes": 1180305,
+      "mode": "0644"
+    },
+    {
+      "file": "blueprint.json",
+      "sha256": "bacd3948df9a2de105e61add25bff27707c983a9bf02abb5d8a500f0cb437a16",
+      "sizeBytes": 10199,
+      "mode": "0644"
+    },
+    {
+      "file": "format.json",
+      "sha256": "48b687984702e313dc22d1cdc4d1102ff6cbc9d1c620aa69f82ea722ce44467a",
+      "sizeBytes": 498,
+      "mode": "0644"
+    },
+    {
+      "file": "goldens.json",
+      "sha256": "83efa94a586751a182f97c991ffa5221b98929070b1780a9fd3e472305a25dbc",
+      "sizeBytes": 1748,
+      "mode": "0644"
+    },
+    {
+      "file": "inputs/crossover.json",
+      "sha256": "72e616468e5254a3f26afe018b5edf4fb9b39d93d51c278966cf81b554c5b657",
+      "sizeBytes": 1207,
+      "mode": "0644"
+    },
+    {
+      "file": "inputs/distribution.json",
+      "sha256": "9af5812f3f33dc029e0b453bbb9dc04f1462033575001080ceec47c90b756544",
+      "sizeBytes": 1058,
+      "mode": "0644"
+    },
+    {
+      "file": "inputs/how-rich-is-batman.json",
+      "sha256": "ed08786352d60e27f1ea12638869927456e7a5e8af50afd4e9b9d921a4b0527a",
+      "sizeBytes": 7813,
+      "mode": "0644"
+    },
+    {
+      "file": "inputs/same-universe.json",
+      "sha256": "138fb3c4bb0d09f110fbd2c1b456c9415d598a3e9051372f0d956a20db7b406a",
+      "sizeBytes": 1398,
+      "mode": "0644"
+    },
+    {
+      "file": "inputs/why-batman-subsidizes-red-hood.json",
+      "sha256": "77f009c574aafa4296f739a91d8e401a97a4f6f59f27797fc7f4b0d5753adb53",
+      "sizeBytes": 6710,
+      "mode": "0644"
+    },
+    {
+      "file": "inputs/why-batman-wont-kill-joker.json",
+      "sha256": "80eccbe7aa30c2ae2562fbb90b74f2cbeb9728a16ff3213e74757b1dbef79cde",
+      "sizeBytes": 6724,
+      "mode": "0644"
+    },
+    {
+      "file": "package-lock.json",
+      "sha256": "66c73e388cf0b6ea567975bb9a0432697a3e05381b2ec855c4c64aad70cd10a4",
+      "sizeBytes": 19207,
+      "mode": "0644"
+    },
+    {
+      "file": "package.json",
+      "sha256": "46357490231126e35b94bf8be6f64d8b293a98b7ad04c8c7c4bdae20c78d6c06",
+      "sizeBytes": 452,
+      "mode": "0644"
+    },
+    {
+      "file": "pipeline.json",
+      "sha256": "95200e08c26357571609b51f4501c75b69e67ce3b246472de19f2410da4d97c2",
+      "sizeBytes": 1841,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/crossover-0.1.4-inspection.json",
+      "sha256": "eecde08a6b80ca873a74c39c389a102ed4d94d2b2361ddd476daa941f2ab5cb3",
+      "sizeBytes": 796,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/crossover-0.1.4.mp4",
+      "sha256": "ea9ac93ea4cd4db86f877c7c661c51a854b075da6ef4e29c67678e9f5df713ae",
+      "sizeBytes": 353695,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/crossover-0.1.4.mp4.receipt.json",
+      "sha256": "fe1f3db6b8e6e878cc7768176f010c47ade331fbdf410a2080fbf0af0d3f555c",
+      "sizeBytes": 972,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/same-universe-0.1.4-inspection.json",
+      "sha256": "38f070645b741d6c55f5f0c7b03dba690856eb195b48a2efa66ae976cb747d6d",
+      "sizeBytes": 801,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/same-universe-0.1.4.mp4",
+      "sha256": "e38117ce661ba51d0786388d1fded4e9174a54cd1a989da64330e050aed73411",
+      "sizeBytes": 4168087,
+      "mode": "0644"
+    },
+    {
+      "file": "proofs/same-universe-0.1.4.mp4.receipt.json",
+      "sha256": "e1eda68321d4d301c2b9e363074acaea3a0672b02ce1431521c21162e1be4305",
+      "sizeBytes": 1052,
+      "mode": "0644"
+    },
+    {
+      "file": "quality.json",
+      "sha256": "50b7414899bd8dcf6ffcf24e4daca74c4bee7c8043d02933977cdbd166414fc1",
+      "sizeBytes": 1408,
+      "mode": "0644"
+    },
+    {
+      "file": "requirements.json",
+      "sha256": "de2ce4ec3642755a20725f92b3d6b2dada969658b171ba0aceff6fd9dd778677",
+      "sizeBytes": 1314,
+      "mode": "0644"
+    },
+    {
+      "file": "runtime/critique.mjs",
+      "sha256": "02efc589d1088f7566b809f82a34ec98cd6ecd6faa2db75440bcf114cb890d96",
+      "sizeBytes": 15029,
+      "mode": "0755"
+    },
+    {
+      "file": "runtime/generate.mjs",
+      "sha256": "66e0e50c484f0912fd272495cc60faee6c5ff22cbd292c19185247369b7b5148",
+      "sizeBytes": 30749,
+      "mode": "0755"
+    },
+    {
+      "file": "runtime/publish.mjs",
+      "sha256": "7053b6c27565807395b2fe84e9f1444ac9cf0afb38256f9dd13f076c10ca780f",
+      "sizeBytes": 6110,
+      "mode": "0644"
+    },
+    {
+      "file": "runtime/render.mjs",
+      "sha256": "c6df6b1276d3b9e92df5c3d18d965f84f57d6c937dcefecf27860c8d1af3c520",
+      "sizeBytes": 21294,
+      "mode": "0644"
+    },
+    {
+      "file": "runtime/scout.mjs",
+      "sha256": "92cc77b1224d5c43a5cdc404fedf9e0ce027b6f9dcc942fb489db14aa6961b6f",
+      "sizeBytes": 16912,
+      "mode": "0644"
+    },
+    {
+      "file": "tests/contract.test.mjs",
+      "sha256": "00a336d5ced9d304d47806a6ed77d20e680d284e22d1acf2dec5f83853d0a066",
+      "sizeBytes": 3314,
+      "mode": "0644"
+    },
+    {
+      "file": "tests/critique.test.mjs",
+      "sha256": "e39fdaba724df795243629e172c0f447ab5f8b193dc7e5de4587802cb871f2fd",
+      "sizeBytes": 5973,
+      "mode": "0644"
+    },
+    {
+      "file": "tests/distribution.test.mjs",
+      "sha256": "3202efd8baa8ae295b9d953fdc30155e51202f8383d39e66b51d81a82e3d19e1",
+      "sizeBytes": 2999,
+      "mode": "0644"
+    },
+    {
+      "file": "tests/make-fixtures.mjs",
+      "sha256": "791356a2bf731fc08456d841712f784b46851af0d985a94b8073b83d2922435a",
+      "sizeBytes": 946,
+      "mode": "0644"
+    },
+    {
+      "file": "tests/music.test.mjs",
+      "sha256": "ce35c32d7527d4bfacd21051a4d5e0f2b9f299b76fb9eb89c831ae16e2fa6389",
+      "sizeBytes": 4013,
+      "mode": "0644"
+    },
+    {
+      "file": "tests/scout.test.mjs",
+      "sha256": "5ebca629d295d956ca7c7099deb2dca9e99d06bcefa8ed7db18bf9d03846d271",
+      "sizeBytes": 5010,
+      "mode": "0644"
+    },
+    {
+      "file": "tests/smoke.mjs",
+      "sha256": "2629a350d8f6144ed7cd72144bcc30c778a217e4c221e65c0e5a40cb55786bf6",
+      "sizeBytes": 756,
+      "mode": "0644"
+    },
+    {
+      "file": "tests/verify-proofs.mjs",
+      "sha256": "e93e0e94d2088db4d3851ba28c3762640e01b5a0d801224b954b6bb91b2927e5",
+      "sizeBytes": 2805,
+      "mode": "0644"
+    },
+    {
+      "file": "tools/fetch-card.mjs",
+      "sha256": "96cc31d6a9e2660d6aaa8bc2c4feb3ca2452ae46078f139aa42548def91ca9ef",
+      "sizeBytes": 2483,
+      "mode": "0755"
+    },
+    {
+      "file": "tools/fetch-gameplay.mjs",
+      "sha256": "381fac565fc9f0cf6d2d94cd7f7c187647c50b4b550bdb510ad5de864331586f",
+      "sizeBytes": 2511,
+      "mode": "0644"
+    },
+    {
+      "file": "tools/synthesize.mjs",
+      "sha256": "7a7eb4373343167b9b29e997620e6b9074f152a0db366bb6297650a831e5f51a",
+      "sizeBytes": 5758,
+      "mode": "0755"
+    }
+  ]
+}

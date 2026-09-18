@@ -38,7 +38,19 @@ The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-a
 
 1. Read `README.md`, `input-contract.json`, `composition-contract.json`, `output-contract.json`, `quality.json`, and `content-boundary.json`. Read `ROADMAP.md` as well when changing the Format, planning a capability, or checking what remains unfinished.
 2. Run `npm install` once. Then run `npm run check`, `npm run inspect:registry`, and `npm run smoke`.
-3. If the job uses audio, transcribe it before choosing gestures:
+3. **If scouting for breaking topics (Cultural Radar):**
+   - Follow `trend-scout-playbook.md` to monitor the Layer 1 Reddit sieve.
+   - Run the automated scout:
+     `npm run scout -- --subreddit=GamingLeaksAndRumours --limit=3`
+     Or scout all 5 core subreddits with top community debate comments:
+     `npm run scout -- --with-comments --output=/absolute/path/trends.json`
+4. **If starting from a topic or idea (Research & Script Creation):**
+   - Follow `research-playbook.md` to frame the counterintuitive angle, concrete stories/facts, and emotional payoff.
+   - Follow `writer-playbook.md` to write the script in Shaz's authentic voice, enforcing the *Therefore/But* causality rule and 4-shot rhythm.
+   - Validate and lint the script against AI tells and word count limits:
+     `npm run lint:script -- --script=/absolute/path/script.json`
+   - Once approved by the user, record or stage the dialogue audio as `user-audio.wav`.
+4. If the job uses audio, transcribe it before choosing gestures:
 
    `npm run transcribe -- --audio=/absolute/path/audio --output=/absolute/path/transcript.json`
 

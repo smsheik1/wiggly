@@ -26,6 +26,7 @@ const formatConfigs: FormatProfileConfig[] = [
   {
     slug: "character-gameplay-conversations",
     promise: "Fan-favorite characters trade lines over Arkham Knight and Spider-Man 2 gameplay with timed captions and ducked music—assembled into vertical 9:16 Shorts.",
+    lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-character-gameplay-conversations",
     manifestPath: "format-repositories/character-gameplay-conversations-v1/format.json",
     repositoryHref: "https://github.com/smsheik1/wiggly-character-gameplay-conversations/releases/download/v0.3.0/character-gameplay-conversations-0.3.0.zip",
@@ -102,6 +103,7 @@ const formatConfigs: FormatProfileConfig[] = [
   {
     slug: "repo-builder",
     promise: "Turn a reference video into a reusable Wiggly Repo with your coding agent. Inspect the ingredients, approve the blueprint, then build and test the recipe.",
+    lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-repo-builder",
     manifestPath: "format-repositories/repo-builder-v1/format.json",
     repositoryHref: "https://github.com/smsheik1/wiggly-repo-builder/releases/download/v0.1.1/wiggly-repo-builder-0.1.1.zip",
@@ -615,8 +617,8 @@ const formatConfigs: FormatProfileConfig[] = [
   },
   {
     slug: "shaz-puppet-runtime",
-    promise: "Give Shaz a voice track and pick a room. The kit reads the words locally, lip-syncs the mouth, and gives a fresh agent five artist-reviewed gestures for the moments that matter.",
-    lastUpdated: "August 2026",
+    promise: "Give Shaz a voice track and pick a room, or turn breaking cultural trends into animated multi-shot commentary Shorts. The kit reads the words locally, lip-syncs the mouth, scouts live scoops ($0), and gives a fresh agent five artist-reviewed gestures for the moments that matter.",
+    lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-shaz-puppet-runtime",
     repositoryHref: "https://github.com/smsheik1/wiggly-shaz-puppet-runtime/releases/download/v0.4.0/wiggly-shaz-puppet-runtime-format-kit.zip",
     manifestPath: "format-repositories/shaz-puppet-runtime-v1/format.json",
@@ -640,13 +642,15 @@ const formatConfigs: FormatProfileConfig[] = [
     ],
     handoff: {
       requiredInputs: [
-        "One dialogue audio file",
+        "A story topic, or run `npm run scout` to pull breaking trends from Reddit/X curators",
+        "One dialogue audio file, or an agent-generated script following writer-playbook.md",
         "One built-in background; Sisters Room is the default",
         "Talk to Camera for ordinary speech, or a short sequence made from the five artist-reviewed gestures",
-        "Hold and pause timing only when using a custom gesture sequence",
+        "Hold and pause timing only when using a custom gesture sequence, or multi-shot with Chibi commentary holds",
       ],
       deliverables: [
-        "One checked scene plan",
+        "One candidate trend card or approved research package",
+        "One lint-verified script with causality connectors",
         "One local transcript with word timing",
         "One 1280 × 720 H.264 MP4, with AAC when audio is supplied",
         "A record of the Cherry version, source audio, and lip-sync cues used",
@@ -655,6 +659,9 @@ const formatConfigs: FormatProfileConfig[] = [
       ],
       instructions: [
         "Download the Repo, report the version in KIT-MANIFEST.json, then run npm install, npm test, npm run check, npm run inspect:registry, and npm run smoke",
+        "If starting without a topic, run npm run scout to monitor the Layer 1 Reddit sieve (GTA 6, Apple, Marvel, AI) and pull community roast comments",
+        "Follow research-playbook.md and writer-playbook.md to frame the counterintuitive angle and write a tight 30s script enforcing Therefore/But causality",
+        "Lint the script before recording: npm run lint:script -- --script=/path/to/script.json",
         "For direct-to-audience speech, set sequencePreset to talk-to-camera; supply the audio but no sequence, durationFrames, or frame math",
         "Before choosing gestures, run npm run transcribe and read the words plus their timing; do not upload the audio to a transcription service",
         "For expressive beats, use only the artist-reviewed present, think, aha, point, and confident action IDs with explicit holdFrames and gapFrames",
@@ -669,13 +676,13 @@ const formatConfigs: FormatProfileConfig[] = [
         "Treat a new gesture as separate rig-drawing work and test it before adding it to the registry",
       ],
       estimates: [
-        { label: "Plan + checks", cost: "$0", time: "under 1 min" },
+        { label: "Trend scout + script", cost: "$0", time: "about 1-3 min" },
         { label: "Render on your Mac", cost: "$0", time: "about 1-5 min" },
         { label: "Watch + review", cost: "$0", time: "about 1-3 min" },
       ],
       totalEstimate: "$0 in service fees, usually 2-8 min",
-      output: "One 1280 × 720 talking-scene MP4 in the room you chose, plus the checks and review record used to deliver it",
-      firstQuestion: "Send the dialogue audio and choose Sisters Room, Living Room, Photo Zone, or Pure White. I’ll read the words locally, start with Talk to Camera, and add a reviewed gesture only where the line earns one.",
+      output: "One 1280 × 720 animated Shaz commentary MP4 in the room you chose, plus the checks and review record used to deliver it",
+      firstQuestion: "I have real-time cultural radar enabled across Reddit and gaming/tech curators. Want me to run `npm run scout` to pull breaking scoops (GTA 6, Wolverine, iPhone 18 Pro), or do you already have a specific story topic in mind?",
     },
   },
   {
