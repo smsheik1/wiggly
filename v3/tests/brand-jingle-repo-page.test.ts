@@ -12,9 +12,9 @@ assert.match(source, /Website or one sentence in/);
 assert.match(source, /One approval buys one song attempt/);
 assert.match(source, /format-repositories\/brand-jingle-v1/);
 assert.doesNotMatch(source, /Seedance|Replicate|music video/i);
-assert.equal(
-  existsSync("public/format-repositories/brand-jingle-v1/downloads/wiggly-brand-jingle-format-kit.zip"),
-  true,
+assert.match(
+  source,
+  /https:\/\/github\.com\/smsheik1\/wiggly-brand-jingle\/releases\/download\/.*\.zip|\/format-repositories\/brand-jingle-v1\/downloads\/.*\.zip/,
 );
 
 const profile = getDiscoveryFormatProfile("jingle");

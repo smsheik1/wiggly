@@ -69,7 +69,7 @@ export default function VideoMemeFormatPage() {
               <p className="mt-4 text-sm font-semibold text-violet-700">Website or brief in. Reaction meme MP4 out. No provider key.</p>
             </div>
             <Button asChild data-testid="download-video-meme-kit">
-              <a href="/format-repositories/video-meme-v1/downloads/wiggly-video-meme-format-kit.zip" download>
+              <a href="https://github.com/smsheik1/wiggly-video-meme/releases/download/v1.0.0/wiggly-video-meme-format-kit.zip" download>
                 Download runnable kit
               </a>
             </Button>

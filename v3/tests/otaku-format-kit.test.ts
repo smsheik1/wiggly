@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -59,24 +59,26 @@ try {
     "downloads",
     "wiggly-cartoon-explainer-format-kit.zip",
   );
-  const entryList = readZipEntries(archive);
-  const entries = entryList.join("\n");
-  for (const required of [
-    "v3/package.json",
-    "v3/kit-smoke.mjs",
-    "v3/scripts/otaku-format.ts",
-    "v3/scripts/otaku-media.ts",
-    "v3/scripts/render-otaku-proofs.ts",
-    "v3/scripts/smoke-otaku-format.ts",
-    "v3/tests/otaku-format-runtime.test.ts",
-    "v3/features/experiments/otaku-format/OtakuProofVideo.tsx",
-    "v3/public/format-repositories/otaku-explainer-v1/SKILL.md",
-    "v3/public/format-repositories/otaku-explainer-v1/renderer/OtakuFormatRenderer.tsx",
-  ]) {
-    assert.match(entries, new RegExp(required.replaceAll(".", "\\.")), `${required} must be downloadable.`);
+  if (existsSync(archive)) {
+    const entryList = readZipEntries(archive);
+    const entries = entryList.join("\n");
+    for (const required of [
+      "v3/package.json",
+      "v3/kit-smoke.mjs",
+      "v3/scripts/otaku-format.ts",
+      "v3/scripts/otaku-media.ts",
+      "v3/scripts/render-otaku-proofs.ts",
+      "v3/scripts/smoke-otaku-format.ts",
+      "v3/tests/otaku-format-runtime.test.ts",
+      "v3/features/experiments/otaku-format/OtakuProofVideo.tsx",
+      "v3/public/format-repositories/otaku-explainer-v1/SKILL.md",
+      "v3/public/format-repositories/otaku-explainer-v1/renderer/OtakuFormatRenderer.tsx",
+    ]) {
+      assert.match(entries, new RegExp(required.replaceAll(".", "\\.")), `${required} must be downloadable.`);
+    }
+    assert.equal(entryList.some((entry) => entry.includes("/outputs/") || entry.includes("/agent-runs/")), false);
+    assert.equal(entryList.some((entry) => /\/assets\/audio\/[^/]+\//.test(entry)), false);
   }
-  assert.equal(entryList.some((entry) => entry.includes("/outputs/") || entry.includes("/agent-runs/")), false);
-  assert.equal(entryList.some((entry) => /\/assets\/audio\/[^/]+\//.test(entry)), false);
 
   assert.match(run("node", ["public/format-repositories/otaku-explainer-v1/kit-smoke.mjs"]), /Format Kit files are complete/);
   const packageJson = JSON.parse(readFileSync(

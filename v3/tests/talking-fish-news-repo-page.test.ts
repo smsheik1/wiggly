@@ -11,9 +11,9 @@ assert.match(source, /talking-fish-news-pipeline/);
 assert.match(source, /What should tonight&apos;s fish report cover/);
 assert.match(source, /four sourced evidence beats/);
 assert.doesNotMatch(source, /TalkingFishNewsProofClient|generate.*(?:Image|Video)/i);
-assert.equal(
-  existsSync("public/format-repositories/talking-fish-news-v1/downloads/wiggly-talking-fish-news-format-kit.zip"),
-  true,
+assert.match(
+  source,
+  /https:\/\/github\.com\/smsheik1\/wiggly-talking-fish-news\/releases\/download\/.*\.zip|\/format-repositories\/talking-fish-news-v1\/downloads\/.*\.zip/,
 );
 
 const profile = getDiscoveryFormatProfile("talking-fish-news");

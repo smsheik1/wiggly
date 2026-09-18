@@ -8,9 +8,9 @@ assert.match(source, /Wiggly \/ Format Lab/);
 assert.match(source, /format-repositories\/brainrot-v1/);
 assert.match(source, /Download runnable kit/);
 assert.match(source, /Three scripts, two voices/);
-assert.equal(
-  existsSync("public/format-repositories/brainrot-v1/downloads/wiggly-brainrot-format-kit.zip"),
-  true,
+assert.match(
+  source,
+  /https:\/\/github\.com\/smsheik1\/wiggly-brainrot\/releases\/download\/.*\.zip|\/format-repositories\/brainrot-v1\/downloads\/.*\.zip/,
 );
 
 const profile = getDiscoveryFormatProfile("brainrot");

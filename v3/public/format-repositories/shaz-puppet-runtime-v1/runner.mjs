@@ -14,6 +14,7 @@ import {
   generateTranscript,
   validateTranscriptionAudio,
 } from "./runtime/transcription.mjs";
+import { deriveMultiShotPlan } from "./runtime/multi-shot-timeline.mjs";
 import {
   MAX_OUTPUT_FRAMES,
   execute,
@@ -79,6 +80,8 @@ async function check() {
     "input-contract.json",
     "composition-contract.json",
     "output-contract.json",
+    "shot-sheet-contract.json",
+    "director-playbook.md",
     "quality.json",
     "content-boundary.json",
     "assets.json",
@@ -160,6 +163,7 @@ async function init(args) {
   if (input.transcript !== undefined) {
     throw new Error("source input must omit transcript; init generates checksum-bound local transcript evidence");
   }
+  const isMultiShot = input.schemaVersion === "shaz-multi-shot-v1";
   const isPerformance = input.schemaVersion === "shaz-body-language-performance-v1";
   const isTalkToCamera = input.schemaVersion === "shaz-sequence-input-v1"
     && input.sequencePreset !== undefined;
@@ -174,12 +178,15 @@ async function init(args) {
   }
   const isAudioSequence = input.schemaVersion === "shaz-sequence-input-v1"
     && (typeof input.backgroundId === "string" || isTalkToCamera);
-  const needsAudio = isPerformance || isAudioSequence;
-  const needsSemanticPlan = needsAudio && !isTalkToCamera;
+  const needsAudio = isPerformance || isAudioSequence || isMultiShot;
+  const needsSemanticPlan = needsAudio && !isTalkToCamera && !isMultiShot;
   if (needsSemanticPlan && !SHA256.test(input.planningTranscriptSha256 ?? "")) {
     throw new Error(
       "audio-backed gesture plans require planningTranscriptSha256 from npm run transcribe",
     );
+  }
+  if (isMultiShot && input.planningTranscriptSha256 && !SHA256.test(input.planningTranscriptSha256)) {
+    throw new Error("multi-shot input planningTranscriptSha256 must be a valid 64-char sha256");
   }
   const lipSyncMode = args.lipsync ?? "auto";
   if (!["auto", "off"].includes(lipSyncMode)) throw new Error("--lipsync must be auto or off");
@@ -218,7 +225,7 @@ async function init(args) {
       delete input.lipSync;
       delete input.transcript;
       let sequenceAudioFrames = null;
-      if (isAudioSequence) {
+      if (isAudioSequence || isMultiShot) {
         const probe = probeMedia(stagedAudioPath);
         const durationSeconds = measuredAudioDuration(probe);
         if (!(durationSeconds > 0)) throw new Error("staged audio has no measurable duration");
@@ -254,7 +261,21 @@ async function init(args) {
         segmentCount: transcriptState.transcript.segments.length,
         wordCount: transcriptState.transcript.words.length,
       };
-      if (isAudioSequence && lipSyncMode !== "off") {
+      // If input is multi-shot and shots array is omitted, automatically derive it from the transcript!
+      if (isMultiShot && (!Array.isArray(input.shots) || input.shots.length === 0)) {
+        const derived = deriveMultiShotPlan({
+          transcript: transcriptState.transcript,
+          audioDurationSeconds: sequenceAudioFrames / 24,
+          defaultBackgroundId: input.defaultBackgroundId ?? "sisters-room",
+        });
+        input.title = input.title ?? derived.title;
+        input.totalDurationFrames = sequenceAudioFrames;
+        input.shots = derived.shots;
+      }
+
+      const shouldGenerateLipSync = (isAudioSequence && lipSyncMode !== "off")
+        || (isMultiShot && input.shots?.some((s) => s.shotType === "talk-to-camera") && lipSyncMode !== "off");
+      if (shouldGenerateLipSync) {
         const cueFile = "cherry-lipsync.tsv";
         const cuePath = path.join(runDirectory, cueFile);
         const sourceAudioSha256 = await sha256(stagedAudioPath);
@@ -421,7 +442,7 @@ async function finalize(args) {
   if (review.schemaVersion !== 1 || review.status !== "approved") failures.push("human review has not approved the output");
   if (review.reviewedOutputSha256 !== outputSha256) failures.push("human review checksum is stale");
   if (typeof review.reviewer !== "string" || review.reviewer.trim().length < 1) failures.push("human review must name its reviewer");
-  const isAudiovisual = validated.mode === "performance" || validated.mode === "audio-sequence";
+  const isAudiovisual = validated.mode === "performance" || validated.mode === "audio-sequence" || validated.mode === "multi-shot";
   if (isAudiovisual) {
     if (review.directVideoPerception !== true) failures.push("performance review must directly perceive moving video");
     if (review.directAudioPerception !== true) failures.push("performance review must directly perceive the audio track");

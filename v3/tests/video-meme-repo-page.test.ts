@@ -12,9 +12,9 @@ assert.match(page, /golden-video-/);
 assert.match(proof, /technicalHref: "\/format-lab\/video-meme"/);
 assert.match(proof, /manifestPath: "format-repositories\/video-meme-v1\/format.json"/);
 assert.match(proof, /What website or brand should this meme be for\?/);
-assert.equal(
-  existsSync("public/format-repositories/video-meme-v1/downloads/wiggly-video-meme-format-kit.zip"),
-  true,
+assert.match(
+  page,
+  /https:\/\/github\.com\/smsheik1\/wiggly-video-meme\/releases\/download\/.*\.zip|\/format-repositories\/video-meme-v1\/downloads\/.*\.zip/,
 );
 
 console.log("Video Meme repo page tests passed.");

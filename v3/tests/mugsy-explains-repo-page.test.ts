@@ -31,10 +31,13 @@ for (const file of [
   "references/original/mugsyclips_Da5cRx2sKhl.mp4",
   "references/original/mugsyclips_DavoEJ4RAhM.mp4",
   "references/original/mugsyclips_DaqkxFkxXI1.mp4",
-  "downloads/wiggly-mugsy-explains-format-kit.zip",
 ]) {
   assert.equal(existsSync(`${packageRoot}/${file}`), true, `${file} should ship in the public package.`);
 }
+assert.match(
+  source,
+  /https:\/\/github\.com\/smsheik1\/wiggly-mugsy-explains\/releases\/download\/.*\.zip|\/format-repositories\/mugsy-explains-v1\/downloads\/.*\.zip/,
+);
 
 const format = JSON.parse(readFileSync(`${packageRoot}/format.json`, "utf8"));
 assert.equal(format.id, "mugsy-explains");

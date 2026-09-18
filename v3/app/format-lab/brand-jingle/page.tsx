@@ -69,7 +69,7 @@ export default function BrandJingleFormatPage() {
               <p className="mt-4 text-sm font-semibold text-violet-700">Website or one sentence in. MP3 and cover art out.</p>
             </div>
             <Button asChild data-testid="download-brand-jingle-kit">
-              <a href="/format-repositories/brand-jingle-v1/downloads/wiggly-brand-jingle-format-kit.zip" download>
+              <a href="https://github.com/smsheik1/wiggly-brand-jingle/releases/download/v1.0.0/wiggly-brand-jingle-format-kit.zip" download>
                 Download runnable kit
               </a>
             </Button>

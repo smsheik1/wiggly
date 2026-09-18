@@ -12,11 +12,15 @@ const output = path.join(downloads, `${archiveName}.zip`);
 const checksumOutput = `${output}.sha256`;
 const excludedNames = new Set(["node_modules", ".runtime-cache", ".DS_Store", ".git"]);
 const packagedPropFiles = new Set(["phone.svg", "crossed-arms-pose.png"]);
+const packagedFontFiles = new Set(["GROBOLD.ttf"]);
 const packagedBackgroundFiles = new Set([
   "living-room.png",
   "map-photo-zone.png",
   "pure-white.png",
   "sisters-room.png",
+]);
+const packagedAudioFiles = new Set([
+  "pop.wav",
 ]);
 const archiveTimestamp = new Date("2000-01-01T00:00:00.000Z");
 
@@ -53,9 +57,26 @@ export function include(source) {
   }
   if (
     parts[0] === "assets" &&
+    parts[1] === "fonts" &&
+    parts.length > 2 &&
+    !packagedFontFiles.has(parts.slice(2).join(path.sep))
+  ) {
+    return false;
+  }
+  if (
+    parts[0] === "assets" &&
     parts[1] === "backgrounds" &&
     parts.length > 2 &&
     !packagedBackgroundFiles.has(parts.slice(2).join(path.sep))
+  ) {
+    return false;
+  }
+  if (
+    parts[0] === "assets" &&
+    parts[1] === "audio" &&
+    parts[2] === "sfx" &&
+    parts.length > 3 &&
+    !packagedAudioFiles.has(parts.slice(3).join(path.sep))
   ) {
     return false;
   }

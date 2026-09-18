@@ -85,7 +85,7 @@ export default function MugsyExplainsFormatPage() {
             <p className="mt-4 text-sm font-semibold text-violet-700">Three comparisons in. One inspected 25-35 second vertical MP4 out.</p>
           </div>
           <Button asChild data-testid="download-mugsy-explains-kit">
-            <a href="/format-repositories/mugsy-explains-v1/downloads/wiggly-mugsy-explains-format-kit.zip" download>
+            <a href="https://github.com/smsheik1/wiggly-mugsy-explains/releases/download/v0.1.1-proof/wiggly-mugsy-explains-format-kit.zip" download>
               Download runnable kit
             </a>
           </Button>

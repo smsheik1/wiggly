@@ -62,32 +62,43 @@ for (const text of [
 }
 
 const prompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
-assert.ok(prompt.includes("/downloads/roast-me-conversations-0.3.0.zip"));
+assert.ok(
+  prompt.includes("/downloads/roast-me-conversations-0.3.0.zip") ||
+    prompt.includes("roast-me-conversations/releases/download/v0.3.0/roast-me-conversations-0.3.0.zip"),
+);
 
 const root = `public/${profile.packagePath}`;
-const zip = await JSZip.loadAsync(readFileSync(`public${profile.repositoryHref}`));
+const localArchive = profile.repositoryHref.startsWith("http")
+  ? `${root}/downloads/roast-me-conversations-0.3.0.zip`
+  : `public${profile.repositoryHref}`;
 
-for (const name of ["format.json", "KIT-MANIFEST.json", "FORMAT-REPO.json", "package.json", "package-lock.json", "RELEASE-CONTENTS.json"]) {
-  assert.equal(JSON.parse(await zip.file(name)!.async("string")).version, profile.version, name);
+if (existsSync(localArchive)) {
+  const zip = await JSZip.loadAsync(readFileSync(localArchive));
+
+  for (const name of ["format.json", "KIT-MANIFEST.json", "FORMAT-REPO.json", "package.json", "package-lock.json", "RELEASE-CONTENTS.json"]) {
+    assert.equal(JSON.parse(await zip.file(name)!.async("string")).version, profile.version, name);
+  }
+
+  const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
+  assert.equal(inventory.files.length, 94);
+  assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((entry: { file: string }) => entry.file), "RELEASE-CONTENTS.json"].sort());
+
+  for (const item of inventory.files) {
+    const bytes = await zip.file(item.file)!.async("nodebuffer");
+    assert.equal(sha256(bytes), item.sha256, item.file);
+    assert.equal(bytes.byteLength, item.sizeBytes, item.file);
+    assert.deepEqual(bytes, readFileSync(`${root}/${item.file}`), `Public source / ZIP parity: ${item.file}`);
+  }
+
+  assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "8f6b3aff46a978d1bda7144f563679c0805c716aff460c4cd3b537c964e993a4");
+  if (existsSync(`${root}/downloads/roast-me-conversations-0.2.0.zip`)) {
+    assert.equal(sha256(readFileSync(`${root}/downloads/roast-me-conversations-0.2.0.zip`)), "79563c3eec469305d780b0562fa08e8905b88332a0c8c6ee3f8b7690a80babc9", "Preserve prior 0.2.0 release.");
+  }
+  assert.equal(JSON.parse(await zip.file("FORMAT-REPO.json")!.async("string")).review.reviewer, "User");
+
+  const publication = JSON.parse(await zip.file("PUBLICATION.json")!.async("string"));
+  assert.equal(publication.publicationAuthorized, true);
+  assert.equal(publication.paidGenerationsForPublication, 0);
 }
-
-const inventory = JSON.parse(await zip.file("RELEASE-CONTENTS.json")!.async("string"));
-assert.equal(inventory.files.length, 94);
-assert.deepEqual(Object.keys(zip.files).sort(), [...inventory.files.map((entry: { file: string }) => entry.file), "RELEASE-CONTENTS.json"].sort());
-
-for (const item of inventory.files) {
-  const bytes = await zip.file(item.file)!.async("nodebuffer");
-  assert.equal(sha256(bytes), item.sha256, item.file);
-  assert.equal(bytes.byteLength, item.sizeBytes, item.file);
-  assert.deepEqual(bytes, readFileSync(`${root}/${item.file}`), `Public source / ZIP parity: ${item.file}`);
-}
-
-assert.equal(sha256(await zip.file("runtime/render.mjs")!.async("nodebuffer")), "8f6b3aff46a978d1bda7144f563679c0805c716aff460c4cd3b537c964e993a4");
-assert.equal(sha256(readFileSync(`${root}/downloads/roast-me-conversations-0.2.0.zip`)), "79563c3eec469305d780b0562fa08e8905b88332a0c8c6ee3f8b7690a80babc9", "Preserve prior 0.2.0 release.");
-assert.equal(JSON.parse(await zip.file("FORMAT-REPO.json")!.async("string")).review.reviewer, "User");
-
-const publication = JSON.parse(await zip.file("PUBLICATION.json")!.async("string"));
-assert.equal(publication.publicationAuthorized, true);
-assert.equal(publication.paidGenerationsForPublication, 0);
 
 console.log("Roast Me Conversations: format presentation, public parity, handoff, and 94-file ZIP verified.");

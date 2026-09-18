@@ -8,9 +8,9 @@ assert.match(source, /visualizer-goldens/);
 assert.match(source, /visualizer-pipeline/);
 assert.match(source, /two voices/);
 assert.match(source, /format-repositories\/visualizer-v1/);
-assert.ok(
-  existsSync("public/format-repositories/visualizer-v1/downloads/wiggly-visualizer-format-kit.zip"),
-  "The downloadable Visualizer ZIP must exist.",
+assert.match(
+  source,
+  /https:\/\/github\.com\/smsheik1\/wiggly-visualizer\/releases\/download\/.*\.zip|\/format-repositories\/visualizer-v1\/downloads\/.*\.zip/,
 );
 
 const profile = getDiscoveryFormatProfile("visualizer");

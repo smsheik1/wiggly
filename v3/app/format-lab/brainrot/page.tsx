@@ -70,7 +70,7 @@ export default function BrainrotFormatPage() {
               </p>
             </div>
             <Button asChild data-testid="download-brainrot-kit">
-              <a href="/format-repositories/brainrot-v1/downloads/wiggly-brainrot-format-kit.zip" download>
+              <a href="https://github.com/smsheik1/wiggly-brainrot/releases/download/v1.0.0/wiggly-brainrot-format-kit.zip" download>
                 Download runnable kit
               </a>
             </Button>
