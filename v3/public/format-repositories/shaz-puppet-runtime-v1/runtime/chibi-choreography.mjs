@@ -15,36 +15,41 @@
 export const CHIBI_HOLDS = {
   "talk-gesture": {
     file: "Timeline 1_0003x.png",
-    accentFile: "Timeline 1_0002.png",
-    reboundFile: "Timeline 1_0004x.png",
+    overshootFile: "Timeline 1_0001.png",
+    reboundFile: "Timeline 1_0002.png",
+    accentFile: "Timeline 1_0001.png",
     description: "Front-facing neutral delivery, open conversational posture",
     defaultWeight: 35,
   },
   "present-card": {
     file: "Timeline 1_0005.png",
-    accentFile: "Timeline 1_0004x.png",
+    overshootFile: "Timeline 1_0004x.png",
     reboundFile: "Timeline 1_0006.png",
+    accentFile: "Timeline 1_0004x.png",
     description: "Body angled left, right hand extended presenting topic card/media",
     defaultWeight: 30,
   },
   "think-chin": {
     file: "Timeline 1_0008.png",
-    accentFile: "Timeline 1_0007x.png",
+    overshootFile: "Timeline 1_0007x.png",
     reboundFile: "Timeline 1_0009.png",
+    accentFile: "Timeline 1_0007x.png",
     description: "Head tilted down, hand propping up chin, introspective posture",
     defaultWeight: 25,
   },
   "shrug-open": {
     file: "Timeline 1_0011.png",
-    accentFile: "Timeline 1_0010.png",
+    overshootFile: "Timeline 1_0010.png",
     reboundFile: "Timeline 1_0012.png",
+    accentFile: "Timeline 1_0010.png",
     description: "Hands out to sides, playful questioning or disbelief posture",
     defaultWeight: 25,
   },
   "point-emphasis": {
     file: "Timeline 1_0013.png",
+    overshootFile: "Timeline 1_0012.png",
+    reboundFile: "Timeline 1_0014.png",
     accentFile: "Timeline 1_0012.png",
-    reboundFile: "Timeline 1_0005.png",
     description: "Arm extended pointing toward topic/audience for decisive emphasis",
     defaultWeight: 20,
   },
@@ -221,24 +226,46 @@ export function buildChibiSchedule({ routine, durationFrames }) {
       }
 
       const holdDef = CHIBI_HOLDS[step.id];
-      const accentFile = holdDef?.accentFile ?? step.file;
+      const overshootFile = holdDef?.overshootFile ?? holdDef?.accentFile ?? step.file;
       const reboundFile = holdDef?.reboundFile ?? step.file;
+      const settleFile = holdDef?.file ?? step.file;
 
-      for (let i = 0; i < duration; i += 1) {
-        // Keep initial frames (first 6 frames) and terminal frames (last 4 frames) on primary hold
-        // On living holds (> 12 frames), alternate living accents on twos every 16 frames
-        if (duration > 12 && i >= 6 && i < duration - 4) {
-          const cycle = (i - 6) % 16;
-          if (cycle === 0 || cycle === 1) {
-            schedule.push(accentFile);
-            continue;
-          }
-          if (cycle === 2 || cycle === 3) {
-            schedule.push(reboundFile);
-            continue;
-          }
+      // 3-Frame Stepped Pose Snapping (Overshoot -> Rebound -> Settle)
+      // Frame 1: Overshoot (held for ~5 frames, less than half a second)
+      // Frame 2: Rebound (held for ~4 frames, less than half a second)
+      // Frame 3: Settle (held for the remainder of the pose)
+      if (duration >= 14) {
+        const overshootFrames = 5;
+        const reboundFrames = 4;
+        const settleFrames = duration - overshootFrames - reboundFrames;
+
+        for (let i = 0; i < overshootFrames; i += 1) {
+          schedule.push(overshootFile);
         }
-        schedule.push(step.file);
+        for (let i = 0; i < reboundFrames; i += 1) {
+          schedule.push(reboundFile);
+        }
+        for (let i = 0; i < settleFrames; i += 1) {
+          schedule.push(settleFile);
+        }
+      } else if (duration >= 6) {
+        const overshootFrames = 2;
+        const reboundFrames = 2;
+        const settleFrames = duration - overshootFrames - reboundFrames;
+
+        for (let i = 0; i < overshootFrames; i += 1) {
+          schedule.push(overshootFile);
+        }
+        for (let i = 0; i < reboundFrames; i += 1) {
+          schedule.push(reboundFile);
+        }
+        for (let i = 0; i < settleFrames; i += 1) {
+          schedule.push(settleFile);
+        }
+      } else {
+        for (let i = 0; i < duration; i += 1) {
+          schedule.push(settleFile);
+        }
       }
     }
   }

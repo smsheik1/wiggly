@@ -284,6 +284,24 @@ test("buildChibiSchedule synthesizes entrance, cushions, holds, and exit leap", 
   assert.equal(schedule.at(-1), "Timeline 1_0016.png");
 });
 
+test("buildChibiSchedule schedules 3-frame triad (overshoot -> rebound -> settle) for each pose", () => {
+  const routine = ["present-card"];
+  const durationFrames = 48; // 2 seconds
+  const schedule = buildChibiSchedule({ routine, durationFrames });
+
+  // Entrance smear + squash (5 frames)
+  // Present-card hold:
+  // Frame 1: Overshoot Timeline 1_0004x.png (5 frames)
+  // Frame 2: Rebound Timeline 1_0006.png (4 frames)
+  // Frame 3: Settle Timeline 1_0005.png (remainder)
+  // Exit: 5 frames
+  assert.equal(schedule[5], "Timeline 1_0004x.png", "pose entry begins with overshoot");
+  assert.equal(schedule[9], "Timeline 1_0004x.png", "overshoot held for 5 frames");
+  assert.equal(schedule[10], "Timeline 1_0006.png", "rebound follows overshoot");
+  assert.equal(schedule[13], "Timeline 1_0006.png", "rebound held for 4 frames");
+  assert.equal(schedule[14], "Timeline 1_0005.png", "settle hold follows rebound");
+});
+
 test("getChibiFrameTransform computes choppy anticipation, overshoot, undershoot, and living speech beats", () => {
   const totalFrames = 80;
 

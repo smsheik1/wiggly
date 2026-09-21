@@ -214,32 +214,15 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
         for (let f = 0; f < shot.durationFrames; f += 1) {
           outputFrame += 1;
           const chosenFile = schedule[f] ?? "Timeline 1_0005.png";
-          const transform = getChibiFrameTransform(f, shot.durationFrames);
-          const cacheKey = `${chosenFile}:${transform.dx}:${transform.dy}:${transform.sx}:${transform.sy}`;
-
-          let frameToUse = frameBufferCache.get(cacheKey);
+          let frameToUse = frameBufferCache.get(chosenFile);
           if (!frameToUse) {
             const itemPath = path.resolve(root, "assets/chibi", chosenFile);
-
-            // Extract character patch from 1280x720 canvas
-            // Character is bounded within [left: 900, top: 400, width: 380, height: 320]
-            const newW = Math.max(10, Math.round(380 * transform.sx));
-            const newH = Math.max(10, Math.round(320 * transform.sy));
-            const compLeft = Math.max(0, Math.min(1280 - newW, Math.round(1100 - (1100 - 900) * transform.sx + transform.dx)));
-            const compTop = 720 - newH;
-
-            const patch = await sharp(itemPath)
-              .extract({ left: 900, top: 400, width: 380, height: 320 })
-              .resize(newW, newH)
-              .png()
-              .toBuffer();
-
             frameToUse = await sharp(topicBgBuffer)
-              .composite([{ input: patch, left: compLeft, top: compTop }])
+              .composite([{ input: itemPath }])
               .png()
               .toBuffer();
 
-            frameBufferCache.set(cacheKey, frameToUse);
+            frameBufferCache.set(chosenFile, frameToUse);
           }
 
           await fs.writeFile(
