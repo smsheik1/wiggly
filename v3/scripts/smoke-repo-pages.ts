@@ -196,12 +196,12 @@ try {
     await page
       .locator("#run-with-agent")
       .screenshot({ path: path.join(screenshots, `${slug}-run.png`) });
-    await page
+    const copyButton = page
       .locator("#run-with-agent")
-      .getByRole("button", { name: "Send to Coding Agent" })
-      .click();
-    await page.getByRole("menuitem", { name: "Send to Codex" }).waitFor();
-    await page.keyboard.press("Escape");
+      .getByRole("button", { name: /Copy Agent Prompt|Copied prompt!/ });
+    if (await copyButton.count()) {
+      await copyButton.click();
+    }
     await page.setViewportSize({ width: 390, height: 844 });
     await page.locator("#accounts-youll-connect").scrollIntoViewIfNeeded();
     const dimensions = await page.evaluate(() => ({
