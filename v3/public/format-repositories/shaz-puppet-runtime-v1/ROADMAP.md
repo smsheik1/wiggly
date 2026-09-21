@@ -12,7 +12,8 @@ This is the working order for the Shaz Wiggly Repo. Read it before adding a capa
 - Every audio-backed run creates a local English transcript with word timestamps before planning. The package includes the pinned whisper.cpp source and model, compiles its small Apple-silicon helper locally, and uploads nothing.
 - Four fixed backgrounds ship with the kit: Sisters Room, Living Room, Photo Zone, and Pure White. Sisters Room is the default. Every room uses the same camera and waist-up Shaz placement.
 - **Multi-Shot Video (`shaz-multi-shot-v1`):** composes contiguous shots (`talk-to-camera`, `text-card`, `chibi-commentary`, `b-roll`) over continuous audio without frame gaps or desyncs.
-- **Chibi Choreography & Animation Physics Engine:** synthesizes dynamic squash, stretch, anticipation, and settle cushions across LLM-choreographed routines (`["present-card", "think-chin", "shrug-open"]`). Zero keyword heuristics or emotion fallbacks.
+- **Reference-Calibrated Chibi Choreography:** frame-by-frame calibrated against the human animator reference (`I made this video to impress my Pakistani Mom`). Native 1280×720 direct compositing (no synthetic scaling or Sharp crops), clause-level pose density (~15-30 frames / 0.6s–1.2s per hold), 2-frame cushions on-twos connecting all 5 core holds (`talk-gesture`, `present-card`, `think-chin`, `shrug-open`, `point-emphasis`), and root-level auto-expansion guardrail in `buildChibiSchedule` via `deriveChibiRoutine` so blind agents never produce frozen commentary.
+- **Jev Sub-Conscious Director Integration:** optional TypeSafe AI Jev model integration for sub-200ms comedic acting instinct (pose selection, camera motion, and badge tags) with deterministic zero-cost fallback.
 - The runtime validates the plan, renders through one character renderer, inspects the finished media, and requires human review before delivery.
 
 ## Registered, but not ready for automatic use
