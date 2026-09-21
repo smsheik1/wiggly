@@ -19,6 +19,7 @@ import {
 } from "../runtime/multi-shot-timeline.mjs";
 import {
   buildChibiSchedule,
+  getChibiFrameTransform,
   normalizeChibiHold,
 } from "../runtime/chibi-choreography.mjs";
 
@@ -281,6 +282,70 @@ test("buildChibiSchedule synthesizes entrance, cushions, holds, and exit leap", 
   assert.equal(schedule.at(-3), "Timeline 1_0015.png");
   assert.equal(schedule.at(-2), "Timeline 1_0016.png");
   assert.equal(schedule.at(-1), "Timeline 1_0016.png");
+});
+
+test("getChibiFrameTransform computes choppy anticipation, overshoot, undershoot, and living speech beats", () => {
+  const totalFrames = 80;
+
+  // Entrance smear
+  const f0 = getChibiFrameTransform(0, totalFrames);
+  assert.equal(f0.phase, "entrance-smear");
+  assert.ok(f0.dy > 0 && f0.dx > 0, "smear enters from offstage corner");
+
+  // Anticipation squash
+  const f2 = getChibiFrameTransform(2, totalFrames);
+  assert.equal(f2.phase, "anticipation-squash");
+  assert.ok(f2.sx > 1.0 && f2.sy < 1.0, "squash compresses vertically and widens horizontally");
+
+  // Entrance OVERSHOOT
+  const f4 = getChibiFrameTransform(4, totalFrames);
+  assert.equal(f4.phase, "entrance-overshoot");
+  assert.ok(f4.dy < -15, "overshoot pops high past target baseline");
+  assert.ok(f4.sy > 1.0, "overshoot stretches taller");
+
+  // Entrance UNDERSHOOT rebound
+  const f6 = getChibiFrameTransform(6, totalFrames);
+  assert.equal(f6.phase, "entrance-undershoot");
+  assert.ok(f6.dy > 0, "undershoot dips back down below baseline before settle");
+
+  // Settle hold
+  const f10 = getChibiFrameTransform(10, totalFrames);
+  assert.equal(f10.phase, "settle-hold");
+  assert.equal(f10.dx, 0);
+  assert.equal(f10.dy, 0);
+
+  // Living speech beat overshoot (at step (frame-8) % 16 === 0)
+  const f24 = getChibiFrameTransform(24, totalFrames);
+  assert.equal(f24.phase, "beat-overshoot");
+  assert.ok(f24.dy < 0, "speech beat pops up to accent dialogue");
+
+  // Exit crouch anticipation
+  const fCrouch = getChibiFrameTransform(totalFrames - 5, totalFrames);
+  assert.equal(fCrouch.phase, "exit-crouch");
+
+  // Exit apex leap overshoot
+  const fApex = getChibiFrameTransform(totalFrames - 3, totalFrames);
+  assert.equal(fApex.phase, "exit-overshoot");
+  assert.ok(fApex.dy < -20, "apex leap explodes upward");
+
+  // Exit smear
+  const fExit = getChibiFrameTransform(totalFrames - 1, totalFrames);
+  assert.equal(fExit.phase, "exit-smear");
+});
+
+test("renderTextCardFrame highlights only exact phrase words without false substring matches", async () => {
+  const bgPath = path.join(root, "assets", "backgrounds", "sisters-room.png");
+  const bgBuffer = await fs.readFile(bgPath);
+
+  // Phrase contains "it looks.", but sentence starts with "It turns out..."
+  // Word 0 "It" and "a" should not be highlighted; only words "than", "it", "looks." should be #00b4d8
+  const frameBuf = await renderTextCardFrame({
+    backgroundBuffer: bgBuffer,
+    text: "It turns out having a puppy is way harder than it looks.",
+    highlights: [{ phrase: "than it looks.", color: "#00b4d8" }],
+    wordLimit: null,
+  });
+  assert(Buffer.isBuffer(frameBuf));
 });
 
 test("validateMultiShotPlan accepts explicit LLM chibiRoutine", async () => {

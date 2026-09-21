@@ -9,7 +9,7 @@ import { renderRigFrame } from "./rig-v2-renderer.mjs";
 import { renderTextCardFrame, wordsVisibleAtFrame } from "./text-card-renderer.mjs";
 import { renderTopicCard } from "./topic-card-renderer.mjs";
 import { renderKenBurnsFrame } from "./broll-renderer.mjs";
-import { buildChibiSchedule } from "./chibi-choreography.mjs";
+import { buildChibiSchedule, getChibiFrameTransform } from "./chibi-choreography.mjs";
 import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
@@ -124,7 +124,11 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
 
             if (f < totalRecipeFrames) {
               activePose = pose;
-              poseFrame = f + 1;
+              if (shot.startFrame === 0 && poseId === "think") {
+                poseFrame = Math.min(totalRecipeFrames, 7 + f);
+              } else {
+                poseFrame = f + 1;
+              }
             } else if (f < totalRecipeFrames + holdFrames) {
               activePose = pose;
               poseFrame = totalRecipeFrames;
@@ -221,19 +225,39 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           durationFrames: shot.durationFrames,
         });
 
-        // Cache required chibi frames composited over the topic background
-        const chibiBufferMap = new Map();
-        const uniqueFiles = new Set(schedule);
-        for (const file of uniqueFiles) {
-          const itemPath = path.resolve(root, "assets/chibi", file);
-          const buf = await sharp(topicBgBuffer).composite([{ input: itemPath }]).png().toBuffer();
-          chibiBufferMap.set(file, buf);
-        }
+        // Cache composited chibi frames with kinetic transforms (overshoot, undershoot, squash/stretch)
+        const frameBufferCache = new Map();
 
         for (let f = 0; f < shot.durationFrames; f += 1) {
           outputFrame += 1;
           const chosenFile = schedule[f] ?? "Timeline 1_0005.png";
-          const frameToUse = chibiBufferMap.get(chosenFile) ?? topicBgBuffer;
+          const transform = getChibiFrameTransform(f, shot.durationFrames);
+          const cacheKey = `${chosenFile}:${transform.dx}:${transform.dy}:${transform.sx}:${transform.sy}`;
+
+          let frameToUse = frameBufferCache.get(cacheKey);
+          if (!frameToUse) {
+            const itemPath = path.resolve(root, "assets/chibi", chosenFile);
+
+            // Extract character patch from 1280x720 canvas
+            // Character is bounded within [left: 900, top: 400, width: 380, height: 320]
+            const newW = Math.max(10, Math.round(380 * transform.sx));
+            const newH = Math.max(10, Math.round(320 * transform.sy));
+            const compLeft = Math.max(0, Math.min(1280 - newW, Math.round(1100 - (1100 - 900) * transform.sx + transform.dx)));
+            const compTop = Math.max(0, Math.min(720 - newH, Math.round(720 - (720 - 400) * transform.sy + transform.dy)));
+
+            const patch = await sharp(itemPath)
+              .extract({ left: 900, top: 400, width: 380, height: 320 })
+              .resize(newW, newH)
+              .png()
+              .toBuffer();
+
+            frameToUse = await sharp(topicBgBuffer)
+              .composite([{ input: patch, left: compLeft, top: compTop }])
+              .png()
+              .toBuffer();
+
+            frameBufferCache.set(cacheKey, frameToUse);
+          }
 
           await fs.writeFile(
             path.join(scratch, `frame-${String(outputFrame).padStart(6, "0")}.png`),

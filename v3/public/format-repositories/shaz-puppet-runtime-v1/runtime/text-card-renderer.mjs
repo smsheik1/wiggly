@@ -77,6 +77,33 @@ function buildSvgContent({ text, highlights = [], wordLimit = null, width = 1280
   const wallCenterY = 320;
   const startY = wallCenterY - (totalTextHeight / 2) + (fontSize * 0.85);
 
+  // Pre-calculate exact word indices for highlight phrases to prevent false substring matches
+  const allWords = text.trim().split(/\s+/).filter(Boolean);
+  const cleanAll = allWords.map((w) => w.toLowerCase().replace(/[^\w]/g, ""));
+  const wordColorMap = new Map();
+
+  for (const hl of highlights) {
+    if (!hl.phrase || !hl.color) continue;
+    const hlWords = hl.phrase.trim().split(/\s+/).filter(Boolean);
+    const cleanHl = hlWords.map((w) => w.toLowerCase().replace(/[^\w]/g, ""));
+    if (cleanHl.length === 0) continue;
+
+    for (let i = 0; i <= cleanAll.length - cleanHl.length; i += 1) {
+      let match = true;
+      for (let j = 0; j < cleanHl.length; j += 1) {
+        if (cleanAll[i + j] !== cleanHl[j]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        for (let j = 0; j < cleanHl.length; j += 1) {
+          wordColorMap.set(i + j, hl.color);
+        }
+      }
+    }
+  }
+
   let wordCountSeen = 0;
 
   const tspanLines = lines.map((line, lineIndex) => {
@@ -87,25 +114,22 @@ function buildSvgContent({ text, highlights = [], wordLimit = null, width = 1280
     for (const token of tokens) {
       const isWord = /\S/.test(token);
       let isVisible = true;
+      let tokenColor = defaultFill;
+
       if (isWord) {
+        const currentWordIndex = wordCountSeen;
         wordCountSeen += 1;
         if (wordLimit !== null && wordCountSeen > wordLimit) {
           isVisible = false;
+        }
+        if (wordColorMap.has(currentWordIndex)) {
+          tokenColor = wordColorMap.get(currentWordIndex);
         }
       } else if (wordLimit !== null && wordCountSeen >= wordLimit) {
         isVisible = false;
       }
 
       if (!isVisible) continue;
-
-      // Check if token matches any highlight phrase
-      let tokenColor = defaultFill;
-      for (const hl of highlights) {
-        if (hl.phrase.toLowerCase().includes(token.toLowerCase().trim())) {
-          tokenColor = hl.color;
-          break;
-        }
-      }
 
       segments.push({ text: token, color: tokenColor });
     }
