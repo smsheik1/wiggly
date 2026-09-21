@@ -276,6 +276,7 @@ async function init(args) {
         input.title = input.title ?? derived.title;
         input.totalDurationFrames = sequenceAudioFrames;
         input.shots = derived.shots;
+        delete input.defaultBackgroundId;
       }
 
       const shouldGenerateLipSync = (isAudioSequence && lipSyncMode !== "off")
