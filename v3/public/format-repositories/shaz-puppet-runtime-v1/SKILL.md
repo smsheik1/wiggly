@@ -49,7 +49,9 @@ The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-a
    - Follow `writer-playbook.md` to write the script in Shaz's authentic voice, enforcing the *Therefore/But* causality rule and 4-shot rhythm.
    - Validate and lint the script against AI tells and word count limits:
      `npm run lint:script -- --script=/absolute/path/script.json`
-   - Once approved by the user, record or stage the dialogue audio as `user-audio.wav`.
+   - Once approved by the user, record dialogue or synthesize speech using Shaz's official cloned voice:
+     `npm run speak -- --text="Approved script text here" --output=/absolute/path/user-audio.wav`
+     (Uses Shaz's official Fish Audio clone `947a3b8d8a2c431a8a2934008d89d5b3`, normalized for Cherry WASI lip-sync).
 4. If the job uses audio, transcribe it before choosing gestures:
 
    `npm run transcribe -- --audio=/absolute/path/audio --output=/absolute/path/transcript.json`

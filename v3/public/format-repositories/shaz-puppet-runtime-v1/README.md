@@ -135,6 +135,16 @@ Chibi Shaz follows classical animation physics and timing discovered from frame-
 
 When `TYPESAFE_API_KEY` is present in `secrets.env`, the director uses TypeSafe AI's Jev model (`jev-latest`) for sub-200ms comedic acting decisions (pose selection, camera motion, and badge tags). If no key is configured, the system falls back seamlessly to the deterministic keyword analyzer at $0 cost.
 
+### Shaz Voice Cloning & Synthesis (`npm run speak`)
+
+The format package integrates an official private Fish Audio voice clone of Shaz (`947a3b8d8a2c431a8a2934008d89d5b3`), trained on 30.0s of isolated studio vocal audio with verified ground-truth phonetic transcripts.
+
+To synthesize new dialogue on demand:
+```sh
+npm run speak -- --text="What is going on guys? Today we have a crazy new story to talk about." --output=user-audio.wav
+```
+The command automatically normalizes the audio stream into 44.1kHz 16-bit mono PCM WAV, ready for instant Cherry WASI lip-sync, transcription, and puppet animation.
+
 ## Pick a background
 
 Audio-backed scenes must name one of these built-in backgrounds:
