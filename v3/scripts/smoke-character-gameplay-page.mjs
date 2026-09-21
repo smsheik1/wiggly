@@ -43,7 +43,7 @@ try {
   await page.screenshot({ path: path.join(screenshots, "repo-desktop.png") });
   const copyButton = page.locator("#run-with-agent").getByRole("button", { name: /Copy Agent Prompt|Copied prompt!/ });
   await copyButton.click();
-  await page.locator("#run-with-agent").getByText("Copied prompt!").waitFor();
+  await page.locator("#run-with-agent").getByText("Copied prompt!").first().waitFor();
   const clipboard = await page.evaluate(() => navigator.clipboard.readText());
   assert.ok(clipboard.includes(archive));
   assert.ok(clipboard.includes(`${origin}/formats/${slug}`));
