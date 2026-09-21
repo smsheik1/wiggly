@@ -226,46 +226,10 @@ export function buildChibiSchedule({ routine, durationFrames }) {
       }
 
       const holdDef = CHIBI_HOLDS[step.id];
-      const overshootFile = holdDef?.overshootFile ?? holdDef?.accentFile ?? step.file;
-      const reboundFile = holdDef?.reboundFile ?? step.file;
       const settleFile = holdDef?.file ?? step.file;
 
-      // 3-Frame Stepped Pose Snapping (Overshoot -> Rebound -> Settle)
-      // Frame 1: Overshoot (held for ~5 frames, less than half a second)
-      // Frame 2: Rebound (held for ~4 frames, less than half a second)
-      // Frame 3: Settle (held for the remainder of the pose)
-      if (duration >= 14) {
-        const overshootFrames = 5;
-        const reboundFrames = 4;
-        const settleFrames = duration - overshootFrames - reboundFrames;
-
-        for (let i = 0; i < overshootFrames; i += 1) {
-          schedule.push(overshootFile);
-        }
-        for (let i = 0; i < reboundFrames; i += 1) {
-          schedule.push(reboundFile);
-        }
-        for (let i = 0; i < settleFrames; i += 1) {
-          schedule.push(settleFile);
-        }
-      } else if (duration >= 6) {
-        const overshootFrames = 2;
-        const reboundFrames = 2;
-        const settleFrames = duration - overshootFrames - reboundFrames;
-
-        for (let i = 0; i < overshootFrames; i += 1) {
-          schedule.push(overshootFile);
-        }
-        for (let i = 0; i < reboundFrames; i += 1) {
-          schedule.push(reboundFile);
-        }
-        for (let i = 0; i < settleFrames; i += 1) {
-          schedule.push(settleFile);
-        }
-      } else {
-        for (let i = 0; i < duration; i += 1) {
-          schedule.push(settleFile);
-        }
+      for (let i = 0; i < duration; i += 1) {
+        schedule.push(settleFile);
       }
     }
   }

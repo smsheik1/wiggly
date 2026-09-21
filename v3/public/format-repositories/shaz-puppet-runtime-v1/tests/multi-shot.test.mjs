@@ -284,22 +284,37 @@ test("buildChibiSchedule synthesizes entrance, cushions, holds, and exit leap", 
   assert.equal(schedule.at(-1), "Timeline 1_0016.png");
 });
 
-test("buildChibiSchedule schedules 3-frame triad (overshoot -> rebound -> settle) for each pose", () => {
-  const routine = ["present-card"];
-  const durationFrames = 48; // 2 seconds
+test("buildChibiSchedule matches artist reference timing with cushions and snappy holds", () => {
+  const routine = ["present-card", "think-chin", "shrug-open"];
+  const durationFrames = 96; // 4 seconds at 24fps
   const schedule = buildChibiSchedule({ routine, durationFrames });
 
-  // Entrance smear + squash (5 frames)
-  // Present-card hold:
-  // Frame 1: Overshoot Timeline 1_0004x.png (5 frames)
-  // Frame 2: Rebound Timeline 1_0006.png (4 frames)
-  // Frame 3: Settle Timeline 1_0005.png (remainder)
-  // Exit: 5 frames
-  assert.equal(schedule[5], "Timeline 1_0004x.png", "pose entry begins with overshoot");
-  assert.equal(schedule[9], "Timeline 1_0004x.png", "overshoot held for 5 frames");
-  assert.equal(schedule[10], "Timeline 1_0006.png", "rebound follows overshoot");
-  assert.equal(schedule[13], "Timeline 1_0006.png", "rebound held for 4 frames");
-  assert.equal(schedule[14], "Timeline 1_0005.png", "settle hold follows rebound");
+  // Entrance: smear (2f) + squash (2f) + settle bounce (1f)
+  assert.equal(schedule[0], "Timeline 1_0000In.png");
+  assert.equal(schedule[2], "Timeline 1_0001.png");
+  assert.equal(schedule[4], "Timeline 1_0002.png");
+
+  // First hold: present-card
+  assert.equal(schedule[5], "Timeline 1_0005.png");
+
+  // Transition to think-chin: 2f breakdown (0006) + 2f anticipation (0007x)
+  assert.ok(schedule.includes("Timeline 1_0006.png"));
+  assert.ok(schedule.includes("Timeline 1_0007x.png"));
+
+  // Second hold: think-chin
+  assert.ok(schedule.includes("Timeline 1_0008.png"));
+
+  // Transition to shrug-open: 2f breakdown (0009) + 2f anticipation (0010)
+  assert.ok(schedule.includes("Timeline 1_0009.png"));
+  assert.ok(schedule.includes("Timeline 1_0010.png"));
+
+  // Third hold: shrug-open
+  assert.ok(schedule.includes("Timeline 1_0011.png"));
+
+  // Exit: crouch (1f) + apex stretch (2f) + smear (2f)
+  assert.equal(schedule.at(-5), "Timeline 1_0014.png");
+  assert.equal(schedule.at(-4), "Timeline 1_0015.png");
+  assert.equal(schedule.at(-1), "Timeline 1_0016.png");
 });
 
 test("getChibiFrameTransform computes choppy anticipation, overshoot, undershoot, and living speech beats", () => {
