@@ -473,8 +473,22 @@ export async function deriveMultiShotPlanWithJev({
           }
           shot.rationale = `Jev actor instinct: ${jevChoice.chibiPose} (${Math.round(jevChoice.chibiConfidence * 100)}% conf)`;
         }
+      } else if (shot.shotType === "talk-to-camera") {
+        const shotStartMs = (shot.startFrame / 24) * 1000;
+        const shotEndMs = (shot.endFrameExclusive / 24) * 1000;
+        const spokenText = transcript.words
+          .filter((w) => w.endMs >= shotStartMs && w.startMs <= shotEndMs)
+          .map((w) => w.text)
+          .join(" ")
+          .trim();
+        if (spokenText) {
+          const jevChoice = await evaluateSentenceDirector(spokenText, { apiKey, fetchFn });
+          if (jevChoice?.shazPose) {
+            shot.poseId = jevChoice.shazPose;
+            shot.rationale = `Jev puppet actor instinct: ${jevChoice.shazPose} (${Math.round(jevChoice.shazConfidence * 100)}% conf)`;
+          }
+        }
       } else if (shot.shotType === "b-roll") {
-        // If preceding shot had punchline, apply dramatic snap-punch
         const jevChoice = await evaluateSentenceDirector(shot.rationale || "B-roll transition", { apiKey, fetchFn });
         if (jevChoice?.cameraMotion) {
           shot.motion = jevChoice.cameraMotion;

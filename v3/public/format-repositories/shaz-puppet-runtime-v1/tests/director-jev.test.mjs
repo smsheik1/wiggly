@@ -17,12 +17,16 @@ test("evaluateSentenceDirector parses mock Jev response correctly", async () => 
     json: async () => ({
       model: "jev-1.13.0",
       answers: {
+        shaz_puppet_pose: {
+          choice: "think",
+          confidence: 0.91,
+        },
         chibi_pose: {
           choice: "facepalm",
           confidence: 0.88,
         },
         camera_motion: {
-          choice: "snap-punch",
+          choice: "zoom-in",
           confidence: 0.95,
         },
         badge_category: {
@@ -42,8 +46,9 @@ test("evaluateSentenceDirector parses mock Jev response correctly", async () => 
   });
 
   assert.ok(evaluation);
-  assert.equal(evaluation.chibiPose, "facepalm");
-  assert.equal(evaluation.cameraMotion, "snap-punch");
+  assert.equal(evaluation.shazPose, "think");
+  assert.equal(evaluation.chibiPose, "shrug-open");
+  assert.equal(evaluation.cameraMotion, "zoom-in");
   assert.equal(evaluation.badge, "THE CLASH");
   assert.equal(evaluation.isPunchline, true);
   assert.equal(evaluation.provenance, "jev-systemone");

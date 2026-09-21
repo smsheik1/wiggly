@@ -57,6 +57,7 @@ export const CHIBI_POSE_ALIASES = {
   "point-side": "point-emphasis",
   "point-up": "point-emphasis",
   "celebrate": "point-emphasis",
+  "facepalm": "shrug-open",
 };
 
 /**

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { normalizeChibiHold } from "./chibi-choreography.mjs";
 
 const TYPESAFE_ENDPOINT = "https://api.typesafe.ai/v1/systemone";
 const JEV_MODEL = "jev-latest";
@@ -18,7 +19,7 @@ export function getTypesafeApiKey() {
 
   // Walk up directories to find secrets.env
   let currentDir = process.cwd();
-  for (let i = 0; i < 4; i += 1) {
+  for (let i = 0; i < 7; i += 1) {
     const candidate = path.join(currentDir, "secrets.env");
     if (fs.existsSync(candidate)) {
       try {
@@ -45,7 +46,7 @@ export function getTypesafeApiKey() {
  * Calls Jev System One API with typed questions.
  */
 export async function callJevSystemOne({ state, questions, apiKey: explicitKey, fetchFn = fetch }) {
-  const key = explicitKey || getTypesafeApiKey();
+  const key = explicitKey !== undefined ? explicitKey : getTypesafeApiKey();
   if (!key) {
     return null;
   }
@@ -91,12 +92,14 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn } = {
     },
     camera_motion: {
       type: "choice",
-      instructions: "Which virtual camera move matches the drama and comedic pacing of this line?",
+      instructions: "Which virtual camera move matches the drama and pacing of this beat?",
       criteria: {
-        "snap-punch": "Sudden hard punch-in on a shocking detail, punchline, or roast",
-        "slow-push": "Slow gradual cinematic push-in building dramatic tension",
-        "slow-pull": "Pulling back to reveal context or wide reaction",
-        "static": "Calm holding shot for neutral exposition",
+        "zoom-in": "Dramatic push-in or punch-in building tension or emphasizing a focal point",
+        "zoom-out": "Pulling back to reveal wide context or comic relief",
+        "pan-right": "Cinematic sweeping move panning right to track momentum",
+        "pan-left": "Cinematic sweeping move panning left to reveal elements",
+        "pan-up": "Sweeping camera move upwards",
+        "pan-down": "Sweeping camera move downwards",
       },
     },
     badge_category: {
@@ -114,20 +117,39 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn } = {
       type: "noul",
       instructions: "Is this sentence delivering a comedic punchline or sarcastic joke?",
     },
+    shaz_puppet_pose: {
+      type: "choice",
+      instructions: "Which main puppet gesture best suits Shaz speaking this direct-to-audience line?",
+      criteria: {
+        "neutral-listening": "Calm, conversational default speech without exaggerated physical gesturing",
+        "present": "Welcoming the viewer, presenting a concept, opening up an idea with hands outward",
+        "think": "Pondering, reflecting on an observation, questioning assumptions, chin hold",
+        "aha": "A realization, discovery, 'aha' moment, pointing out an epiphany",
+        "point": "Direct emphasis, calling someone or something out directly, making a point",
+        "confident": "Confident delivery, stance with hands on hips, concluding with certainty",
+      },
+    },
   };
 
   const result = await callJevSystemOne({ state: sentence, questions, apiKey, fetchFn });
   if (!result || !result.answers) return null;
 
   const answers = result.answers;
+  const allowedMotions = ["zoom-in", "zoom-out", "pan-left", "pan-right", "pan-up", "pan-down"];
+  const chosenMotion = answers.camera_motion?.choice;
+  const cameraMotion = allowedMotions.includes(chosenMotion) ? chosenMotion : "zoom-in";
+
   return {
-    chibiPose: answers.chibi_pose?.choice || "present-card",
+    shazPose: answers.shaz_puppet_pose?.choice || "neutral-listening",
+    shazConfidence: answers.shaz_puppet_pose?.confidence || 0,
+    chibiPose: normalizeChibiHold(answers.chibi_pose?.choice),
     chibiConfidence: answers.chibi_pose?.confidence || 0,
-    cameraMotion: answers.camera_motion?.choice || "zoom-in",
+    cameraMotion,
     cameraConfidence: answers.camera_motion?.confidence || 0,
     badge: answers.badge_category?.choice || "KEY POINT",
-    isPunchline: (answers.is_punchline?.noul ?? 0) >= 0.6,
-    punchlineProbability: answers.is_punchline?.noul ?? 0,
+    badgeConfidence: answers.badge_category?.confidence || 0,
+    isPunchline: (answers.is_punchline?.probability ?? answers.is_punchline?.noul ?? 0) > 0.6,
+    punchlineProbability: answers.is_punchline?.probability ?? answers.is_punchline?.noul ?? 0,
     provenance: "jev-systemone",
   };
 }
