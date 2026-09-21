@@ -38,9 +38,13 @@
       "shotType": "chibi-commentary",
       "startFrame": 530,
       "endFrameExclusive": 580,
-      "chibiPose": "shrug-smile",
+      "chibiPose": "shrug-open",
+      "chibiRoutine": [
+        "present-card",
+        "shrug-open"
+      ],
       "backgroundId": "sisters-room",
-      "rationale": "Chibi Shaz commentating with entry smear, shrug pose, and exit smear."
+      "rationale": "Chibi Shaz commentating with entry smear, multi-pose clause progression, and exit smear."
     },
     {
       "id": "closing-talk",

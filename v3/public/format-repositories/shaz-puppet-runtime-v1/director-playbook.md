@@ -47,12 +47,12 @@ In this version of the format, the director has access to:
   - `"shrug-open"`: Shoulders raised, hands open to sides (acknowledging reality, playful disbelief, "what can you do?").
   - `"point-emphasis"`: Arm extended pointing forward/side (decisive takeaway, rule enforcement, emphatic conclusion).
 - **Choreographing with `chibiRoutine`:**
-  - The Director LLM can choreograph a sequence of 1 to 3 holds across the shot duration in `chibiRoutine`:
+  - The Director LLM should choreograph a sequence of holds matching the vocal clauses in `chibiRoutine`. Target density is **1 pose every ~15 to 30 frames (0.6s to 1.2s)**, matching the animator reference:
     ```json
-    "chibiRoutine": ["present-card", "think-chin", "shrug-open"]
+    "chibiRoutine": ["talk-gesture", "present-card", "think-chin", "shrug-open"]
     ```
   - The runtime automatically synthesizes the 1-2 frame squash, anticipation windup, recoil, and smear cushions connecting each hold, along with the smear entrance and apex exit leap.
-  - If only a single hold is needed for short shots, provide `chibiRoutine: ["present-card"]` or `"chibiPose": "present-card"`.
+  - **Root-Level Guardrail for Blind Agents:** If an agent provides only a single hold (e.g. `chibiPose: "present-card"`) for a shot $\ge 48$ frames (2.0s), the runtime automatically expands it via `deriveChibiRoutine` into a multi-pose progression so Chibi Shaz never freezes.
 - **On-The-Fly Topic Card Generation:**
   - The Director can specify a `card` object directly in the shot to generate a custom vector card on the fly:
     ```json

@@ -13,7 +13,7 @@ Use this kit to turn a voice track into a Shaz talking scene or to build a short
 
 - **Talk to Camera:** the normal choice for direct-to-audience speech. `sequencePreset: "talk-to-camera"` measures the audio, holds `neutral-listening` for the full line, and lets Cherry change only the mouth. Do not invent a pose or calculate frames.
 - **Reviewed gesture sequence:** arrange the five artist-reviewed gestures listed below, then follow the complete run workflow.
-- **Multi-Shot Video (`shaz-multi-shot-v1`):** high-retention directed video composing four shot types (`talk-to-camera`, `text-card`, `chibi-commentary`, `b-roll`) over continuous audio. Read `director-playbook.md` and `shot-sheet-contract.json`. The Director LLM choreographs `chibiRoutine` sequences using classical squash/stretch cushions.
+- **Multi-Shot Video (`shaz-multi-shot-v1`):** high-retention directed video composing four shot types (`talk-to-camera`, `text-card`, `chibi-commentary`, `b-roll`) over continuous audio. Read `director-playbook.md` and `shot-sheet-contract.json`. The Director choreographs `chibiRoutine` sequences with lively clause-density (1 pose per ~15-30 frames / 0.6s-1.2s) connected by 2-frame squash/stretch cushions. The runtime auto-expands single holds on shots >= 48 frames so chibi never freezes.
 - **Action repair or authoring:** work on exactly one action. Read `references/rig-animation-playbook.md` completely and follow the author-and-learn loop. Do not repair several unapproved actions at once.
 
 ## Which actions may be used

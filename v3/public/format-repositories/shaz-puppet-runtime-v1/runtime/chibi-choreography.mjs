@@ -156,14 +156,72 @@ export function normalizeChibiHold(poseId) {
   return "present-card";
 }
 
+/**
+ * Derives an authentic clause-level Chibi Shaz acting progression matching the human animator reference
+ * (~15-30 frames / 0.6s - 1.2s per hold), connected by 2-frame squash/stretch cushions.
+ *
+ * @param {string} [primaryPose="present-card"] - The key thematic pose or emotional peak
+ * @param {number} [durationFrames=72] - Total shot duration in frames
+ * @returns {string[]} Array of hold pose IDs
+ */
+export function deriveChibiRoutine(primaryPose = "present-card", durationFrames = 72) {
+  const norm = normalizeChibiHold(primaryPose);
+
+  // Short shots (< 36 frames / 1.5s): 1 clear hold
+  if (durationFrames < 36) {
+    return [norm];
+  }
+
+  // Medium shots (36-63 frames / 1.5s - 2.6s): 2-step setup -> payoff
+  if (durationFrames < 64) {
+    const mediumPairs = {
+      "point-emphasis": ["think-chin", "point-emphasis"],
+      "present-card": ["talk-gesture", "present-card"],
+      "think-chin": ["talk-gesture", "think-chin"],
+      "shrug-open": ["present-card", "shrug-open"],
+      "talk-gesture": ["talk-gesture", "present-card"],
+    };
+    return mediumPairs[norm] ?? ["talk-gesture", norm];
+  }
+
+  // Standard shots (64-95 frames / 2.7s - 4.0s): 3-step conversational progression
+  if (durationFrames < 96) {
+    const standardTriads = {
+      "point-emphasis": ["talk-gesture", "think-chin", "point-emphasis"],
+      "present-card": ["talk-gesture", "present-card", "think-chin"],
+      "think-chin": ["talk-gesture", "present-card", "think-chin"],
+      "shrug-open": ["talk-gesture", "think-chin", "shrug-open"],
+      "talk-gesture": ["present-card", "think-chin", "talk-gesture"],
+    };
+    return standardTriads[norm] ?? ["talk-gesture", "present-card", norm];
+  }
+
+  // Long shots (>= 96 frames / 4.0s+): 4-step dynamic acting routine
+  const longQuads = {
+    "point-emphasis": ["talk-gesture", "present-card", "think-chin", "point-emphasis"],
+    "present-card": ["talk-gesture", "present-card", "think-chin", "shrug-open"],
+    "think-chin": ["talk-gesture", "present-card", "think-chin", "shrug-open"],
+    "shrug-open": ["talk-gesture", "present-card", "think-chin", "shrug-open"],
+    "talk-gesture": ["present-card", "think-chin", "shrug-open", "talk-gesture"],
+  };
+  return longQuads[norm] ?? ["talk-gesture", "present-card", "think-chin", norm];
+}
+
 export function buildChibiSchedule({ routine, durationFrames }) {
   if (!Number.isInteger(durationFrames) || durationFrames <= 0) {
     throw new Error(`buildChibiSchedule requires positive integer durationFrames, got ${durationFrames}`);
   }
 
-  const holdList = Array.isArray(routine) && routine.length > 0
+  let holdList = Array.isArray(routine) && routine.length > 0
     ? routine.map(normalizeChibiHold)
     : ["present-card"];
+
+  // Root-level guardrail for blind agents:
+  // If only a single static hold was supplied for a shot >= 48 frames (2.0s),
+  // automatically expand into an authentic clause-level progression so characters never freeze.
+  if (holdList.length === 1 && durationFrames >= 48) {
+    holdList = deriveChibiRoutine(holdList[0], durationFrames);
+  }
 
   const steps = [];
 

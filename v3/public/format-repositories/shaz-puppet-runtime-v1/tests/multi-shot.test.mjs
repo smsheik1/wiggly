@@ -19,6 +19,7 @@ import {
 } from "../runtime/multi-shot-timeline.mjs";
 import {
   buildChibiSchedule,
+  deriveChibiRoutine,
   getChibiFrameTransform,
   normalizeChibiHold,
 } from "../runtime/chibi-choreography.mjs";
@@ -418,3 +419,35 @@ test("validateMultiShotPlan accepts explicit LLM chibiRoutine", async () => {
   assert.equal(validated.totalFrames, 96);
   assert.deepEqual(validated.shots[0].chibiRoutine, ["present-card", "think-chin", "shrug-open"]);
 });
+
+test("deriveChibiRoutine produces clause-level progressions based on duration", () => {
+  // Short (< 36 frames): 1 hold
+  assert.deepEqual(deriveChibiRoutine("present-card", 24), ["present-card"]);
+
+  // Medium (36-63 frames): 2 holds
+  const medium = deriveChibiRoutine("point-emphasis", 48);
+  assert.equal(medium.length, 2);
+  assert.equal(medium[1], "point-emphasis");
+
+  // Standard (64-95 frames): 3 holds
+  const standard = deriveChibiRoutine("think-chin", 72);
+  assert.equal(standard.length, 3);
+  assert.ok(standard.includes("think-chin"));
+
+  // Long (>= 96 frames): 4 holds
+  const long = deriveChibiRoutine("shrug-open", 120);
+  assert.equal(long.length, 4);
+  assert.ok(long.includes("shrug-open"));
+});
+
+test("buildChibiSchedule auto-expands single hold when duration >= 48 frames", () => {
+  // Blind agent passes single pose for a 72-frame shot (3.0s)
+  const schedule = buildChibiSchedule({ routine: ["present-card"], durationFrames: 72 });
+  assert.equal(schedule.length, 72);
+
+  // Instead of a frozen single hold, auto-expanded routine contains multi-pose progression + cushions
+  assert.ok(schedule.includes("Timeline 1_0003x.png"), "must include talk-gesture hold");
+  assert.ok(schedule.includes("Timeline 1_0005.png"), "must include present-card hold");
+  assert.ok(schedule.includes("Timeline 1_0008.png"), "must include think-chin hold");
+});
+

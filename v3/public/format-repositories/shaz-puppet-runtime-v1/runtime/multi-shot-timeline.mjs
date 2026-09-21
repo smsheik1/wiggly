@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import path from "node:path";
 import { evaluateSentenceDirector } from "./director-jev.mjs";
+import { deriveChibiRoutine } from "./chibi-choreography.mjs";
 
 const MULTI_SHOT_SCHEMA = "shaz-multi-shot-v1";
 const SHOT_ID = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
@@ -193,7 +194,9 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       text: shot.text ?? null,
       highlights: shot.highlights ?? [],
       chibiPose: shot.chibiPose ?? "present-card",
-      chibiRoutine: Array.isArray(shot.chibiRoutine) ? shot.chibiRoutine : [shot.chibiPose ?? "present-card"],
+      chibiRoutine: Array.isArray(shot.chibiRoutine) && shot.chibiRoutine.length > 1
+        ? shot.chibiRoutine
+        : deriveChibiRoutine(shot.chibiRoutine?.[0] ?? shot.chibiPose ?? "present-card", durationFrames),
       topicMedia: shot.topicMedia ?? null,
       brollMedia: shot.brollMedia ?? null,
       motion: shot.motion ?? "zoom-in",
@@ -388,6 +391,7 @@ export function deriveMultiShotPlan({
         backgroundId: defaultBackgroundId,
       });
     } else if (shotType === "chibi-commentary") {
+      const shotDuration = endFrame - currentFrame;
       shots.push({
         id: shotId,
         shotType: "chibi-commentary",
@@ -395,7 +399,7 @@ export function deriveMultiShotPlan({
         endFrameExclusive: endFrame,
         backgroundId: defaultBackgroundId,
         chibiPose: semantics.chibiPose,
-        chibiRoutine: [semantics.chibiPose],
+        chibiRoutine: deriveChibiRoutine(semantics.chibiPose, shotDuration),
         card: {
           badge: semantics.badge,
           headline: semantics.headline,
@@ -495,8 +499,9 @@ export async function deriveMultiShotPlanWithJev({
           lastChibiPose = chosenPose;
           lastBadge = chosenBadge;
 
+          const shotDuration = shot.endFrameExclusive - shot.startFrame;
           shot.chibiPose = chosenPose;
-          shot.chibiRoutine = [chosenPose];
+          shot.chibiRoutine = deriveChibiRoutine(chosenPose, shotDuration);
           if (shot.card) {
             shot.card.badge = chosenBadge;
           }
