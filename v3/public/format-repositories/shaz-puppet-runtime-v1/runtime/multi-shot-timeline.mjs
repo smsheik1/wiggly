@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
+import { evaluateSentenceDirector } from "./director-jev.mjs";
 
 const MULTI_SHOT_SCHEMA = "shaz-multi-shot-v1";
 const SHOT_ID = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
@@ -439,6 +440,52 @@ export function deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultB
     totalDurationFrames: totalFrames,
     shots,
   };
+}
+
+/**
+ * Derives an intelligent multi-shot plan utilizing TypeSafe AI's Jev model
+ * for probabilistic comedic gesture and camera choreography.
+ * Gracefully falls back to deterministic deriveMultiShotPlan if Jev is unavailable.
+ */
+export async function deriveMultiShotPlanWithJev({
+  transcript,
+  audioDurationSeconds,
+  defaultBackgroundId = "sisters-room",
+  apiKey,
+  fetchFn,
+}) {
+  const plan = deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultBackgroundId });
+
+  // If no transcript or single shot, return deterministic plan
+  if (!transcript || !Array.isArray(transcript.words) || transcript.words.length === 0 || plan.shots.length <= 1) {
+    return plan;
+  }
+
+  try {
+    for (const shot of plan.shots) {
+      if (shot.shotType === "chibi-commentary" && shot.card?.quote) {
+        const jevChoice = await evaluateSentenceDirector(shot.card.quote, { apiKey, fetchFn });
+        if (jevChoice) {
+          shot.chibiPose = jevChoice.chibiPose;
+          shot.chibiRoutine = [jevChoice.chibiPose];
+          if (shot.card) {
+            shot.card.badge = jevChoice.badge;
+          }
+          shot.rationale = `Jev actor instinct: ${jevChoice.chibiPose} (${Math.round(jevChoice.chibiConfidence * 100)}% conf)`;
+        }
+      } else if (shot.shotType === "b-roll") {
+        // If preceding shot had punchline, apply dramatic snap-punch
+        const jevChoice = await evaluateSentenceDirector(shot.rationale || "B-roll transition", { apiKey, fetchFn });
+        if (jevChoice?.cameraMotion) {
+          shot.motion = jevChoice.cameraMotion;
+        }
+      }
+    }
+  } catch {
+    // If Jev call fails (e.g. network timeout), preserve deterministic plan
+  }
+
+  return plan;
 }
 
 export { MULTI_SHOT_SCHEMA };

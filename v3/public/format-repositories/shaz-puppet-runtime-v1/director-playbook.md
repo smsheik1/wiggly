@@ -111,6 +111,17 @@ In this version of the format, the director has access to:
 
 ---
 
+## Jev System One Actor Intuition Engine (Optional BYOK)
+
+When a `TYPESAFE_API_KEY` is configured in `secrets.env` or the environment, `deriveMultiShotPlanWithJev` automatically queries TypeSafe AI's Jev model (`jev-latest`).
+- **Sub-200ms Decision Engine:** Jev evaluates each commentary sentence at **\$0.042/1M tokens** with sub-200ms latency to select the most natural, human-feeling:
+  - **`chibiPose`** (`talk-gesture`, `present-card`, `think-chin`, `shrug-open`, `point-emphasis`)
+  - **`badge`** category tags (e.g. `THEORY`, `LEAK`, `RUMOR`, `VERDICT`)
+  - **Camera Motion** (`zoom-in`, `pan-left`, `pan-right`, etc.)
+- **Graceful Fallback:** If no API key is provided, the director falls back seamlessly to the deterministic keyword analyzer at zero cost and zero network overhead.
+
+---
+
 ## Directing Rules
 
 1. **Never Cut in the Middle of a Spoken Word:**
