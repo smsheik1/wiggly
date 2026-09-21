@@ -234,6 +234,11 @@ export function analyzeSentenceSemantics(text) {
     icon = "burger";
     badge = "HOMEMADE";
     chibiPose = "talk-gesture";
+  } else if (/\b(love|thank|thanks|heart|favorite|sweet|grateful)\b/i.test(lower)) {
+    theme = "sunburst-gold";
+    icon = "heart-paw";
+    badge = "THE BEST";
+    chibiPose = "present-card";
   } else if (/\b(rule|rules|train|training|discipline|disciplined|champion|trophy|win|best|master)\b/i.test(lower)) {
     theme = "emerald-green";
     icon = "trophy";
@@ -254,11 +259,6 @@ export function analyzeSentenceSemantics(text) {
     icon = "question";
     badge = "TOTAL CONFUSION";
     chibiPose = "think-chin";
-  } else if (/\b(love|thank|thanks|heart|favorite|sweet|grateful)\b/i.test(lower)) {
-    theme = "sunburst-gold";
-    icon = "heart-paw";
-    badge = "THE BEST";
-    chibiPose = "present-card";
   } else if (/\b(idea|ideas|think|thought|realize|discovery|aha)\b/i.test(lower)) {
     theme = "sunburst-gold";
     icon = "idea";
@@ -277,7 +277,12 @@ export function analyzeSentenceSemantics(text) {
  * Automatically derives an intelligent, rhythmic multi-shot plan
  * from a word-timestamped transcript.
  */
-export function deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultBackgroundId = "sisters-room" }) {
+export function deriveMultiShotPlan({
+  transcript,
+  audioDurationSeconds,
+  defaultBackgroundId = "sisters-room",
+  brollMediaList = [],
+}) {
   const totalFrames = Math.max(1, Math.round(audioDurationSeconds * 24));
   const totalDurationMs = Math.round(audioDurationSeconds * 1000);
 
@@ -318,22 +323,17 @@ export function deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultB
       beats.push({
         text: currentWords.map((item) => item.text).join(" ").trim(),
         startMs: currentWords[0].startMs,
-        endMs: isLastWord ? totalDurationMs : transcript.words[i + 1].startMs,
+        endMs: currentWords.at(-1).endMs,
         words: [...currentWords],
       });
       currentWords = [];
     }
   }
 
-  // Build the shots sequence following the Director Playbook rhythm
+  // Build shot plan from beats
   const shots = [];
   let currentFrame = 0;
 
-  // Shot rotation state machine:
-  // 0: talk-to-camera (Hook / Anecdote)
-  // 1: chibi-commentary with on-the-fly topic card
-  // 2: text-card (punchy text highlight) or talk-to-camera
-  // 3: chibi-commentary or talk-to-camera
   for (let bIndex = 0; bIndex < beats.length; bIndex += 1) {
     const beat = beats[bIndex];
     const isFirst = bIndex === 0;
@@ -352,8 +352,8 @@ export function deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultB
     // Dynamic 4-part rotation:
     // 0: talk-to-camera
     // 1: chibi-commentary with vector card
-    // 2: b-roll full-screen illustration with Ken Burns motion (pan-right, zoom-in, pan-left, zoom-out)
-    // 3: text-card punchline or return to talk-to-camera
+    // 2: b-roll (if media provided) or text-card (punchy kinetic typography)
+    // 3: talk-to-camera
     let shotType = "talk-to-camera";
     let brollMotion = "zoom-in";
     if (isFirst) {
@@ -361,18 +361,22 @@ export function deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultB
     } else if (bIndex % 4 === 1) {
       shotType = "chibi-commentary";
     } else if (bIndex % 4 === 2) {
-      shotType = "b-roll";
-      const motions = ["zoom-in", "pan-right", "zoom-out", "pan-left"];
-      brollMotion = motions[Math.floor(bIndex / 2) % motions.length];
-    } else if (bIndex % 4 === 3) {
-      // If short punchy text, use text-card; otherwise return to talk-to-camera
-      if (beat.words.length <= 8 && beat.text.length <= 50) {
-        shotType = "text-card";
+      if (brollMediaList && brollMediaList.length > 0) {
+        shotType = "b-roll";
+        const motions = ["zoom-in", "pan-right", "zoom-out", "pan-left"];
+        brollMotion = motions[Math.floor(bIndex / 2) % motions.length];
       } else {
-        shotType = "talk-to-camera";
+        shotType = "text-card";
       }
+    } else if (bIndex % 4 === 3) {
+      shotType = "talk-to-camera";
     } else {
       shotType = "talk-to-camera";
+    }
+
+    // Ensure adjacent shots never have identical shotType
+    if (shots.length > 0 && shotType === shots.at(-1).shotType) {
+      shotType = shotType === "talk-to-camera" ? "chibi-commentary" : "talk-to-camera";
     }
 
     if (shotType === "talk-to-camera") {
@@ -401,12 +405,14 @@ export function deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultB
         },
       });
     } else if (shotType === "b-roll") {
+      const brollMedia = brollMediaList[Math.floor(bIndex / 4) % brollMediaList.length] ?? null;
       shots.push({
         id: shotId,
         shotType: "b-roll",
         startFrame: currentFrame,
         endFrameExclusive: endFrame,
         backgroundId: defaultBackgroundId,
+        brollMedia,
         motion: brollMotion,
       });
     } else if (shotType === "text-card") {
@@ -451,27 +457,50 @@ export async function deriveMultiShotPlanWithJev({
   transcript,
   audioDurationSeconds,
   defaultBackgroundId = "sisters-room",
+  brollMediaList = [],
   apiKey,
   fetchFn,
 }) {
-  const plan = deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultBackgroundId });
+  const plan = deriveMultiShotPlan({ transcript, audioDurationSeconds, defaultBackgroundId, brollMediaList });
 
   // If no transcript or single shot, return deterministic plan
   if (!transcript || !Array.isArray(transcript.words) || transcript.words.length === 0 || plan.shots.length <= 1) {
     return plan;
   }
 
+  const chibiRotation = ["point-emphasis", "think-chin", "present-card", "shrug-open", "talk-gesture"];
+  const puppetRotation = ["present", "think", "aha", "point", "confident"];
+  const badgeRotation = ["REALITY CHECK", "THE CLASH", "COMMUNITY ROAST", "THE BEST", "YOUR VERDICT"];
+
+  let lastChibiPose = null;
+  let lastBadge = null;
+  let lastPuppetPose = null;
+
   try {
     for (const shot of plan.shots) {
       if (shot.shotType === "chibi-commentary" && shot.card?.quote) {
         const jevChoice = await evaluateSentenceDirector(shot.card.quote, { apiKey, fetchFn });
         if (jevChoice) {
-          shot.chibiPose = jevChoice.chibiPose;
-          shot.chibiRoutine = [jevChoice.chibiPose];
-          if (shot.card) {
-            shot.card.badge = jevChoice.badge;
+          let chosenPose = jevChoice.chibiPose;
+          let chosenBadge = jevChoice.badge;
+
+          // Prevent exact repetition of identical pose or badge in successive shots
+          if (chosenPose === lastChibiPose) {
+            chosenPose = chibiRotation.find((p) => p !== lastChibiPose) ?? "point-emphasis";
           }
-          shot.rationale = `Jev actor instinct: ${jevChoice.chibiPose} (${Math.round(jevChoice.chibiConfidence * 100)}% conf)`;
+          if (chosenBadge === lastBadge) {
+            chosenBadge = badgeRotation.find((b) => b !== lastBadge) ?? "REALITY CHECK";
+          }
+
+          lastChibiPose = chosenPose;
+          lastBadge = chosenBadge;
+
+          shot.chibiPose = chosenPose;
+          shot.chibiRoutine = [chosenPose];
+          if (shot.card) {
+            shot.card.badge = chosenBadge;
+          }
+          shot.rationale = `Jev actor instinct: ${chosenPose} (${Math.round(jevChoice.chibiConfidence * 100)}% conf)`;
         }
       } else if (shot.shotType === "talk-to-camera") {
         const shotStartMs = (shot.startFrame / 24) * 1000;
@@ -484,8 +513,13 @@ export async function deriveMultiShotPlanWithJev({
         if (spokenText) {
           const jevChoice = await evaluateSentenceDirector(spokenText, { apiKey, fetchFn });
           if (jevChoice?.shazPose) {
-            shot.poseId = jevChoice.shazPose;
-            shot.rationale = `Jev puppet actor instinct: ${jevChoice.shazPose} (${Math.round(jevChoice.shazConfidence * 100)}% conf)`;
+            let chosenPuppetPose = jevChoice.shazPose;
+            if (chosenPuppetPose === lastPuppetPose) {
+              chosenPuppetPose = puppetRotation.find((p) => p !== lastPuppetPose) ?? "present";
+            }
+            lastPuppetPose = chosenPuppetPose;
+            shot.poseId = chosenPuppetPose;
+            shot.rationale = `Jev puppet actor instinct: ${chosenPuppetPose} (${Math.round(jevChoice.shazConfidence * 100)}% conf)`;
           }
         }
       } else if (shot.shotType === "b-roll") {

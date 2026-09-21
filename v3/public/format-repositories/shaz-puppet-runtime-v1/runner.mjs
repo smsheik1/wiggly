@@ -272,6 +272,7 @@ async function init(args) {
           transcript: transcriptState.transcript,
           audioDurationSeconds: sequenceAudioFrames / 24,
           defaultBackgroundId: input.defaultBackgroundId ?? "sisters-room",
+          brollMediaList: Array.isArray(input.brollMedia) ? input.brollMedia : [],
         });
         input.title = input.title ?? derived.title;
         input.totalDurationFrames = sequenceAudioFrames;

@@ -105,13 +105,41 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
         const pose = validated.registry.byId.get(poseId) ?? neutralPose;
         const totalRecipeFrames = pose.recipe.durationFrames || 1;
 
-        // Render animated pose leading to apex hold, with Cherry mouth sync for each frame
+        // Render animated gesture entrance, apex hold, smooth release, and neutral speech
         for (let f = 0; f < shot.durationFrames; f += 1) {
           const globalFrame = shot.startFrame + f;
           const mouthDrawing = validated.lipSync?.frameDrawings[globalFrame] ?? null;
-          // Step through the recipe frames (1-indexed) into the hold pose
-          const poseFrame = Math.min(f + 1, totalRecipeFrames);
-          const cacheKey = `${poseId}:${poseFrame}:${mouthDrawing ?? "source"}`;
+
+          let activePose = pose;
+          let poseFrame = 1;
+          if (poseId === "neutral-listening" || totalRecipeFrames <= 1) {
+            activePose = neutralPose;
+            poseFrame = 1;
+          } else if (shot.durationFrames <= totalRecipeFrames) {
+            activePose = pose;
+            poseFrame = Math.min(f + 1, totalRecipeFrames);
+          } else {
+            const holdFrames = Math.min(24, Math.max(8, Math.floor((shot.durationFrames - totalRecipeFrames) / 3)));
+            const releaseFrames = totalRecipeFrames;
+
+            if (f < totalRecipeFrames) {
+              activePose = pose;
+              poseFrame = f + 1;
+            } else if (f < totalRecipeFrames + holdFrames) {
+              activePose = pose;
+              poseFrame = totalRecipeFrames;
+            } else if (f < totalRecipeFrames + holdFrames + releaseFrames) {
+              activePose = pose;
+              const stepBack = f - (totalRecipeFrames + holdFrames);
+              poseFrame = Math.max(1, totalRecipeFrames - stepBack);
+            } else {
+              activePose = neutralPose;
+              poseFrame = 1;
+            }
+          }
+
+          const activePoseId = activePose.id;
+          const cacheKey = `${activePoseId}:${poseFrame}:${mouthDrawing ?? "source"}`;
 
           let composedBuffer;
           if (frameCache.has(cacheKey)) {
@@ -124,7 +152,7 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
               propRoot: path.join(root, "assets", "props"),
               assetCache,
               propCache,
-              poseRuntime: pose.poseRuntime,
+              poseRuntime: activePose.poseRuntime,
               background: TRANSPARENT,
               stageView: PERFORMANCE_STAGE_VIEW,
               mouthDrawing,
