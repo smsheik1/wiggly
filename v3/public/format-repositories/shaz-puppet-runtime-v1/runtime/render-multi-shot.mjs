@@ -115,30 +115,13 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           if (poseId === "neutral-listening" || totalRecipeFrames <= 1) {
             activePose = neutralPose;
             poseFrame = 1;
-          } else if (shot.durationFrames <= totalRecipeFrames) {
-            activePose = pose;
-            poseFrame = Math.min(f + 1, totalRecipeFrames);
           } else {
-            const holdFrames = Math.min(24, Math.max(8, Math.floor((shot.durationFrames - totalRecipeFrames) / 3)));
-            const releaseFrames = totalRecipeFrames;
-
-            if (f < totalRecipeFrames) {
-              activePose = pose;
-              if (shot.startFrame === 0 && poseId === "think") {
-                poseFrame = Math.min(totalRecipeFrames, 7 + f);
-              } else {
-                poseFrame = f + 1;
-              }
-            } else if (f < totalRecipeFrames + holdFrames) {
-              activePose = pose;
-              poseFrame = totalRecipeFrames;
-            } else if (f < totalRecipeFrames + holdFrames + releaseFrames) {
-              activePose = pose;
-              const stepBack = f - (totalRecipeFrames + holdFrames);
-              poseFrame = Math.max(1, totalRecipeFrames - stepBack);
+            activePose = pose;
+            // When entering think, avoid initial frames 1-6 which have closed blink eyelids
+            if (poseId === "think" && f < 6) {
+              poseFrame = Math.min(totalRecipeFrames, 7 + f);
             } else {
-              activePose = neutralPose;
-              poseFrame = 1;
+              poseFrame = Math.min(f + 1, totalRecipeFrames);
             }
           }
 
@@ -243,7 +226,7 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
             const newW = Math.max(10, Math.round(380 * transform.sx));
             const newH = Math.max(10, Math.round(320 * transform.sy));
             const compLeft = Math.max(0, Math.min(1280 - newW, Math.round(1100 - (1100 - 900) * transform.sx + transform.dx)));
-            const compTop = Math.max(0, Math.min(720 - newH, Math.round(720 - (720 - 400) * transform.sy + transform.dy)));
+            const compTop = 720 - newH;
 
             const patch = await sharp(itemPath)
               .extract({ left: 900, top: 400, width: 380, height: 320 })
