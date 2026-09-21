@@ -75,7 +75,10 @@ try {
   assert.match(await discovery.locator("#proof-quality").innerText(), /remain unverified/);
   assert.equal(await discovery.getByRole("link", { name: "Open finished ad" }).count(), 0);
   const builder = getDiscoveryFormatProfile("repo-builder")!;
-  const archive = await discovery.request.get(`${baseUrl}${builder.repositoryHref}`);
+  const archiveUrl = builder.repositoryHref?.startsWith("http")
+    ? builder.repositoryHref
+    : `${baseUrl}${builder.repositoryHref}`;
+  const archive = await discovery.request.get(archiveUrl);
   assert.equal(archive.status(), 200);
   assert.equal(createHash("sha256").update(await archive.body()).digest("hex"), "7cf18546f887516dc2420ed443d43bddf49f316a49e13e6d40e04f46ee3dc3dc");
   await discovery.goto(`${baseUrl}/s/repo-builder-overview`, { waitUntil: "domcontentloaded" });
@@ -138,9 +141,10 @@ try {
               .count(),
             `${slug}: missing download control`,
           );
-          const archive = await page.request.head(
-            `${baseUrl}${format.repositoryHref}`,
-          );
+          const archiveUrl = format.repositoryHref.startsWith("http")
+            ? format.repositoryHref
+            : `${baseUrl}${format.repositoryHref}`;
+          const archive = await page.request.head(archiveUrl);
           assert.equal(
             archive.status(),
             200,
