@@ -184,7 +184,11 @@ export async function runScriptLinter(filePath) {
   const result = validateScript(script);
 
   try {
-    const fullText = script.beats.map((b) => b.spokenText).join(" ");
+    const fullText = [
+      script.hook.text,
+      ...script.beats.map((b) => b.text),
+      script.landing.text,
+    ].join(" ");
     const jevReport = await lintScriptWithJev(fullText);
     if (jevReport) {
       result.jev = jevReport;
