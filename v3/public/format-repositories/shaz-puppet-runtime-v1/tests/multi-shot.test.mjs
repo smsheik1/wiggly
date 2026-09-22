@@ -518,4 +518,40 @@ test("phone-use-sequence recipe conforms to universal rig contract and matches t
   assert.ok(Math.abs(phoneSample.attrs.position.attr3dpath[1] - thinkSample.attrs.position.attr3dpath[1]) < 0.01, "registered Y position must match think");
 });
 
+test("OTS_GRAPHIC_ZONE respects 90% broadcast action-safe and Shaz staging boundary", async () => {
+  const { OTS_GRAPHIC_ZONE } = await import("../runtime/render-multi-shot.mjs");
+  const contract = JSON.parse(await fs.readFile(path.join(root, "composition-contract.json"), "utf8"));
+
+  assert.ok(OTS_GRAPHIC_ZONE, "OTS_GRAPHIC_ZONE must be exported");
+  assert.equal(OTS_GRAPHIC_ZONE.left, 80);
+  assert.equal(OTS_GRAPHIC_ZONE.top, 90);
+  assert.equal(OTS_GRAPHIC_ZONE.width, 440);
+  assert.equal(OTS_GRAPHIC_ZONE.height, 440);
+
+  // 90% Action Safe limits for 1280x720 canvas
+  const actionSafeLeft = (1280 * 0.1) / 2; // 64
+  const actionSafeRight = 1280 - actionSafeLeft; // 1216
+  const actionSafeTop = (720 * 0.1) / 2; // 36
+  const actionSafeBottom = 720 - actionSafeTop; // 684
+
+  assert.ok(OTS_GRAPHIC_ZONE.left >= actionSafeLeft, "OTS left must be inside action safe");
+  assert.ok(OTS_GRAPHIC_ZONE.top >= actionSafeTop, "OTS top must be inside action safe");
+  assert.ok(OTS_GRAPHIC_ZONE.left + OTS_GRAPHIC_ZONE.width <= actionSafeRight, "OTS right must be inside action safe");
+  assert.ok(OTS_GRAPHIC_ZONE.top + OTS_GRAPHIC_ZONE.height <= actionSafeBottom, "OTS bottom must be inside action safe");
+
+  // Clearance from Shaz staging region
+  const cardRightEdge = OTS_GRAPHIC_ZONE.left + OTS_GRAPHIC_ZONE.width;
+  assert.ok(cardRightEdge <= OTS_GRAPHIC_ZONE.shazStagingBox.left, "Card must not intrude into Shaz core staging box");
+  assert.ok(OTS_GRAPHIC_ZONE.comfortMarginToShaz >= 100, "Comfort margin must be at least 100px");
+
+  // Contract match
+  assert.deepEqual(contract.otsGraphicZone.bounds, {
+    left: OTS_GRAPHIC_ZONE.left,
+    top: OTS_GRAPHIC_ZONE.top,
+    width: OTS_GRAPHIC_ZONE.width,
+    height: OTS_GRAPHIC_ZONE.height,
+  });
+});
+
+
 

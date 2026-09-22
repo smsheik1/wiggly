@@ -30,6 +30,11 @@ In this version of the format, the director has access to:
   - Conversational delivery, personal anecdotes, asking questions to the viewer.
   - Comedic beats, sarcastic reactions, and punchlines.
 - **Duration guidelines:** Typically 3 to 7 seconds. Rarely hold on talking head longer than 6 seconds without a beat change.
+- **Over-The-Shoulder (OTS) Graphic Zone:**
+  - **Calibrated Bounds:** `left: 80, top: 90, width: 440, height: 440` (lies strictly within 90% broadcast action-safe: `x: 64..1216, y: 36..684`).
+  - **Comfort Margin:** $\ge 120\text{px}$ clean negative space between the graphic right edge (`x: 520`) and Shaz's staging core (`x: ~640`).
+  - **Z-Index Layering:** `1: Background` $\rightarrow$ `2: OTS Card` (with drop shadow) $\rightarrow$ `3: Shaz Puppet Rig` (composited in front, enabling authentic hand/sleeve overlap depth).
+  - **Acting Pairings:** Pair OTS pop-ups with `"point"` (focusing attention on evidence), `"present"` (revealing facts to viewer), or `"chin-stroke"` (smug reflection as the reveal appears).
 
 ### 2. `text-card` (Slow/Fast Moments & Transitions)
 - **What it is:** Bold, punchy typography placed on the room wall (e.g. Sisters Room), with key words highlighted in vibrant accent colors (e.g. `#00b4d8` cyan, `#b5179e` purple).

@@ -15,6 +15,16 @@ import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
 
+export const OTS_GRAPHIC_ZONE = Object.freeze({
+  left: 80,
+  top: 90,
+  width: 440,
+  height: 440,
+  actionSafePadding: 64,
+  comfortMarginToShaz: 120,
+  shazStagingBox: Object.freeze({ left: 540, top: 80, width: 700, height: 640 }),
+});
+
 export async function renderMultiShot({ root, runDirectory, validated }) {
   const output = path.join(runDirectory, "final.mp4");
   const scratch = await fs.mkdtemp(path.join(os.tmpdir(), "shaz-multi-shot-"));
