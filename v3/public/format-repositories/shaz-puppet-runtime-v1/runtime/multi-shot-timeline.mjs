@@ -17,6 +17,17 @@ function exactKeys(value, allowed, context) {
 }
 
 /**
+ * Resolves semantic alias pose IDs to their registered recipe identifiers.
+ * E.g. "chin-stroke" -> "phone-use-sequence" (the prop-free swagger chin-stroke pose)
+ */
+export function resolvePuppetPoseId(poseId) {
+  if (poseId === "chin-stroke" || poseId === "chin-stroke-smug" || poseId === "swagger") {
+    return "phone-use-sequence";
+  }
+  return poseId;
+}
+
+/**
  * Validates a multi-shot plan against measured audio and background assets.
  */
 export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBackgroundId, assets, poseRegistry, transcript }) {
@@ -108,9 +119,9 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
     }
 
     if (shot.shotType === "talk-to-camera") {
-      const poseId = shot.poseId ?? "neutral-listening";
-      if (poseRegistry?.byId && !poseRegistry.byId.has(poseId)) {
-        throw new Error(`shots[${index}].poseId '${poseId}' is not a registered puppet pose`);
+      const resolvedPoseId = resolvePuppetPoseId(shot.poseId ?? "neutral-listening");
+      if (poseRegistry?.byId && !poseRegistry.byId.has(resolvedPoseId)) {
+        throw new Error(`shots[${index}].poseId '${shot.poseId}' is not a registered puppet pose`);
       }
     }
 
@@ -190,7 +201,7 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       endFrameExclusive: shot.endFrameExclusive,
       durationFrames,
       backgroundId,
-      poseId: shot.shotType === "talk-to-camera" ? (shot.poseId ?? "neutral-listening") : null,
+      poseId: shot.shotType === "talk-to-camera" ? resolvePuppetPoseId(shot.poseId ?? "neutral-listening") : null,
       text: shot.text ?? null,
       highlights: shot.highlights ?? [],
       chibiPose: shot.chibiPose ?? "present-card",
@@ -388,7 +399,7 @@ export function deriveMultiShotPlan({
     if (!chibiIndices.has(textIdx)) textCardIndices.add(textIdx);
   }
 
-  const activePoses = ["point", "think", "confident", "present", "aha"];
+  const activePoses = ["chin-stroke", "point", "think", "confident", "present", "aha"];
   let activePoseIndex = 0;
 
   for (let bIndex = 0; bIndex < beats.length; bIndex += 1) {
@@ -531,6 +542,7 @@ export async function deriveMultiShotPlanWithJev({
 
   const puppetRotation = [
     "neutral-listening",
+    "chin-stroke",
     "point",
     "think",
     "confident",

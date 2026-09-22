@@ -10,6 +10,7 @@ import { renderTextCardFrame, wordsVisibleAtFrame } from "./text-card-renderer.m
 import { renderTopicCard } from "./topic-card-renderer.mjs";
 import { renderKenBurnsFrame } from "./broll-renderer.mjs";
 import { buildChibiSchedule, getChibiFrameTransform } from "./chibi-choreography.mjs";
+import { resolvePuppetPoseId } from "./multi-shot-timeline.mjs";
 import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
@@ -101,7 +102,8 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
         });
 
       } else if (shot.shotType === "talk-to-camera") {
-        const poseId = shot.poseId ?? "neutral-listening";
+        const rawPoseId = shot.poseId ?? "neutral-listening";
+        const poseId = resolvePuppetPoseId(rawPoseId);
         const pose = validated.registry.byId.get(poseId) ?? neutralPose;
         const totalRecipeFrames = pose.recipe.durationFrames || 1;
 

@@ -128,9 +128,10 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn } = {
     },
     shaz_puppet_pose: {
       type: "choice",
-      instructions: "Which approved puppet gesture best suits Shaz speaking this line? Select neutral-listening for regular narration, or select an active gesture (point, think, confident, present, aha) when the line delivers emphasis, skepticism, punchlines, or conclusion.",
+      instructions: "Which approved puppet gesture best suits Shaz speaking this line? Select neutral-listening for regular narration, or select an active gesture (chin-stroke, point, think, confident, present, aha) when the line delivers emphasis, skepticism, punchlines, or conclusion.",
       criteria: {
         "neutral-listening": "Default baseline narration without overt arm movement",
+        "chin-stroke": "Smug, confident chin-stroke with hand resting under jaw and sly smirk; perfect for sarcastic irony, skepticism, or witty callouts",
         "point": "Direct emphasis, calling someone or something out, or making an accusatory point",
         "think": "Pondering, reflecting, questioning assumptions, chin hold",
         "confident": "Confident conclusion, hands on hips, or strong definitive statement",

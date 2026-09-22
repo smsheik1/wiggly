@@ -22,13 +22,14 @@ Use `neutral-listening` as the calm body behind Talk to Camera:
 
 - `neutral-listening`
 
-For body-language beats, default to these five artist-reviewed gestures:
+For body-language beats, default to these approved gestures:
 
 - `present`
 - `think`
 - `aha`
 - `point`
 - `confident`
+- `chin-stroke` (swagger / smug chin-stroke with sly smirk, alias for the prop-free `phone-use-sequence` recipe; approved after complete visual review)
 
 The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, `look-at-phone`, `facepalm-frustrated`, `arms-crossed-skeptical`, and `phone-use-sequence`. They are runnable engineering material, not approved performance choices. Do not select one automatically or put it into a user video until that exact current recipe has passed a fresh complete visual review.
 

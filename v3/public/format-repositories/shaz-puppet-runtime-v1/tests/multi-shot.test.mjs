@@ -15,6 +15,7 @@ import {
 import {
   analyzeSentenceSemantics,
   deriveMultiShotPlan,
+  resolvePuppetPoseId,
   validateMultiShotPlan,
 } from "../runtime/multi-shot-timeline.mjs";
 import {
@@ -450,4 +451,47 @@ test("buildChibiSchedule auto-expands single hold when duration >= 48 frames", (
   assert.ok(schedule.includes("Timeline 1_0005.png"), "must include present-card hold");
   assert.ok(schedule.includes("Timeline 1_0008.png"), "must include think-chin hold");
 });
+
+test("resolvePuppetPoseId maps chin-stroke aliases to registered phone-use-sequence recipe", () => {
+  assert.equal(resolvePuppetPoseId("chin-stroke"), "phone-use-sequence");
+  assert.equal(resolvePuppetPoseId("chin-stroke-smug"), "phone-use-sequence");
+  assert.equal(resolvePuppetPoseId("swagger"), "phone-use-sequence");
+  assert.equal(resolvePuppetPoseId("neutral-listening"), "neutral-listening");
+  assert.equal(resolvePuppetPoseId("point"), "point");
+});
+
+test("validateMultiShotPlan accepts chin-stroke pose for talk-to-camera shot", async () => {
+  const assets = JSON.parse(await fs.readFile(path.join(root, "assets.json"), "utf8"));
+  const poseIndex = JSON.parse(await fs.readFile(path.join(root, "poses", "index.json"), "utf8"));
+  const poseRegistry = {
+    byId: new Map(poseIndex.poses.map((p) => [p.id, p])),
+  };
+
+  const planWithChinStroke = {
+    schemaVersion: "shaz-multi-shot-v1",
+    title: "Chin stroke validation",
+    audioFile: "user-audio.wav",
+    totalDurationFrames: 48,
+    shots: [
+      {
+        id: "shot-1",
+        shotType: "talk-to-camera",
+        poseId: "chin-stroke",
+        startFrame: 0,
+        endFrameExclusive: 48,
+        backgroundId: "sisters-room",
+      },
+    ],
+  };
+
+  const validated = validateMultiShotPlan(planWithChinStroke, {
+    audioDurationSeconds: 2.0,
+    defaultBackgroundId: "sisters-room",
+    assets,
+    poseRegistry,
+  });
+
+  assert.equal(validated.shots[0].poseId, "phone-use-sequence");
+});
+
 
