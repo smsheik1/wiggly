@@ -17,7 +17,7 @@ These commands check the package, inspect every registered recipe, and make a fr
 
 ## The safe building blocks
 
-Use `neutral-listening` as the calm body behind Talk to Camera. The other five entries below are the artist-reviewed gestures in the current performance set.
+Use `neutral-listening` as the calm body behind Talk to Camera. The other six entries below are the artist-reviewed gestures in the current performance set.
 
 | ID | Best use |
 | --- | --- |
@@ -27,8 +27,9 @@ Use `neutral-listening` as the calm body behind Talk to Camera. The other five e
 | `aha` | Realization |
 | `point` | Strong directional emphasis |
 | `confident` | Assured statement or finish |
+| `chin-stroke` | Thoughtful swagger, smug pause, or sly smirk (prop-free) |
 
-`poses/index.json` contains eight more recipes. They are registered, so the runtime can load and inspect them, but they are **not cleared for automatic use**. Registered means runnable, not creatively approved. `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, `look-at-phone`, `facepalm-frustrated`, `arms-crossed-skeptical`, and `phone-use-sequence` each need a fresh complete visual review before they appear in a user video.
+`poses/index.json` contains seven more recipes. They are registered, so the runtime can load and inspect them, but they are **not cleared for automatic use**. Registered means runnable, not creatively approved. `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, `look-at-phone`, `facepalm-frustrated`, and `arms-crossed-skeptical` each need a fresh complete visual review before they appear in a user video.
 
 ## Talk to Camera
 
@@ -137,13 +138,13 @@ When `TYPESAFE_API_KEY` is present in `secrets.env`, the director uses TypeSafe 
 
 ### Shaz Voice Cloning & Synthesis (`npm run speak`)
 
-The format package integrates an official private Fish Audio voice clone of Shaz (`947a3b8d8a2c431a8a2934008d89d5b3`), trained on 30.0s of isolated studio vocal audio with verified ground-truth phonetic transcripts.
+The format package integrates an official Cartesia Sonic-3.6 voice clone for creator Shaz (`28ca280b-6835-45d4-aa27-f432156f8236`), with Fish Audio (`947a3b8d8a2c431a8a2934008d89d5b3`) as fallback.
 
 To synthesize new dialogue on demand:
 ```sh
 npm run speak -- --text="What is going on guys? Today we have a crazy new story to talk about." --output=user-audio.wav
 ```
-The command automatically normalizes the audio stream into 44.1kHz 16-bit mono PCM WAV, ready for instant Cherry WASI lip-sync, transcription, and puppet animation.
+The command automatically applies broadcast loudness normalization (`-16 LUFS`) via ffmpeg and exports clean 44.1kHz 16-bit mono PCM WAV, ready for instant Cherry WASI lip-sync, transcription, and puppet animation.
 
 ## Pick a background
 

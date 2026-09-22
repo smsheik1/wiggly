@@ -19,8 +19,10 @@ In this version of the format, the director has access to:
 - **What it is:** Shaz waist-up facing camera with Cherry lip-sync.
 - **Expressive Poses:** You can specify `poseId` (from `poses/index.json`) to give Shaz an emotional stance while speaking with full lip-sync:
   - `"neutral-listening"`: Calm default baseline listening/talking pose.
+  - `"chin-stroke"`: Swagger / smug chin-stroke with sly smirk and hand on hip (great for teasing revelations, hot takes, "nobody asked for this" moments).
   - `"present"`: Open hand gesture presenting ideas outward (great for intros, explanations).
   - `"aha"`: Raised index finger with realization (great for key insights, epiphanies, wrap-ups).
+  - `"point"`: Direct forward point for strong directional emphasis and claims.
   - `"confident"`: Confident hands-on-hips delivery.
   - `"shrug"`: Gentle questioning or disbelief stance.
 - **When to use:**

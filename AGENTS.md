@@ -38,6 +38,7 @@ Do not override guardrails silently.
 8. No invisible interactivity. If a user can click it, they must be able to see it. Hidden hover zones, transparent buttons, and overlapping click traps are banned.
 9. Download/share parity is mandatory. Canvas preview, Remotion export, and share pages must consume the same scene contract and renderer path.
 10. Every fixed bug needs a guardrail test or an updated existing test for that bug class.
+11. Puppet rig and staging coordinate spaces are strictly decoupled. Rig root pegs (`Shaz_Master-P`) must maintain universal scale 1.0 and zero coordinate offset across all authored pose recipes; framing/zoom belongs exclusively to `PERFORMANCE_STAGE_VIEW`.
 
 ## Before You Edit
 
@@ -68,7 +69,7 @@ Ask these questions before writing code:
 
 ## Provider Credentials
 
-- Provider API keys have one canonical source: the ignored repo-root `secrets.env`, which is a local symlink to the operator's central secrets file. Do not search, open, or use `.env.local` for provider credentials.
+- Provider API keys have one canonical source: the ignored repo-root `secrets.env`, which is a local symlink to the operator's central secrets file. Do not search, open, or use `.env.local` for provider credentials. Key providers configured here include `CARTESIA_API_KEY` (official Shaz voice synthesis clone) and `TYPESAFE_API_KEY` (Jev autonomous actor director).
 - When a provider key is needed for an explicitly approved call, load only the named value from `secrets.env` in memory. Do not print it, copy it into a worktree, or assume its absence from the worktree shell means it is unconfigured.
 
 ## Frontend QA

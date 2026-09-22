@@ -52,7 +52,7 @@ The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-a
      `npm run lint:script -- --script=/absolute/path/script.json`
    - Once approved by the user, record dialogue or synthesize speech using Shaz's official cloned voice:
      `npm run speak -- --text="Approved script text here" --output=/absolute/path/user-audio.wav`
-     (Uses Shaz's official Fish Audio clone `947a3b8d8a2c431a8a2934008d89d5b3`, normalized for Cherry WASI lip-sync).
+     (Uses Shaz's official Cartesia Sonic-3.6 clone `28ca280b-6835-45d4-aa27-f432156f8236` with `-16 LUFS` broadcast loudness normalization and Cherry WASI lip-sync compatibility; falls back to Fish Audio clone `947a3b8d8a2c431a8a2934008d89d5b3`).
 4. If the job uses audio, transcribe it before choosing gestures:
 
    `npm run transcribe -- --audio=/absolute/path/audio --output=/absolute/path/transcript.json`
@@ -61,7 +61,7 @@ The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-a
 
 4. Choose the input:
    - For ordinary dialogue, copy `fixtures/talk-to-camera/input.json`. Supply no `sequence`, `durationFrames`, or frame math. Initialization derives one exact-length `neutral-listening` hold from the audio, with lip-sync required.
-   - For a multi-shot directed video, copy `fixtures/multi-shot/input.json` or author a `shaz-multi-shot-v1` plan following `director-playbook.md`. Arrange `talk-to-camera`, `text-card`, `chibi-commentary` (with `chibiRoutine`), and `b-roll` shots.
+   - For a multi-shot directed video, copy `fixtures/multi-shot/input.json` or author a `shaz-multi-shot-v1` plan following `director-playbook.md`. If `shots` is omitted, `npm run init` will automatically invoke the autonomous JEV Director engine to derive a complete, emotionally paced shot sheet directly from the Whisper transcript.
    - For body language, write a `sequence` with the five reviewed gesture IDs above. Use `neutral-listening` only as the calm default or connective tissue. Use explicit `holdFrames` and `gapFrames`. The last action must use `gapFrames: 0`.
    - Choose `sisters-room`, `living-room`, `map-photo-zone`, or `pure-white` from `assets.json`. Name `backgroundId` explicitly for an audio-backed sequence. A semantic performance input may omit it and use `assets.defaultBackgroundId`. Never invent a background ID.
    - `map-photo-zone` is only a clean fixed room in this release. Its empty area is reserved for future supporting media; do not add, crop, or position an image or video there.
