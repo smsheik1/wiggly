@@ -165,3 +165,106 @@ test("deriveMultiShotPlanWithJev prioritizes talk-to-camera with neutral-listeni
   assert.equal(plan.shots[3].poseId, "neutral-listening");
 });
 
+test("curateImageCandidatesDeterministic selects reputable news source over generic stock photo", async () => {
+  const { curateImageCandidatesDeterministic } = await import("../runtime/director-jev.mjs");
+
+  const candidates = [
+    { index: 0, title: "Royalty Free Stock Photo of a Car Steering Wheel", source: "Getty Images", domain: "gettyimages.com" },
+    { index: 1, title: "GM Is Getting Rid Of Apple CarPlay In All Of Its Cars", source: "The Autopian", domain: "theautopian.com" },
+    { index: 2, title: "Generic vehicle vector clipart", source: "ClipArt Library", domain: "clipart.com" },
+  ];
+
+  const result = curateImageCandidatesDeterministic("General Motors just confirmed they still plan to ban Apple CarPlay.", candidates);
+  assert.ok(result);
+  assert.equal(result.selectedIndex, 1);
+  assert.equal(result.selectedCandidate.source, "The Autopian");
+  assert.equal(result.provenance, "heuristic");
+});
+
+test("curateImageCandidatesDeterministic selects meme on sarcastic punchline", async () => {
+  const { curateImageCandidatesDeterministic } = await import("../runtime/director-jev.mjs");
+
+  const candidates = [
+    { index: 0, title: "GM electric vehicle charging station photo", source: "Car and Driver", domain: "caranddriver.com" },
+    { index: 1, title: "SpongeBob Green Fish Deadpan Stare Reaction Meme", source: "Know Your Meme", domain: "knowyourmeme.com" },
+  ];
+
+  const result = curateImageCandidatesDeterministic("Nobody actually asked for this ridiculous paywall.", candidates);
+  assert.ok(result);
+  assert.equal(result.selectedIndex, 1);
+  assert.equal(result.badge, "REACTION");
+});
+
+test("curateImageCandidatesWithJev parses Jev selection correctly", async () => {
+  const { curateImageCandidatesWithJev } = await import("../runtime/director-jev.mjs");
+
+  const candidates = [
+    { index: 0, title: "GM corporate building exterior", source: "Bloomberg", domain: "bloomberg.com" },
+    { index: 1, title: "Who needs Apple CarPlay? Not General Motors' EVs", source: "Detroit Free Press", domain: "freep.com" },
+    { index: 2, title: "SpongeBob meme fish reaction", source: "Reddit", domain: "reddit.com" },
+  ];
+
+  const mockFetch = async () => ({
+    ok: true,
+    json: async () => ({
+      model: "jev-latest",
+      answers: {
+        best_image: {
+          choice: "candidate_1",
+          confidence: 0.94,
+        },
+        card_badge: {
+          choice: "REPORT",
+          confidence: 0.91,
+        },
+      },
+    }),
+  });
+
+  const curated = await curateImageCandidatesWithJev({
+    sentence: "General Motors confirms it will not offer Apple CarPlay in future EVs.",
+    candidates,
+    apiKey: "mock-key",
+    fetchFn: mockFetch,
+  });
+
+  assert.ok(curated);
+  assert.equal(curated.selectedIndex, 1);
+  assert.equal(curated.selectedCandidate.source, "Detroit Free Press");
+  assert.equal(curated.badge, "REPORT");
+  assert.equal(curated.provenance, "jev-systemone");
+});
+
+test("searchGoogleImages parses Serper response correctly and handles key gracefully", async () => {
+  const { searchGoogleImages } = await import("../runtime/serper-search.mjs");
+
+  // Missing key returns null
+  const nullResult = await searchGoogleImages("test query", { apiKey: null });
+  assert.equal(nullResult, null);
+
+  // Mock fetch returns structured results
+  const mockFetch = async () => ({
+    ok: true,
+    json: async () => ({
+      images: [
+        {
+          title: "GM CarPlay Ban Announcement",
+          imageUrl: "https://example.com/carplay.jpg",
+          source: "The Verge",
+          domain: "theverge.com",
+          imageWidth: 800,
+          imageHeight: 600,
+        },
+      ],
+    }),
+  });
+
+  const results = await searchGoogleImages("GM CarPlay", { apiKey: "mock-serper", fetchFn: mockFetch });
+  assert.ok(Array.isArray(results));
+  assert.equal(results.length, 1);
+  assert.equal(results[0].title, "GM CarPlay Ban Announcement");
+  assert.equal(results[0].source, "The Verge");
+  assert.equal(results[0].imageUrl, "https://example.com/carplay.jpg");
+});
+
+
