@@ -290,6 +290,76 @@ export function ShazPuppetRuntimeIncludedAssets({
               </div>
             </div>
           </div>
+
+          {/* Real In-Production Broadcast Examples */}
+          <div className="border-t-2 border-[#080817] bg-[#fffdf8] p-5 sm:p-6" data-testid="shaz-ots-examples">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#31566e]">
+                  Production Renders in Action
+                </p>
+                <h4 className="mt-1 text-xl font-black text-[#080817]">
+                  From Calibration to Real Broadcast Output
+                </h4>
+              </div>
+              <span className="border-2 border-[#080817] bg-white px-2.5 py-1 font-mono text-[10px] font-black uppercase tracking-[0.12em] text-[#080817]">
+                24fps multi-shot engine
+              </span>
+            </div>
+            <p className="mt-2 max-w-[760px] text-xs font-bold leading-5 text-[#596176]">
+              Real broadcast frames rendered by Jev Autonomous Actor Director during the GM CarPlay report. Over-The-Shoulder cards pop in with synchronized SFX and sit naturally behind Shaz’s animated arm gestures.
+            </p>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-2">
+              <div className="overflow-hidden border-2 border-[#080817] bg-white shadow-[3px_3px_0_#080817]">
+                <div className="relative aspect-video border-b-2 border-[#080817] bg-[#080817]">
+                  <Image
+                    src={`${formatAssetRoot}/assets/composition/ots-example-news-card.png`}
+                    alt="Real broadcast example: Talk-to-Camera Shaz with Detroit Free Press news card"
+                    width={1280}
+                    height={720}
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="block h-full w-full object-cover"
+                  />
+                  <div className="absolute left-3 top-3 border-2 border-[#080817] bg-[#ef4444] px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider text-white shadow-[2px_2px_0_#080817]">
+                    Shot 01 · News Editorial
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h5 className="text-sm font-black text-[#080817]">
+                    Detroit Free Press Article Card
+                  </h5>
+                  <p className="mt-1.5 text-xs font-bold leading-5 text-[#596176]">
+                    Authentic headline clipping and cockpit photograph. Shaz performs <code className="rounded bg-[#f1f5f9] px-1 py-0.5 font-mono text-[11px] text-[#080817]">chin-stroke</code> with his sleeve naturally overlapping the card edge for authentic 3D depth.
+                  </p>
+                </div>
+              </div>
+
+              <div className="overflow-hidden border-2 border-[#080817] bg-white shadow-[3px_3px_0_#080817]">
+                <div className="relative aspect-video border-b-2 border-[#080817] bg-[#080817]">
+                  <Image
+                    src={`${formatAssetRoot}/assets/composition/ots-example-meme-card.png`}
+                    alt="Real broadcast example: Talk-to-Camera Shaz with SpongeBob deadpan fish reaction meme"
+                    width={1280}
+                    height={720}
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="block h-full w-full object-cover"
+                  />
+                  <div className="absolute left-3 top-3 border-2 border-[#080817] bg-[#c9ff55] px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider text-[#080817] shadow-[2px_2px_0_#080817]">
+                    Shot 04 · Comedic Meme
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h5 className="text-sm font-black text-[#080817]">
+                    SpongeBob Deadpan Reaction Meme
+                  </h5>
+                  <p className="mt-1.5 text-xs font-bold leading-5 text-[#596176]">
+                    95% full-bleed image card selected by Jev Curator with punchline <code className="rounded bg-[#f1f5f9] px-1 py-0.5 font-mono text-[11px] text-[#080817]">NOBODY ASKED FOR THIS</code> timed for sarcastic comedic contrast.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div
           className="mt-8 border-2 border-[#080817] bg-[#fffdf8] p-5 shadow-[5px_5px_0_#080817]"
