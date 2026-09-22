@@ -117,16 +117,28 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn } = {
       type: "noul",
       instructions: "Is this sentence delivering a comedic punchline or sarcastic joke?",
     },
+    shot_type: {
+      type: "choice",
+      instructions: "What visual shot format best serves this sentence in a video commentary? Default to talk-to-camera unless there is a strong comedic cutaway or statistical quote.",
+      criteria: {
+        "talk-to-camera": "Standard anchor: Shaz speaking directly to the viewer on camera. Use this for 75%+ of sentences.",
+        "chibi-commentary": "Comedic cutaway: Chibi animated character with pop card for an exaggerated roast, funny tangent, or sarcastic aside.",
+        "text-card": "Graphic card: Big bold full-screen kinetic text card to highlight an astonishing quote, statistic, or critical takeaway.",
+      },
+    },
     shaz_puppet_pose: {
       type: "choice",
-      instructions: "Which main puppet gesture best suits Shaz speaking this direct-to-audience line?",
+      instructions: "Which puppet gesture best suits Shaz speaking this line? Select neutral-listening for regular narration, or select an active gesture (shrug, confident, point, think, arms-crossed-skeptical, facepalm-frustrated) when the line delivers emphasis, skepticism, punchlines, or conclusion.",
       criteria: {
-        "neutral-listening": "Calm, conversational default speech without exaggerated physical gesturing",
-        "present": "Welcoming the viewer, presenting a concept, opening up an idea with hands outward",
-        "think": "Pondering, reflecting on an observation, questioning assumptions, chin hold",
-        "aha": "A realization, discovery, 'aha' moment, pointing out an epiphany",
-        "point": "Direct emphasis, calling someone or something out directly, making a point",
-        "confident": "Confident delivery, stance with hands on hips, concluding with certainty",
+        "neutral-listening": "Default baseline narration without overt arm movement",
+        "present": "Presenting data or welcoming the audience with open hands",
+        "think": "Pondering, reflecting, chin hold",
+        "shrug": "Disbelief, skepticism, questioning who asked for this",
+        "arms-crossed-skeptical": "Smug skepticism, doubtful stance, waiting for proof",
+        "facepalm-frustrated": "Facepalm at absurd stupidity or exasperating corporate moves",
+        "aha": "Epiphany or connecting the dots",
+        "point": "Direct emphasis or calling out a specific entity",
+        "confident": "Confident conclusion or strong definitive statement",
       },
     },
   };
@@ -139,7 +151,13 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn } = {
   const chosenMotion = answers.camera_motion?.choice;
   const cameraMotion = allowedMotions.includes(chosenMotion) ? chosenMotion : "zoom-in";
 
+  const allowedShotTypes = ["talk-to-camera", "chibi-commentary", "text-card"];
+  const chosenShotType = answers.shot_type?.choice;
+  const shotType = allowedShotTypes.includes(chosenShotType) ? chosenShotType : "talk-to-camera";
+
   return {
+    shotType,
+    shotTypeConfidence: answers.shot_type?.confidence ?? 0,
     shazPose: answers.shaz_puppet_pose?.choice || "neutral-listening",
     shazConfidence: answers.shaz_puppet_pose?.confidence || 0,
     chibiPose: normalizeChibiHold(answers.chibi_pose?.choice),
