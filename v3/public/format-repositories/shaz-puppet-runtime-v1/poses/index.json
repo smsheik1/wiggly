@@ -1,19 +1,89 @@
 {
   "schemaVersion": 1,
   "poses": [
-    { "id": "neutral-listening", "kind": "authored-neutral-anchor", "path": "authored/neutral-listening.json", "sha256": "ca91808736aca7c2b4be3881a688abf9c755617bc61c9b21516a8e2361540406" },
-    { "id": "present", "kind": "authored-replay", "path": "authored/present.json", "sha256": "4577345e15985d0fe71159fa6ebca5dae1e991b9e82ee2b1905a80040c826715" },
-    { "id": "shrug", "kind": "heldout-authored-replay", "path": "authored/shrug.json", "sha256": "9cba89c6393a43580c25eb6059132a39ef30490958936d7f375071faf2f451b1" },
-    { "id": "think", "kind": "authored-replay", "path": "authored/think.json", "sha256": "6fc21c25dd49a6bf18eae49886c6ebb95a41367461a792655d450377ddb16d12" },
-    { "id": "key-point", "kind": "authored-body-replay", "path": "authored/key-point.json", "sha256": "6fc4f1da6fea7392bd8879e39c336c4e54641c2d805993025af9ad6865d9f8c5" },
-    { "id": "aha", "kind": "authored-replay", "path": "authored/aha.json", "sha256": "e3ebc83fa6409be5ac66ce77189ff445bf38352f16ccaf5423756ae95174d654" },
-    { "id": "point", "kind": "authored-replay", "path": "authored/point.json", "sha256": "fcc7f489498683514104d7612dc4fbf5be22243b1f867b6190db74c8e9225a39" },
-    { "id": "confident", "kind": "authored-replay", "path": "authored/confident.json", "sha256": "53496ec22e505fa44673260935ccaa4edc9ea87796b99a1c79031b825c804c1c" },
-    { "id": "excited-celebration", "kind": "generated", "path": "generated/excited-celebration.json", "sha256": "8ca05e529dae031fd6d1c19d727473f9aba058172e995d3e91cacdbc4f6be348" },
-    { "id": "point-at-screen", "kind": "generated", "path": "generated/point-at-screen.json", "sha256": "b8c3853a778610960ed42d0df9f9723debd6eaa5bf8e4873bbd6659b3772fb7a" },
-    { "id": "look-at-phone", "kind": "generated", "path": "generated/look-at-phone.json", "sha256": "863ecff5a785cbe82792e3083ef63c1cc55a3276bb681dc3f5a0d98e7a3edf3d" },
-    { "id": "facepalm-frustrated", "kind": "generated", "path": "generated/facepalm-frustrated.json", "sha256": "566e57501132d20540be4841382a27718a89814fd5e7bc9e04d5c4c2f8f4807c" },
-    { "id": "arms-crossed-skeptical", "kind": "generated", "path": "generated/arms-crossed-skeptical.json", "sha256": "382027cc126ca184c8947cbd794a352497acb73fe90e98548701bbd4acacfae9" },
-    { "id": "phone-use-sequence", "kind": "generated", "path": "generated/phone-use-sequence.json", "sha256": "9fa8355275ed7ea92d9721a2b29ee0e30e746fcfb81fd8e7d4da7c91fad1cd66" }
+    {
+      "id": "neutral-listening",
+      "kind": "authored-neutral-anchor",
+      "path": "authored/neutral-listening.json",
+      "sha256": "ca91808736aca7c2b4be3881a688abf9c755617bc61c9b21516a8e2361540406"
+    },
+    {
+      "id": "present",
+      "kind": "authored-replay",
+      "path": "authored/present.json",
+      "sha256": "4577345e15985d0fe71159fa6ebca5dae1e991b9e82ee2b1905a80040c826715"
+    },
+    {
+      "id": "shrug",
+      "kind": "heldout-authored-replay",
+      "path": "authored/shrug.json",
+      "sha256": "9cba89c6393a43580c25eb6059132a39ef30490958936d7f375071faf2f451b1"
+    },
+    {
+      "id": "think",
+      "kind": "authored-replay",
+      "path": "authored/think.json",
+      "sha256": "6fc21c25dd49a6bf18eae49886c6ebb95a41367461a792655d450377ddb16d12"
+    },
+    {
+      "id": "key-point",
+      "kind": "authored-body-replay",
+      "path": "authored/key-point.json",
+      "sha256": "6fc4f1da6fea7392bd8879e39c336c4e54641c2d805993025af9ad6865d9f8c5"
+    },
+    {
+      "id": "aha",
+      "kind": "authored-replay",
+      "path": "authored/aha.json",
+      "sha256": "e3ebc83fa6409be5ac66ce77189ff445bf38352f16ccaf5423756ae95174d654"
+    },
+    {
+      "id": "point",
+      "kind": "authored-replay",
+      "path": "authored/point.json",
+      "sha256": "fcc7f489498683514104d7612dc4fbf5be22243b1f867b6190db74c8e9225a39"
+    },
+    {
+      "id": "confident",
+      "kind": "authored-replay",
+      "path": "authored/confident.json",
+      "sha256": "53496ec22e505fa44673260935ccaa4edc9ea87796b99a1c79031b825c804c1c"
+    },
+    {
+      "id": "excited-celebration",
+      "kind": "generated",
+      "path": "generated/excited-celebration.json",
+      "sha256": "8ca05e529dae031fd6d1c19d727473f9aba058172e995d3e91cacdbc4f6be348"
+    },
+    {
+      "id": "point-at-screen",
+      "kind": "generated",
+      "path": "generated/point-at-screen.json",
+      "sha256": "b8c3853a778610960ed42d0df9f9723debd6eaa5bf8e4873bbd6659b3772fb7a"
+    },
+    {
+      "id": "look-at-phone",
+      "kind": "generated",
+      "path": "generated/look-at-phone.json",
+      "sha256": "863ecff5a785cbe82792e3083ef63c1cc55a3276bb681dc3f5a0d98e7a3edf3d"
+    },
+    {
+      "id": "facepalm-frustrated",
+      "kind": "generated",
+      "path": "generated/facepalm-frustrated.json",
+      "sha256": "566e57501132d20540be4841382a27718a89814fd5e7bc9e04d5c4c2f8f4807c"
+    },
+    {
+      "id": "arms-crossed-skeptical",
+      "kind": "generated",
+      "path": "generated/arms-crossed-skeptical.json",
+      "sha256": "382027cc126ca184c8947cbd794a352497acb73fe90e98548701bbd4acacfae9"
+    },
+    {
+      "id": "phone-use-sequence",
+      "kind": "generated",
+      "path": "generated/phone-use-sequence.json",
+      "sha256": "0e7870420995f6dd8b351a1c99c1a0a5da38a2ea246e0e0465be9d9b330321a0"
+    }
   ]
 }

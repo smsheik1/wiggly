@@ -187,11 +187,12 @@ export async function synthesizeShazVoice({
 
   await fs.writeFile(rawWavPath, rawBuffer);
 
-  // Normalize stream headers and chunk sizes via ffmpeg for Cherry WASI lip-sync compatibility
+  // Normalize stream headers, loudness (-16 LUFS broadcast standard), and chunk sizes via ffmpeg
   try {
     await execFileAsync("ffmpeg", [
       "-y",
       "-i", rawWavPath,
+      "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
       "-c:a", "pcm_s16le",
       "-ar", "44100",
       "-ac", "1",

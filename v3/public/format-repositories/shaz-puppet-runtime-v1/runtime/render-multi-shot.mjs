@@ -11,7 +11,7 @@ import { renderTopicCard } from "./topic-card-renderer.mjs";
 import { renderKenBurnsFrame } from "./broll-renderer.mjs";
 import { buildChibiSchedule, getChibiFrameTransform } from "./chibi-choreography.mjs";
 import { resolvePuppetPoseId } from "./multi-shot-timeline.mjs";
-import { PERFORMANCE_STAGE_VIEW, performancePoseRuntime } from "./render-sequence.mjs";
+import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
 
@@ -141,7 +141,7 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
               propRoot: path.join(root, "assets", "props"),
               assetCache,
               propCache,
-              poseRuntime: performancePoseRuntime(validated.manifest, activePose),
+              poseRuntime: activePose.poseRuntime,
               background: TRANSPARENT,
               stageView: PERFORMANCE_STAGE_VIEW,
               mouthDrawing,

@@ -26,6 +26,31 @@ async function buildPhoneUseSequence(manifest) {
   if (phone.sourceXstageSha256 !== manifest.source.sha256) {
     throw new Error("look-at-phone recipe targets a different Shaz rig");
   }
+
+  const controls = structuredClone(phone.controls);
+
+  // Normalize Shaz_Master-P: invert the 0.86 scale and +0.12 Y offset originally used for phone prop framing
+  controls["Shaz_Master-P"] = controls["Shaz_Master-P"].map((key) => ({
+    ...key,
+    scale: [
+      key.scale[0] / 0.86,
+      key.scale[1] / 0.86,
+    ],
+    position: [
+      key.position[0],
+      key.position[1] - 0.12,
+      key.position[2],
+    ],
+  }));
+
+  // Smooth arm entrance so relaxed right hand clears canvas bottom during standalone inspection
+  for (const key of controls["Right_Arm_Pivot-P"] || []) {
+    if (key.frame <= 6) {
+      const blend = (7 - key.frame) / 6;
+      key.rotation = (key.rotation ?? 0) + 15 * blend;
+    }
+  }
+
   return {
     ...phone,
     id: "phone-use-sequence",
@@ -36,12 +61,14 @@ async function buildPhoneUseSequence(manifest) {
         ...phone.authorship.learnedFrom,
         "removed the detached screen-space tap hand; the phone action keeps the authored overlay hand and its native sleeve registration",
         "removed the literal phone from this reusable gesture after visual review; the native body-language action remains intact",
+        "normalized Shaz_Master-P to scale 1.0 and zero Y offset to conform to universal puppet rig contract",
       ],
     },
     quality: {
       ...phone.quality,
       armCompositeMode: "native-rig",
     },
+    controls,
   };
 }
 

@@ -57,8 +57,9 @@ test("phone-use sequence preserves the native gesture without a literal phone", 
     "removing the phone from the sequence must not alter the registered look-at-phone action");
   assert.deepEqual(pose.props, [],
     "the final storyboard gesture must not retain the literal phone or a screen-space hand");
-  assert.deepEqual(pose.controls, base.controls);
   assert.deepEqual(pose.drawings, base.drawings);
+  assert.ok(Math.abs(pose.controls["Shaz_Master-P"][0].scale[0] - 1.0) < 0.01, "Shaz_Master-P scale must be 1.0");
+  assert.ok(Math.abs(pose.controls["Shaz_Master-P"][0].position[1]) < 0.01, "Shaz_Master-P position Y must be ~0.0");
 });
 
 test("phone-use sequence generator exactly reproduces the registered recipe", async () => {

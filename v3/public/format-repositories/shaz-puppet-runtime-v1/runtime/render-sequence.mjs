@@ -7,31 +7,9 @@ import sharp from "sharp";
 import { execute, sha256, validateRun, writeJson } from "./run-common.mjs";
 import { renderRigFrame } from "./rig-v2-renderer.mjs";
 import { renderMultiShot } from "./render-multi-shot.mjs";
-import { createPoseRuntime } from "./pose-recipe.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
 const PERFORMANCE_STAGE_VIEW = Object.freeze({ scale: 1.33, offset: [0.12, 0.142] });
-
-function performancePoseRuntime(manifest, pose) {
-  if (pose.id === "phone-use-sequence") {
-    if (!pose._performanceRuntime) {
-      const normalizedRecipe = {
-        ...pose.recipe,
-        controls: {
-          ...pose.recipe.controls,
-          "Shaz_Master-P": pose.recipe.controls["Shaz_Master-P"].map((key) => ({
-            ...key,
-            scale: [key.scale[0] / 0.86, key.scale[1] / 0.86],
-            position: [key.position[0], key.position[1] - 0.12, key.position[2]],
-          })),
-        },
-      };
-      pose._performanceRuntime = createPoseRuntime(manifest, normalizedRecipe);
-    }
-    return pose._performanceRuntime;
-  }
-  return pose.poseRuntime;
-}
 
 function stepForPerformanceFrame(timeline, outputFrame) {
   const event = timeline.events.find(({ startFrame, endFrameExclusive }) => (
@@ -88,7 +66,7 @@ async function renderPerformance({ root, runDirectory, validated }) {
           propRoot: path.join(root, "assets", "props"),
           assetCache,
           propCache,
-          poseRuntime: performancePoseRuntime(validated.manifest, pose),
+          poseRuntime: pose.poseRuntime,
           background: TRANSPARENT,
           stageView: PERFORMANCE_STAGE_VIEW,
         });
@@ -346,4 +324,4 @@ async function renderSequence({ root, runDirectory }) {
   }
 }
 
-export { PERFORMANCE_STAGE_VIEW, performancePoseRuntime, renderSequence };
+export { PERFORMANCE_STAGE_VIEW, renderSequence };

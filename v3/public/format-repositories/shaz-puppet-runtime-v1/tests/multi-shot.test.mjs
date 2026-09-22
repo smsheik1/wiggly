@@ -494,8 +494,7 @@ test("validateMultiShotPlan accepts chin-stroke pose for talk-to-camera shot", a
   assert.equal(validated.shots[0].poseId, "phone-use-sequence");
 });
 
-test("performancePoseRuntime normalizes phone-use-sequence framing to match neutral and think height", async () => {
-  const { performancePoseRuntime } = await import("../runtime/render-sequence.mjs");
+test("phone-use-sequence recipe conforms to universal rig contract and matches think height", async () => {
   const { loadManifest } = await import("../runtime/rig-v2-renderer.mjs");
   const { createPoseRuntime, loadPoseRecipe } = await import("../runtime/pose-recipe.mjs");
 
@@ -503,35 +502,20 @@ test("performancePoseRuntime normalizes phone-use-sequence framing to match neut
   const phoneRecipe = await loadPoseRecipe(path.join(root, "poses", "generated", "phone-use-sequence.json"));
   const thinkRecipe = await loadPoseRecipe(path.join(root, "poses", "authored", "think.json"));
 
-  const phonePose = {
-    id: "phone-use-sequence",
-    recipe: phoneRecipe,
-    poseRuntime: createPoseRuntime(manifest, phoneRecipe),
-  };
-  const thinkPose = {
-    id: "think",
-    recipe: thinkRecipe,
-    poseRuntime: createPoseRuntime(manifest, thinkRecipe),
-  };
-
-  const normalized = performancePoseRuntime(manifest, phonePose);
-  assert.notEqual(normalized, phonePose.poseRuntime, "normalized runtime should wrap the raw runtime");
+  const phoneRuntime = createPoseRuntime(manifest, phoneRecipe);
+  const thinkRuntime = createPoseRuntime(manifest, thinkRecipe);
 
   const columns = new Map(manifest.scenes[0].columns.map((c) => [c.name, c]));
   const masterNode = manifest.scenes[0].nodes.find((n) => n.name === "Shaz_Master-P");
   assert.ok(masterNode, "Shaz_Master-P node must exist");
 
-  const rawSample = phonePose.poseRuntime.sampleNodeAtFrame(masterNode, columns, 55);
-  const normSample = normalized.sampleNodeAtFrame(masterNode, columns, 55);
-  const thinkSample = thinkPose.poseRuntime.sampleNodeAtFrame(masterNode, columns, 49);
+  const phoneSample = phoneRuntime.sampleNodeAtFrame(masterNode, columns, 55);
+  const thinkSample = thinkRuntime.sampleNodeAtFrame(masterNode, columns, 49);
 
-  // Raw phone-use-sequence had 0.86 scale and +0.1165 Y offset
-  assert.ok(rawSample.attrs.scale.x < 0.9, "raw scale is shrunk");
-  assert.ok(rawSample.attrs.position.attr3dpath[1] > 0.1, "raw position is sunk down");
-
-  // Normalized phone-use-sequence has 1.0 scale and matches think master peg Y
-  assert.ok(Math.abs(normSample.attrs.scale.x - 1.0) < 0.01, "normalized scale must be ~1.0");
-  assert.ok(Math.abs(normSample.attrs.position.attr3dpath[1] - thinkSample.attrs.position.attr3dpath[1]) < 0.01, "normalized Y position must match think");
+  // Directly registered recipe has 1.0 scale and matches think master peg Y
+  assert.ok(Math.abs(phoneSample.attrs.scale.x - 1.0) < 0.01, "registered recipe scale must be ~1.0");
+  assert.ok(Math.abs(phoneSample.attrs.scale.y - 1.0) < 0.01, "registered recipe scale Y must be ~1.0");
+  assert.ok(Math.abs(phoneSample.attrs.position.attr3dpath[1] - thinkSample.attrs.position.attr3dpath[1]) < 0.01, "registered Y position must match think");
 });
 
 
