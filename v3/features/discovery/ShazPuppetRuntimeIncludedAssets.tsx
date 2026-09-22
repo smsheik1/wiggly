@@ -229,6 +229,69 @@ export function ShazPuppetRuntimeIncludedAssets({
           </div>
         </div>
         <div
+          className="mt-8 overflow-hidden border-2 border-[#080817] bg-white shadow-[5px_5px_0_#080817]"
+          data-testid="shaz-ots-safe-zone"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-[#080817] bg-[#fffdf8] p-5">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#31566e]">
+                Composition & Staging Science
+              </p>
+              <h3 className="mt-1 text-[clamp(24px,3.5vw,36px)] font-black leading-none tracking-[-0.03em]">
+                Over-The-Shoulder (OTS) Graphic Safe Zone
+              </h3>
+            </div>
+            <span className="border-2 border-[#080817] bg-[#c9ff55] px-2.5 py-1 font-mono text-[10px] font-black uppercase tracking-[0.12em]">
+              440 × 440px target
+            </span>
+          </div>
+
+          <div className="grid min-[860px]:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.85fr)]">
+            <div className="relative aspect-video border-b-2 border-[#080817] bg-[#080817] min-[860px]:border-b-0 min-[860px]:border-r-2">
+              <Image
+                src={`${formatAssetRoot}/assets/composition/ots-graphic-safe-zone.png`}
+                alt="Over-The-Shoulder (OTS) Graphic Safe Zone boundary and staging guides on Talk-to-Camera Shaz"
+                width={1280}
+                height={720}
+                sizes="(min-width: 860px) 620px, 100vw"
+                className="block h-full w-full object-cover"
+              />
+            </div>
+            <div className="flex flex-col justify-between bg-[#fffdf8] p-5 sm:p-6">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#667087]">
+                  Spatial Architecture
+                </p>
+                <h4 className="mt-2 text-xl font-black leading-tight text-[#080817]">
+                  The Science of Negative Space
+                </h4>
+                <p className="mt-3 text-xs font-bold leading-5 text-[#596176]">
+                  Shaz is staged off-center (scale 1.33, offset [0.12, 0.142]), reserving the entire left half of the 1280×720 canvas as open graphic real estate. News cards and screenshots pop up over his shoulder without crowding the host.
+                </p>
+
+                <ul className="mt-4 space-y-2.5 font-mono text-xs font-bold text-[#263446]">
+                  <li className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-[#06b6d4]" />
+                    <span><strong>90% Action Safe:</strong> 64px X-margin, 36px Y-margin</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-[#eab308]" />
+                    <span><strong>OTS Zone Box:</strong> 440×440px at (x: 80, y: 90)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-[#ec4899]" />
+                    <span><strong>Comfort Margin:</strong> ~120px to Shaz core body</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="mt-5 border-t-2 border-[#080817]/10 pt-3 text-[11px] font-bold text-[#667087]">
+                <strong className="text-[#080817]">3-Layer Z-Index Depth:</strong> Background → OTS Graphic (drop shadow) → Shaz Puppet Rig in foreground for natural arm overlap.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
           className="mt-8 border-2 border-[#080817] bg-[#fffdf8] p-5 shadow-[5px_5px_0_#080817]"
           data-testid="shaz-multi-shot-palette"
         >

@@ -751,7 +751,11 @@ for (const mapping of ["A · X", "B · G · I · J", "C · H", "D", "E · F · K
     new RegExp(mapping.replaceAll(" · ", " \\· ")),
   );
 }
-assert.match(includedAssetsSource, /swaps between five mouth drawings/);
+assert.match(includedAssetsSource, /shaz-ots-safe-zone/);
+assert.match(includedAssetsSource, /Over-The-Shoulder \(OTS\) Graphic Safe Zone/);
+assert.match(includedAssetsSource, /ots-graphic-safe-zone\.png/);
+assert.match(includedAssetsSource, /440 × 440px target/);
+assert.match(includedAssetsSource, /The Science of Negative Space/);
 assert.match(includedAssetsSource, /shaz-multi-shot-palette/);
 assert.match(includedAssetsSource, /The 4-Shot Studio Palette/);
 assert.match(includedAssetsSource, /talk-to-camera/);
