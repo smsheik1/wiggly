@@ -1,12 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  CARTESIA_MODEL,
+  CARTESIA_SHAZ_VOICE_ID,
+  CARTESIA_TTS_URL,
   FISH_MODEL,
   FISH_TTS_URL,
   SHAZ_VOICE_ID,
+  loadCartesiaApiKey,
   loadFishApiKey,
   synthesizeShazVoice,
 } from "../runtime/voice.mjs";
+
+test("CARTESIA_SHAZ_VOICE_ID is registered as valid Cartesia UUID", () => {
+  assert.equal(typeof CARTESIA_SHAZ_VOICE_ID, "string");
+  assert.match(CARTESIA_SHAZ_VOICE_ID, /^[a-f0-9-]{36}$/);
+  assert.equal(CARTESIA_MODEL, "sonic-3.6");
+  assert.equal(CARTESIA_TTS_URL, "https://api.cartesia.ai/tts/bytes");
+});
 
 test("SHAZ_VOICE_ID is registered as valid 32-char hex Fish Audio voice ID", () => {
   assert.equal(typeof SHAZ_VOICE_ID, "string");
@@ -35,3 +46,12 @@ test("loadFishApiKey loads key from environment or secrets.env gracefully", asyn
     assert.ok(key.length > 10);
   }
 });
+
+test("loadCartesiaApiKey loads key from environment or secrets.env gracefully", async () => {
+  const key = await loadCartesiaApiKey();
+  if (key) {
+    assert.equal(typeof key, "string");
+    assert.ok(key.length > 10);
+  }
+});
+
