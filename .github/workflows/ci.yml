@@ -18,7 +18,9 @@ jobs:
       - name: Install local media tools
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Extract the public Character Gameplay Conversations kit
-        run: unzip -q v3/public/format-repositories/character-gameplay-conversations-v1/downloads/character-gameplay-conversations-0.3.0.zip -d "$RUNNER_TEMP/character-gameplay-kit"
+        run: |
+          curl -fsSL https://github.com/smsheik1/wiggly-character-gameplay-conversations/releases/download/v0.3.0/character-gameplay-conversations-0.3.0.zip -o "$RUNNER_TEMP/character-gameplay.zip"
+          unzip -q "$RUNNER_TEMP/character-gameplay.zip" -d "$RUNNER_TEMP/character-gameplay-kit"
       - name: Test the extracted runtime without providers
         working-directory: ${{ runner.temp }}/character-gameplay-kit
         run: |
@@ -36,7 +38,9 @@ jobs:
       - name: Install local media and archive tools
         run: sudo apt-get update && sudo apt-get install -y ffmpeg zip unzip
       - name: Extract the standalone Repo Builder artifact
-        run: unzip -q v3/public/format-repositories/repo-builder-v1/downloads/wiggly-repo-builder-0.1.1.zip -d "$RUNNER_TEMP/repo-builder-kit"
+        run: |
+          curl -fsSL https://github.com/smsheik1/wiggly-repo-builder/releases/download/v0.1.1/wiggly-repo-builder-0.1.1.zip -o "$RUNNER_TEMP/repo-builder.zip"
+          unzip -q "$RUNNER_TEMP/repo-builder.zip" -d "$RUNNER_TEMP/repo-builder-kit"
       - name: Check source and released kit content match
         run: node v3/public/format-repositories/repo-builder-v1/verify-kit.mjs "$RUNNER_TEMP/repo-builder-kit"
       - name: Prove the extracted kit without network or providers
@@ -58,7 +62,9 @@ jobs:
       - name: Install local media tools
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Extract only the published consumer archive
-        run: unzip -q v3/public/format-repositories/lego-music-video-v1/downloads/wiggly-lego-music-video-format-kit.zip -d "$RUNNER_TEMP/lego-kit"
+        run: |
+          curl -fsSL https://github.com/smsheik1/wiggly-lego-music-video/releases/download/v0.1.0/wiggly-lego-music-video-format-kit.zip -o "$RUNNER_TEMP/lego.zip"
+          unzip -q "$RUNNER_TEMP/lego.zip" -d "$RUNNER_TEMP/lego-kit"
       - name: Install and prove the actual package without provider calls
         working-directory: ${{ runner.temp }}/lego-kit/wiggly-lego-music-video-format-kit/v3
         run: |

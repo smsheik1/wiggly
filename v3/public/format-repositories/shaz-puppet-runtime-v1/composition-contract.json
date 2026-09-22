@@ -17,5 +17,18 @@
   "supportingMediaZone": "map-photo-zone contains a clean empty wall area reserved in metadata for a future supporting-media feature. This Format does not accept, crop, place, or render supporting media there.",
   "camera": "Fixed for character dialogue; b-roll shots execute cinematic Ken Burns camera motion (pan / zoom) across full-screen illustrations.",
   "characterFraming": "Shaz is a waist-up rig. In audio-backed compositions the hoodie must continue below the bottom canvas edge in every frame, so its rounded lower boundary never reveals the missing legs. The same fixed stage view must also preserve clear left and right margins across every used action.",
+  "otsGraphicZone": {
+    "canvasWidth": 1280,
+    "canvasHeight": 720,
+    "actionSafePercent": 90,
+    "bounds": { "left": 80, "top": 90, "width": 440, "height": 440 },
+    "comfortMarginToShaz": 120,
+    "shazStagingBox": { "left": 540, "top": 80, "width": 700, "height": 640 },
+    "layering": [
+      "1: fixed background",
+      "2: ots-graphic (with drop shadow)",
+      "3: shaz-puppet-rig (rendered in front for natural 3D hand/arm depth)"
+    ]
+  },
   "multiShotTimeline": "shaz-multi-shot-v1 composes contiguous shots (talk-to-camera, chibi-commentary, b-roll, text-card) over continuous audio with zero frame gaps or desyncs. Text cards render bold typography with colored phrase highlights, chibi commentary pairs a reactive puppet with on-the-fly topic cards, and b-roll delivers Ken Burns visual storytelling."
 }

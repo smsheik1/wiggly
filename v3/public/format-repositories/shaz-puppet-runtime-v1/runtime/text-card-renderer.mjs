@@ -28,23 +28,81 @@ function escapeXml(unsafe) {
   });
 }
 
+function wrapTextIntoLines(text, maxChars = 22) {
+  const paragraphs = text.split("\n");
+  const wrapped = [];
+  for (const para of paragraphs) {
+    const words = para.trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) continue;
+    let currentLine = "";
+    for (const w of words) {
+      if (!currentLine) {
+        currentLine = w;
+      } else if ((currentLine + " " + w).length <= maxChars) {
+        currentLine += " " + w;
+      } else {
+        wrapped.push(currentLine);
+        currentLine = w;
+      }
+    }
+    if (currentLine) {
+      wrapped.push(currentLine);
+    }
+  }
+  return wrapped.length > 0 ? wrapped : [text];
+}
+
 /**
- * Splits text into lines and tokens.
- * If wordLimit is provided, only the first `wordLimit` words are made visible (the rest omitted or transparent).
+ * Splits text into lines and tokens with proper word-wrapping and adaptive font sizing.
+ * If wordLimit is provided, only the first `wordLimit` words are made visible.
  */
 function buildSvgContent({ text, highlights = [], wordLimit = null, width = 1280, height = 720 }) {
-  const lines = text.split("\n");
+  const lines = wrapTextIntoLines(text, 22);
+  const maxLen = Math.max(...lines.map((l) => l.length));
   
   const fontBase64 = getGroboldBase64();
   const fontFamily = fontBase64 ? "Grobold, sans-serif" : "sans-serif";
-  const fontSize = 66;
-  const lineHeight = 88;
+  let fontSize = 62;
+  if (maxLen > 20) {
+    fontSize = Math.max(38, Math.floor(62 * (20 / maxLen)));
+  }
+  if (lines.length > 3) {
+    fontSize = Math.min(fontSize, 44);
+  }
+  const lineHeight = Math.round(fontSize * 1.35);
   const defaultFill = "#111111";
 
   const totalTextHeight = lines.length * lineHeight;
   // Center vertically on the wall area above the floor (floor starts around y=550)
   const wallCenterY = 320;
   const startY = wallCenterY - (totalTextHeight / 2) + (fontSize * 0.85);
+
+  // Pre-calculate exact word indices for highlight phrases to prevent false substring matches
+  const allWords = text.trim().split(/\s+/).filter(Boolean);
+  const cleanAll = allWords.map((w) => w.toLowerCase().replace(/[^\w]/g, ""));
+  const wordColorMap = new Map();
+
+  for (const hl of highlights) {
+    if (!hl.phrase || !hl.color) continue;
+    const hlWords = hl.phrase.trim().split(/\s+/).filter(Boolean);
+    const cleanHl = hlWords.map((w) => w.toLowerCase().replace(/[^\w]/g, ""));
+    if (cleanHl.length === 0) continue;
+
+    for (let i = 0; i <= cleanAll.length - cleanHl.length; i += 1) {
+      let match = true;
+      for (let j = 0; j < cleanHl.length; j += 1) {
+        if (cleanAll[i + j] !== cleanHl[j]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        for (let j = 0; j < cleanHl.length; j += 1) {
+          wordColorMap.set(i + j, hl.color);
+        }
+      }
+    }
+  }
 
   let wordCountSeen = 0;
 
@@ -56,25 +114,22 @@ function buildSvgContent({ text, highlights = [], wordLimit = null, width = 1280
     for (const token of tokens) {
       const isWord = /\S/.test(token);
       let isVisible = true;
+      let tokenColor = defaultFill;
+
       if (isWord) {
+        const currentWordIndex = wordCountSeen;
         wordCountSeen += 1;
         if (wordLimit !== null && wordCountSeen > wordLimit) {
           isVisible = false;
+        }
+        if (wordColorMap.has(currentWordIndex)) {
+          tokenColor = wordColorMap.get(currentWordIndex);
         }
       } else if (wordLimit !== null && wordCountSeen >= wordLimit) {
         isVisible = false;
       }
 
       if (!isVisible) continue;
-
-      // Check if token matches any highlight phrase
-      let tokenColor = defaultFill;
-      for (const hl of highlights) {
-        if (hl.phrase.toLowerCase().includes(token.toLowerCase().trim())) {
-          tokenColor = hl.color;
-          break;
-        }
-      }
 
       segments.push({ text: token, color: tokenColor });
     }
@@ -87,7 +142,7 @@ function buildSvgContent({ text, highlights = [], wordLimit = null, width = 1280
       .map((seg) => `<tspan fill="${seg.color}">${escapeXml(seg.text)}</tspan>`)
       .join("");
 
-    return `<text x="${width / 2}" y="${startY + lineIndex * lineHeight}" text-anchor="middle" font-family="${fontFamily}" font-size="${fontSize}px" letter-spacing="0.5px" word-spacing="8px" xml:space="preserve">${renderedSpans}</text>`;
+    return `<text x="${width / 2}" y="${startY + lineIndex * lineHeight}" text-anchor="middle" font-family="${fontFamily}" font-size="${fontSize}px" letter-spacing="0.5px" word-spacing="6px" xml:space="preserve">${renderedSpans}</text>`;
   }).filter(Boolean);
 
   const fontFaceDef = fontBase64 ? `
@@ -124,6 +179,10 @@ export function wordsVisibleAtFrame({ totalWords, localFrame, durationFrames, wo
         visible = i + 1;
       }
     }
+    // Prevent single short words from floating alone in space; reveal at least 2 words
+    if (visible === 1 && totalWords > 1) {
+      visible = 2;
+    }
     return Math.min(visible, totalWords);
   }
 
@@ -131,7 +190,10 @@ export function wordsVisibleAtFrame({ totalWords, localFrame, durationFrames, wo
   // leaving the remaining 35% of the shot holding the complete sentence before cutting.
   const popDuration = Math.max(1, Math.floor(durationFrames * 0.65));
   const framesPerWord = Math.max(2, Math.floor(popDuration / totalWords));
-  const visible = Math.min(totalWords, Math.floor(localFrame / framesPerWord) + 1);
+  let visible = Math.min(totalWords, Math.floor(localFrame / framesPerWord) + 1);
+  if (visible === 1 && totalWords > 1) {
+    visible = 2;
+  }
   return visible;
 }
 

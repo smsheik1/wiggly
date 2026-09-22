@@ -172,13 +172,38 @@ export function validateScript(script) {
   };
 }
 
+import { lintScriptWithJev } from "./director-jev.mjs";
+
 /**
- * CLI Runner helper
+ * CLI Runner helper with optional TypeSafe AI Jev voice linter check.
  */
 export async function runScriptLinter(filePath) {
   const absolutePath = path.resolve(process.cwd(), filePath);
   const raw = await fs.readFile(absolutePath, "utf8");
   const script = JSON.parse(raw);
   const result = validateScript(script);
+
+  try {
+    const fullText = [
+      script.hook.text,
+      ...script.beats.map((b) => b.text),
+      script.landing.text,
+    ].join(" ");
+    const jevReport = await lintScriptWithJev(fullText);
+    if (jevReport) {
+      result.jev = jevReport;
+      if (jevReport.grade === "reject-corporate" || (jevReport.isCorporate && jevReport.corporateProbability >= 0.75)) {
+        throw new Error(
+          `Script rejected by Jev Voice Linter: detected corporate/PR speak (${Math.round(jevReport.corporateProbability * 100)}% probability). Make tone more direct and human.`,
+        );
+      }
+    }
+  } catch (err) {
+    if (err.message.startsWith("Script rejected by Jev")) {
+      throw err;
+    }
+    // If Jev network or auth issue, ignore and continue with valid deterministic check
+  }
+
   return result;
 }

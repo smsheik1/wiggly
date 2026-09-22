@@ -15,10 +15,13 @@ import {
 import {
   analyzeSentenceSemantics,
   deriveMultiShotPlan,
+  resolvePuppetPoseId,
   validateMultiShotPlan,
 } from "../runtime/multi-shot-timeline.mjs";
 import {
   buildChibiSchedule,
+  deriveChibiRoutine,
+  getChibiFrameTransform,
   normalizeChibiHold,
 } from "../runtime/chibi-choreography.mjs";
 
@@ -283,6 +286,103 @@ test("buildChibiSchedule synthesizes entrance, cushions, holds, and exit leap", 
   assert.equal(schedule.at(-1), "Timeline 1_0016.png");
 });
 
+test("buildChibiSchedule matches artist reference timing with cushions and snappy holds", () => {
+  const routine = ["present-card", "think-chin", "shrug-open"];
+  const durationFrames = 96; // 4 seconds at 24fps
+  const schedule = buildChibiSchedule({ routine, durationFrames });
+
+  // Entrance: smear (2f) + squash (2f) + settle bounce (1f)
+  assert.equal(schedule[0], "Timeline 1_0000In.png");
+  assert.equal(schedule[2], "Timeline 1_0001.png");
+  assert.equal(schedule[4], "Timeline 1_0002.png");
+
+  // First hold: present-card
+  assert.equal(schedule[5], "Timeline 1_0005.png");
+
+  // Transition to think-chin: 2f breakdown (0006) + 2f anticipation (0007x)
+  assert.ok(schedule.includes("Timeline 1_0006.png"));
+  assert.ok(schedule.includes("Timeline 1_0007x.png"));
+
+  // Second hold: think-chin
+  assert.ok(schedule.includes("Timeline 1_0008.png"));
+
+  // Transition to shrug-open: 2f breakdown (0009) + 2f anticipation (0010)
+  assert.ok(schedule.includes("Timeline 1_0009.png"));
+  assert.ok(schedule.includes("Timeline 1_0010.png"));
+
+  // Third hold: shrug-open
+  assert.ok(schedule.includes("Timeline 1_0011.png"));
+
+  // Exit: crouch (1f) + apex stretch (2f) + smear (2f)
+  assert.equal(schedule.at(-5), "Timeline 1_0014.png");
+  assert.equal(schedule.at(-4), "Timeline 1_0015.png");
+  assert.equal(schedule.at(-1), "Timeline 1_0016.png");
+});
+
+test("getChibiFrameTransform computes choppy anticipation, overshoot, undershoot, and living speech beats", () => {
+  const totalFrames = 80;
+
+  // Entrance smear
+  const f0 = getChibiFrameTransform(0, totalFrames);
+  assert.equal(f0.phase, "entrance-smear");
+  assert.ok(f0.dy > 0 && f0.dx > 0, "smear enters from offstage corner");
+
+  // Anticipation squash
+  const f2 = getChibiFrameTransform(2, totalFrames);
+  assert.equal(f2.phase, "anticipation-squash");
+  assert.ok(f2.sx > 1.0 && f2.sy < 1.0, "squash compresses vertically and widens horizontally");
+
+  // Entrance OVERSHOOT
+  const f4 = getChibiFrameTransform(4, totalFrames);
+  assert.equal(f4.phase, "entrance-overshoot");
+  assert.ok(f4.dy < -15, "overshoot pops high past target baseline");
+  assert.ok(f4.sy > 1.0, "overshoot stretches taller");
+
+  // Entrance UNDERSHOOT rebound
+  const f6 = getChibiFrameTransform(6, totalFrames);
+  assert.equal(f6.phase, "entrance-undershoot");
+  assert.ok(f6.dy > 0, "undershoot dips back down below baseline before settle");
+
+  // Settle hold
+  const f10 = getChibiFrameTransform(10, totalFrames);
+  assert.equal(f10.phase, "settle-hold");
+  assert.equal(f10.dx, 0);
+  assert.equal(f10.dy, 0);
+
+  // Living speech beat overshoot (at step (frame-8) % 16 === 0)
+  const f24 = getChibiFrameTransform(24, totalFrames);
+  assert.equal(f24.phase, "beat-overshoot");
+  assert.ok(f24.dy < 0, "speech beat pops up to accent dialogue");
+
+  // Exit crouch anticipation
+  const fCrouch = getChibiFrameTransform(totalFrames - 5, totalFrames);
+  assert.equal(fCrouch.phase, "exit-crouch");
+
+  // Exit apex leap overshoot
+  const fApex = getChibiFrameTransform(totalFrames - 3, totalFrames);
+  assert.equal(fApex.phase, "exit-overshoot");
+  assert.ok(fApex.dy < -20, "apex leap explodes upward");
+
+  // Exit smear
+  const fExit = getChibiFrameTransform(totalFrames - 1, totalFrames);
+  assert.equal(fExit.phase, "exit-smear");
+});
+
+test("renderTextCardFrame highlights only exact phrase words without false substring matches", async () => {
+  const bgPath = path.join(root, "assets", "backgrounds", "sisters-room.png");
+  const bgBuffer = await fs.readFile(bgPath);
+
+  // Phrase contains "it looks.", but sentence starts with "It turns out..."
+  // Word 0 "It" and "a" should not be highlighted; only words "than", "it", "looks." should be #00b4d8
+  const frameBuf = await renderTextCardFrame({
+    backgroundBuffer: bgBuffer,
+    text: "It turns out having a puppy is way harder than it looks.",
+    highlights: [{ phrase: "than it looks.", color: "#00b4d8" }],
+    wordLimit: null,
+  });
+  assert(Buffer.isBuffer(frameBuf));
+});
+
 test("validateMultiShotPlan accepts explicit LLM chibiRoutine", async () => {
   const assets = JSON.parse(await fs.readFile(path.join(root, "assets.json"), "utf8"));
   const audioDurationSeconds = 4.0; // 96 frames
@@ -320,3 +420,138 @@ test("validateMultiShotPlan accepts explicit LLM chibiRoutine", async () => {
   assert.equal(validated.totalFrames, 96);
   assert.deepEqual(validated.shots[0].chibiRoutine, ["present-card", "think-chin", "shrug-open"]);
 });
+
+test("deriveChibiRoutine produces clause-level progressions based on duration", () => {
+  // Short (< 36 frames): 1 hold
+  assert.deepEqual(deriveChibiRoutine("present-card", 24), ["present-card"]);
+
+  // Medium (36-63 frames): 2 holds
+  const medium = deriveChibiRoutine("point-emphasis", 48);
+  assert.equal(medium.length, 2);
+  assert.equal(medium[1], "point-emphasis");
+
+  // Standard (64-95 frames): 3 holds
+  const standard = deriveChibiRoutine("think-chin", 72);
+  assert.equal(standard.length, 3);
+  assert.ok(standard.includes("think-chin"));
+
+  // Long (>= 96 frames): 4 holds
+  const long = deriveChibiRoutine("shrug-open", 120);
+  assert.equal(long.length, 4);
+  assert.ok(long.includes("shrug-open"));
+});
+
+test("buildChibiSchedule auto-expands single hold when duration >= 48 frames", () => {
+  // Blind agent passes single pose for a 72-frame shot (3.0s)
+  const schedule = buildChibiSchedule({ routine: ["present-card"], durationFrames: 72 });
+  assert.equal(schedule.length, 72);
+
+  // Instead of a frozen single hold, auto-expanded routine contains multi-pose progression + cushions
+  assert.ok(schedule.includes("Timeline 1_0003x.png"), "must include talk-gesture hold");
+  assert.ok(schedule.includes("Timeline 1_0005.png"), "must include present-card hold");
+  assert.ok(schedule.includes("Timeline 1_0008.png"), "must include think-chin hold");
+});
+
+test("resolvePuppetPoseId maps chin-stroke aliases to registered phone-use-sequence recipe", () => {
+  assert.equal(resolvePuppetPoseId("chin-stroke"), "phone-use-sequence");
+  assert.equal(resolvePuppetPoseId("chin-stroke-smug"), "phone-use-sequence");
+  assert.equal(resolvePuppetPoseId("swagger"), "phone-use-sequence");
+  assert.equal(resolvePuppetPoseId("neutral-listening"), "neutral-listening");
+  assert.equal(resolvePuppetPoseId("point"), "point");
+});
+
+test("validateMultiShotPlan accepts chin-stroke pose for talk-to-camera shot", async () => {
+  const assets = JSON.parse(await fs.readFile(path.join(root, "assets.json"), "utf8"));
+  const poseIndex = JSON.parse(await fs.readFile(path.join(root, "poses", "index.json"), "utf8"));
+  const poseRegistry = {
+    byId: new Map(poseIndex.poses.map((p) => [p.id, p])),
+  };
+
+  const planWithChinStroke = {
+    schemaVersion: "shaz-multi-shot-v1",
+    title: "Chin stroke validation",
+    audioFile: "user-audio.wav",
+    totalDurationFrames: 48,
+    shots: [
+      {
+        id: "shot-1",
+        shotType: "talk-to-camera",
+        poseId: "chin-stroke",
+        startFrame: 0,
+        endFrameExclusive: 48,
+        backgroundId: "sisters-room",
+      },
+    ],
+  };
+
+  const validated = validateMultiShotPlan(planWithChinStroke, {
+    audioDurationSeconds: 2.0,
+    defaultBackgroundId: "sisters-room",
+    assets,
+    poseRegistry,
+  });
+
+  assert.equal(validated.shots[0].poseId, "phone-use-sequence");
+});
+
+test("phone-use-sequence recipe conforms to universal rig contract and matches think height", async () => {
+  const { loadManifest } = await import("../runtime/rig-v2-renderer.mjs");
+  const { createPoseRuntime, loadPoseRecipe } = await import("../runtime/pose-recipe.mjs");
+
+  const manifest = await loadManifest(path.join(root, "rig-v2", "runtime.json"));
+  const phoneRecipe = await loadPoseRecipe(path.join(root, "poses", "generated", "phone-use-sequence.json"));
+  const thinkRecipe = await loadPoseRecipe(path.join(root, "poses", "authored", "think.json"));
+
+  const phoneRuntime = createPoseRuntime(manifest, phoneRecipe);
+  const thinkRuntime = createPoseRuntime(manifest, thinkRecipe);
+
+  const columns = new Map(manifest.scenes[0].columns.map((c) => [c.name, c]));
+  const masterNode = manifest.scenes[0].nodes.find((n) => n.name === "Shaz_Master-P");
+  assert.ok(masterNode, "Shaz_Master-P node must exist");
+
+  const phoneSample = phoneRuntime.sampleNodeAtFrame(masterNode, columns, 55);
+  const thinkSample = thinkRuntime.sampleNodeAtFrame(masterNode, columns, 49);
+
+  // Directly registered recipe has 1.0 scale and matches think master peg Y
+  assert.ok(Math.abs(phoneSample.attrs.scale.x - 1.0) < 0.01, "registered recipe scale must be ~1.0");
+  assert.ok(Math.abs(phoneSample.attrs.scale.y - 1.0) < 0.01, "registered recipe scale Y must be ~1.0");
+  assert.ok(Math.abs(phoneSample.attrs.position.attr3dpath[1] - thinkSample.attrs.position.attr3dpath[1]) < 0.01, "registered Y position must match think");
+});
+
+test("OTS_GRAPHIC_ZONE respects 90% broadcast action-safe and Shaz staging boundary", async () => {
+  const { OTS_GRAPHIC_ZONE } = await import("../runtime/render-multi-shot.mjs");
+  const contract = JSON.parse(await fs.readFile(path.join(root, "composition-contract.json"), "utf8"));
+
+  assert.ok(OTS_GRAPHIC_ZONE, "OTS_GRAPHIC_ZONE must be exported");
+  assert.equal(OTS_GRAPHIC_ZONE.left, 80);
+  assert.equal(OTS_GRAPHIC_ZONE.top, 90);
+  assert.equal(OTS_GRAPHIC_ZONE.width, 440);
+  assert.equal(OTS_GRAPHIC_ZONE.height, 440);
+
+  // 90% Action Safe limits for 1280x720 canvas
+  const actionSafeLeft = (1280 * 0.1) / 2; // 64
+  const actionSafeRight = 1280 - actionSafeLeft; // 1216
+  const actionSafeTop = (720 * 0.1) / 2; // 36
+  const actionSafeBottom = 720 - actionSafeTop; // 684
+
+  assert.ok(OTS_GRAPHIC_ZONE.left >= actionSafeLeft, "OTS left must be inside action safe");
+  assert.ok(OTS_GRAPHIC_ZONE.top >= actionSafeTop, "OTS top must be inside action safe");
+  assert.ok(OTS_GRAPHIC_ZONE.left + OTS_GRAPHIC_ZONE.width <= actionSafeRight, "OTS right must be inside action safe");
+  assert.ok(OTS_GRAPHIC_ZONE.top + OTS_GRAPHIC_ZONE.height <= actionSafeBottom, "OTS bottom must be inside action safe");
+
+  // Clearance from Shaz staging region
+  const cardRightEdge = OTS_GRAPHIC_ZONE.left + OTS_GRAPHIC_ZONE.width;
+  assert.ok(cardRightEdge <= OTS_GRAPHIC_ZONE.shazStagingBox.left, "Card must not intrude into Shaz core staging box");
+  assert.ok(OTS_GRAPHIC_ZONE.comfortMarginToShaz >= 100, "Comfort margin must be at least 100px");
+
+  // Contract match
+  assert.deepEqual(contract.otsGraphicZone.bounds, {
+    left: OTS_GRAPHIC_ZONE.left,
+    top: OTS_GRAPHIC_ZONE.top,
+    width: OTS_GRAPHIC_ZONE.width,
+    height: OTS_GRAPHIC_ZONE.height,
+  });
+});
+
+
+

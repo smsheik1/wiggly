@@ -13,7 +13,7 @@ Use this kit to turn a voice track into a Shaz talking scene or to build a short
 
 - **Talk to Camera:** the normal choice for direct-to-audience speech. `sequencePreset: "talk-to-camera"` measures the audio, holds `neutral-listening` for the full line, and lets Cherry change only the mouth. Do not invent a pose or calculate frames.
 - **Reviewed gesture sequence:** arrange the five artist-reviewed gestures listed below, then follow the complete run workflow.
-- **Multi-Shot Video (`shaz-multi-shot-v1`):** high-retention directed video composing four shot types (`talk-to-camera`, `text-card`, `chibi-commentary`, `b-roll`) over continuous audio. Read `director-playbook.md` and `shot-sheet-contract.json`. The Director LLM choreographs `chibiRoutine` sequences using classical squash/stretch cushions.
+- **Multi-Shot Video (`shaz-multi-shot-v1`):** high-retention directed video composing four shot types (`talk-to-camera`, `text-card`, `chibi-commentary`, `b-roll`) over continuous audio. Read `director-playbook.md` and `shot-sheet-contract.json`. The Director choreographs `chibiRoutine` sequences with lively clause-density (1 pose per ~15-30 frames / 0.6s-1.2s) connected by 2-frame squash/stretch cushions. The runtime auto-expands single holds on shots >= 48 frames so chibi never freezes.
 - **Action repair or authoring:** work on exactly one action. Read `references/rig-animation-playbook.md` completely and follow the author-and-learn loop. Do not repair several unapproved actions at once.
 
 ## Which actions may be used
@@ -22,13 +22,14 @@ Use `neutral-listening` as the calm body behind Talk to Camera:
 
 - `neutral-listening`
 
-For body-language beats, default to these five artist-reviewed gestures:
+For body-language beats, default to these approved gestures:
 
 - `present`
 - `think`
 - `aha`
 - `point`
 - `confident`
+- `chin-stroke` (swagger / smug chin-stroke with sly smirk, alias for the prop-free `phone-use-sequence` recipe; approved after complete visual review)
 
 The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, `look-at-phone`, `facepalm-frustrated`, `arms-crossed-skeptical`, and `phone-use-sequence`. They are runnable engineering material, not approved performance choices. Do not select one automatically or put it into a user video until that exact current recipe has passed a fresh complete visual review.
 
@@ -49,7 +50,9 @@ The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-a
    - Follow `writer-playbook.md` to write the script in Shaz's authentic voice, enforcing the *Therefore/But* causality rule and 4-shot rhythm.
    - Validate and lint the script against AI tells and word count limits:
      `npm run lint:script -- --script=/absolute/path/script.json`
-   - Once approved by the user, record or stage the dialogue audio as `user-audio.wav`.
+   - Once approved by the user, record dialogue or synthesize speech using Shaz's official cloned voice:
+     `npm run speak -- --text="Approved script text here" --output=/absolute/path/user-audio.wav`
+     (Uses Shaz's official Cartesia Sonic-3.6 clone `28ca280b-6835-45d4-aa27-f432156f8236` with `-16 LUFS` broadcast loudness normalization and Cherry WASI lip-sync compatibility; falls back to Fish Audio clone `947a3b8d8a2c431a8a2934008d89d5b3`).
 4. If the job uses audio, transcribe it before choosing gestures:
 
    `npm run transcribe -- --audio=/absolute/path/audio --output=/absolute/path/transcript.json`
@@ -58,7 +61,7 @@ The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-a
 
 4. Choose the input:
    - For ordinary dialogue, copy `fixtures/talk-to-camera/input.json`. Supply no `sequence`, `durationFrames`, or frame math. Initialization derives one exact-length `neutral-listening` hold from the audio, with lip-sync required.
-   - For a multi-shot directed video, copy `fixtures/multi-shot/input.json` or author a `shaz-multi-shot-v1` plan following `director-playbook.md`. Arrange `talk-to-camera`, `text-card`, `chibi-commentary` (with `chibiRoutine`), and `b-roll` shots.
+   - For a multi-shot directed video, copy `fixtures/multi-shot/input.json` or author a `shaz-multi-shot-v1` plan following `director-playbook.md`. If `shots` is omitted, `npm run init` will automatically invoke the autonomous JEV Director engine to derive a complete, emotionally paced shot sheet directly from the Whisper transcript.
    - For body language, write a `sequence` with the five reviewed gesture IDs above. Use `neutral-listening` only as the calm default or connective tissue. Use explicit `holdFrames` and `gapFrames`. The last action must use `gapFrames: 0`.
    - Choose `sisters-room`, `living-room`, `map-photo-zone`, or `pure-white` from `assets.json`. Name `backgroundId` explicitly for an audio-backed sequence. A semantic performance input may omit it and use `assets.defaultBackgroundId`. Never invent a background ID.
    - `map-photo-zone` is only a clean fixed room in this release. Its empty area is reserved for future supporting media; do not add, crop, or position an image or video there.

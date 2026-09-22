@@ -10,7 +10,7 @@ import { generateCherryCues, verifyCherryEngine } from "./runtime/cherry.mjs";
 import { inspectRun } from "./runtime/inspect-run.mjs";
 import { renderSequence } from "./runtime/render-sequence.mjs";
 import { ensureWhisperEngine, generateTranscript, validateTranscriptionAudio } from "./runtime/transcription.mjs";
-import { deriveMultiShotPlan } from "./runtime/multi-shot-timeline.mjs";
+import { deriveMultiShotPlan, deriveMultiShotPlanWithJev } from "./runtime/multi-shot-timeline.mjs";
 import { runScriptLinter } from "./runtime/validate-script.mjs";
 import {
   DEFAULT_SUBREDDITS,
@@ -268,14 +268,16 @@ async function init(args) {
       };
       // If input is multi-shot and shots array is omitted, automatically derive it from the transcript!
       if (isMultiShot && (!Array.isArray(input.shots) || input.shots.length === 0)) {
-        const derived = deriveMultiShotPlan({
+        const derived = await deriveMultiShotPlanWithJev({
           transcript: transcriptState.transcript,
           audioDurationSeconds: sequenceAudioFrames / 24,
           defaultBackgroundId: input.defaultBackgroundId ?? "sisters-room",
+          brollMediaList: Array.isArray(input.brollMedia) ? input.brollMedia : [],
         });
         input.title = input.title ?? derived.title;
         input.totalDurationFrames = sequenceAudioFrames;
         input.shots = derived.shots;
+        delete input.defaultBackgroundId;
       }
 
       const shouldGenerateLipSync = (isAudioSequence && lipSyncMode !== "off")

@@ -19,8 +19,10 @@ In this version of the format, the director has access to:
 - **What it is:** Shaz waist-up facing camera with Cherry lip-sync.
 - **Expressive Poses:** You can specify `poseId` (from `poses/index.json`) to give Shaz an emotional stance while speaking with full lip-sync:
   - `"neutral-listening"`: Calm default baseline listening/talking pose.
+  - `"chin-stroke"`: Swagger / smug chin-stroke with sly smirk and hand on hip (great for teasing revelations, hot takes, "nobody asked for this" moments).
   - `"present"`: Open hand gesture presenting ideas outward (great for intros, explanations).
   - `"aha"`: Raised index finger with realization (great for key insights, epiphanies, wrap-ups).
+  - `"point"`: Direct forward point for strong directional emphasis and claims.
   - `"confident"`: Confident hands-on-hips delivery.
   - `"shrug"`: Gentle questioning or disbelief stance.
 - **When to use:**
@@ -28,6 +30,11 @@ In this version of the format, the director has access to:
   - Conversational delivery, personal anecdotes, asking questions to the viewer.
   - Comedic beats, sarcastic reactions, and punchlines.
 - **Duration guidelines:** Typically 3 to 7 seconds. Rarely hold on talking head longer than 6 seconds without a beat change.
+- **Over-The-Shoulder (OTS) Graphic Zone:**
+  - **Calibrated Bounds:** `left: 80, top: 90, width: 440, height: 440` (lies strictly within 90% broadcast action-safe: `x: 64..1216, y: 36..684`).
+  - **Comfort Margin:** $\ge 120\text{px}$ clean negative space between the graphic right edge (`x: 520`) and Shaz's staging core (`x: ~640`).
+  - **Z-Index Layering:** `1: Background` $\rightarrow$ `2: OTS Card` (with drop shadow) $\rightarrow$ `3: Shaz Puppet Rig` (composited in front, enabling authentic hand/sleeve overlap depth).
+  - **Acting Pairings:** Pair OTS pop-ups with `"point"` (focusing attention on evidence), `"present"` (revealing facts to viewer), or `"chin-stroke"` (smug reflection as the reveal appears).
 
 ### 2. `text-card` (Slow/Fast Moments & Transitions)
 - **What it is:** Bold, punchy typography placed on the room wall (e.g. Sisters Room), with key words highlighted in vibrant accent colors (e.g. `#00b4d8` cyan, `#b5179e` purple).
@@ -47,12 +54,12 @@ In this version of the format, the director has access to:
   - `"shrug-open"`: Shoulders raised, hands open to sides (acknowledging reality, playful disbelief, "what can you do?").
   - `"point-emphasis"`: Arm extended pointing forward/side (decisive takeaway, rule enforcement, emphatic conclusion).
 - **Choreographing with `chibiRoutine`:**
-  - The Director LLM can choreograph a sequence of 1 to 3 holds across the shot duration in `chibiRoutine`:
+  - The Director LLM should choreograph a sequence of holds matching the vocal clauses in `chibiRoutine`. Target density is **1 pose every ~15 to 30 frames (0.6s to 1.2s)**, matching the animator reference:
     ```json
-    "chibiRoutine": ["present-card", "think-chin", "shrug-open"]
+    "chibiRoutine": ["talk-gesture", "present-card", "think-chin", "shrug-open"]
     ```
   - The runtime automatically synthesizes the 1-2 frame squash, anticipation windup, recoil, and smear cushions connecting each hold, along with the smear entrance and apex exit leap.
-  - If only a single hold is needed for short shots, provide `chibiRoutine: ["present-card"]` or `"chibiPose": "present-card"`.
+  - **Root-Level Guardrail for Blind Agents:** If an agent provides only a single hold (e.g. `chibiPose: "present-card"`) for a shot $\ge 48$ frames (2.0s), the runtime automatically expands it via `deriveChibiRoutine` into a multi-pose progression so Chibi Shaz never freezes.
 - **On-The-Fly Topic Card Generation:**
   - The Director can specify a `card` object directly in the shot to generate a custom vector card on the fly:
     ```json
@@ -108,6 +115,17 @@ In this version of the format, the director has access to:
   - Storytelling moments describing a specific scene, world, memory, or complex concept.
   - Giving visual breathing room when the voiceover paints a picture or dives into descriptive lore.
 - **Duration guidelines:** Typically 2.5 to 5.0 seconds. Long enough for the Ken Burns motion to glide cleanly across the canvas.
+
+---
+
+## Jev System One Actor Intuition Engine (Optional BYOK)
+
+When a `TYPESAFE_API_KEY` is configured in `secrets.env` or the environment, `deriveMultiShotPlanWithJev` automatically queries TypeSafe AI's Jev model (`jev-latest`).
+- **Sub-200ms Decision Engine:** Jev evaluates each commentary sentence at **\$0.042/1M tokens** with sub-200ms latency to select the most natural, human-feeling:
+  - **`chibiPose`** (`talk-gesture`, `present-card`, `think-chin`, `shrug-open`, `point-emphasis`)
+  - **`badge`** category tags (e.g. `THEORY`, `LEAK`, `RUMOR`, `VERDICT`)
+  - **Camera Motion** (`zoom-in`, `pan-left`, `pan-right`, etc.)
+- **Graceful Fallback:** If no API key is provided, the director falls back seamlessly to the deterministic keyword analyzer at zero cost and zero network overhead.
 
 ---
 

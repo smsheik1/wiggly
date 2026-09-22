@@ -17,7 +17,7 @@ These commands check the package, inspect every registered recipe, and make a fr
 
 ## The safe building blocks
 
-Use `neutral-listening` as the calm body behind Talk to Camera. The other five entries below are the artist-reviewed gestures in the current performance set.
+Use `neutral-listening` as the calm body behind Talk to Camera. The other six entries below are the artist-reviewed gestures in the current performance set.
 
 | ID | Best use |
 | --- | --- |
@@ -27,8 +27,9 @@ Use `neutral-listening` as the calm body behind Talk to Camera. The other five e
 | `aha` | Realization |
 | `point` | Strong directional emphasis |
 | `confident` | Assured statement or finish |
+| `chin-stroke` | Thoughtful swagger, smug pause, or sly smirk (prop-free) |
 
-`poses/index.json` contains eight more recipes. They are registered, so the runtime can load and inspect them, but they are **not cleared for automatic use**. Registered means runnable, not creatively approved. `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, `look-at-phone`, `facepalm-frustrated`, `arms-crossed-skeptical`, and `phone-use-sequence` each need a fresh complete visual review before they appear in a user video.
+`poses/index.json` contains seven more recipes. They are registered, so the runtime can load and inspect them, but they are **not cleared for automatic use**. Registered means runnable, not creatively approved. `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, `look-at-phone`, `facepalm-frustrated`, and `arms-crossed-skeptical` each need a fresh complete visual review before they appear in a user video.
 
 ## Talk to Camera
 
@@ -107,6 +108,43 @@ For a more expressive moment, write a sequence with approved pose IDs and explic
 Actions touch by default. A positive `gapFrames` value deliberately inserts white frames; it does not create a polished transition. The final action must use `gapFrames: 0`.
 
 The five-action fixture at `fixtures/five-recreated-authored-input.json` shows Present, Think, Ah-ha, Point, and Confident through the official runtime.
+
+## Multi-Shot Video (`shaz-multi-shot-v1`)
+
+For high-retention storytelling, the multi-shot engine composes four contiguous shot types across continuous audio with zero frame gaps or lip-sync desyncs:
+
+| Shot Type | Purpose | Character / Visuals |
+| --- | --- | --- |
+| `talk-to-camera` | Personal address, comedic hooks, punchlines | Shaz waist-up with Cherry lip-sync & approved poses (`neutral-listening`, `present`, `think`, `aha`, `point`, `confident`) |
+| `text-card` | Pacing resets, chapter titles, thesis highlights | Bold wall typography with vibrant colored highlights (`#00b4d8`, `#f77f00`) |
+| `chibi-commentary` | Topic reactions, theories, breakdowns | Chibi Shaz reacting to on-the-fly vector topic cards or topic media |
+| `b-roll` | Lore, complex scenarios, visual breathing room | Full-screen concept artwork with Ken Burns camera motion (`zoom-in`, `pan-right`, etc.) |
+
+### Chibi Shaz Choreography Architecture
+
+Chibi Shaz follows classical animation physics and timing discovered from frame-by-frame analysis of the human animator reference (`I made this video to impress my Pakistani Mom`):
+
+1. **Native 1280×720 Compositing:** Chibi cels are authored natively for 1280×720 and composited directly without programmatic cropping, matrix scaling, or aspect stretching, grounded at $y=719$.
+2. **Clause-Level Pose Density:** In authentic animation, characters never hold one static pose through a spoken sentence. Poses advance at each vocal clause ($\sim 15-30$ frames / 0.6s–1.2s per hold):
+   ```json
+   "chibiRoutine": ["talk-gesture", "present-card", "think-chin", "shrug-open"]
+   ```
+3. **Transition Cushions on Twos:** All transitions between hold poses (`talk-gesture`, `present-card`, `think-chin`, `shrug-open`, `point-emphasis`) are dynamically connected by 2-frame squash, stretch, and anticipation cushions (`0004x`, `0006`, `0007x`, `0009`, `0010`, `0012`) stepped strictly on twos (12 fps animated cadence).
+4. **Root-Level Guardrail for Autonomous/Blind Agents:** If an agent provides only a single static hold for a shot $\ge 48$ frames (2.0s), `buildChibiSchedule` automatically expands it via `deriveChibiRoutine` into a multi-pose clause progression. Blind agents cannot produce a frozen chibi shot even on their first attempt.
+
+### Jev Actor Intuition & Direction
+
+When `TYPESAFE_API_KEY` is present in `secrets.env`, the director uses TypeSafe AI's Jev model (`jev-latest`) for sub-200ms comedic acting decisions (pose selection, camera motion, and badge tags). If no key is configured, the system falls back seamlessly to the deterministic keyword analyzer at $0 cost.
+
+### Shaz Voice Cloning & Synthesis (`npm run speak`)
+
+The format package integrates an official Cartesia Sonic-3.6 voice clone for creator Shaz (`28ca280b-6835-45d4-aa27-f432156f8236`), with Fish Audio (`947a3b8d8a2c431a8a2934008d89d5b3`) as fallback.
+
+To synthesize new dialogue on demand:
+```sh
+npm run speak -- --text="What is going on guys? Today we have a crazy new story to talk about." --output=user-audio.wav
+```
+The command automatically applies broadcast loudness normalization (`-16 LUFS`) via ffmpeg and exports clean 44.1kHz 16-bit mono PCM WAV, ready for instant Cherry WASI lip-sync, transcription, and puppet animation.
 
 ## Pick a background
 

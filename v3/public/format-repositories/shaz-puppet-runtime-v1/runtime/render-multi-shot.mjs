@@ -9,10 +9,21 @@ import { renderRigFrame } from "./rig-v2-renderer.mjs";
 import { renderTextCardFrame, wordsVisibleAtFrame } from "./text-card-renderer.mjs";
 import { renderTopicCard } from "./topic-card-renderer.mjs";
 import { renderKenBurnsFrame } from "./broll-renderer.mjs";
-import { buildChibiSchedule } from "./chibi-choreography.mjs";
+import { buildChibiSchedule, getChibiFrameTransform } from "./chibi-choreography.mjs";
+import { resolvePuppetPoseId } from "./multi-shot-timeline.mjs";
 import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
+
+export const OTS_GRAPHIC_ZONE = Object.freeze({
+  left: 80,
+  top: 90,
+  width: 440,
+  height: 440,
+  actionSafePadding: 64,
+  comfortMarginToShaz: 120,
+  shazStagingBox: Object.freeze({ left: 540, top: 80, width: 700, height: 640 }),
+});
 
 export async function renderMultiShot({ root, runDirectory, validated }) {
   const output = path.join(runDirectory, "final.mp4");
@@ -101,17 +112,33 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
         });
 
       } else if (shot.shotType === "talk-to-camera") {
-        const poseId = shot.poseId ?? "neutral-listening";
+        const rawPoseId = shot.poseId ?? "neutral-listening";
+        const poseId = resolvePuppetPoseId(rawPoseId);
         const pose = validated.registry.byId.get(poseId) ?? neutralPose;
         const totalRecipeFrames = pose.recipe.durationFrames || 1;
 
-        // Render animated pose leading to apex hold, with Cherry mouth sync for each frame
+        // Render animated gesture entrance, apex hold, smooth release, and neutral speech
         for (let f = 0; f < shot.durationFrames; f += 1) {
           const globalFrame = shot.startFrame + f;
           const mouthDrawing = validated.lipSync?.frameDrawings[globalFrame] ?? null;
-          // Step through the recipe frames (1-indexed) into the hold pose
-          const poseFrame = Math.min(f + 1, totalRecipeFrames);
-          const cacheKey = `${poseId}:${poseFrame}:${mouthDrawing ?? "source"}`;
+
+          let activePose = pose;
+          let poseFrame = 1;
+          if (poseId === "neutral-listening" || totalRecipeFrames <= 1) {
+            activePose = neutralPose;
+            poseFrame = 1;
+          } else {
+            activePose = pose;
+            // When entering think, avoid initial frames 1-6 which have closed blink eyelids
+            if (poseId === "think" && f < 6) {
+              poseFrame = Math.min(totalRecipeFrames, 7 + f);
+            } else {
+              poseFrame = Math.min(f + 1, totalRecipeFrames);
+            }
+          }
+
+          const activePoseId = activePose.id;
+          const cacheKey = `${activePoseId}:${poseFrame}:${mouthDrawing ?? "source"}`;
 
           let composedBuffer;
           if (frameCache.has(cacheKey)) {
@@ -124,7 +151,7 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
               propRoot: path.join(root, "assets", "props"),
               assetCache,
               propCache,
-              poseRuntime: pose.poseRuntime,
+              poseRuntime: activePose.poseRuntime,
               background: TRANSPARENT,
               stageView: PERFORMANCE_STAGE_VIEW,
               mouthDrawing,
@@ -193,19 +220,22 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           durationFrames: shot.durationFrames,
         });
 
-        // Cache required chibi frames composited over the topic background
-        const chibiBufferMap = new Map();
-        const uniqueFiles = new Set(schedule);
-        for (const file of uniqueFiles) {
-          const itemPath = path.resolve(root, "assets/chibi", file);
-          const buf = await sharp(topicBgBuffer).composite([{ input: itemPath }]).png().toBuffer();
-          chibiBufferMap.set(file, buf);
-        }
+        // Cache composited chibi frames with kinetic transforms (overshoot, undershoot, squash/stretch)
+        const frameBufferCache = new Map();
 
         for (let f = 0; f < shot.durationFrames; f += 1) {
           outputFrame += 1;
           const chosenFile = schedule[f] ?? "Timeline 1_0005.png";
-          const frameToUse = chibiBufferMap.get(chosenFile) ?? topicBgBuffer;
+          let frameToUse = frameBufferCache.get(chosenFile);
+          if (!frameToUse) {
+            const itemPath = path.resolve(root, "assets/chibi", chosenFile);
+            frameToUse = await sharp(topicBgBuffer)
+              .composite([{ input: itemPath }])
+              .png()
+              .toBuffer();
+
+            frameBufferCache.set(chosenFile, frameToUse);
+          }
 
           await fs.writeFile(
             path.join(scratch, `frame-${String(outputFrame).padStart(6, "0")}.png`),
