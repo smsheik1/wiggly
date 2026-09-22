@@ -91,6 +91,7 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       "brollMedia",
       "motion",
       "card",
+      "otsGraphic",
       "rationale",
     ], `shots[${index}]`);
 
@@ -122,6 +123,22 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       const resolvedPoseId = resolvePuppetPoseId(shot.poseId ?? "neutral-listening");
       if (poseRegistry?.byId && !poseRegistry.byId.has(resolvedPoseId)) {
         throw new Error(`shots[${index}].poseId '${shot.poseId}' is not a registered puppet pose`);
+      }
+      if (shot.otsGraphic !== undefined) {
+        if (typeof shot.otsGraphic !== "object" || shot.otsGraphic === null) {
+          throw new Error(`shots[${index}].otsGraphic must be an object`);
+        }
+        exactKeys(
+          shot.otsGraphic,
+          ["badge", "headline", "image", "subtext", "entranceDelayFrames", "durationFrames"],
+          `shots[${index}].otsGraphic`,
+        );
+        if (shot.otsGraphic.headline !== undefined && typeof shot.otsGraphic.headline !== "string") {
+          throw new Error(`shots[${index}].otsGraphic.headline must be a string`);
+        }
+        if (shot.otsGraphic.badge !== undefined && typeof shot.otsGraphic.badge !== "string") {
+          throw new Error(`shots[${index}].otsGraphic.badge must be a string`);
+        }
       }
     }
 
@@ -212,6 +229,7 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       brollMedia: shot.brollMedia ?? null,
       motion: shot.motion ?? "zoom-in",
       card: shot.card ?? null,
+      otsGraphic: shot.otsGraphic ?? null,
       rationale: shot.rationale ?? null,
     });
   }

@@ -9,6 +9,7 @@ import { renderRigFrame } from "./rig-v2-renderer.mjs";
 import { renderTextCardFrame, wordsVisibleAtFrame } from "./text-card-renderer.mjs";
 import { renderTopicCard } from "./topic-card-renderer.mjs";
 import { renderKenBurnsFrame } from "./broll-renderer.mjs";
+import { renderOtsCardFrame } from "./ots-card-renderer.mjs";
 import { buildChibiSchedule, getChibiFrameTransform } from "./chibi-choreography.mjs";
 import { resolvePuppetPoseId } from "./multi-shot-timeline.mjs";
 import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
@@ -31,7 +32,7 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
 
   const assetCache = new Map();
   const propCache = new Map();
-  const frameCache = new Map();
+  const puppetCache = new Map();
   const bgCache = new Map();
 
   const neutralPose = validated.registry.byId.get("neutral-listening");
@@ -117,6 +118,21 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
         const pose = validated.registry.byId.get(poseId) ?? neutralPose;
         const totalRecipeFrames = pose.recipe.durationFrames || 1;
 
+        // Resolve OTS graphic assets and timing if present
+        const ots = shot.otsGraphic ?? null;
+        let otsInnerImageBuffer = null;
+        if (ots?.image) {
+          const otsImgPath = path.isAbsolute(ots.image)
+            ? ots.image
+            : path.resolve(runDirectory, ots.image);
+          if (await fs.access(otsImgPath).then(() => true).catch(() => false)) {
+            otsInnerImageBuffer = await fs.readFile(otsImgPath);
+          }
+        }
+        const otsEntranceDelay = ots?.entranceDelayFrames ?? 0;
+        const otsDuration = ots?.durationFrames ?? (shot.durationFrames - otsEntranceDelay);
+        const otsFrameCache = new Map();
+
         // Render animated gesture entrance, apex hold, smooth release, and neutral speech
         for (let f = 0; f < shot.durationFrames; f += 1) {
           const globalFrame = shot.startFrame + f;
@@ -138,11 +154,11 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           }
 
           const activePoseId = activePose.id;
-          const cacheKey = `${activePoseId}:${poseFrame}:${mouthDrawing ?? "source"}`;
+          const puppetKey = `${activePoseId}:${poseFrame}:${mouthDrawing ?? "source"}`;
 
-          let composedBuffer;
-          if (frameCache.has(cacheKey)) {
-            composedBuffer = frameCache.get(cacheKey);
+          let puppetBuffer;
+          if (puppetCache.has(puppetKey)) {
+            puppetBuffer = puppetCache.get(puppetKey);
           } else {
             const rendered = await renderRigFrame({
               manifest: validated.manifest,
@@ -156,14 +172,42 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
               stageView: PERFORMANCE_STAGE_VIEW,
               mouthDrawing,
             });
-
-            composedBuffer = await sharp(bgBuffer)
-              .composite([{ input: rendered.buffer }])
-              .png()
-              .toBuffer();
-
-            frameCache.set(cacheKey, composedBuffer);
+            puppetBuffer = rendered.buffer;
+            puppetCache.set(puppetKey, puppetBuffer);
           }
+
+          // Composite OTS card if active on this frame
+          const composites = [];
+          if (ots && f >= otsEntranceDelay && f < otsEntranceDelay + otsDuration) {
+            const cardEntranceFrame = f - otsEntranceDelay;
+            const cardCacheKey = Math.min(cardEntranceFrame, 4);
+            let cardBuffer = otsFrameCache.get(cardCacheKey);
+            if (!cardBuffer) {
+              cardBuffer = await renderOtsCardFrame({
+                badge: ots.badge ?? "",
+                headline: ots.headline ?? "",
+                image: otsInnerImageBuffer,
+                subtext: ots.subtext ?? "",
+                width: OTS_GRAPHIC_ZONE.width,
+                height: OTS_GRAPHIC_ZONE.height,
+                entranceFrame: cardEntranceFrame,
+              });
+              otsFrameCache.set(cardCacheKey, cardBuffer);
+            }
+            composites.push({
+              input: cardBuffer,
+              left: OTS_GRAPHIC_ZONE.left,
+              top: OTS_GRAPHIC_ZONE.top,
+            });
+          }
+
+          // Puppet rig layer in front of OTS card
+          composites.push({ input: puppetBuffer });
+
+          const composedBuffer = await sharp(bgBuffer)
+            .composite(composites)
+            .png()
+            .toBuffer();
 
           outputFrame += 1;
           await fs.writeFile(
@@ -180,6 +224,7 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           durationFrames: shot.durationFrames,
           poseId,
           backgroundId: shot.backgroundId,
+          ...(shot.otsGraphic ? { otsGraphic: shot.otsGraphic } : {}),
         });
 
       } else if (shot.shotType === "chibi-commentary") {
@@ -319,6 +364,13 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           const timeMs = Math.round((shot.startFrame / 24) * 1000);
           if (timeMs >= 0) {
             sfxTriggers.push({ timeMs, shotId: shot.id, type: shot.shotType });
+          }
+        }
+        if (shot.shotType === "talk-to-camera" && shot.otsGraphic) {
+          const entranceDelay = shot.otsGraphic.entranceDelayFrames ?? 0;
+          const timeMs = Math.round(((shot.startFrame + entranceDelay) / 24) * 1000);
+          if (timeMs >= 0) {
+            sfxTriggers.push({ timeMs, shotId: shot.id, type: "ots-graphic" });
           }
         }
       }

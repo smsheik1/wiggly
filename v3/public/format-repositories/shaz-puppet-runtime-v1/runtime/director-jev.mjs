@@ -208,3 +208,109 @@ export async function lintScriptWithJev(scriptText, { apiKey, fetchFn } = {}) {
     provenance: "jev-systemone",
   };
 }
+
+/**
+ * Deterministic fallback to select the highest-signal image candidate without network or API keys.
+ */
+export function curateImageCandidatesDeterministic(sentence, candidates) {
+  if (!Array.isArray(candidates) || candidates.length === 0) {
+    return null;
+  }
+
+  const sLower = (sentence || "").toLowerCase();
+  const isPunchlineOrSarcastic = sLower.includes("nobody asked") || sLower.includes("ridiculous") || sLower.includes("joke") || sLower.includes("dealbreaker");
+
+  let bestIndex = 0;
+  let bestScore = -1;
+
+  for (const [idx, c] of candidates.entries()) {
+    let score = 0;
+    const titleLower = (c.title || "").toLowerCase();
+    const sourceLower = (c.source || c.domain || "").toLowerCase();
+
+    // Prefer recognized authoritative news publications
+    const newsKeywords = ["verge", "reuters", "bloomberg", "detroit", "autopian", "motortrend", "techcrunch", "wsj", "macrumors", "ars"];
+    if (newsKeywords.some((k) => sourceLower.includes(k) || titleLower.includes(k))) {
+      score += 3;
+    }
+
+    // If comedic/sarcastic beat, reward meme or reaction imagery
+    if (isPunchlineOrSarcastic && (titleLower.includes("meme") || titleLower.includes("reaction") || titleLower.includes("funny"))) {
+      score += 4;
+    }
+
+    // Penalize generic stock keywords or watermark signs
+    if (titleLower.includes("stock photo") || titleLower.includes("getty") || titleLower.includes("alamy") || titleLower.includes("clipart")) {
+      score -= 5;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = idx;
+    }
+  }
+
+  const chosen = candidates[bestIndex];
+  return {
+    selectedCandidate: chosen,
+    selectedIndex: bestIndex,
+    badge: isPunchlineOrSarcastic ? "REACTION" : (chosen.source ? chosen.source.toUpperCase().slice(0, 16) : "REPORT"),
+    confidence: 0.85,
+    rationale: "Deterministic editorial signal ranking",
+    provenance: "heuristic",
+  };
+}
+
+/**
+ * Curates image candidates using Jev System One actor intuition.
+ * Evaluates candidates for comedic contrast, rhetorical punch, and journalistic proof.
+ */
+export async function curateImageCandidatesWithJev({ sentence, candidates, apiKey, fetchFn } = {}) {
+  if (!Array.isArray(candidates) || candidates.length === 0) {
+    return null;
+  }
+
+  const criteria = {};
+  for (const [idx, c] of candidates.entries()) {
+    const key = `candidate_${idx}`;
+    criteria[key] = `[${c.source || c.domain || "Web"}]: "${c.title || "Image"}"`;
+  }
+
+  const questions = {
+    best_image: {
+      type: "choice",
+      instructions: "Which image candidate best matches the commentary beat with authentic journalistic proof, clear editorial context, or hilarious comedic contrast? Avoid generic stock art, watermarks, or irrelevant clipart.",
+      criteria,
+    },
+    card_badge: {
+      type: "choice",
+      instructions: "What punchy 1-2 word badge should appear at the top of the card?",
+      criteria: {
+        "REPORT": "Verified news report, breaking leak, or official announcement",
+        "REALITY CHECK": "Skeptical or critical take on corporate claims",
+        "REACTION": "Audience meme, deadpan roast, or community sentiment",
+        "THE DEALBREAKER": "Key dealbreaker or controversial takeaway",
+      },
+    },
+  };
+
+  const result = await callJevSystemOne({ state: `Spoken dialogue: "${sentence}"`, questions, apiKey, fetchFn });
+  if (!result || !result.answers) {
+    return curateImageCandidatesDeterministic(sentence, candidates);
+  }
+
+  const answers = result.answers;
+  const choiceKey = answers.best_image?.choice;
+  const matchIndex = choiceKey ? Number(choiceKey.replace("candidate_", "")) : 0;
+  const selectedIndex = (!isNaN(matchIndex) && matchIndex >= 0 && matchIndex < candidates.length) ? matchIndex : 0;
+
+  return {
+    selectedCandidate: candidates[selectedIndex],
+    selectedIndex,
+    badge: answers.card_badge?.choice || "REPORT",
+    confidence: answers.best_image?.confidence ?? 0.9,
+    rationale: `Jev selected candidate ${selectedIndex} for editorial impact`,
+    provenance: "jev-systemone",
+  };
+}
+
