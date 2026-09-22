@@ -128,17 +128,14 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn } = {
     },
     shaz_puppet_pose: {
       type: "choice",
-      instructions: "Which puppet gesture best suits Shaz speaking this line? Select neutral-listening for regular narration, or select an active gesture (shrug, confident, point, think, arms-crossed-skeptical, facepalm-frustrated) when the line delivers emphasis, skepticism, punchlines, or conclusion.",
+      instructions: "Which approved puppet gesture best suits Shaz speaking this line? Select neutral-listening for regular narration, or select an active gesture (point, think, confident, present, aha) when the line delivers emphasis, skepticism, punchlines, or conclusion.",
       criteria: {
         "neutral-listening": "Default baseline narration without overt arm movement",
+        "point": "Direct emphasis, calling someone or something out, or making an accusatory point",
+        "think": "Pondering, reflecting, questioning assumptions, chin hold",
+        "confident": "Confident conclusion, hands on hips, or strong definitive statement",
         "present": "Presenting data or welcoming the audience with open hands",
-        "think": "Pondering, reflecting, chin hold",
-        "shrug": "Disbelief, skepticism, questioning who asked for this",
-        "arms-crossed-skeptical": "Smug skepticism, doubtful stance, waiting for proof",
-        "facepalm-frustrated": "Facepalm at absurd stupidity or exasperating corporate moves",
-        "aha": "Epiphany or connecting the dots",
-        "point": "Direct emphasis or calling out a specific entity",
-        "confident": "Confident conclusion or strong definitive statement",
+        "aha": "Sudden realization, discovery, epiphany, or connecting the dots",
       },
     },
   };

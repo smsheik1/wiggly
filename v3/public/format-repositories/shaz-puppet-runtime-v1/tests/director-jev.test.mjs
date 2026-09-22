@@ -106,8 +106,8 @@ test("deriveMultiShotPlanWithJev prioritizes talk-to-camera with neutral-listeni
           shot_type: { choice: callCount === 3 ? "chibi-commentary" : "talk-to-camera", confidence: 0.85 },
           shaz_puppet_pose: {
             // Beat 1: active gesture (point)
-            // Beat 2: active gesture (shrug) -> should be grounded back to neutral-listening for breathing room!
-            choice: callCount === 1 ? "point" : callCount === 2 ? "shrug" : "neutral-listening",
+            // Beat 2: active gesture (think) -> should be grounded back to neutral-listening for breathing room!
+            choice: callCount === 1 ? "point" : callCount === 2 ? "think" : "neutral-listening",
             confidence: 0.75,
           },
           chibi_pose: { choice: "point-emphasis", confidence: 0.85 },

@@ -388,7 +388,7 @@ export function deriveMultiShotPlan({
     if (!chibiIndices.has(textIdx)) textCardIndices.add(textIdx);
   }
 
-  const activePoses = ["point", "shrug", "arms-crossed-skeptical", "think", "confident", "present"];
+  const activePoses = ["point", "think", "confident", "present", "aha"];
   let activePoseIndex = 0;
 
   for (let bIndex = 0; bIndex < beats.length; bIndex += 1) {
@@ -532,11 +532,8 @@ export async function deriveMultiShotPlanWithJev({
   const puppetRotation = [
     "neutral-listening",
     "point",
-    "shrug",
-    "arms-crossed-skeptical",
     "think",
     "confident",
-    "facepalm-frustrated",
     "present",
     "aha",
   ];
