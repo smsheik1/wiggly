@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "npm run test:fast",
-    "test:fast": "node --test tests/background-assets.test.mjs tests/cherry-vendor.test.mjs tests/deformation-chains.test.mjs tests/director-jev.test.mjs tests/generated-pose-regressions.test.mjs tests/lipsync.test.mjs tests/motion-packets.test.mjs tests/multi-shot.test.mjs tests/neutral-listening.test.mjs tests/pose-authoring.test.mjs tests/pose-recipe.test.mjs tests/rig-v2-renderer.test.mjs tests/run-contract.test.mjs tests/script-validator.test.mjs tests/topic-card-renderer.test.mjs tests/trend-scout.test.mjs tests/voice.test.mjs",
+    "test:fast": "node --test tests/background-assets.test.mjs tests/cherry-vendor.test.mjs tests/deformation-chains.test.mjs tests/director-jev.test.mjs tests/generated-pose-regressions.test.mjs tests/lipsync.test.mjs tests/motion-packets.test.mjs tests/multi-shot.test.mjs tests/neutral-listening.test.mjs tests/ots-card-renderer.test.mjs tests/pose-authoring.test.mjs tests/pose-recipe.test.mjs tests/rig-v2-renderer.test.mjs tests/run-contract.test.mjs tests/script-validator.test.mjs tests/topic-card-renderer.test.mjs tests/trend-scout.test.mjs tests/voice.test.mjs",
     "test:heavy": "node --test tests/build-kit.test.mjs tests/cherry-wasi-runtime.test.mjs tests/inspect-pose.test.mjs tests/key-point.test.mjs tests/performance-runtime.test.mjs tests/talk-to-camera.test.mjs tests/transcription.test.mjs",
     "test:all": "node --test tests/*.test.mjs",
     "test:script": "node --test tests/script-validator.test.mjs",

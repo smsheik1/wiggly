@@ -95,9 +95,7 @@ export async function renderOtsCardFrame({
     }).png().toBuffer();
   }
 
-  // 3. Prepare floating overlays (badge pill & bottom headline scrim)
-  const badgeText = (badge || "").toUpperCase().trim();
-  const badgeW = Math.max(90, Math.min(240, badgeText.length * 9.5 + 24));
+  // 3. Prepare floating overlays (bottom headline scrim)
   const hasHeadline = Boolean(headline && headline.trim());
 
   const overlaysSvg = Buffer.from(`
@@ -117,14 +115,6 @@ export async function renderOtsCardFrame({
       ${hasHeadline ? `
         <path d="M 0 ${innerH - 96} L ${innerW} ${innerH - 96} L ${innerW} ${innerH - rx} Q ${innerW} ${innerH} ${innerW - rx} ${innerH} L ${rx} ${innerH} Q 0 ${innerH} 0 ${innerH - rx} Z" fill="url(#bottomFade)" />
         <text x="18" y="${innerH - 24}" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="900" fill="#ffffff" letter-spacing="-0.3" filter="url(#pillShadow)">${headline.toUpperCase().trim()}</text>
-      ` : ""}
-
-      <!-- Top Badge Pill -->
-      ${badgeText ? `
-        <g filter="url(#pillShadow)">
-          <rect x="16" y="16" width="${badgeW}" height="28" rx="8" fill="#ef4444" />
-          <text x="${16 + badgeW / 2}" y="34.5" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="1.2">${badgeText}</text>
-        </g>
       ` : ""}
     </svg>
   `);

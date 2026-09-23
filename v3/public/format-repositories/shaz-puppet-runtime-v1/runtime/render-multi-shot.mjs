@@ -184,7 +184,6 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
             let cardBuffer = otsFrameCache.get(cardCacheKey);
             if (!cardBuffer) {
               cardBuffer = await renderOtsCardFrame({
-                badge: ots.badge ?? "",
                 headline: ots.headline ?? "",
                 image: otsInnerImageBuffer,
                 subtext: ots.subtext ?? "",
