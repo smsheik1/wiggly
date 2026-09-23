@@ -15,6 +15,27 @@
     "artistRenderedFramesUsed": false,
     "userVisualApproval": "pending"
   },
+  "poseCatalogShowcase": {
+    "formatVersion": "0.3.0",
+    "status": "approved-production-11-pose-showcase",
+    "input": "goldens/pose-catalog-showcase/input.json",
+    "video": "goldens/pose-catalog-showcase/final.mp4",
+    "poster": "goldens/pose-catalog-showcase/poster.jpg",
+    "contactSheet": "goldens/pose-catalog-showcase/contact-sheet.jpg",
+    "validationReceipt": "goldens/pose-catalog-showcase/validation-receipt.json",
+    "renderReport": "goldens/pose-catalog-showcase/render-report.json",
+    "qualityReport": "goldens/pose-catalog-showcase/quality-report.json",
+    "humanReview": "goldens/pose-catalog-showcase/human-review.json",
+    "inputSha256": "0ef68fc9a300ba434d6ad0fc258b410c8a5fd825d840e4c25e9ad37230f4cd54",
+    "videoSha256": "bd7812e41912a0f0f9b18824a737ecb378bbc1edcac60e6c54af7c77717bb16a",
+    "durationSeconds": 23.583333,
+    "frames": 566,
+    "width": 1280,
+    "height": 720,
+    "fps": 24,
+    "artistRenderedFramesUsed": false,
+    "userVisualApproval": "approved"
+  },
   "talkingSceneShowcase": {
     "formatVersion": "0.2.0",
     "status": "technical-pass-user-praised-first-draft",

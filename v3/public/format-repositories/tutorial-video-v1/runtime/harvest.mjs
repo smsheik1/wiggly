@@ -124,46 +124,131 @@ export const KNOWN_FORMATS = {
     outputLabel: 'animal-conversations.mp4',
     relativeRepoDir: 'animal-conversations-v1',
     runtimeCommand: 'node runner.mjs make'
+  },
+  'shaz-puppet-runtime': {
+    name: 'Animate Shaz',
+    slug: 'shaz-puppet-runtime',
+    promise: 'Turn scripts or audio into 24fps cartoon host videos with local Whisper transcription, Cherry lip-sync, and 11 production poses.',
+    formula: '24fps puppet animation with Cherry phoneme lip-sync and 11 distinct acting poses',
+    url: 'https://wiggly.agentenamel.com/formats/shaz-puppet-runtime',
+    outputLabel: 'shaz-puppet-runtime.mp4',
+    relativeRepoDir: 'shaz-puppet-runtime-v1',
+    runtimeCommand: 'node runner.mjs make'
+  },
+  'animate-shaz': {
+    name: 'Animate Shaz',
+    slug: 'shaz-puppet-runtime',
+    promise: 'Turn scripts or audio into 24fps cartoon host videos with local Whisper transcription, Cherry lip-sync, and 11 production poses.',
+    formula: '24fps puppet animation with Cherry phoneme lip-sync and 11 distinct acting poses',
+    url: 'https://wiggly.agentenamel.com/formats/shaz-puppet-runtime',
+    outputLabel: 'shaz-puppet-runtime.mp4',
+    relativeRepoDir: 'shaz-puppet-runtime-v1',
+    runtimeCommand: 'node runner.mjs make'
+  },
+  'shaz': {
+    name: 'Animate Shaz',
+    slug: 'shaz-puppet-runtime',
+    promise: 'Turn scripts or audio into 24fps cartoon host videos with local Whisper transcription, Cherry lip-sync, and 11 production poses.',
+    formula: '24fps puppet animation with Cherry phoneme lip-sync and 11 distinct acting poses',
+    url: 'https://wiggly.agentenamel.com/formats/shaz-puppet-runtime',
+    outputLabel: 'shaz-puppet-runtime.mp4',
+    relativeRepoDir: 'shaz-puppet-runtime-v1',
+    runtimeCommand: 'node runner.mjs make'
   }
 };
 
-export function resolveFormatMetadata(targetSlug, searchRoots = []) {
-  let baseMeta = null;
-  if (KNOWN_FORMATS[targetSlug]) {
-    baseMeta = { ...KNOWN_FORMATS[targetSlug] };
-  }
+export function findRepoDirAndFormatJson(targetSlug, searchRoots = []) {
+  const normTarget = targetSlug.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-  let matchedRepoDir = null;
+  // 1. Direct candidate paths
   for (const root of searchRoots) {
     const candidates = [
       path.join(root, `${targetSlug}-v1`),
       path.join(root, `${targetSlug}`),
+      path.join(root, '..', `${targetSlug}-v1`),
+      path.join(root, '..', `${targetSlug}`),
       path.join(root, 'v3/public/format-repositories', `${targetSlug}-v1`),
-      path.join(root, 'public/format-repositories', `${targetSlug}-v1`)
+      path.join(root, 'v3/public/format-repositories', `${targetSlug}`),
+      path.join(root, 'public/format-repositories', `${targetSlug}-v1`),
+      path.join(root, 'public/format-repositories', `${targetSlug}`)
     ];
     for (const c of candidates) {
-      if (existsSync(path.join(c, 'format.json'))) {
-        matchedRepoDir = c;
-        if (!baseMeta) {
-          try {
-            const json = JSON.parse(readFileSync(path.join(c, 'format.json'), 'utf8'));
-            baseMeta = {
-              name: json.name || json.title || targetSlug,
-              slug: json.slug || json.id || targetSlug,
-              promise: json.summary || json.description || `Automated ${json.name || targetSlug} video generator.`,
-              url: `https://wiggly.agentenamel.com/formats/${json.slug || targetSlug}`,
-              outputLabel: `${json.slug || targetSlug}.mp4`,
-              relativeRepoDir: path.basename(c)
-            };
-          } catch {}
-        }
-        break;
+      const formatPath = path.join(c, 'format.json');
+      if (existsSync(formatPath)) {
+        try {
+          const json = JSON.parse(readFileSync(formatPath, 'utf8'));
+          return { repoDir: c, formatJson: json };
+        } catch {}
       }
     }
-    if (matchedRepoDir && baseMeta) break;
   }
 
-  if (!baseMeta) {
+  // 2. Scan all format repository directories in searchRoots for format.json
+  const scannedDirs = new Set();
+  for (const root of searchRoots) {
+    const searchDirs = [
+      root,
+      path.join(root, '..'),
+      path.join(root, 'v3/public/format-repositories'),
+      path.join(root, 'public/format-repositories'),
+      path.join(root, '../../public/format-repositories'),
+      path.join(root, '../../../public/format-repositories')
+    ];
+    for (const sDir of searchDirs) {
+      if (!existsSync(sDir) || scannedDirs.has(sDir)) continue;
+      scannedDirs.add(sDir);
+      try {
+        const entries = readdirSync(sDir, { withFileTypes: true });
+        for (const ent of entries) {
+          if (!ent.isDirectory()) continue;
+          const fullDir = path.join(sDir, ent.name);
+          const formatPath = path.join(fullDir, 'format.json');
+          if (existsSync(formatPath)) {
+            try {
+              const json = JSON.parse(readFileSync(formatPath, 'utf8'));
+              const id = (json.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+              const slug = (json.slug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+              const title = (json.title || json.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+              const dirName = ent.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+              if (
+                id === normTarget ||
+                slug === normTarget ||
+                title === normTarget ||
+                dirName.includes(normTarget) ||
+                normTarget.includes(id) ||
+                (normTarget.includes('shaz') && (id.includes('shaz') || title.includes('shaz')))
+              ) {
+                return { repoDir: fullDir, formatJson: json };
+              }
+            } catch {}
+          }
+        }
+      } catch {}
+    }
+  }
+
+  return { repoDir: null, formatJson: null };
+}
+
+export function resolveFormatMetadata(targetSlug, searchRoots = []) {
+  const { repoDir, formatJson } = findRepoDirAndFormatJson(targetSlug, searchRoots);
+
+  let baseMeta = null;
+  if (formatJson) {
+    const slug = formatJson.id || formatJson.slug || targetSlug;
+    baseMeta = {
+      name: formatJson.title || formatJson.name || targetSlug,
+      slug,
+      promise: formatJson.summary || formatJson.description || `Automated ${formatJson.title || formatJson.name || slug} video generator.`,
+      url: `https://wiggly.agentenamel.com/formats/${slug}`,
+      outputLabel: `${slug}.mp4`,
+      relativeRepoDir: repoDir ? path.basename(repoDir) : `${slug}-v1`,
+      repoDir
+    };
+  } else if (KNOWN_FORMATS[targetSlug]) {
+    baseMeta = { ...KNOWN_FORMATS[targetSlug] };
+  } else {
     baseMeta = {
       name: targetSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
       slug: targetSlug,
@@ -174,7 +259,7 @@ export function resolveFormatMetadata(targetSlug, searchRoots = []) {
     };
   }
 
-  const introspected = introspectRepoDetails(matchedRepoDir);
+  const introspected = introspectRepoDetails(repoDir);
   return {
     ...baseMeta,
     formula: introspected.formula || baseMeta.formula || `packages creative rules into an autonomous video generator`,
@@ -185,36 +270,89 @@ export function resolveFormatMetadata(targetSlug, searchRoots = []) {
 }
 
 export function locateProofMedia(formatMeta, searchRoots = []) {
+  // 1. Check existing harvested media directory first
   for (const root of searchRoots) {
     const existingMedia = path.join(root, "media", formatMeta.slug, "final-result.mp4");
     if (existsSync(existingMedia)) return existingMedia;
+  }
 
-    const repoCandidates = [
+  const repoCandidates = [
+    formatMeta.repoDir,
+    ...searchRoots.flatMap(root => [
       path.join(root, formatMeta.relativeRepoDir || `${formatMeta.slug}-v1`),
       path.join(root, formatMeta.slug),
-      path.join(root, `../${formatMeta.slug}-v1`),
-      path.join(root, `../../${formatMeta.slug}-v1`),
-      path.join(root, `v3/public/format-repositories/${formatMeta.relativeRepoDir || `${formatMeta.slug}-v1`}`)
+      path.join(root, `../${formatMeta.relativeRepoDir || `${formatMeta.slug}-v1`}`),
+      path.join(root, `../${formatMeta.slug}`),
+      path.join(root, `v3/public/format-repositories/${formatMeta.relativeRepoDir || `${formatMeta.slug}-v1`}`),
+      path.join(root, `v3/public/format-repositories/${formatMeta.slug}`)
+    ])
+  ].filter(Boolean);
+
+  for (const dir of repoCandidates) {
+    if (!existsSync(dir)) continue;
+
+    // A. Contract-driven golden discovery: inspect goldens.json
+    const goldensJsonPath = path.join(dir, 'goldens.json');
+    if (existsSync(goldensJsonPath)) {
+      try {
+        const goldensData = JSON.parse(readFileSync(goldensJsonPath, 'utf8'));
+        // Prioritize approved showcase / talking scene / canonical videos
+        const candidateKeys = Object.keys(goldensData).sort((a, b) => {
+          const aShowcase = a.toLowerCase().includes('showcase') ? 1 : 0;
+          const bShowcase = b.toLowerCase().includes('showcase') ? 1 : 0;
+          return bShowcase - aShowcase;
+        });
+
+        for (const key of candidateKeys) {
+          const entry = goldensData[key];
+          if (entry && typeof entry === 'object' && entry.video) {
+            const videoPath = path.join(dir, entry.video);
+            if (existsSync(videoPath)) {
+              return videoPath;
+            }
+          }
+        }
+      } catch {}
+    }
+
+    // B. Direct golden and example subpaths
+    const subpaths = [
+      'goldens/pose-catalog-showcase/final.mp4',
+      'goldens/talking-scene-lipsync-v1/final.mp4',
+      'examples/wiggly-proof.mp4',
+      'goldens/wiggly-format-explainer.mp4',
+      'proofs/same-universe-0.1.4.mp4',
+      'proofs/crossover-0.1.4.mp4',
+      'outputs/how-batman-sleeps.mp4',
+      'examples/batman-spongebob-music.mp4',
+      'examples/animal-conversations/final-result.mp4',
+      'examples/batman-arkham/final-result.mp4'
     ];
 
-    for (const dir of repoCandidates) {
-      if (!existsSync(dir)) continue;
+    for (const sp of subpaths) {
+      const full = path.join(dir, sp);
+      if (existsSync(full)) return full;
+    }
 
-      const subpaths = [
-        'examples/wiggly-proof.mp4',
-        'goldens/wiggly-format-explainer.mp4',
-        'proofs/same-universe-0.1.4.mp4',
-        'proofs/crossover-0.1.4.mp4',
-        'outputs/how-batman-sleeps.mp4',
-        'examples/batman-spongebob-music.mp4',
-        'examples/animal-conversations/final-result.mp4',
-        'examples/batman-arkham/final-result.mp4'
-      ];
-
-      for (const sp of subpaths) {
-        const full = path.join(dir, sp);
-        if (existsSync(full)) return full;
-      }
+    // C. Search goldens/, examples/, and proofs/ directories
+    const searchSubdirs = ['goldens', 'examples', 'outputs', 'proofs'];
+    for (const sub of searchSubdirs) {
+      const subFull = path.join(dir, sub);
+      if (!existsSync(subFull)) continue;
+      try {
+        const files = readdirSync(subFull, { withFileTypes: true });
+        for (const f of files) {
+          if (f.isFile() && f.name.endsWith('.mp4')) {
+            return path.join(subFull, f.name);
+          }
+          if (f.isDirectory()) {
+            const nested = path.join(subFull, f.name, 'final.mp4');
+            if (existsSync(nested)) return nested;
+            const nestedAny = readdirSync(path.join(subFull, f.name)).find(x => x.endsWith('.mp4'));
+            if (nestedAny) return path.join(subFull, f.name, nestedAny);
+          }
+        }
+      } catch {}
     }
   }
 
