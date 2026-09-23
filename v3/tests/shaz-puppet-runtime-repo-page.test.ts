@@ -590,7 +590,7 @@ for (const staleCopy of [
 }
 const trust = await getShazPuppetRuntimeTrustData();
 assert.equal(trust.version, "0.4.0");
-assert.equal(trust.includedAssets.poses.length, 14);
+assert.equal(trust.includedAssets.poses.length, 11);
 assert.equal(
   trust.includedAssets.poses.some(({ id }) => id === "talk-to-camera"),
   false,
@@ -613,7 +613,7 @@ assert.deepEqual(
   trust.includedAssets.showcasePoses.map(({ id }) => id),
   trustedShowcasePoseIds,
 );
-assert.equal(trust.includedAssets.props.length, 2);
+assert.equal(trust.includedAssets.props.length, 1);
 assert.equal(trust.includedAssets.defaultBackgroundId, "sisters-room");
 assert.deepEqual(
   trust.includedAssets.backgrounds.map(({ id, label, path, sha256 }) => ({

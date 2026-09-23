@@ -62,18 +62,6 @@
       "sha256": "399fdc5f52a76b6ee54a0c35863fed3d22307072e6a4b1d48b4ac32a0bbbb7df"
     },
     {
-      "id": "facepalm-frustrated",
-      "kind": "generated",
-      "path": "generated/facepalm-frustrated.json",
-      "sha256": "bfb12379e72c51f650622bbbce64fcc86db4deb86a1a90eafc81c84f6c7dfbbd"
-    },
-    {
-      "id": "arms-crossed-skeptical",
-      "kind": "generated",
-      "path": "generated/arms-crossed-skeptical.json",
-      "sha256": "f6fae70b94adcafc32511f52cbed0eab66b53acdd271560761dce3e963fdf078"
-    },
-    {
       "id": "chin-stroke-swagger",
       "kind": "generated",
       "path": "generated/chin-stroke-swagger.json",

@@ -27,6 +27,12 @@ export function resolvePuppetPoseId(poseId) {
   if (poseId === "key-point") {
     return "point";
   }
+  if (poseId === "facepalm-frustrated" || poseId === "facepalm") {
+    return "shrug";
+  }
+  if (poseId === "arms-crossed-skeptical" || poseId === "arms-crossed") {
+    return "confident";
+  }
   return poseId;
 }
 
