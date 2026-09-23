@@ -76,6 +76,10 @@ test("facepalm uses the front hand channel for complete face coverage", async ()
     assert.ok(key.scale[0] <= 0.421 && key.scale[1] <= 0.421);
     assert.ok(key.rotation >= 98 && key.rotation <= 108);
   }
+  assert.deepEqual(pose.drawings.Right_Hand, [{ frame: 1, drawing: "1" }],
+    "off-hand must remain in drawing 1 throughout to prevent amputated sleeve tuck");
+  assert.ok(Math.abs(pose.controls["Shaz_Master-P"][0].scale[0] - 1.0) < 0.01,
+    "Shaz_Master-P scale must be 1.0 per Rule 11");
 });
 
 test("front facepalm palm is a provenance-locked alias of an existing rig drawing", async () => {
