@@ -1,0 +1,329 @@
+{
+  "schemaVersion": 2,
+  "status": "pass",
+  "mode": "multi-shot-timeline",
+  "validatedAt": "2026-09-23T21:57:39.856Z",
+  "formatVersion": "0.4.0",
+  "inputSha256": "0ef68fc9a300ba434d6ad0fc258b410c8a5fd825d840e4c25e9ad37230f4cd54",
+  "sourceXstageSha256": "507e8b0fa7b95d36b9429671b6b6a9ffa3dd77f5c559b84eb2b49add04512fca",
+  "poseRegistrySha256": "330853e324c4fbd3d92aadbd866570f729127b0ca8d4c7fdc227edf316c4dcb0",
+  "artistRenderedFramesUsed": false,
+  "totalFrames": 566,
+  "durationSeconds": 23.583333333333332,
+  "audio": {
+    "file": "user-audio.wav",
+    "sha256": "b47f9c9a90a7491d4e9d01bcfd5822ac87631f0b2799987e407d530f280e166e",
+    "codec": "pcm_s16le",
+    "durationSeconds": 23.6
+  },
+  "transcript": {
+    "file": "transcript.json",
+    "sha256": "4ae03ab121bdd586f830a17cb769bb1878c53a344bff7d3c4d7cc40ec1794566",
+    "receiptFile": "transcript.receipt.json",
+    "receiptSha256": "d48c6544664deefd4e097d1eaa00008553ec9c844e227f719c3e860e6dc2e753",
+    "sourceAudioSha256": "b47f9c9a90a7491d4e9d01bcfd5822ac87631f0b2799987e407d530f280e166e",
+    "language": "en",
+    "segmentCount": 10,
+    "wordCount": 40,
+    "engine": {
+      "name": "whisper.cpp",
+      "version": "1.9.2",
+      "execution": "locally-compiled-darwin-arm64",
+      "vendorManifestSha256": "ab781778440de86237e7fefc5848e45b3f55472b43f2355258c5734086adc018",
+      "sourceArchiveSha256": "a6abd064fcca8b85e794d205abf328c522e9451db43a3eadc178b883b7d0e9cd",
+      "buildPlanSha256": "6e4232dddec821a790da768675e3918b7a458aaed772d050f27ff2a2f0dc48ce",
+      "binarySha256": "2b79b5a2a31cef4c9eb8861b4ac9fc5ac285c6bb5a1b4feb052127b8b14d219f",
+      "compilerVersion": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+      "modelId": "base.en-q5_1",
+      "modelSha256": "4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f"
+    }
+  },
+  "lipSync": {
+    "engine": "cherry-lip-sync",
+    "execution": "node-wasi-preview1",
+    "cueSource": "bundled-wasi-engine",
+    "cueFile": "cherry-lipsync.tsv",
+    "cueSha256": "97c9cf9c32fbb3981fd0435f9b23a8d7815af315062c737ff712abf50af77e46",
+    "sourceAudioSha256": "b47f9c9a90a7491d4e9d01bcfd5822ac87631f0b2799987e407d530f280e166e",
+    "fps": 24
+  },
+  "shots": [
+    {
+      "index": 0,
+      "id": "shot-01",
+      "shotType": "talk-to-camera",
+      "startFrame": 0,
+      "endFrameExclusive": 60,
+      "durationFrames": 60,
+      "backgroundId": "sisters-room",
+      "poseId": "neutral-listening",
+      "text": null,
+      "highlights": [],
+      "chibiPose": "present-card",
+      "chibiRoutine": [
+        "talk-gesture",
+        "present-card"
+      ],
+      "topicMedia": null,
+      "brollMedia": null,
+      "motion": "zoom-in",
+      "card": null,
+      "otsGraphic": {
+        "image": "media/card-01.png"
+      },
+      "rationale": "Pose 01/11: neutral-listening baseline anchor"
+    },
+    {
+      "index": 1,
+      "id": "shot-02",
+      "shotType": "talk-to-camera",
+      "startFrame": 60,
+      "endFrameExclusive": 105,
+      "durationFrames": 45,
+      "backgroundId": "sisters-room",
+      "poseId": "present",
+      "text": null,
+      "highlights": [],
+      "chibiPose": "present-card",
+      "chibiRoutine": [
+        "talk-gesture",
+        "present-card"
+      ],
+      "topicMedia": null,
+      "brollMedia": null,
+      "motion": "zoom-in",
+      "card": null,
+      "otsGraphic": {
+        "image": "media/card-02.png"
+      },
+      "rationale": "Pose 02/11: present welcoming gesture"
+    },
+    {
+      "index": 2,
+      "id": "shot-03",
+      "shotType": "talk-to-camera",
+      "startFrame": 105,
+      "endFrameExclusive": 153,
+      "durationFrames": 48,
+      "backgroundId": "sisters-room",
+      "poseId": "shrug",
+      "text": null,
+      "highlights": [],
+      "chibiPose": "present-card",
+      "chibiRoutine": [
+        "talk-gesture",
+        "present-card"
+      ],
+      "topicMedia": null,
+      "brollMedia": null,
+      "motion": "zoom-in",
+      "card": null,
+      "otsGraphic": {
+        "image": "media/card-03.png"
+      },
+      "rationale": "Pose 03/11: shrug skeptical disbelief"
+    },
+    {
+      "index": 3,
+      "id": "shot-04",
+      "shotType": "talk-to-camera",
+      "startFrame": 153,
+      "endFrameExclusive": 198,
+      "durationFrames": 45,
+      "backgroundId": "sisters-room",
+      "poseId": "think",
+      "text": null,
+      "highlights": [],
+      "chibiPose": "present-card",
+      "chibiRoutine": [
+        "talk-gesture",
+        "present-card"
+      ],
+      "topicMedia": null,
+      "brollMedia": null,
+      "motion": "zoom-in",
+      "card": null,
+      "otsGraphic": {
+        "image": "media/card-04.png"
+      },
+      "rationale": "Pose 04/11: think chin hold analytical"
+    },
+    {
+      "index": 4,
+      "id": "shot-05",
+      "shotType": "talk-to-camera",
+      "startFrame": 198,
+      "endFrameExclusive": 249,
+      "durationFrames": 51,
+      "backgroundId": "sisters-room",
+      "poseId": "key-point",
+      "text": null,
+      "highlights": [],
+      "chibiPose": "present-card",
+      "chibiRoutine": [
+        "talk-gesture",
+        "present-card"
+      ],
+      "topicMedia": null,
+      "brollMedia": null,
+      "motion": "zoom-in",
+      "card": null,
+      "otsGraphic": {
+        "image": "media/card-05.png"
+      },
+      "rationale": "Pose 05/11: key-point deliberate wind-up"
+    },
+    {
+      "index": 5,
+      "id": "shot-06",
+      "shotType": "talk-to-camera",
+      "startFrame": 249,
+      "endFrameExclusive": 297,
+      "durationFrames": 48,
+      "backgroundId": "sisters-room",
+      "poseId": "aha",
+      "text": null,
+      "highlights": [],
+      "chibiPose": "present-card",
+      "chibiRoutine": [
+        "talk-gesture",
+        "present-card"
+      ],
+      "topicMedia": null,
+      "brollMedia": null,
+      "motion": "zoom-in",
+      "card": null,
+      "otsGraphic": {
+        "image": "media/card-06.png"
+      },
+      "rationale": "Pose 06/11: aha quick eureka pop"
+    },
+    {
+      "index": 6,
+      "id": "shot-07",
+      "shotType": "talk-to-camera",
+      "startFrame": 297,
+      "endFrameExclusive": 343,
+      "durationFrames": 46,
+      "backgroundId": "sisters-room",
+      "poseId": "point",
+      "text": null,
+      "highlights": [],
+      "chibiPose": "present-card",
+      "chibiRoutine": [
+        "talk-gesture",
+        "present-card"
+      ],
+      "topicMedia": null,
+      "brollMedia": null,
+      "motion": "zoom-in",
+      "card": null,
+      "otsGraphic": {
+        "image": "media/card-07.png"
+      },
+      "rationale": "Pose 07/11: point camera callout"
+    },
+    {
+      "index": 7,
+      "id": "shot-08",
+      "shotType": "talk-to-camera",
+      "startFrame": 343,
+      "endFrameExclusive": 390,
+      "durationFrames": 47,
+      "backgroundId": "sisters-room",
+      "poseId": "confident",
+      "text": null,
+      "highlights": [],
+      "chibiPose": "present-card",
+      "chibiRoutine": [
+        "talk-gesture",
+        "present-card"
+      ],
+      "topicMedia": null,
+      "brollMedia": null,
+      "motion": "zoom-in",
+      "card": null,
+      "otsGraphic": {
+        "image": "media/card-08.png"
+      },
+      "rationale": "Pose 08/11: confident hands-on-hips swagger"
+    },
+    {
+      "index": 8,
+      "id": "shot-09",
+      "shotType": "talk-to-camera",
+      "startFrame": 390,
+      "endFrameExclusive": 453,
+      "durationFrames": 63,
+      "backgroundId": "sisters-room",
+      "poseId": "excited-celebration",
+      "text": null,
+      "highlights": [],
+      "chibiPose": "present-card",
+      "chibiRoutine": [
+        "talk-gesture",
+        "present-card"
+      ],
+      "topicMedia": null,
+      "brollMedia": null,
+      "motion": "zoom-in",
+      "card": null,
+      "otsGraphic": {
+        "image": "media/card-09.png"
+      },
+      "rationale": "Pose 09/11: excited-celebration double-arm bounce"
+    },
+    {
+      "index": 9,
+      "id": "shot-10",
+      "shotType": "talk-to-camera",
+      "startFrame": 453,
+      "endFrameExclusive": 505,
+      "durationFrames": 52,
+      "backgroundId": "sisters-room",
+      "poseId": "point-at-screen",
+      "text": null,
+      "highlights": [],
+      "chibiPose": "present-card",
+      "chibiRoutine": [
+        "talk-gesture",
+        "present-card"
+      ],
+      "topicMedia": null,
+      "brollMedia": null,
+      "motion": "zoom-in",
+      "card": null,
+      "otsGraphic": {
+        "image": "media/card-10.png"
+      },
+      "rationale": "Pose 10/11: point-at-screen OTS card focus"
+    },
+    {
+      "index": 10,
+      "id": "shot-11",
+      "shotType": "talk-to-camera",
+      "startFrame": 505,
+      "endFrameExclusive": 566,
+      "durationFrames": 61,
+      "backgroundId": "sisters-room",
+      "poseId": "chin-stroke-swagger",
+      "text": null,
+      "highlights": [],
+      "chibiPose": "present-card",
+      "chibiRoutine": [
+        "talk-gesture",
+        "present-card"
+      ],
+      "topicMedia": null,
+      "brollMedia": null,
+      "motion": "zoom-in",
+      "card": null,
+      "otsGraphic": {
+        "image": "media/card-11.png"
+      },
+      "rationale": "Pose 11/11: chin-stroke-swagger smug smirk"
+    }
+  ],
+  "providerCalls": 0,
+  "estimatedCost": "$0"
+}

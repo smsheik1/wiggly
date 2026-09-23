@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "reviewedOutputSha256": "bd7812e41912a0f0f9b18824a737ecb378bbc1edcac60e6c54af7c77717bb16a",
+  "reviewer": "shaz",
+  "directVideoPerception": true,
+  "directAudioPerception": true,
+  "completePasses": 1,
+  "notes": "Verified all 11 poses and matching OTS cards with synchronized lip-sync and audio."
+}

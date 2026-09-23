@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 2,
+  "status": "rendered",
+  "mode": "multi-shot-timeline",
+  "renderedAt": "2026-09-23T21:56:21.188Z",
+  "inputSha256": "0ef68fc9a300ba434d6ad0fc258b410c8a5fd825d840e4c25e9ad37230f4cd54",
+  "audioSha256": "b47f9c9a90a7491d4e9d01bcfd5822ac87631f0b2799987e407d530f280e166e",
+  "sourceXstageSha256": "507e8b0fa7b95d36b9429671b6b6a9ffa3dd77f5c559b84eb2b49add04512fca",
+  "artistRenderedFramesUsed": false,
+  "renderer": "runtime/render-multi-shot.mjs#renderMultiShot",
+  "cameraMotion": false,
+  "stageView": {
+    "scale": 1.33,
+    "offset": [
+      0.12,
+      0.142
+    ]
+  },
+  "finalVideo": "final.mp4",
+  "outputSha256": "bd7812e41912a0f0f9b18824a737ecb378bbc1edcac60e6c54af7c77717bb16a",
+  "totalFrames": 566,
+  "durationSeconds": 23.583333333333332,
+  "audioDurationSeconds": 23.6,
+  "shots": [
+    {
+      "id": "shot-01",
+      "shotType": "talk-to-camera",
+      "outputStartFrame": 1,
+      "outputEndFrame": 60,
+      "durationFrames": 60,
+      "poseId": "neutral-listening",
+      "backgroundId": "sisters-room",
+      "otsGraphic": {
+        "image": "media/card-01.png"
+      }
+    },
+    {
+      "id": "shot-02",
+      "shotType": "talk-to-camera",
+      "outputStartFrame": 61,
+      "outputEndFrame": 105,
+      "durationFrames": 45,
+      "poseId": "present",
+      "backgroundId": "sisters-room",
+      "otsGraphic": {
+        "image": "media/card-02.png"
+      }
+    },
+    {
+      "id": "shot-03",
+      "shotType": "talk-to-camera",
+      "outputStartFrame": 106,
+      "outputEndFrame": 153,
+      "durationFrames": 48,
+      "poseId": "shrug",
+      "backgroundId": "sisters-room",
+      "otsGraphic": {
+        "image": "media/card-03.png"
+      }
+    },
+    {
+      "id": "shot-04",
+      "shotType": "talk-to-camera",
+      "outputStartFrame": 154,
+      "outputEndFrame": 198,
+      "durationFrames": 45,
+      "poseId": "think",
+      "backgroundId": "sisters-room",
+      "otsGraphic": {
+        "image": "media/card-04.png"
+      }
+    },
+    {
+      "id": "shot-05",
+      "shotType": "talk-to-camera",
+      "outputStartFrame": 199,
+      "outputEndFrame": 249,
+      "durationFrames": 51,
+      "poseId": "key-point",
+      "backgroundId": "sisters-room",
+      "otsGraphic": {
+        "image": "media/card-05.png"
+      }
+    },
+    {
+      "id": "shot-06",
+      "shotType": "talk-to-camera",
+      "outputStartFrame": 250,
+      "outputEndFrame": 297,
+      "durationFrames": 48,
+      "poseId": "aha",
+      "backgroundId": "sisters-room",
+      "otsGraphic": {
+        "image": "media/card-06.png"
+      }
+    },
+    {
+      "id": "shot-07",
+      "shotType": "talk-to-camera",
+      "outputStartFrame": 298,
+      "outputEndFrame": 343,
+      "durationFrames": 46,
+      "poseId": "point",
+      "backgroundId": "sisters-room",
+      "otsGraphic": {
+        "image": "media/card-07.png"
+      }
+    },
+    {
+      "id": "shot-08",
+      "shotType": "talk-to-camera",
+      "outputStartFrame": 344,
+      "outputEndFrame": 390,
+      "durationFrames": 47,
+      "poseId": "confident",
+      "backgroundId": "sisters-room",
+      "otsGraphic": {
+        "image": "media/card-08.png"
+      }
+    },
+    {
+      "id": "shot-09",
+      "shotType": "talk-to-camera",
+      "outputStartFrame": 391,
+      "outputEndFrame": 453,
+      "durationFrames": 63,
+      "poseId": "excited-celebration",
+      "backgroundId": "sisters-room",
+      "otsGraphic": {
+        "image": "media/card-09.png"
+      }
+    },
+    {
+      "id": "shot-10",
+      "shotType": "talk-to-camera",
+      "outputStartFrame": 454,
+      "outputEndFrame": 505,
+      "durationFrames": 52,
+      "poseId": "point-at-screen",
+      "backgroundId": "sisters-room",
+      "otsGraphic": {
+        "image": "media/card-10.png"
+      }
+    },
+    {
+      "id": "shot-11",
+      "shotType": "talk-to-camera",
+      "outputStartFrame": 506,
+      "outputEndFrame": 566,
+      "durationFrames": 61,
+      "poseId": "chin-stroke-swagger",
+      "backgroundId": "sisters-room",
+      "otsGraphic": {
+        "image": "media/card-11.png"
+      }
+    }
+  ],
+  "transcript": {
+    "file": "transcript.json",
+    "sha256": "4ae03ab121bdd586f830a17cb769bb1878c53a344bff7d3c4d7cc40ec1794566",
+    "receiptFile": "transcript.receipt.json",
+    "receiptSha256": "d48c6544664deefd4e097d1eaa00008553ec9c844e227f719c3e860e6dc2e753",
+    "sourceAudioSha256": "b47f9c9a90a7491d4e9d01bcfd5822ac87631f0b2799987e407d530f280e166e",
+    "language": "en",
+    "segmentCount": 10,
+    "wordCount": 40,
+    "engine": {
+      "name": "whisper.cpp",
+      "version": "1.9.2",
+      "execution": "locally-compiled-darwin-arm64",
+      "vendorManifestSha256": "ab781778440de86237e7fefc5848e45b3f55472b43f2355258c5734086adc018",
+      "sourceArchiveSha256": "a6abd064fcca8b85e794d205abf328c522e9451db43a3eadc178b883b7d0e9cd",
+      "buildPlanSha256": "6e4232dddec821a790da768675e3918b7a458aaed772d050f27ff2a2f0dc48ce",
+      "binarySha256": "2b79b5a2a31cef4c9eb8861b4ac9fc5ac285c6bb5a1b4feb052127b8b14d219f",
+      "compilerVersion": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+      "modelId": "base.en-q5_1",
+      "modelSha256": "4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f"
+    }
+  },
+  "providerCalls": 0,
+  "cost": "$0"
+}

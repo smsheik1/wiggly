@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { ShazPuppetRuntimeTrustData } from "./shazPuppetRuntimeTrust.server";
+import { ShazPoseTutorialVideo } from "./ShazPoseTutorialVideo";
 
 const kindLabels: Record<string, string> = {
   "authored-neutral-anchor": "Artist-reviewed",
@@ -644,6 +645,10 @@ export function ShazPuppetRuntimeIncludedAssets({
             Only the mouth changes · the body stays put
           </p>
         </div>
+
+        {/* The Science of Poses: Complete 11-Pose Rig Inventory & Expression Tutorial */}
+        <ShazPoseTutorialVideo />
+
         <p className="mt-8 text-xs font-black uppercase tracking-[0.15em] text-[#667087]">
           Five artist-reviewed gestures
         </p>

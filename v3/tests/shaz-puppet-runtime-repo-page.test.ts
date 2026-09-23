@@ -60,6 +60,10 @@ const includedAssetsSource = readFileSync(
   "features/discovery/ShazPuppetRuntimeIncludedAssets.tsx",
   "utf8",
 );
+const tutorialVideoSource = readFileSync(
+  "features/discovery/ShazPoseTutorialVideo.tsx",
+  "utf8",
+);
 const connectionsSource = readFileSync(
   "features/discovery/ShazPuppetRuntimeConnections.tsx",
   "utf8",
@@ -725,6 +729,19 @@ assert.match(includedAssetsSource, /sequencePreset/);
 assert.match(
   includedAssetsSource,
   /data\.includedAssets\.defaultDialogue\.internalPoseId/,
+);
+assert.match(includedAssetsSource, /<ShazPoseTutorialVideo/);
+assert.match(tutorialVideoSource, /shaz-pose-science-tutorial/);
+assert.match(tutorialVideoSource, /The Science of Poses: Complete Rig Inventory & Expression Tutorial/);
+assert.match(tutorialVideoSource, /11 Active Production Poses/);
+assert.match(tutorialVideoSource, /POSE_CUES/);
+assert.ok(
+  existsSync("public/format-repositories/shaz-puppet-runtime-v1/goldens/pose-catalog-showcase/final.mp4"),
+  "pose-catalog-showcase final.mp4 must exist on disk",
+);
+assert.ok(
+  existsSync("public/format-repositories/shaz-puppet-runtime-v1/goldens/pose-catalog-showcase/poster.jpg"),
+  "pose-catalog-showcase poster.jpg must exist on disk",
 );
 assert.match(includedAssetsSource, /Five artist-reviewed gestures/);
 assert.match(includedAssetsSource, /data\.includedAssets\.showcasePoses\.map/);
