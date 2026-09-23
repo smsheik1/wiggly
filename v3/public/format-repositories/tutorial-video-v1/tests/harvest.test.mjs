@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { harvestTargetAssets, resolveFormatMetadata } from '../runtime/harvest.mjs';
+import { harvestTargetAssets, resolveFormatMetadata, locateProofMedia } from '../runtime/harvest.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -19,6 +19,21 @@ test('resolveFormatMetadata resolves known and local formats', () => {
   const arkham = resolveFormatMetadata('character-gameplay-conversations');
   assert.equal(arkham.name, 'Batman Arkham Conversations');
   assert.equal(arkham.slug, 'character-gameplay-conversations');
+});
+
+test('resolveFormatMetadata and locateProofMedia dynamically discover Animate Shaz via contract', () => {
+  const searchRoots = [
+    root,
+    path.join(root, '..')
+  ];
+  const meta = resolveFormatMetadata('animate-shaz', searchRoots);
+  assert.equal(meta.name, 'Animate Shaz');
+  assert.equal(meta.slug, 'shaz-puppet-runtime');
+  assert.equal(meta.relativeRepoDir, 'shaz-puppet-runtime-v1');
+
+  const proof = locateProofMedia(meta, searchRoots);
+  assert.ok(proof && existsSync(proof), 'Discovered proof video must exist on disk');
+  assert.match(proof, /final/);
 });
 
 test('harvestTargetAssets harvests valid video, browser and terminal stills for mugsy-explains', async () => {
