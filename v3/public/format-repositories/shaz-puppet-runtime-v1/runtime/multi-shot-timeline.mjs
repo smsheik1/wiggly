@@ -774,9 +774,18 @@ export async function deriveMultiShotPlanWithJev({
       totalDurationFrames: totalFrames,
       shots,
     };
-  } catch {
-    // If Jev call fails (e.g. network timeout), preserve deterministic plan
-    return deterministicPlan;
+  } catch (err) {
+    throw new Error(
+      `\n================================================================================\n` +
+      `❌ JEV DIRECTOR FAILURE DURING MULTI-SHOT TIMELINE GENERATION\n` +
+      `================================================================================\n` +
+      `Jev failed to choreograph the scene beats:\n${err.message}\n\n` +
+      `Baby steps to fix:\n` +
+      `1. Open 'secrets.env' and ensure TYPESAFE_API_KEY is valid and non-empty.\n` +
+      `2. Verify that your TypeSafe AI account is active and has credits.\n` +
+      `3. Check internet access to https://api.typesafe.ai/v1/systemone.\n` +
+      `================================================================================\n`
+    );
   }
 }
 

@@ -19,6 +19,7 @@ Wiggly should feel magical to users and boring internally. The way we avoid endl
 7. **State changes are events.** Prefer semantic actions such as `websiteSubmitted`, `sceneSelected`, `audioGenerated`, `renderQueued`, and `formatChanged` over generic setters.
 8. **Formats are plugins.** New formats must live behind the format registry with their own renderer/defaults/validation/reroll behavior.
 9. **Every bug becomes a guardrail test.** If a bug reaches the UI once, add or update a test so it cannot silently return.
+10. **No silent fallbacks on external API failures.** If an external API call fails (missing key, invalid credentials, out of credits, rate limit, provider outage, or HTTP 4xx/5xx): STOP immediately, yell loudly to the operator with clear diagnostic details, and provide step-by-step instructions on how to fix it (e.g. which key in `secrets.env`, which provider dashboard to check for credits/status). Do NOT silently degrade quality, swallow errors, or fall back to mock/synthetic data unless running in an explicit, isolated local mock test suite.
 
 ## Pre-Change Checklist
 

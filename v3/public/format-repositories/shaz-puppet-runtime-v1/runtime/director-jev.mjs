@@ -48,7 +48,17 @@ export function getTypesafeApiKey() {
 export async function callJevSystemOne({ state, questions, apiKey: explicitKey, fetchFn = fetch }) {
   const key = explicitKey !== undefined ? explicitKey : getTypesafeApiKey();
   if (!key) {
-    return null;
+    throw new Error(
+      `\n================================================================================\n` +
+      `❌ JEV DIRECTOR FAILURE: TYPESAFE_API_KEY IS MISSING\n` +
+      `================================================================================\n` +
+      `Cannot direct the scene: Jev autonomous actor director requires TYPESAFE_API_KEY.\n\n` +
+      `Baby steps to fix:\n` +
+      `1. Open your repo root 'secrets.env' file.\n` +
+      `2. Add or verify: TYPESAFE_API_KEY=your_key_here\n` +
+      `3. Verify that your TypeSafe AI account is active and has credits.\n` +
+      `================================================================================\n`
+    );
   }
 
   const response = await fetchFn(TYPESAFE_ENDPOINT, {
@@ -66,7 +76,17 @@ export async function callJevSystemOne({ state, questions, apiKey: explicitKey, 
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Jev API error (HTTP ${response.status}): ${errText}`);
+    throw new Error(
+      `\n================================================================================\n` +
+      `❌ JEV DIRECTOR API ERROR (HTTP ${response.status})\n` +
+      `================================================================================\n` +
+      `The TypeSafe Jev API call failed with response:\n${errText}\n\n` +
+      `Baby steps to fix:\n` +
+      `1. Check if your API key in 'secrets.env' is expired or out of credits at https://typesafe.ai/account.\n` +
+      `2. Check provider status to see if TypeSafe services are temporarily degraded.\n` +
+      `3. Verify internet connectivity to api.typesafe.ai.\n` +
+      `================================================================================\n`
+    );
   }
 
   return response.json();

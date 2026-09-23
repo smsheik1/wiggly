@@ -10,9 +10,13 @@ import {
   deriveMultiShotPlanWithJev,
 } from "../runtime/multi-shot-timeline.mjs";
 
-test("director-jev returns null gracefully when no key is provided", async () => {
-  const result = await evaluateSentenceDirector("Hello world", { apiKey: null, fetchFn: () => { throw new Error("Should not fetch"); } });
-  assert.equal(result, null);
+test("director-jev throws a loud error with baby steps when no key is provided", async () => {
+  await assert.rejects(
+    async () => {
+      await evaluateSentenceDirector("Hello world", { apiKey: null, fetchFn: () => { throw new Error("Should not fetch"); } });
+    },
+    /TYPESAFE_API_KEY IS MISSING/,
+  );
 });
 
 test("evaluateSentenceDirector parses mock Jev response correctly", async () => {
