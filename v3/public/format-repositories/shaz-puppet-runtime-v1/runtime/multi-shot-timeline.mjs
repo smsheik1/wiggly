@@ -781,9 +781,13 @@ export async function deriveMultiShotPlanWithJev({
       `================================================================================\n` +
       `Jev failed to choreograph the scene beats:\n${err.message}\n\n` +
       `Baby steps to fix:\n` +
-      `1. Open 'secrets.env' and ensure TYPESAFE_API_KEY is valid and non-empty.\n` +
-      `2. Verify that your TypeSafe AI account is active and has credits.\n` +
-      `3. Check internet access to https://api.typesafe.ai/v1/systemone.\n` +
+      `1. Open your browser and go to: https://typesafe.ai/dashboard\n` +
+      `2. Click 'Billing' at https://typesafe.ai/billing to check your balance or add credits.\n` +
+      `3. Go to https://typesafe.ai/keys, click 'Create New Secret Key', and copy the key string.\n` +
+      `4. Open 'secrets.env' at your repo root in your code editor.\n` +
+      `5. Add or update: TYPESAFE_API_KEY=your_copied_key_here\n` +
+      `6. Check https://status.typesafe.ai to verify services are operational.\n` +
+      `7. Save 'secrets.env' and re-run your command.\n` +
       `================================================================================\n`
     );
   }

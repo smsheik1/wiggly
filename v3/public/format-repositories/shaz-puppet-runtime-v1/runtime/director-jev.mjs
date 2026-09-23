@@ -54,9 +54,14 @@ export async function callJevSystemOne({ state, questions, apiKey: explicitKey, 
       `================================================================================\n` +
       `Cannot direct the scene: Jev autonomous actor director requires TYPESAFE_API_KEY.\n\n` +
       `Baby steps to fix:\n` +
-      `1. Open your repo root 'secrets.env' file.\n` +
-      `2. Add or verify: TYPESAFE_API_KEY=your_key_here\n` +
-      `3. Verify that your TypeSafe AI account is active and has credits.\n` +
+      `1. Open your browser and go to: https://typesafe.ai/dashboard\n` +
+      `2. Log in, then click on 'API Keys' in the sidebar navigation (or go directly to https://typesafe.ai/keys).\n` +
+      `3. Click the 'Create New Secret Key' button, name it 'Wiggly Jev', and copy the generated key.\n` +
+      `4. Check your account balance: Click 'Billing' in the left menu (https://typesafe.ai/billing) and ensure you have an active card or available credits.\n` +
+      `5. Open your local 'secrets.env' file (located at the root of your Wiggly repository) in your code editor.\n` +
+      `6. Add or update this exact line:\n` +
+      `   TYPESAFE_API_KEY=your_copied_key_here\n` +
+      `7. Save the file and re-run your command.\n` +
       `================================================================================\n`
     );
   }
@@ -82,9 +87,12 @@ export async function callJevSystemOne({ state, questions, apiKey: explicitKey, 
       `================================================================================\n` +
       `The TypeSafe Jev API call failed with response:\n${errText}\n\n` +
       `Baby steps to fix:\n` +
-      `1. Check if your API key in 'secrets.env' is expired or out of credits at https://typesafe.ai/account.\n` +
-      `2. Check provider status to see if TypeSafe services are temporarily degraded.\n` +
-      `3. Verify internet connectivity to api.typesafe.ai.\n` +
+      `1. Open your browser and go to: https://typesafe.ai/billing\n` +
+      `2. Check your balance/credits to confirm your account has active credits or an unexpired payment card. Click 'Add Credits' if balance is 0.\n` +
+      `3. Go to https://typesafe.ai/keys, confirm your key is active, or click 'Create New Key'.\n` +
+      `4. Open 'secrets.env' at your repo root and update TYPESAFE_API_KEY with your verified key.\n` +
+      `5. Check https://status.typesafe.ai to verify TypeSafe API services are operational.\n` +
+      `6. Save 'secrets.env' and re-run your command.\n` +
       `================================================================================\n`
     );
   }
