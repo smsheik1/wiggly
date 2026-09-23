@@ -44,7 +44,7 @@ async function buildLookAtPhone(manifest) {
 
   for (const nodeName of ["Left_Pupil", "Right_Pupil"]) {
     const neutral = sourceControlState(manifest, nodeName, 1);
-    const focused = adjustedState(neutral, { positionDelta: [-0.025, -0.025, 0] });
+    const focused = adjustedState(neutral, { positionDelta: [-0.1, -0.32, 0] });
     controls[nodeName] = [
       controlKey(1, neutral),
       controlKey(7, focused),
@@ -62,7 +62,14 @@ async function buildLookAtPhone(manifest) {
       ],
     ]));
   for (const nodeName of FACE_DRAWINGS) {
-    drawings[nodeName] = [{ frame: 1, drawing: sourceDrawing(manifest, nodeName, 1) }];
+    if (nodeName === "Left_Eye" || nodeName === "Right_Eye") {
+      drawings[nodeName] = [
+        { frame: 1, drawing: sourceDrawing(manifest, nodeName, 1) },
+        { frame: 7, drawing: "4" },
+      ];
+    } else {
+      drawings[nodeName] = [{ frame: 1, drawing: sourceDrawing(manifest, nodeName, 1) }];
+    }
   }
 
   return {
@@ -92,17 +99,14 @@ async function buildLookAtPhone(manifest) {
         id: "phone",
         asset: "phone.svg",
         sha256: PHONE_SHA256,
-        layer: "front",
+        layer: "body-front",
         keys: [
-          // Start beside the lowered hand, then settle directly beneath the
-          // authored overlay hand. Intermediate keys follow the native hand
-          // as it rises so the device never becomes a floating screen prop.
           { frame: 1, position: [0.355, 0.8], width: 0.055, rotation: 8, opacity: 100, interpolation: "hold" },
           { frame: 7, position: [0.355, 0.8], width: 0.055, rotation: 6, opacity: 100 },
-          { frame: 10, position: [0.39, 0.8], width: 0.052, rotation: 3, opacity: 100 },
-          { frame: 12, position: [0.45, 0.63], width: 0.05, rotation: -1, opacity: 100 },
-          { frame: 13, position: [0.415, 0.53], width: 0.048, rotation: 1, opacity: 100 },
-          { frame: think.durationFrames + THINK_OFFSET, position: [0.415, 0.53], width: 0.048, rotation: 1, opacity: 100 },
+          { frame: 10, position: [0.39, 0.7], width: 0.052, rotation: 3, opacity: 100 },
+          { frame: 12, position: [0.42, 0.52], width: 0.05, rotation: 1, opacity: 100 },
+          { frame: 13, position: [0.44, 0.44], width: 0.05, rotation: 4, opacity: 100 },
+          { frame: think.durationFrames + THINK_OFFSET, position: [0.44, 0.44], width: 0.05, rotation: 4, opacity: 100 },
         ],
       },
     ],

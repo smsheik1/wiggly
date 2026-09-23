@@ -41,6 +41,12 @@ function adjustmentFor(nodeName, sourceKey) {
   }
   if (nodeName === "Head_Movement-P" && settled) return { rotationDelta: -5 };
   if (nodeName === "OL_Hand-P" && settled) return { positionDelta: [0.08, 0.06, 0] };
+  if (nodeName === "Left_Forearm-P" && sourceKey.frame + OFFSET >= 16) {
+    return { positionDelta: [0.45, -1.3, 0], rotationDelta: -22 };
+  }
+  if (nodeName === "Left_Arm-P" && sourceKey.frame + OFFSET >= 16) {
+    return { positionDelta: [0, -0.4, 0], rotationDelta: 12 };
+  }
   return {};
 }
 

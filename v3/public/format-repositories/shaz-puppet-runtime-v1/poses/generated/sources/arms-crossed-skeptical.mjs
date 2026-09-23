@@ -33,7 +33,7 @@ const FACE_DRAWINGS = new Set([
 ]);
 
 function adjustedKey(nodeName, key) {
-  const progress = Math.max(0, Math.min(1, (key.frame - 1) / 12));
+  const progress = key.frame <= 1 ? 0.4 : 1.0;
   if (nodeName === "Shaz_Master-P") {
     return adjustedState(key, {
       positionDelta: [0, 0.1, 0],
@@ -48,13 +48,16 @@ function adjustedKey(nodeName, key) {
     return adjustedState(key, { rotationDelta: progress * 6 });
   }
   if (nodeName === "Left_Arm_Pivot-P") {
-    return adjustedState(key, { rotationDelta: progress * 90 });
+    return adjustedState(key, { rotationDelta: progress * 20 });
   }
   if (nodeName === "Left_Forearm_Pivot-P") {
-    return adjustedState(key, { rotationDelta: progress * 120 });
+    return adjustedState(key, { rotationDelta: progress * 110 });
+  }
+  if (nodeName === "Right_Arm_Pivot-P") {
+    return adjustedState(key, { rotationDelta: progress * -20 });
   }
   if (nodeName === "Right_Forearm_Pivot-P") {
-    return adjustedState(key, { rotationDelta: progress * -40 });
+    return adjustedState(key, { rotationDelta: progress * -110 });
   }
   return key;
 }

@@ -10275,8 +10275,8 @@
       {
         "frame": 7,
         "position": [
-          -0.025,
-          -0.025,
+          -0.1,
+          -0.32,
           0
         ],
         "rotation": 0,
@@ -10292,8 +10292,8 @@
       {
         "frame": 55,
         "position": [
-          -0.025,
-          -0.025,
+          -0.1,
+          -0.32,
           0
         ],
         "rotation": 0,
@@ -10942,8 +10942,8 @@
       {
         "frame": 7,
         "position": [
-          -0.025,
-          -0.025,
+          -0.1,
+          -0.32,
           0
         ],
         "rotation": 0,
@@ -10959,8 +10959,8 @@
       {
         "frame": 55,
         "position": [
-          -0.025,
-          -0.025,
+          -0.1,
+          -0.32,
           0
         ],
         "rotation": 0,
@@ -11722,12 +11722,20 @@
       {
         "frame": 1,
         "drawing": "1"
+      },
+      {
+        "frame": 7,
+        "drawing": "4"
       }
     ],
     "Right_Eye": [
       {
         "frame": 1,
         "drawing": "1"
+      },
+      {
+        "frame": 7,
+        "drawing": "4"
       }
     ],
     "Left_Pupil": [
@@ -11764,7 +11772,7 @@
       "id": "phone",
       "asset": "phone.svg",
       "sha256": "aadcadb428f4f63ad54ed9575e5120a8519a3520af3b2460714a337a1fd21975",
-      "layer": "front",
+      "layer": "body-front",
       "keys": [
         {
           "frame": 1,
@@ -11791,7 +11799,7 @@
           "frame": 10,
           "position": [
             0.39,
-            0.8
+            0.7
           ],
           "width": 0.052,
           "rotation": 3,
@@ -11800,31 +11808,31 @@
         {
           "frame": 12,
           "position": [
-            0.45,
-            0.63
+            0.42,
+            0.52
           ],
           "width": 0.05,
-          "rotation": -1,
+          "rotation": 1,
           "opacity": 100
         },
         {
           "frame": 13,
           "position": [
-            0.415,
-            0.53
+            0.44,
+            0.44
           ],
-          "width": 0.048,
-          "rotation": 1,
+          "width": 0.05,
+          "rotation": 4,
           "opacity": 100
         },
         {
           "frame": 55,
           "position": [
-            0.415,
-            0.53
+            0.44,
+            0.44
           ],
-          "width": 0.048,
-          "rotation": 1,
+          "width": 0.05,
+          "rotation": 4,
           "opacity": 100
         }
       ]

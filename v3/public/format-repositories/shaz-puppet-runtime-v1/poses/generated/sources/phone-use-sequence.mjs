@@ -10,7 +10,7 @@ import { writePoseRecipe } from "../../../runtime/pose-authoring.mjs";
 import { loadManifest } from "../../../runtime/rig-v2-renderer.mjs";
 
 const PHONE_PATH = fileURLToPath(new URL("../look-at-phone.json", import.meta.url));
-const PHONE_SHA256 = "863ecff5a785cbe82792e3083ef63c1cc55a3276bb681dc3f5a0d98e7a3edf3d";
+const PHONE_SHA256 = "9ac4235aa21f21d956ddbf3db52a4d09a6d2e3b2ea2e46605794898b12080316";
 
 async function loadLockedPhone() {
   const bytes = await fs.readFile(PHONE_PATH);

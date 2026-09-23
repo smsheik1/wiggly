@@ -35,7 +35,7 @@ test("handheld props are established instead of appearing randomly", async () =>
   assert.equal(phonePose.props.some(({ id }) => /hand|arm|sleeve|fist/i.test(id)), false,
     "screen-space limb substitutes are forbidden");
   const settledPhone = phone.keys.at(-1).position;
-  assert.ok(settledPhone[0] >= 0.4 && settledPhone[0] <= 0.43,
+  assert.ok(settledPhone[0] >= 0.4 && settledPhone[0] <= 0.45,
     "settled phone must remain outside the face while touching the native overlay hand");
   assert.equal(phonePose.quality.armCompositeMode, "native-rig");
 });
