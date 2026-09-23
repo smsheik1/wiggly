@@ -1,0 +1,151 @@
+{
+  "schemaVersion": "shaz-multi-shot-v1",
+  "title": "Complete 11-Pose Rig Inventory Showcase",
+  "audioFile": "user-audio.wav",
+  "totalDurationFrames": 566,
+  "planningTranscriptSha256": "4ae03ab121bdd586f830a17cb769bb1878c53a344bff7d3c4d7cc40ec1794566",
+  "transcript": {
+    "file": "transcript.json",
+    "sha256": "4ae03ab121bdd586f830a17cb769bb1878c53a344bff7d3c4d7cc40ec1794566",
+    "receiptFile": "transcript.receipt.json",
+    "receiptSha256": "d48c6544664deefd4e097d1eaa00008553ec9c844e227f719c3e860e6dc2e753",
+    "sourceAudioSha256": "b47f9c9a90a7491d4e9d01bcfd5822ac87631f0b2799987e407d530f280e166e",
+    "language": "en",
+    "segmentCount": 10,
+    "wordCount": 40
+  },
+  "shots": [
+    {
+      "id": "shot-01",
+      "shotType": "talk-to-camera",
+      "startFrame": 0,
+      "endFrameExclusive": 60,
+      "backgroundId": "sisters-room",
+      "poseId": "neutral-listening",
+      "otsGraphic": {
+        "image": "media/card-01.png"
+      },
+      "rationale": "Pose 01/11: neutral-listening baseline anchor"
+    },
+    {
+      "id": "shot-02",
+      "shotType": "talk-to-camera",
+      "startFrame": 60,
+      "endFrameExclusive": 105,
+      "backgroundId": "sisters-room",
+      "poseId": "present",
+      "otsGraphic": {
+        "image": "media/card-02.png"
+      },
+      "rationale": "Pose 02/11: present welcoming gesture"
+    },
+    {
+      "id": "shot-03",
+      "shotType": "talk-to-camera",
+      "startFrame": 105,
+      "endFrameExclusive": 153,
+      "backgroundId": "sisters-room",
+      "poseId": "shrug",
+      "otsGraphic": {
+        "image": "media/card-03.png"
+      },
+      "rationale": "Pose 03/11: shrug skeptical disbelief"
+    },
+    {
+      "id": "shot-04",
+      "shotType": "talk-to-camera",
+      "startFrame": 153,
+      "endFrameExclusive": 198,
+      "backgroundId": "sisters-room",
+      "poseId": "think",
+      "otsGraphic": {
+        "image": "media/card-04.png"
+      },
+      "rationale": "Pose 04/11: think chin hold analytical"
+    },
+    {
+      "id": "shot-05",
+      "shotType": "talk-to-camera",
+      "startFrame": 198,
+      "endFrameExclusive": 249,
+      "backgroundId": "sisters-room",
+      "poseId": "key-point",
+      "otsGraphic": {
+        "image": "media/card-05.png"
+      },
+      "rationale": "Pose 05/11: key-point deliberate wind-up"
+    },
+    {
+      "id": "shot-06",
+      "shotType": "talk-to-camera",
+      "startFrame": 249,
+      "endFrameExclusive": 297,
+      "backgroundId": "sisters-room",
+      "poseId": "aha",
+      "otsGraphic": {
+        "image": "media/card-06.png"
+      },
+      "rationale": "Pose 06/11: aha quick eureka pop"
+    },
+    {
+      "id": "shot-07",
+      "shotType": "talk-to-camera",
+      "startFrame": 297,
+      "endFrameExclusive": 343,
+      "backgroundId": "sisters-room",
+      "poseId": "point",
+      "otsGraphic": {
+        "image": "media/card-07.png"
+      },
+      "rationale": "Pose 07/11: point camera callout"
+    },
+    {
+      "id": "shot-08",
+      "shotType": "talk-to-camera",
+      "startFrame": 343,
+      "endFrameExclusive": 390,
+      "backgroundId": "sisters-room",
+      "poseId": "confident",
+      "otsGraphic": {
+        "image": "media/card-08.png"
+      },
+      "rationale": "Pose 08/11: confident hands-on-hips swagger"
+    },
+    {
+      "id": "shot-09",
+      "shotType": "talk-to-camera",
+      "startFrame": 390,
+      "endFrameExclusive": 453,
+      "backgroundId": "sisters-room",
+      "poseId": "excited-celebration",
+      "otsGraphic": {
+        "image": "media/card-09.png"
+      },
+      "rationale": "Pose 09/11: excited-celebration double-arm bounce"
+    },
+    {
+      "id": "shot-10",
+      "shotType": "talk-to-camera",
+      "startFrame": 453,
+      "endFrameExclusive": 505,
+      "backgroundId": "sisters-room",
+      "poseId": "point-at-screen",
+      "otsGraphic": {
+        "image": "media/card-10.png"
+      },
+      "rationale": "Pose 10/11: point-at-screen OTS card focus"
+    },
+    {
+      "id": "shot-11",
+      "shotType": "talk-to-camera",
+      "startFrame": 505,
+      "endFrameExclusive": 566,
+      "backgroundId": "sisters-room",
+      "poseId": "chin-stroke-swagger",
+      "otsGraphic": {
+        "image": "media/card-11.png"
+      },
+      "rationale": "Pose 11/11: chin-stroke-swagger smug smirk"
+    }
+  ]
+}

@@ -4,8 +4,7 @@
   "rigAssets": "rig-v2/assets/receipt.json",
   "defaultBackgroundId": "sisters-room",
   "props": [
-    { "id": "phone", "path": "assets/props/phone.svg", "sha256": "aadcadb428f4f63ad54ed9575e5120a8519a3520af3b2460714a337a1fd21975", "usage": "look-at-phone" },
-    { "id": "crossed-arms-pose", "path": "assets/props/crossed-arms-pose.png", "sha256": "73e73755a77822989fd466ab6fe79591b176bbe9ea68940a46359c999a84e311", "usage": "arms-crossed-skeptical registered pose drawing" }
+    { "id": "phone", "path": "assets/props/phone.svg", "sha256": "aadcadb428f4f63ad54ed9575e5120a8519a3520af3b2460714a337a1fd21975", "usage": "look-at-phone" }
   ],
   "fonts": [
     {

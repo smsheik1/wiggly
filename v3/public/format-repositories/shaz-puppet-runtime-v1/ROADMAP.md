@@ -18,16 +18,14 @@ This is the working order for the Shaz Wiggly Repo. Read it before adding a capa
 
 ## Registered, but not ready for automatic use
 
-These eight current recipes are runnable engineering material and still need a fresh complete visual review:
+These six current recipes are runnable engineering material and still need a fresh complete visual review:
 
 - `shrug`
 - `key-point`
 - `excited-celebration`
 - `point-at-screen`
-- `look-at-phone`
 - `facepalm-frustrated`
 - `arms-crossed-skeptical`
-- `phone-use-sequence`
 
 **Registered means runnable, not creatively approved.** Do not use these actions as automatic choices in a user video.
 

@@ -59,31 +59,13 @@
       "id": "point-at-screen",
       "kind": "generated",
       "path": "generated/point-at-screen.json",
-      "sha256": "b8c3853a778610960ed42d0df9f9723debd6eaa5bf8e4873bbd6659b3772fb7a"
+      "sha256": "399fdc5f52a76b6ee54a0c35863fed3d22307072e6a4b1d48b4ac32a0bbbb7df"
     },
     {
-      "id": "look-at-phone",
+      "id": "chin-stroke-swagger",
       "kind": "generated",
-      "path": "generated/look-at-phone.json",
-      "sha256": "863ecff5a785cbe82792e3083ef63c1cc55a3276bb681dc3f5a0d98e7a3edf3d"
-    },
-    {
-      "id": "facepalm-frustrated",
-      "kind": "generated",
-      "path": "generated/facepalm-frustrated.json",
-      "sha256": "566e57501132d20540be4841382a27718a89814fd5e7bc9e04d5c4c2f8f4807c"
-    },
-    {
-      "id": "arms-crossed-skeptical",
-      "kind": "generated",
-      "path": "generated/arms-crossed-skeptical.json",
-      "sha256": "382027cc126ca184c8947cbd794a352497acb73fe90e98548701bbd4acacfae9"
-    },
-    {
-      "id": "phone-use-sequence",
-      "kind": "generated",
-      "path": "generated/phone-use-sequence.json",
-      "sha256": "0e7870420995f6dd8b351a1c99c1a0a5da38a2ea246e0e0465be9d9b330321a0"
+      "path": "generated/chin-stroke-swagger.json",
+      "sha256": "196f618d56f1cd147465eb7ef3d27b2ac00c306f21141b000f17ddb40bd48381"
     }
   ]
 }

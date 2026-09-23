@@ -48,7 +48,22 @@ export function getTypesafeApiKey() {
 export async function callJevSystemOne({ state, questions, apiKey: explicitKey, fetchFn = fetch }) {
   const key = explicitKey !== undefined ? explicitKey : getTypesafeApiKey();
   if (!key) {
-    return null;
+    throw new Error(
+      `\n================================================================================\n` +
+      `❌ JEV DIRECTOR FAILURE: TYPESAFE_API_KEY IS MISSING\n` +
+      `================================================================================\n` +
+      `Cannot direct the scene: Jev autonomous actor director requires TYPESAFE_API_KEY.\n\n` +
+      `Baby steps to fix:\n` +
+      `1. Open your browser and go to: https://typesafe.ai/dashboard\n` +
+      `2. Log in, then click on 'API Keys' in the sidebar navigation (or go directly to https://typesafe.ai/keys).\n` +
+      `3. Click the 'Create New Secret Key' button, name it 'Wiggly Jev', and copy the generated key.\n` +
+      `4. Check your account balance: Click 'Billing' in the left menu (https://typesafe.ai/billing) and ensure you have an active card or available credits.\n` +
+      `5. Open your local 'secrets.env' file (located at the root of your Wiggly repository) in your code editor.\n` +
+      `6. Add or update this exact line:\n` +
+      `   TYPESAFE_API_KEY=your_copied_key_here\n` +
+      `7. Save the file and re-run your command.\n` +
+      `================================================================================\n`
+    );
   }
 
   const response = await fetchFn(TYPESAFE_ENDPOINT, {
@@ -66,7 +81,20 @@ export async function callJevSystemOne({ state, questions, apiKey: explicitKey, 
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Jev API error (HTTP ${response.status}): ${errText}`);
+    throw new Error(
+      `\n================================================================================\n` +
+      `❌ JEV DIRECTOR API ERROR (HTTP ${response.status})\n` +
+      `================================================================================\n` +
+      `The TypeSafe Jev API call failed with response:\n${errText}\n\n` +
+      `Baby steps to fix:\n` +
+      `1. Open your browser and go to: https://typesafe.ai/billing\n` +
+      `2. Check your balance/credits to confirm your account has active credits or an unexpired payment card. Click 'Add Credits' if balance is 0.\n` +
+      `3. Go to https://typesafe.ai/keys, confirm your key is active, or click 'Create New Key'.\n` +
+      `4. Open 'secrets.env' at your repo root and update TYPESAFE_API_KEY with your verified key.\n` +
+      `5. Check https://status.typesafe.ai to verify TypeSafe API services are operational.\n` +
+      `6. Save 'secrets.env' and re-run your command.\n` +
+      `================================================================================\n`
+    );
   }
 
   return response.json();
@@ -76,14 +104,13 @@ export async function callJevSystemOne({ state, questions, apiKey: explicitKey, 
  * Directs a single spoken commentary sentence using Jev.
  * Returns { chibiPose, cameraMotion, badge, isPunchline } or null if Jev is unavailable.
  */
-export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn } = {}) {
+export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn, beatContext } = {}) {
   const questions = {
     chibi_pose: {
       type: "choice",
       instructions: "Which animated Shaz character gesture fits the comedic tone of this beat best?",
       criteria: {
         "point-emphasis": "Asserting a fact, dropping a bomb, pointing out something crucial, calling someone out",
-        "facepalm": "Total disbelief, exasperation, facepalm moment at absurdity or stupidity",
         "shrug-open": "Confusion, questioning who this is for, 'who knows', disbelief, helplessness",
         "think-chin": "Analyzing logically, skeptical thinking, pondering, questioning assumptions",
         "present-card": "Presenting data, asking a question, wrapping up, call to action, welcoming",
@@ -128,20 +155,32 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn } = {
     },
     shaz_puppet_pose: {
       type: "choice",
-      instructions: "Which approved puppet gesture best suits Shaz speaking this line? Select neutral-listening for regular narration, or select an active gesture (chin-stroke, point, think, confident, present, aha) when the line delivers emphasis, skepticism, punchlines, or conclusion.",
+      instructions: "Which entertaining character pose best fits Shaz in this beat? Prioritize visual variety, lively energy, and character attitude. Avoid picking poses that were recently used.",
       criteria: {
-        "neutral-listening": "Default baseline narration without overt arm movement",
-        "chin-stroke": "Smug, confident chin-stroke with hand resting under jaw and sly smirk; perfect for sarcastic irony, skepticism, or witty callouts",
-        "point": "Direct emphasis, calling someone or something out, or making an accusatory point",
-        "think": "Pondering, reflecting, questioning assumptions, chin hold",
-        "confident": "Confident conclusion, hands on hips, or strong definitive statement",
-        "present": "Presenting data or welcoming the audience with open hands",
-        "aha": "Sudden realization, discovery, epiphany, or connecting the dots",
+        "neutral-listening": "Grounded, calm conversational baseline; natural breathing room between active gestures",
+        "chin-stroke": "Smug smirk with hand resting under jaw; witty, sarcastic, playful swagger, or roasting",
+        "excited-celebration": "High-energy double-arm bounce; celebration, hype, excitement, or victory",
+        "point-at-screen": "Gesturing towards the OTS graphic card or headline to draw the viewer's eye",
+        "confident": "Cool swagger with hands firmly on hips; grounded, strong, standing tall",
+        "shrug": "Expressive palms-up shrug with raised shoulders; comic disbelief, bafflement, or 'who even knows?'",
+        "think": "Curious hand-to-chin ponder; analytical, thoughtful, or questioning",
+        "point": "Direct, snappy point towards the camera/audience for punchy emphasis",
+        "aha": "Quick lightbulb eureka moment; sudden realization or sharing a neat takeaway",
+        "present": "Open, welcoming host hands framing the topic or inviting the viewer in",
       },
     },
   };
 
-  const result = await callJevSystemOne({ state: sentence, questions, apiKey, fetchFn });
+  const state = beatContext
+    ? {
+        sentence,
+        beat_progression: `Beat ${beatContext.beatIndex + 1} of ${beatContext.totalBeats}`,
+        recent_poses: beatContext.recentPoses?.length > 0 ? beatContext.recentPoses : ["none yet"],
+        direction_goal: "Direct Shaz's visual performance for high entertainment value and variety. Avoid repeating recent poses so the screen stays fresh and visually dynamic.",
+      }
+    : sentence;
+
+  const result = await callJevSystemOne({ state, questions, apiKey, fetchFn });
   if (!result || !result.answers) return null;
 
   const answers = result.answers;

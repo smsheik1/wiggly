@@ -29,7 +29,7 @@ Use `neutral-listening` as the calm body behind Talk to Camera. The other six en
 | `confident` | Assured statement or finish |
 | `chin-stroke` | Thoughtful swagger, smug pause, or sly smirk (prop-free) |
 
-`poses/index.json` contains seven more recipes. They are registered, so the runtime can load and inspect them, but they are **not cleared for automatic use**. Registered means runnable, not creatively approved. `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, `look-at-phone`, `facepalm-frustrated`, and `arms-crossed-skeptical` each need a fresh complete visual review before they appear in a user video.
+`poses/index.json` contains four more recipes. They are registered, so the runtime can load and inspect them, but they are **not cleared for automatic use**. Registered means runnable, not creatively approved. `shrug`, `key-point`, `excited-celebration`, and `point-at-screen` each need a fresh complete visual review before they appear in a user video. (Broken experimental poses `facepalm-frustrated` and `arms-crossed-skeptical` are preserved in `poses/archive/`).
 
 ## Talk to Camera
 

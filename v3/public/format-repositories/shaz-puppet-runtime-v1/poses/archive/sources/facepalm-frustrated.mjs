@@ -32,15 +32,14 @@ async function loadLockedThink() {
 
 function adjustmentFor(nodeName, sourceKey) {
   const settled = sourceKey.frame >= 7;
-  if (nodeName === "Shaz_Master-P") {
-    return {
-      positionDelta: [0, settled ? 0.04 : 0.1, 0],
-      rotationDelta: settled ? -3 : 0,
-      scaleMultiply: [0.88, 0.88],
-    };
-  }
   if (nodeName === "Head_Movement-P" && settled) return { rotationDelta: -5 };
   if (nodeName === "OL_Hand-P" && settled) return { positionDelta: [0.08, 0.06, 0] };
+  if (nodeName === "Left_Forearm-P" && sourceKey.frame + OFFSET >= 16) {
+    return { positionDelta: [0.45, -1.3, 0], rotationDelta: -22 };
+  }
+  if (nodeName === "Left_Arm-P" && sourceKey.frame + OFFSET >= 16) {
+    return { positionDelta: [0, -0.4, 0], rotationDelta: 12 };
+  }
   return {};
 }
 
@@ -64,9 +63,7 @@ async function buildFacepalmFrustrated(manifest) {
   for (const [nodeName, keys] of Object.entries(think.controls)) {
     const initial = sourceControlState(manifest, nodeName, 1);
     controls[nodeName] = [
-      controlKey(1, adjustedState(initial, nodeName === "Shaz_Master-P"
-        ? { positionDelta: [0, 0.1, 0], scaleMultiply: [0.88, 0.88] }
-        : {})),
+      controlKey(1, initial),
       ...keys
         .filter((key) => key.frame + OFFSET <= DURATION_FRAMES)
         .map((key) => controlKey(
@@ -77,17 +74,17 @@ async function buildFacepalmFrustrated(manifest) {
     ];
   }
 
-  const masterInitial = controls["Shaz_Master-P"][0];
-  controls["Shaz_Master-P"].splice(1, 0,
-    controlKey(3, adjustedState(masterInitial, {
-      positionDelta: [0, 0.025, 0],
-      rotationDelta: -0.35,
-    })),
-    controlKey(5, adjustedState(masterInitial, {
-      positionDelta: [0, 0.01, 0],
-      rotationDelta: 0.2,
-    })),
-  );
+  // Right arm: keep relaxed at side with visible fingers throughout (fix amputated off-hand)
+  controls["Right_Arm_Pivot-P"] = controls["Right_Arm_Pivot-P"].map((k) => ({
+    ...k,
+    rotation: 30,
+    position: [0, 0, 0],
+  }));
+  controls["Right_Forearm_Pivot-P"] = controls["Right_Forearm_Pivot-P"].map((k) => ({
+    ...k,
+    rotation: 0,
+    position: [0, 0, 0],
+  }));
 
   controls["OL_Hand-P"] = controls["OL_Hand-P"].map((key) => (
     key.frame >= 16
@@ -104,6 +101,11 @@ async function buildFacepalmFrustrated(manifest) {
         .map((key) => ({ ...key, frame: key.frame + OFFSET })),
     ],
   ]));
+
+  // Off-hand stays visible relaxed at side
+  drawings.Right_Hand = [{ frame: 1, drawing: "1" }];
+  drawings.Right_Arm = [{ frame: 1, drawing: "1" }];
+  drawings.Right_Forearm = [{ frame: 1, drawing: "1" }];
 
   drawings.Left_Hand = [
     { frame: 1, drawing: sourceDrawing(manifest, "Left_Hand", 1) },

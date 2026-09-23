@@ -29,9 +29,9 @@ For body-language beats, default to these approved gestures:
 - `aha`
 - `point`
 - `confident`
-- `chin-stroke` (swagger / smug chin-stroke with sly smirk, alias for the prop-free `phone-use-sequence` recipe; approved after complete visual review)
+- `chin-stroke` (alias for canonical `chin-stroke-swagger`; approved swagger / smug chin-stroke with sly smirk)
 
-The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, `look-at-phone`, `facepalm-frustrated`, `arms-crossed-skeptical`, and `phone-use-sequence`. They are runnable engineering material, not approved performance choices. Do not select one automatically or put it into a user video until that exact current recipe has passed a fresh complete visual review.
+The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, and `chin-stroke-swagger`. They are runnable engineering material, not approved performance choices. Do not select one automatically or put it into a user video until that exact current recipe has passed a fresh complete visual review. (Broken experimental poses `facepalm-frustrated` and `arms-crossed-skeptical` are archived in `poses/archive/`).
 
 **Registered means runnable. It does not mean creatively approved.** Mechanical inspection can pass a pose that still looks wrong.
 

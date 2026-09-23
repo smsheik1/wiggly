@@ -11,7 +11,7 @@ const downloads = path.join(root, "downloads");
 const output = path.join(downloads, `${archiveName}.zip`);
 const checksumOutput = `${output}.sha256`;
 const excludedNames = new Set(["node_modules", ".runtime-cache", ".DS_Store", ".git"]);
-const packagedPropFiles = new Set(["phone.svg", "crossed-arms-pose.png"]);
+const packagedPropFiles = new Set(["phone.svg"]);
 const packagedFontFiles = new Set(["GROBOLD.ttf"]);
 const packagedBackgroundFiles = new Set([
   "living-room.png",

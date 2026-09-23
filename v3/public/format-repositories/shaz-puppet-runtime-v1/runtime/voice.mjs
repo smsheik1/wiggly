@@ -120,7 +120,22 @@ export async function synthesizeShazVoice({
   if (selectedProvider === "cartesia") {
     const apiKey = explicitApiKey || cartesiaKey;
     if (!apiKey) {
-      throw new Error("CARTESIA_API_KEY is required for Cartesia voice synthesis. Check secrets.env.");
+      throw new Error(
+        `\n================================================================================\n` +
+        `❌ VOICE SYNTHESIS FAILURE: CARTESIA_API_KEY IS MISSING\n` +
+        `================================================================================\n` +
+        `Shaz voice synthesis requires official Cartesia credentials, but CARTESIA_API_KEY is not set.\n\n` +
+        `Baby steps to fix:\n` +
+        `1. Open your browser and go to: https://play.cartesia.ai/keys\n` +
+        `2. Log in, then click the '+ Create API Key' button in the top right.\n` +
+        `3. Name your key (e.g. 'Wiggly Shaz Voice') and click 'Create'. Copy the secret key.\n` +
+        `4. Check your credits: Click 'Billing' in the left menu (https://play.cartesia.ai/settings/billing) and ensure you have character balance.\n` +
+        `5. Open your local 'secrets.env' file (located at the root of your Wiggly repository) in your code editor.\n` +
+        `6. Add or update this exact line:\n` +
+        `   CARTESIA_API_KEY=your_copied_key_here\n` +
+        `7. Save the file and re-run your command.\n` +
+        `================================================================================\n`
+      );
     }
 
     const res = await fetch(CARTESIA_TTS_URL, {
@@ -147,14 +162,42 @@ export async function synthesizeShazVoice({
 
     if (!res.ok) {
       const errorBody = await res.text().catch(() => "");
-      throw new Error(`Cartesia synthesis failed with HTTP ${res.status}: ${errorBody.slice(0, 240)}`);
+      throw new Error(
+        `\n================================================================================\n` +
+        `❌ CARTESIA VOICE SYNTHESIS API ERROR (HTTP ${res.status})\n` +
+        `================================================================================\n` +
+        `Cartesia voice generation failed with response:\n${errorBody.slice(0, 300)}\n\n` +
+        `Baby steps to fix:\n` +
+        `1. Open your browser and go to: https://play.cartesia.ai/settings/billing\n` +
+        `2. Check your balance/credits to confirm your account has active credits. Click 'Add Credits' if balance is 0.\n` +
+        `3. Go to https://play.cartesia.ai/keys, confirm your key is still active, or create a fresh key.\n` +
+        `4. Open 'secrets.env' at your repo root and update CARTESIA_API_KEY with your verified key.\n` +
+        `5. Check https://status.cartesia.ai to verify Cartesia voice systems are operational.\n` +
+        `6. Save 'secrets.env' and re-run your command.\n` +
+        `================================================================================\n`
+      );
     }
 
     rawBuffer = Buffer.from(await res.arrayBuffer());
   } else {
     const apiKey = explicitApiKey || fishKey;
     if (!apiKey) {
-      throw new Error("FISH_STUDIO_APIKEY is required for Fish Audio voice synthesis. Check secrets.env.");
+      throw new Error(
+        `\n================================================================================\n` +
+        `❌ VOICE SYNTHESIS FAILURE: FISH_STUDIO_APIKEY IS MISSING\n` +
+        `================================================================================\n` +
+        `Fish Audio voice synthesis requires FISH_STUDIO_APIKEY, but it is not set.\n\n` +
+        `Baby steps to fix:\n` +
+        `1. Open your browser and go to: https://fish.audio/go-api/\n` +
+        `2. Log in, click on your profile avatar in the top right, and click 'API Keys'.\n` +
+        `3. Click 'Create Key', label it 'Wiggly Voice', and copy the generated key.\n` +
+        `4. Check your credits: Click 'Billing / Wallet' in the dashboard and verify your balance.\n` +
+        `5. Open your local 'secrets.env' file at your repo root in your editor.\n` +
+        `6. Add or update this exact line:\n` +
+        `   FISH_STUDIO_APIKEY=your_copied_key_here\n` +
+        `7. Save the file and re-run your command.\n` +
+        `================================================================================\n`
+      );
     }
 
     const res = await fetch(FISH_TTS_URL, {
@@ -175,7 +218,18 @@ export async function synthesizeShazVoice({
 
     if (!res.ok) {
       const errorBody = await res.text().catch(() => "");
-      throw new Error(`Fish Audio synthesis failed with HTTP ${res.status}: ${errorBody.slice(0, 240)}`);
+      throw new Error(
+        `\n================================================================================\n` +
+        `❌ FISH AUDIO SYNTHESIS API ERROR (HTTP ${res.status})\n` +
+        `================================================================================\n` +
+        `Fish Audio voice generation failed with response:\n${errorBody.slice(0, 300)}\n\n` +
+        `Baby steps to fix:\n` +
+        `1. Open your browser and go to https://fish.audio/go-api/ to check your balance and credit status.\n` +
+        `2. Click 'Add Credits' or top up your account balance.\n` +
+        `3. Verify your key under 'API Keys', then update FISH_STUDIO_APIKEY in 'secrets.env'.\n` +
+        `4. Save 'secrets.env' and re-run your command.\n` +
+        `================================================================================\n`
+      );
     }
 
     rawBuffer = Buffer.from(await res.arrayBuffer());

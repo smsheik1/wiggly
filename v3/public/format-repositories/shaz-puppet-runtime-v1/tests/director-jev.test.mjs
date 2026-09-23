@@ -10,9 +10,13 @@ import {
   deriveMultiShotPlanWithJev,
 } from "../runtime/multi-shot-timeline.mjs";
 
-test("director-jev returns null gracefully when no key is provided", async () => {
-  const result = await evaluateSentenceDirector("Hello world", { apiKey: null, fetchFn: () => { throw new Error("Should not fetch"); } });
-  assert.equal(result, null);
+test("director-jev throws a loud error with baby steps when no key is provided", async () => {
+  await assert.rejects(
+    async () => {
+      await evaluateSentenceDirector("Hello world", { apiKey: null, fetchFn: () => { throw new Error("Should not fetch"); } });
+    },
+    /TYPESAFE_API_KEY IS MISSING/,
+  );
 });
 
 test("evaluateSentenceDirector parses mock Jev response correctly", async () => {
@@ -267,4 +271,41 @@ test("searchGoogleImages parses Serper response correctly and handles key gracef
   assert.equal(results[0].imageUrl, "https://example.com/carplay.jpg");
 });
 
+test("evaluateSentenceDirector passes beatContext to Jev state and resolves active fun poses", async () => {
+  let capturedState = null;
+  const mockFetch = async (_url, options) => {
+    const body = JSON.parse(options.body);
+    capturedState = body.state;
+    return {
+      ok: true,
+      json: async () => ({
+        model: "jev-1.13.0",
+        answers: {
+          shot_type: { choice: "talk-to-camera", confidence: 0.9 },
+          shaz_puppet_pose: { choice: "chin-stroke", confidence: 0.88 },
+          chibi_pose: { choice: "think-chin", confidence: 0.8 },
+          camera_motion: { choice: "zoom-in", confidence: 0.85 },
+          badge_category: { choice: "COMMUNITY ROAST", confidence: 0.9 },
+          is_punchline: { noul: 0.85 },
+        },
+      }),
+    };
+  };
 
+  const evaluation = await evaluateSentenceDirector("And they expected us not to notice!", {
+    apiKey: "mock-key",
+    fetchFn: mockFetch,
+    beatContext: {
+      beatIndex: 2,
+      totalBeats: 5,
+      recentPoses: ["point-at-screen", "excited-celebration"],
+    },
+  });
+
+  assert.ok(evaluation);
+  assert.equal(evaluation.shazPose, "chin-stroke");
+  assert.equal(capturedState.sentence, "And they expected us not to notice!");
+  assert.equal(capturedState.beat_progression, "Beat 3 of 5");
+  assert.deepEqual(capturedState.recent_poses, ["point-at-screen", "excited-celebration"]);
+  assert.match(capturedState.direction_goal, /variety/i);
+});

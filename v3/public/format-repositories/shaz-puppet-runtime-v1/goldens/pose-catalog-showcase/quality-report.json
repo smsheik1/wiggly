@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "status": "pass",
+  "inspectedAt": "2026-09-23T21:56:32.590Z",
+  "inputSha256": "0ef68fc9a300ba434d6ad0fc258b410c8a5fd825d840e4c25e9ad37230f4cd54",
+  "outputSha256": "bd7812e41912a0f0f9b18824a737ecb378bbc1edcac60e6c54af7c77717bb16a",
+  "artistRenderedFramesUsed": false,
+  "measured": {
+    "width": 1280,
+    "height": 720,
+    "codec": "h264",
+    "pixelFormat": "yuv420p",
+    "fps": "24/1",
+    "frames": 566,
+    "durationSeconds": 23.6,
+    "audioCodec": "aac",
+    "meanVolumeDb": -17.6
+  },
+  "poseReports": [
+    {
+      "poseId": "neutral-listening",
+      "status": "pass",
+      "poseRecipeSha256": "d08700a524741bb60c18af329afd80f73d35c5782b5cc75d39c6edfb64481c94",
+      "framesInspected": 1,
+      "maximumIdenticalFrames": 1,
+      "failures": []
+    }
+  ],
+  "failures": [],
+  "transcript": {
+    "file": "transcript.json",
+    "sha256": "4ae03ab121bdd586f830a17cb769bb1878c53a344bff7d3c4d7cc40ec1794566",
+    "receiptFile": "transcript.receipt.json",
+    "receiptSha256": "d48c6544664deefd4e097d1eaa00008553ec9c844e227f719c3e860e6dc2e753",
+    "sourceAudioSha256": "b47f9c9a90a7491d4e9d01bcfd5822ac87631f0b2799987e407d530f280e166e",
+    "language": "en",
+    "segmentCount": 10,
+    "wordCount": 40,
+    "engine": {
+      "name": "whisper.cpp",
+      "version": "1.9.2",
+      "execution": "locally-compiled-darwin-arm64",
+      "vendorManifestSha256": "ab781778440de86237e7fefc5848e45b3f55472b43f2355258c5734086adc018",
+      "sourceArchiveSha256": "a6abd064fcca8b85e794d205abf328c522e9451db43a3eadc178b883b7d0e9cd",
+      "buildPlanSha256": "6e4232dddec821a790da768675e3918b7a458aaed772d050f27ff2a2f0dc48ce",
+      "binarySha256": "2b79b5a2a31cef4c9eb8861b4ac9fc5ac285c6bb5a1b4feb052127b8b14d219f",
+      "compilerVersion": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+      "modelId": "base.en-q5_1",
+      "modelSha256": "4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f"
+    }
+  },
+  "contactSheet": "contact-sheet.jpg",
+  "contactSheetSampleFrames": [
+    0,
+    60,
+    105,
+    153,
+    198,
+    249,
+    296,
+    342,
+    389,
+    452,
+    504,
+    565
+  ],
+  "humanReview": "human-review.json",
+  "slowReview": "review-slow.mp4"
+}

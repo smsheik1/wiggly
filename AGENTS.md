@@ -39,6 +39,7 @@ Do not override guardrails silently.
 9. Download/share parity is mandatory. Canvas preview, Remotion export, and share pages must consume the same scene contract and renderer path.
 10. Every fixed bug needs a guardrail test or an updated existing test for that bug class.
 11. Puppet rig and staging coordinate spaces are strictly decoupled. Rig root pegs (`Shaz_Master-P`) must maintain universal scale 1.0 and zero coordinate offset across all authored pose recipes; framing/zoom belongs exclusively to `PERFORMANCE_STAGE_VIEW`.
+12. No silent fallbacks on external API failures. If an external API call fails (missing key, invalid credentials, out of credits, rate limit, provider outage, or HTTP 4xx/5xx): STOP immediately, yell loudly to the operator with clear diagnostic details, and provide click-by-click baby steps on how to fix it (the exact website URL, which button/tab to click, where to check credits or add payment, where to copy the key, the exact file path to open in `secrets.env`, and the exact line to paste). Do NOT silently degrade quality, swallow errors, or fall back to mock/synthetic data unless running in an explicit, isolated local mock test suite.
 
 ## Before You Edit
 
