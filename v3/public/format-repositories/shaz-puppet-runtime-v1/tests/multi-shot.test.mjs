@@ -452,12 +452,15 @@ test("buildChibiSchedule auto-expands single hold when duration >= 48 frames", (
   assert.ok(schedule.includes("Timeline 1_0008.png"), "must include think-chin hold");
 });
 
-test("resolvePuppetPoseId maps chin-stroke aliases to registered phone-use-sequence recipe", () => {
+test("resolvePuppetPoseId maps chin-stroke, key-point, and look-at-phone aliases to canonical recipes", () => {
   assert.equal(resolvePuppetPoseId("chin-stroke"), "phone-use-sequence");
   assert.equal(resolvePuppetPoseId("chin-stroke-smug"), "phone-use-sequence");
   assert.equal(resolvePuppetPoseId("swagger"), "phone-use-sequence");
+  assert.equal(resolvePuppetPoseId("look-at-phone"), "phone-use-sequence");
+  assert.equal(resolvePuppetPoseId("key-point"), "point");
   assert.equal(resolvePuppetPoseId("neutral-listening"), "neutral-listening");
   assert.equal(resolvePuppetPoseId("point"), "point");
+  assert.equal(resolvePuppetPoseId("point-at-screen"), "point-at-screen");
 });
 
 test("validateMultiShotPlan accepts chin-stroke pose for talk-to-camera shot", async () => {

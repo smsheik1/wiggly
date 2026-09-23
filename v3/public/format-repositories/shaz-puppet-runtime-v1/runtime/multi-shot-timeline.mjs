@@ -21,8 +21,11 @@ function exactKeys(value, allowed, context) {
  * E.g. "chin-stroke" -> "phone-use-sequence" (the prop-free swagger chin-stroke pose)
  */
 export function resolvePuppetPoseId(poseId) {
-  if (poseId === "chin-stroke" || poseId === "chin-stroke-smug" || poseId === "swagger") {
+  if (poseId === "chin-stroke" || poseId === "chin-stroke-smug" || poseId === "swagger" || poseId === "look-at-phone") {
     return "phone-use-sequence";
+  }
+  if (poseId === "key-point") {
+    return "point";
   }
   return poseId;
 }

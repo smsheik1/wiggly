@@ -70,13 +70,12 @@ test("phone-use sequence generator exactly reproduces the registered recipe", as
   assert.deepEqual(await buildPhoneUseSequence(manifest), checkedIn);
 });
 
-test("point-at-screen follows the supplied off-canvas pointing storyboard", async () => {
+test("point-at-screen points directly at stage-right OTS card zone", async () => {
   const pose = await load("point-at-screen");
   assert.equal(pose.durationFrames, 36);
   assert.deepEqual(pose.props ?? [], [], "the off-canvas target must not become a random screen prop");
-  assert.equal(pose.controls["Shaz_Master-P"][0].flipHorizontal, true);
-  assert.equal(pose.drawings.Left_Hand.at(-1).drawing, "8");
-  assert.equal(pose.drawings.Mouth.at(-1).drawing, "4");
+  assert.equal(pose.controls["Shaz_Master-P"][0].flipHorizontal, false, "Shaz_Master-P must preserve universal unmirrored rig orientation");
+  assert.equal(pose.drawings.Left_Hand.at(-1).drawing, "6", "Left_Hand must hold drawing 6 (native index point directed at OTS card)");
   assert.equal(pose.controls["Left_Arm_MOVE-P"].at(-1).frame, 36);
   assert.equal(pose.controls["Head_Movement-P"].at(-1).frame, 36);
 });
