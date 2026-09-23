@@ -24,9 +24,6 @@ export function resolvePuppetPoseId(poseId) {
   if (poseId === "chin-stroke" || poseId === "chin-stroke-swagger" || poseId === "chin-stroke-smug" || poseId === "swagger" || poseId === "phone-use-sequence" || poseId === "look-at-phone") {
     return "chin-stroke-swagger";
   }
-  if (poseId === "key-point") {
-    return "point";
-  }
   if (poseId === "facepalm-frustrated" || poseId === "facepalm") {
     return "shrug";
   }

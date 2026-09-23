@@ -459,7 +459,7 @@ test("resolvePuppetPoseId maps chin-stroke, key-point, and look-at-phone aliases
   assert.equal(resolvePuppetPoseId("swagger"), "chin-stroke-swagger");
   assert.equal(resolvePuppetPoseId("phone-use-sequence"), "chin-stroke-swagger");
   assert.equal(resolvePuppetPoseId("look-at-phone"), "chin-stroke-swagger");
-  assert.equal(resolvePuppetPoseId("key-point"), "point");
+  assert.equal(resolvePuppetPoseId("key-point"), "key-point");
   assert.equal(resolvePuppetPoseId("neutral-listening"), "neutral-listening");
   assert.equal(resolvePuppetPoseId("point"), "point");
   assert.equal(resolvePuppetPoseId("point-at-screen"), "point-at-screen");
