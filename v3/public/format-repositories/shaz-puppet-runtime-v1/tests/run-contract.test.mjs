@@ -100,7 +100,7 @@ test("packaged skill protects the one-action learning loop", async () => {
   assert.match(skill, /wordId/);
   assert.match(skill, /never upload the audio to Deepgram/);
   assert.match(skill, /neutral-listening[\s\S]*present[\s\S]*think[\s\S]*aha[\s\S]*point[\s\S]*confident/);
-  assert.match(skill, /shrug[\s\S]*key-point[\s\S]*excited-celebration[\s\S]*point-at-screen[\s\S]*look-at-phone[\s\S]*facepalm-frustrated[\s\S]*arms-crossed-skeptical[\s\S]*phone-use-sequence/);
+  assert.match(skill, /shrug[\s\S]*key-point[\s\S]*excited-celebration[\s\S]*point-at-screen[\s\S]*facepalm-frustrated[\s\S]*arms-crossed-skeptical[\s\S]*chin-stroke-swagger/);
 });
 
 test("Talk to Camera remains a preset alias over the one registered neutral body", async () => {
@@ -114,7 +114,7 @@ test("Talk to Camera remains a preset alias over the one registered neutral body
   assert.equal(fixture.sequencePreset, "talk-to-camera");
   assert.equal(fixture.sequence, undefined);
   assert.equal(fixture.durationFrames, undefined);
-  assert.equal(poseIndex.poses.length, 14);
+  assert.equal(poseIndex.poses.length, 13);
   assert.ok(poseIndex.poses.some(({ id }) => id === "neutral-listening"));
   assert.ok(!poseIndex.poses.some(({ id }) => id === "talk-to-camera"));
   assert.match(readme, /## Talk to Camera/);

@@ -2,7 +2,7 @@
   "schemaVersion": "shaz-sequence-input-v1",
   "title": "Creator reaction sequence",
   "sequence": [
-    { "poseId": "look-at-phone", "holdFrames": 8, "gapFrames": 3 },
+    { "poseId": "chin-stroke-swagger", "holdFrames": 8, "gapFrames": 3 },
     { "poseId": "facepalm-frustrated", "holdFrames": 8, "gapFrames": 3 },
     { "poseId": "point-at-screen", "holdFrames": 8, "gapFrames": 3 },
     { "poseId": "arms-crossed-skeptical", "holdFrames": 12, "gapFrames": 0 }

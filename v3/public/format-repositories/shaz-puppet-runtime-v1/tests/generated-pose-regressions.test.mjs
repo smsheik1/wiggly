@@ -7,9 +7,8 @@ import { loadManifest } from "../runtime/rig-v2-renderer.mjs";
 import { buildArmsCrossedSkeptical } from "../poses/generated/sources/arms-crossed-skeptical.mjs";
 import { buildFacepalmFrustrated } from "../poses/generated/sources/facepalm-frustrated.mjs";
 import { buildExcitedCelebration } from "../poses/generated/sources/excited-celebration.mjs";
-import { buildLookAtPhone } from "../poses/generated/sources/look-at-phone.mjs";
+import { buildChinStrokeSwagger } from "../poses/generated/sources/chin-stroke-swagger.mjs";
 import { buildPointAtScreen } from "../poses/generated/sources/point-at-screen.mjs";
-import { buildPhoneUseSequence } from "../poses/generated/sources/phone-use-sequence.mjs";
 
 const load = async (name) => JSON.parse(await fs.readFile(
   new URL(`../poses/generated/${name}.json`, import.meta.url),
@@ -22,52 +21,21 @@ const normalizedControlKeys = (keys) => keys.map(({
   ...state
 }) => ({ frame, interpolation, state }));
 
-test("handheld props are established instead of appearing randomly", async () => {
-  const phonePose = await load("look-at-phone");
-  const phone = phonePose.props.find(({ id }) => id === "phone");
-  assert.deepEqual(phonePose.props.map(({ id }) => id), ["phone"]);
-  assert.equal(phone.keys[0].opacity, 100);
-  assert.equal(phone.keys[0].interpolation, "hold", "phone must remain with the lowered hand until the pickup beat");
-  assert.deepEqual(phone.keys[0].position, phone.keys.find(({ frame }) => frame === 7).position,
-    "phone must remain with the lowered native hand until the lift begins");
-  assert.ok(phone.keys[0].position[1] > phone.keys.at(-1).position[1], "phone must rise with the hand");
-  assert.deepEqual(phonePose.drawings.OL_Hand.at(-1), { frame: 13, drawing: "1" });
-  assert.equal(phonePose.props.some(({ id }) => /hand|arm|sleeve|fist/i.test(id)), false,
-    "screen-space limb substitutes are forbidden");
-  const settledPhone = phone.keys.at(-1).position;
-  assert.ok(settledPhone[0] >= 0.4 && settledPhone[0] <= 0.45,
-    "settled phone must remain outside the face while touching the native overlay hand");
-  assert.equal(phonePose.quality.armCompositeMode, "native-rig");
-});
-
-test("look-at-phone generator exactly reproduces the registered recipe", async () => {
+test("chin-stroke-swagger generator exactly reproduces the registered recipe", async () => {
   const [manifest, checkedIn] = await Promise.all([
     loadManifest(new URL("../rig-v2/runtime.json", import.meta.url)),
-    load("look-at-phone"),
+    load("chin-stroke-swagger"),
   ]);
-  assert.deepEqual(await buildLookAtPhone(manifest), checkedIn);
+  assert.deepEqual(await buildChinStrokeSwagger(manifest), checkedIn);
 });
 
-test("phone-use sequence preserves the native gesture without a literal phone", async () => {
-  const pose = await load("phone-use-sequence");
-  const base = await load("look-at-phone");
-  assert.equal(pose.durationFrames, base.durationFrames);
+test("chin-stroke-swagger preserves the prop-free swagger gesture on universal rig", async () => {
+  const pose = await load("chin-stroke-swagger");
+  assert.equal(pose.durationFrames, 55);
   assert.equal(pose.quality.armCompositeMode, "native-rig");
-  assert.deepEqual(base.props.map(({ id }) => id), ["phone"],
-    "removing the phone from the sequence must not alter the registered look-at-phone action");
-  assert.deepEqual(pose.props, [],
-    "the final storyboard gesture must not retain the literal phone or a screen-space hand");
-  assert.deepEqual(pose.drawings, base.drawings);
+  assert.deepEqual(pose.props, [], "chin-stroke-swagger has no props");
   assert.ok(Math.abs(pose.controls["Shaz_Master-P"][0].scale[0] - 1.0) < 0.01, "Shaz_Master-P scale must be 1.0");
   assert.ok(Math.abs(pose.controls["Shaz_Master-P"][0].position[1]) < 0.01, "Shaz_Master-P position Y must be ~0.0");
-});
-
-test("phone-use sequence generator exactly reproduces the registered recipe", async () => {
-  const [manifest, checkedIn] = await Promise.all([
-    loadManifest(new URL("../rig-v2/runtime.json", import.meta.url)),
-    load("phone-use-sequence"),
-  ]);
-  assert.deepEqual(await buildPhoneUseSequence(manifest), checkedIn);
 });
 
 test("point-at-screen points directly at stage-right OTS card zone", async () => {

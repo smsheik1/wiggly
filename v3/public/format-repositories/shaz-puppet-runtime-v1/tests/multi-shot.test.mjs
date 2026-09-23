@@ -453,10 +453,12 @@ test("buildChibiSchedule auto-expands single hold when duration >= 48 frames", (
 });
 
 test("resolvePuppetPoseId maps chin-stroke, key-point, and look-at-phone aliases to canonical recipes", () => {
-  assert.equal(resolvePuppetPoseId("chin-stroke"), "phone-use-sequence");
-  assert.equal(resolvePuppetPoseId("chin-stroke-smug"), "phone-use-sequence");
-  assert.equal(resolvePuppetPoseId("swagger"), "phone-use-sequence");
-  assert.equal(resolvePuppetPoseId("look-at-phone"), "phone-use-sequence");
+  assert.equal(resolvePuppetPoseId("chin-stroke"), "chin-stroke-swagger");
+  assert.equal(resolvePuppetPoseId("chin-stroke-swagger"), "chin-stroke-swagger");
+  assert.equal(resolvePuppetPoseId("chin-stroke-smug"), "chin-stroke-swagger");
+  assert.equal(resolvePuppetPoseId("swagger"), "chin-stroke-swagger");
+  assert.equal(resolvePuppetPoseId("phone-use-sequence"), "chin-stroke-swagger");
+  assert.equal(resolvePuppetPoseId("look-at-phone"), "chin-stroke-swagger");
   assert.equal(resolvePuppetPoseId("key-point"), "point");
   assert.equal(resolvePuppetPoseId("neutral-listening"), "neutral-listening");
   assert.equal(resolvePuppetPoseId("point"), "point");
@@ -494,31 +496,31 @@ test("validateMultiShotPlan accepts chin-stroke pose for talk-to-camera shot", a
     poseRegistry,
   });
 
-  assert.equal(validated.shots[0].poseId, "phone-use-sequence");
+  assert.equal(validated.shots[0].poseId, "chin-stroke-swagger");
 });
 
-test("phone-use-sequence recipe conforms to universal rig contract and matches think height", async () => {
+test("chin-stroke-swagger recipe conforms to universal rig contract and matches think height", async () => {
   const { loadManifest } = await import("../runtime/rig-v2-renderer.mjs");
   const { createPoseRuntime, loadPoseRecipe } = await import("../runtime/pose-recipe.mjs");
 
   const manifest = await loadManifest(path.join(root, "rig-v2", "runtime.json"));
-  const phoneRecipe = await loadPoseRecipe(path.join(root, "poses", "generated", "phone-use-sequence.json"));
+  const swaggerRecipe = await loadPoseRecipe(path.join(root, "poses", "generated", "chin-stroke-swagger.json"));
   const thinkRecipe = await loadPoseRecipe(path.join(root, "poses", "authored", "think.json"));
 
-  const phoneRuntime = createPoseRuntime(manifest, phoneRecipe);
+  const swaggerRuntime = createPoseRuntime(manifest, swaggerRecipe);
   const thinkRuntime = createPoseRuntime(manifest, thinkRecipe);
 
   const columns = new Map(manifest.scenes[0].columns.map((c) => [c.name, c]));
   const masterNode = manifest.scenes[0].nodes.find((n) => n.name === "Shaz_Master-P");
   assert.ok(masterNode, "Shaz_Master-P node must exist");
 
-  const phoneSample = phoneRuntime.sampleNodeAtFrame(masterNode, columns, 55);
+  const swaggerSample = swaggerRuntime.sampleNodeAtFrame(masterNode, columns, 55);
   const thinkSample = thinkRuntime.sampleNodeAtFrame(masterNode, columns, 49);
 
   // Directly registered recipe has 1.0 scale and matches think master peg Y
-  assert.ok(Math.abs(phoneSample.attrs.scale.x - 1.0) < 0.01, "registered recipe scale must be ~1.0");
-  assert.ok(Math.abs(phoneSample.attrs.scale.y - 1.0) < 0.01, "registered recipe scale Y must be ~1.0");
-  assert.ok(Math.abs(phoneSample.attrs.position.attr3dpath[1] - thinkSample.attrs.position.attr3dpath[1]) < 0.01, "registered Y position must match think");
+  assert.ok(Math.abs(swaggerSample.attrs.scale.x - 1.0) < 0.01, "registered recipe scale must be ~1.0");
+  assert.ok(Math.abs(swaggerSample.attrs.scale.y - 1.0) < 0.01, "registered recipe scale Y must be ~1.0");
+  assert.ok(Math.abs(swaggerSample.attrs.position.attr3dpath[1] - thinkSample.attrs.position.attr3dpath[1]) < 0.01, "registered Y position must match think");
 });
 
 test("OTS_GRAPHIC_ZONE respects 90% broadcast action-safe and Shaz staging boundary", async () => {

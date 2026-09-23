@@ -8,7 +8,7 @@ The package can transcribe local English audio with word timing, turn that audio
 
 Use `neutral-listening`, `present`, `think`, `aha`, `point`, and `confident` as the current default building blocks.
 
-Eight other recipes remain in the registry because they are useful for engineering and repair: `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, `look-at-phone`, `facepalm-frustrated`, `arms-crossed-skeptical`, and `phone-use-sequence`. They all need a fresh complete visual review before use in a user video.
+Six other recipes remain in the registry because they are useful for engineering and repair: `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, `facepalm-frustrated`, and `arms-crossed-skeptical`. They all need a fresh complete visual review before use in a user video.
 
 Registry checks prove that a recipe can run and pass mechanical rules. They do not prove that the pose looks good.
 
@@ -16,9 +16,9 @@ Registry checks prove that a recipe can run and pass mechanical rules. They do n
 
 - Source Xstage SHA-256: `507e8b0fa7b95d36b9429671b6b6a9ffa3dd77f5c559b84eb2b49add04512fca`
 - Compiled rig assets verified: 210
-- Registered pose recipes: 14
+- Registered pose recipes: 13
 - Automated tests: 125 passing, including reproducible package bytes, bundled-engine parity, transcript and cue provenance, tamper rejection, transcript-anchored choreography, local-only audio ingress, cache-link rejection, audio-backed rendering, fixed-stage framing, the duration-derived Talk to Camera preset, the exact four-background registry, and a smoke-fixture guard that excludes needs-review poses
-- Registry inspection: all 14 registered actions, 461 recipe frames, zero mechanical failures
+- Registry inspection: all 13 registered actions, 406 recipe frames, zero mechanical failures
 - Official smoke: Present and Confident only, 40 frames over 1.666667 seconds; validation, rendering, inspection, and finalization pass without using a needs-review action
 - Provider calls: 0
 - Cost: $0

@@ -7,7 +7,7 @@
     { "poseId": "shrug", "holdFrames": 12, "gapFrames": 3 },
     { "poseId": "point-at-screen", "holdFrames": 12, "gapFrames": 3 },
     { "poseId": "think", "holdFrames": 12, "gapFrames": 3 },
-    { "poseId": "look-at-phone", "holdFrames": 12, "gapFrames": 3 },
+    { "poseId": "chin-stroke-swagger", "holdFrames": 12, "gapFrames": 3 },
     { "poseId": "aha", "holdFrames": 12, "gapFrames": 3 },
     { "poseId": "facepalm-frustrated", "holdFrames": 12, "gapFrames": 3 },
     { "poseId": "point", "holdFrames": 12, "gapFrames": 3 },

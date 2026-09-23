@@ -62,12 +62,6 @@
       "sha256": "399fdc5f52a76b6ee54a0c35863fed3d22307072e6a4b1d48b4ac32a0bbbb7df"
     },
     {
-      "id": "look-at-phone",
-      "kind": "generated",
-      "path": "generated/look-at-phone.json",
-      "sha256": "9ac4235aa21f21d956ddbf3db52a4d09a6d2e3b2ea2e46605794898b12080316"
-    },
-    {
       "id": "facepalm-frustrated",
       "kind": "generated",
       "path": "generated/facepalm-frustrated.json",
@@ -80,10 +74,10 @@
       "sha256": "f6fae70b94adcafc32511f52cbed0eab66b53acdd271560761dce3e963fdf078"
     },
     {
-      "id": "phone-use-sequence",
+      "id": "chin-stroke-swagger",
       "kind": "generated",
-      "path": "generated/phone-use-sequence.json",
-      "sha256": "8f4e55fbc72a29e5cc78b5fa6aa5a5f6a89bc3e9b83271af45bdc5ca415558ac"
+      "path": "generated/chin-stroke-swagger.json",
+      "sha256": "196f618d56f1cd147465eb7ef3d27b2ac00c306f21141b000f17ddb40bd48381"
     }
   ]
 }

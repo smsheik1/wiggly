@@ -18,11 +18,11 @@ function exactKeys(value, allowed, context) {
 
 /**
  * Resolves semantic alias pose IDs to their registered recipe identifiers.
- * E.g. "chin-stroke" -> "phone-use-sequence" (the prop-free swagger chin-stroke pose)
+ * E.g. "chin-stroke" -> "chin-stroke-swagger" (the prop-free swagger chin-stroke pose)
  */
 export function resolvePuppetPoseId(poseId) {
-  if (poseId === "chin-stroke" || poseId === "chin-stroke-smug" || poseId === "swagger" || poseId === "look-at-phone") {
-    return "phone-use-sequence";
+  if (poseId === "chin-stroke" || poseId === "chin-stroke-swagger" || poseId === "chin-stroke-smug" || poseId === "swagger" || poseId === "phone-use-sequence" || poseId === "look-at-phone") {
+    return "chin-stroke-swagger";
   }
   if (poseId === "key-point") {
     return "point";
