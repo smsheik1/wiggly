@@ -76,14 +76,13 @@ export async function callJevSystemOne({ state, questions, apiKey: explicitKey, 
  * Directs a single spoken commentary sentence using Jev.
  * Returns { chibiPose, cameraMotion, badge, isPunchline } or null if Jev is unavailable.
  */
-export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn } = {}) {
+export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn, beatContext } = {}) {
   const questions = {
     chibi_pose: {
       type: "choice",
       instructions: "Which animated Shaz character gesture fits the comedic tone of this beat best?",
       criteria: {
         "point-emphasis": "Asserting a fact, dropping a bomb, pointing out something crucial, calling someone out",
-        "facepalm": "Total disbelief, exasperation, facepalm moment at absurdity or stupidity",
         "shrug-open": "Confusion, questioning who this is for, 'who knows', disbelief, helplessness",
         "think-chin": "Analyzing logically, skeptical thinking, pondering, questioning assumptions",
         "present-card": "Presenting data, asking a question, wrapping up, call to action, welcoming",
@@ -128,22 +127,32 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn } = {
     },
     shaz_puppet_pose: {
       type: "choice",
-      instructions: "Which approved puppet gesture best suits Shaz speaking this line? Select neutral-listening for regular narration, or select an active gesture (point-at-screen, chin-stroke, point, think, confident, present, shrug, aha) when the line delivers emphasis, skepticism, punchlines, or conclusion.",
+      instructions: "Which entertaining character pose best fits Shaz in this beat? Prioritize visual variety, lively energy, and character attitude. Avoid picking poses that were recently used.",
       criteria: {
-        "neutral-listening": "Default baseline narration without overt arm movement",
-        "point-at-screen": "Directly pointing at the OTS topic card on the left to direct viewer focus",
-        "chin-stroke": "Smug, confident chin-stroke with hand resting under jaw and sly smirk; perfect for sarcastic irony, skepticism, or witty callouts",
-        "point": "Direct emphasis, calling someone or something out, or making an accusatory point",
-        "think": "Pondering, reflecting, questioning assumptions, chin hold",
-        "confident": "Confident conclusion, hands on hips, or strong definitive statement",
-        "present": "Presenting data or welcoming the audience with open hands toward the card",
-        "shrug": "Expressive disbelief, disbelief, or skepticism ('who knows?')",
-        "aha": "Sudden realization, discovery, epiphany, or connecting the dots",
+        "neutral-listening": "Grounded, calm conversational baseline; natural breathing room between active gestures",
+        "chin-stroke": "Smug smirk with hand resting under jaw; witty, sarcastic, playful swagger, or roasting",
+        "excited-celebration": "High-energy double-arm bounce; celebration, hype, excitement, or victory",
+        "point-at-screen": "Gesturing towards the OTS graphic card or headline to draw the viewer's eye",
+        "confident": "Cool swagger with hands firmly on hips; grounded, strong, standing tall",
+        "shrug": "Expressive palms-up shrug with raised shoulders; comic disbelief, bafflement, or 'who even knows?'",
+        "think": "Curious hand-to-chin ponder; analytical, thoughtful, or questioning",
+        "point": "Direct, snappy point towards the camera/audience for punchy emphasis",
+        "aha": "Quick lightbulb eureka moment; sudden realization or sharing a neat takeaway",
+        "present": "Open, welcoming host hands framing the topic or inviting the viewer in",
       },
     },
   };
 
-  const result = await callJevSystemOne({ state: sentence, questions, apiKey, fetchFn });
+  const state = beatContext
+    ? {
+        sentence,
+        beat_progression: `Beat ${beatContext.beatIndex + 1} of ${beatContext.totalBeats}`,
+        recent_poses: beatContext.recentPoses?.length > 0 ? beatContext.recentPoses : ["none yet"],
+        direction_goal: "Direct Shaz's visual performance for high entertainment value and variety. Avoid repeating recent poses so the screen stays fresh and visually dynamic.",
+      }
+    : sentence;
+
+  const result = await callJevSystemOne({ state, questions, apiKey, fetchFn });
   if (!result || !result.answers) return null;
 
   const answers = result.answers;

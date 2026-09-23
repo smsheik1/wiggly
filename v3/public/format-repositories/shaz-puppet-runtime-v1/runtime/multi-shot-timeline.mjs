@@ -426,7 +426,17 @@ export function deriveMultiShotPlan({
     if (!chibiIndices.has(textIdx)) textCardIndices.add(textIdx);
   }
 
-  const activePoses = ["chin-stroke", "point", "think", "confident", "present", "aha"];
+  const activePoses = [
+    "chin-stroke-swagger",
+    "point-at-screen",
+    "excited-celebration",
+    "confident",
+    "shrug",
+    "point",
+    "think",
+    "aha",
+    "present",
+  ];
   let activePoseIndex = 0;
 
   for (let bIndex = 0; bIndex < beats.length; bIndex += 1) {
@@ -570,11 +580,15 @@ export async function deriveMultiShotPlanWithJev({
   const puppetRotation = [
     "neutral-listening",
     "chin-stroke",
+    "chin-stroke-swagger",
+    "point-at-screen",
+    "excited-celebration",
+    "confident",
+    "shrug",
     "point",
     "think",
-    "confident",
-    "present",
     "aha",
+    "present",
   ];
   const chibiRotation = ["point-emphasis", "think-chin", "present-card", "shrug-open", "talk-gesture"];
   const badgeRotation = ["REALITY CHECK", "THE CLASH", "COMMUNITY ROAST", "THE BEST", "YOUR VERDICT"];
@@ -582,6 +596,7 @@ export async function deriveMultiShotPlanWithJev({
   let lastChibiPose = null;
   let lastBadge = null;
   let lastPuppetPose = null;
+  const usedPuppetPoses = [];
   let chibiCount = 0;
   let textCardCount = 0;
   const maxChibi = beats.length >= 7 ? 2 : 1;
@@ -599,7 +614,15 @@ export async function deriveMultiShotPlanWithJev({
       if (isLast) endFrame = totalFrames;
 
       const semantics = analyzeSentenceSemantics(beat.text);
-      const jevChoice = await evaluateSentenceDirector(beat.text, { apiKey, fetchFn });
+      const jevChoice = await evaluateSentenceDirector(beat.text, {
+        apiKey,
+        fetchFn,
+        beatContext: {
+          beatIndex: bIndex,
+          totalBeats: beats.length,
+          recentPoses: usedPuppetPoses.slice(-2),
+        },
+      });
 
       // Determine shot type using Jev + editorial rhythm:
       // - First shot is always talk-to-camera
@@ -635,14 +658,15 @@ export async function deriveMultiShotPlanWithJev({
 
         if (jevChoice?.shazPose) {
           const rawPose = jevChoice.shazPose;
+          const resolved = resolvePuppetPoseId(rawPose);
           const conf = jevChoice.shazConfidence;
 
           // Natural performance rhythm:
           // If previous shot was an active physical gesture, default back to neutral-listening
           // unless Jev has very high confidence (>0.85) on a sharp emotional shift.
           if (lastPuppetPose && lastPuppetPose !== "neutral-listening") {
-            if (conf >= 0.85 && rawPose !== lastPuppetPose && rawPose !== "neutral-listening") {
-              chosenPose = puppetRotation.includes(rawPose) ? rawPose : "neutral-listening";
+            if (conf >= 0.85 && resolved !== lastPuppetPose && resolved !== "neutral-listening") {
+              chosenPose = puppetRotation.includes(resolved) ? resolved : "neutral-listening";
               rationale = `High-conviction actor shift: ${chosenPose} (${Math.round(conf * 100)}% conf)`;
             } else {
               chosenPose = "neutral-listening";
@@ -650,17 +674,20 @@ export async function deriveMultiShotPlanWithJev({
             }
           } else {
             // Previous was neutral or first shot
-            if (rawPose === "neutral-listening" || conf < 0.28) {
+            if (resolved === "neutral-listening" || conf < 0.28) {
               chosenPose = "neutral-listening";
               rationale = `Conversational baseline (${Math.round(conf * 100)}% conf)`;
             } else {
-              chosenPose = puppetRotation.includes(rawPose) ? rawPose : "neutral-listening";
+              chosenPose = puppetRotation.includes(resolved) ? resolved : "neutral-listening";
               rationale = `Jev puppet actor instinct: ${chosenPose} (${Math.round(conf * 100)}% conf)`;
             }
           }
         }
 
         lastPuppetPose = chosenPose;
+        if (chosenPose !== "neutral-listening") {
+          usedPuppetPoses.push(chosenPose);
+        }
 
         shots.push({
           id: shotId,
