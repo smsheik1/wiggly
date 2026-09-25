@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import { evaluateSentenceDirector } from "./director-jev.mjs";
+import { evaluateSentenceDirector, getTypesafeApiKey } from "./director-jev.mjs";
 import { deriveChibiRoutine } from "./chibi-choreography.mjs";
 
 const MULTI_SHOT_SCHEMA = "shaz-multi-shot-v1";
@@ -544,8 +544,8 @@ export function deriveMultiShotPlan({
 
 /**
  * Derives an intelligent multi-shot plan utilizing TypeSafe AI's Jev model
- * for probabilistic comedic gesture and camera choreography.
- * Gracefully falls back to deterministic deriveMultiShotPlan if Jev is unavailable.
+ * for comedic gesture and camera choreography.
+ * Jev is mandatory for autonomous direction with zero silent fallbacks.
  */
 export async function deriveMultiShotPlanWithJev({
   transcript,
@@ -555,20 +555,35 @@ export async function deriveMultiShotPlanWithJev({
   apiKey,
   fetchFn,
 }) {
-  const deterministicPlan = deriveMultiShotPlan({
-    transcript,
-    audioDurationSeconds,
-    defaultBackgroundId,
-    brollMediaList,
-  });
+  const resolvedKey = apiKey !== undefined ? apiKey : getTypesafeApiKey();
+  if (!resolvedKey) {
+    throw new Error(
+      `\n================================================================================\n` +
+      `❌ JEV DIRECTOR FAILURE: TYPESAFE_API_KEY IS MISSING\n` +
+      `================================================================================\n` +
+      `Cannot direct the multi-shot scene: Jev autonomous actor director is MANDATORY and requires TYPESAFE_API_KEY.\n` +
+      `Silent fallbacks are strictly prohibited per Wiggly Engineering Rule 12.\n\n` +
+      `Baby steps to fix:\n` +
+      `1. Open your browser and go to: https://typesafe.ai/dashboard\n` +
+      `2. Log in, then click on 'API Keys' in the sidebar navigation (or go directly to https://typesafe.ai/keys).\n` +
+      `3. Click the 'Create New Secret Key' button, name it 'Wiggly Jev', and copy the generated key.\n` +
+      `4. Check your account balance: Click 'Billing' in the left menu (https://typesafe.ai/billing) and ensure you have an active card or available credits.\n` +
+      `5. Open your local 'secrets.env' file (located at the root of your Wiggly repository) in your code editor.\n` +
+      `6. Add or update this exact line:\n` +
+      `   TYPESAFE_API_KEY=your_copied_key_here\n` +
+      `7. Save the file and re-run your command.\n` +
+      `================================================================================\n`
+    );
+  }
 
-  // If no transcript or single shot, return deterministic plan
-  if (!transcript || !Array.isArray(transcript.words) || transcript.words.length === 0 || deterministicPlan.shots.length <= 1) {
-    return deterministicPlan;
+  if (!transcript || !Array.isArray(transcript.words) || transcript.words.length === 0) {
+    throw new Error("deriveMultiShotPlanWithJev requires a transcript with timed words");
   }
 
   const beats = groupTranscriptIntoBeats(transcript.words);
-  if (beats.length <= 1) return deterministicPlan;
+  if (beats.length === 0) {
+    throw new Error("deriveMultiShotPlanWithJev could not extract any speech beats from transcript");
+  }
 
   const totalFrames = Math.max(1, Math.round(audioDurationSeconds * 24));
   const shots = [];
@@ -772,6 +787,9 @@ export async function deriveMultiShotPlanWithJev({
       shots,
     };
   } catch (err) {
+    if (err.message && err.message.includes("❌ JEV DIRECTOR FAILURE")) {
+      throw err;
+    }
     throw new Error(
       `\n================================================================================\n` +
       `❌ JEV DIRECTOR FAILURE DURING MULTI-SHOT TIMELINE GENERATION\n` +

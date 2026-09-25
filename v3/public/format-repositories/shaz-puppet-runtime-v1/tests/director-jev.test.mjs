@@ -309,3 +309,59 @@ test("evaluateSentenceDirector passes beatContext to Jev state and resolves acti
   assert.deepEqual(capturedState.recent_poses, ["point-at-screen", "excited-celebration"]);
   assert.match(capturedState.direction_goal, /variety/i);
 });
+
+test("deriveMultiShotPlanWithJev throws loud error with baby steps and refuses to fall back when no key is provided", async () => {
+  const sampleTranscript = {
+    text: "Sentence one here. Sentence two here.",
+    words: [
+      { text: "Sentence", startMs: 0, endMs: 500 },
+      { text: "one", startMs: 550, endMs: 900 },
+      { text: "here.", startMs: 950, endMs: 2000 },
+      { text: "Sentence", startMs: 2100, endMs: 2600 },
+      { text: "two", startMs: 2650, endMs: 3000 },
+      { text: "here.", startMs: 3050, endMs: 4200 },
+    ],
+  };
+
+  await assert.rejects(
+    async () => {
+      await deriveMultiShotPlanWithJev({
+        transcript: sampleTranscript,
+        audioDurationSeconds: 4.5,
+        apiKey: null,
+      });
+    },
+    (err) => {
+      assert.match(err.message, /TYPESAFE_API_KEY IS MISSING/);
+      assert.match(err.message, /Silent fallbacks are strictly prohibited/);
+      assert.match(err.message, /Baby steps to fix:/);
+      assert.match(err.message, /https:\/\/typesafe\.ai\/dashboard/);
+      return true;
+    },
+  );
+});
+
+test("curateImageCandidatesWithJev throws loud error when Jev returns invalid answers payload", async () => {
+  const { curateImageCandidatesWithJev } = await import("../runtime/director-jev.mjs");
+  const candidates = [
+    { index: 0, title: "Test candidate", source: "The Verge" },
+  ];
+
+  const mockFetch = async () => ({
+    ok: true,
+    json: async () => ({ model: "jev-latest", answers: null }),
+  });
+
+  await assert.rejects(
+    async () => {
+      await curateImageCandidatesWithJev({
+        sentence: "Test sentence",
+        candidates,
+        apiKey: "mock-key",
+        fetchFn: mockFetch,
+      });
+    },
+    /EMPTY OR INVALID ANSWERS PAYLOAD/,
+  );
+});
+
