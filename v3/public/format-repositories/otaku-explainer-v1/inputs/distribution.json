@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "fixtures/naruto-compilers.json",
+  "media": "goldens/naruto-compilers.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "Compilers Explained by Naruto 🍥💻 #Shorts",
+      "description": "How programming compilers work, explained through Naruto shadow clones.\n\n#Shorts #Anime #Naruto #Programming #Coding #Education",
+      "categoryId": "27",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "Think of a compiler like a shadow clone jutsu for your code 🍥✨\n.\n.\n#naruto #anime #coding #programming #tech #reels #explainer"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "Compilers, explained by Naruto: code goes in, machine instructions come out 🍥💻\n\n#DevHumor #Programming"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "Explaining computer compilers using Naruto characters 🍥💻 #coding #anime #naruto #tech #fyp",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}

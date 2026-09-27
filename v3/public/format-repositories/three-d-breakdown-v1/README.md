@@ -114,7 +114,7 @@ npm run format:three-d -- finalize --run=my-run --approve-final
 
 Compare the result with FinalStraw and at least one supporting reference before finalizing. A file can pass resolution, duration, and audio checks while still failing as an ad.
 
-Never paste keys into prompts, files, run records, or chat. Add the required key names to `.env.local`.
+Never paste keys into prompts, files, run records, or chat. Add the required key names to root `secrets.env` or export in environment.
 
 ## Important boundary
 

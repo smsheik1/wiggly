@@ -118,14 +118,14 @@ In this version of the format, the director has access to:
 
 ---
 
-## Jev System One Actor Intuition Engine (Optional BYOK)
+## Jev System One Actor Intuition Engine (Mandatory BYOK Director)
 
-When a `TYPESAFE_API_KEY` is configured in `secrets.env` or the environment, `deriveMultiShotPlanWithJev` automatically queries TypeSafe AI's Jev model (`jev-latest`).
+JEV is not optional for autonomous multi-shot choreography. When `deriveMultiShotPlanWithJev` is invoked, `TYPESAFE_API_KEY` must be configured in `secrets.env`.
 - **Sub-200ms Decision Engine:** Jev evaluates each commentary sentence at **\$0.042/1M tokens** with sub-200ms latency to select the most natural, human-feeling:
   - **`chibiPose`** (`talk-gesture`, `present-card`, `think-chin`, `shrug-open`, `point-emphasis`)
   - **`badge`** category tags (e.g. `THEORY`, `LEAK`, `RUMOR`, `VERDICT`)
   - **Camera Motion** (`zoom-in`, `pan-left`, `pan-right`, etc.)
-- **Graceful Fallback:** If no API key is provided, the director falls back seamlessly to the deterministic keyword analyzer at zero cost and zero network overhead.
+- **Strict No-Fallback Policy (Rule 12):** Per Wiggly Engineering Rule 12, silent fallbacks are strictly forbidden. If `TYPESAFE_API_KEY` is missing, expired, or out of credits, the runtime stops immediately and yells loudly with click-by-click baby steps on how to fix it.
 
 ---
 

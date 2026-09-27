@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "fixtures/theragun.json",
+  "media": "goldens/theragun.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "Theragun 3D Teardown: How Percussive Therapy Really Works #Shorts",
+      "description": "3D breakdown teardown of Theragun percussive massage device.\n\n#Shorts #3DAnimation #Engineering #Teardown #ProductDesign",
+      "categoryId": "28",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "Theragun 3D engineering breakdown. Exploding the motor, gearbox, and stall force mechanics.\n.\n.\n#3danimation #engineering #teardown #theragun #productdesign #reels"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "Theragun 3D engineering breakdown: exploring the 16mm amplitude and 40lbs stall force mechanism. ⚙️🔍 #Engineering #ProductDesign #3D"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "Theragun 3D teardown breakdown ⚙️ How it actually works inside #engineering #3danimation #teardown #productdesign #fyp",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}

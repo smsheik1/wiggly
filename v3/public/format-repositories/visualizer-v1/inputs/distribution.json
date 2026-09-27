@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "fixtures/davids-cookies.json",
+  "media": "goldens/davids-cookies.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "David's Cookies Visualizer: The Secret Behind the Fresh Baked Aroma #Shorts",
+      "description": "Visualizer podcast dialogue breaking down David's Cookies brand.\n\n#Shorts #Visualizer #Podcast #Brand #Cookies #AudioVisualizer",
+      "categoryId": "22",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "Two hosts discuss the undeniable power of fresh-baked David's Cookies. Audio waveform visualizer animated with Remotion. 🍪🎙️\n.\n.\n#visualizer #podcast #cookies #audiowaveform #reels"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "What makes David's Cookies so addictive? Two hosts dive in with real-time waveform audio visualizer. 🍪🎧 #Podcast #Visualizer"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "David's Cookies podcast breakdown with live visualizer waveform 🍪🎙️ #podcast #visualizer #audiowaveform #cookies #fyp",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}

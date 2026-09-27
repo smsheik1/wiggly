@@ -23,6 +23,7 @@
     "inspect": "node runner.mjs inspect",
     "inspect:registry": "node runtime/inspect-registry.mjs",
     "finalize": "node runner.mjs finalize",
+    "publish": "node runtime/publish.mjs",
     "build:kit": "node build-kit.mjs"
   },
   "dependencies": {

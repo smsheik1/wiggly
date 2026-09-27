@@ -9,6 +9,7 @@
   "scripts": {
     "check:kit": "node kit-smoke.mjs",
     "format:jingle": "tsx scripts/brand-jingle-format.ts",
+    "publish": "node runtime/publish.mjs inputs/distribution.json",
     "test": "tsx tests/brand-jingle-agent-runner.test.ts && node kit-smoke.mjs"
   },
   "dependencies": {

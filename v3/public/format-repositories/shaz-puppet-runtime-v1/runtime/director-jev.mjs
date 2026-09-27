@@ -335,7 +335,18 @@ export async function curateImageCandidatesWithJev({ sentence, candidates, apiKe
 
   const result = await callJevSystemOne({ state: `Spoken dialogue: "${sentence}"`, questions, apiKey, fetchFn });
   if (!result || !result.answers) {
-    return curateImageCandidatesDeterministic(sentence, candidates);
+    throw new Error(
+      `\n================================================================================\n` +
+      `❌ JEV DIRECTOR FAILURE: EMPTY OR INVALID ANSWERS PAYLOAD\n` +
+      `================================================================================\n` +
+      `Jev System One returned an empty or invalid answers payload during image curation.\n` +
+      `Silent fallbacks are prohibited per Wiggly Engineering Rule 12.\n\n` +
+      `Baby steps to fix:\n` +
+      `1. Open your browser and go to: https://typesafe.ai/billing\n` +
+      `2. Confirm your account has active credits or an unexpired payment card.\n` +
+      `3. Check https://status.typesafe.ai to verify TypeSafe API services are operational.\n` +
+      `================================================================================\n`
+    );
   }
 
   const answers = result.answers;

@@ -12,6 +12,7 @@
     "render": "node runner.mjs render",
     "inspect": "node runner.mjs inspect",
     "finalize": "node runner.mjs finalize",
+    "publish": "node runtime/publish.mjs inputs/distribution.json",
     "package": "node build-kit.mjs"
   },
   "dependencies": {

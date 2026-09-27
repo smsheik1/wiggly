@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "fixtures/talk-to-camera.json",
+  "media": "goldens/transcript-guided-story-v1/final.mp4",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "Why You Don't Need an Animation Degree in 2026 🎬 #Shorts",
+      "description": "Animate Shaz cartoon host breakdown powered by local speech AI and autonomous actor direction.\n\n#Shorts #Animation #AI #Cartoon #CreatorOps",
+      "categoryId": "24",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "feed",
+      "shouldShareToFeed": true,
+      "caption": "Turn any audio or script into a 24fps classical animated puppet video right on your Mac 🎨✨\n.\n.\n#animation #cartoons #creators #reels #viral #motion"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "Animate Shaz 0.4.0: 24fps classical character animation with Cherry lip-sync and Jev autonomous direction 🎬🎙️\n\n#Animation #Creativity"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "When your Mac renders classical 24fps animation without subscriptions 🤯 #animation #cartoon #fyp #creator",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}

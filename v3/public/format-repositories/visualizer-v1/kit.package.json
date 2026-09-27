@@ -9,6 +9,7 @@
   "scripts": {
     "check:kit": "node kit-smoke.mjs",
     "format:visualizer": "tsx scripts/visualizer-format.ts",
+    "publish": "node runtime/publish.mjs inputs/distribution.json",
     "test": "tsx tests/visualizer-agent-runner.test.ts && node kit-smoke.mjs"
   },
   "dependencies": {

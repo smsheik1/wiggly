@@ -132,13 +132,15 @@ Chibi Shaz follows classical animation physics and timing discovered from frame-
 3. **Transition Cushions on Twos:** All transitions between hold poses (`talk-gesture`, `present-card`, `think-chin`, `shrug-open`, `point-emphasis`) are dynamically connected by 2-frame squash, stretch, and anticipation cushions (`0004x`, `0006`, `0007x`, `0009`, `0010`, `0012`) stepped strictly on twos (12 fps animated cadence).
 4. **Root-Level Guardrail for Autonomous/Blind Agents:** If an agent provides only a single static hold for a shot $\ge 48$ frames (2.0s), `buildChibiSchedule` automatically expands it via `deriveChibiRoutine` into a multi-pose clause progression. Blind agents cannot produce a frozen chibi shot even on their first attempt.
 
-### Jev Actor Intuition & Direction
+### Jev Actor Intuition & Direction (Mandatory BYOK)
 
-When `TYPESAFE_API_KEY` is present in `secrets.env`, the director uses TypeSafe AI's Jev model (`jev-latest`) for sub-200ms comedic acting decisions (pose selection, camera motion, and badge tags). If no key is configured, the system falls back seamlessly to the deterministic keyword analyzer at $0 cost.
+Jev System One actor intuition is mandatory for autonomous multi-shot timeline direction (`deriveMultiShotPlanWithJev`) and script quality linting. It requires `TYPESAFE_API_KEY` configured in `secrets.env`. The director queries TypeSafe AI's Jev model (`jev-latest`) for sub-200ms comedic acting decisions (pose selection, camera motion, and badge tags).
+
+**Strict No-Fallback Rule (Rule 12):** Jev is not optional. If `TYPESAFE_API_KEY` is missing, expired, or out of credits, the runtime stops immediately and yells loudly with diagnostic baby steps to resolve it.
 
 ### Shaz Voice Cloning & Synthesis (`npm run speak`)
 
-The format package integrates an official Cartesia Sonic-3.6 voice clone for creator Shaz (`28ca280b-6835-45d4-aa27-f432156f8236`), with Fish Audio (`947a3b8d8a2c431a8a2934008d89d5b3`) as fallback.
+The format package integrates an official Cartesia Sonic-3.6 voice clone for creator Shaz (`28ca280b-6835-45d4-aa27-f432156f8236`), requiring `CARTESIA_API_KEY` in `secrets.env`. If credentials are missing, the runtime halts immediately with clear setup steps.
 
 To synthesize new dialogue on demand:
 ```sh

@@ -1,4 +1,36 @@
 {
+  "secretPolicy": {
+    "source": "secrets.env",
+    "forbidden": [".env.local"],
+    "rule": "Read secrets in memory only from repo-root secrets.env. Never log or persist."
+  },
+  "providers": [
+    {
+      "id": "replicate",
+      "name": "Replicate",
+      "purpose": "Create the storyboard, four production endpoints, and later video clips.",
+      "environmentVariable": "REPLICATE_API_TOKEN",
+      "requiredFor": ["images", "video"],
+      "optional": false
+    },
+    {
+      "id": "fish-studio",
+      "name": "Fish Audio",
+      "purpose": "Create the final narrator voice after the video gate opens.",
+      "environmentVariable": "FISH_STUDIO_APIKEY",
+      "requiredFor": ["voice"],
+      "optional": false
+    },
+    {
+      "id": "social-publisher",
+      "name": "Social Publisher (Buffer MCP or API)",
+      "purpose": "Simultaneous multi-platform publishing to YouTube Shorts, Instagram Reels, TikTok, and X.",
+      "environmentVariable": "BUFFER_API_KEY",
+      "requiredFor": ["distribution"],
+      "optional": true,
+      "providerCost": "Free tier available / BYOK"
+    }
+  ],
   "environment": {
     "REPLICATE_API_TOKEN": {
       "requiredFor": [
@@ -14,6 +46,14 @@
       ],
       "secret": true,
       "purpose": "Create the final narrator voice after the video gate opens."
+    },
+    "BUFFER_API_KEY": {
+      "requiredFor": [
+        "distribution"
+      ],
+      "secret": true,
+      "optional": true,
+      "purpose": "Simultaneous multi-platform publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
     }
   },
   "tools": {

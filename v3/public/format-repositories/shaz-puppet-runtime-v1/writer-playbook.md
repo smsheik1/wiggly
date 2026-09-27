@@ -110,10 +110,10 @@ End on a strong, definitive beat. Never wind down or summarize:
 
 ---
 
-## 8. TypeSafe AI Jev Voice Linter (Optional BYOK Gate)
+## 8. TypeSafe AI Jev Voice Linter (Mandatory BYOK Gate)
 
-When a `TYPESAFE_API_KEY` is present in `secrets.env` or the environment, `npm run lint:script` complements the deterministic 26-tell regex suite with an instant System One semantic check:
+When running `npm run lint:script`, `TYPESAFE_API_KEY` must be configured in `secrets.env`:
 - **Model:** `jev-latest` at sub-200ms latency (~$0.00003 per script).
 - **Check:** Measures probability of corporate PR speak, soulless buzzword density, and conversational authenticity.
 - **Fail Boundary:** Automatically blocks scripts if Jev identifies a corporate/PR probability ≥ 75%, flagging the text to be rewritten with more direct, personal human phrasing before voice synthesis.
-- If no key is set, the linter runs purely offline on the deterministic regex and causality rules.
+- **Zero Fallback Policy:** If `TYPESAFE_API_KEY` is missing or fails, execution halts immediately with clear setup instructions.

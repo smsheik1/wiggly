@@ -12,7 +12,7 @@ The runner validates the plan, shows the cost, makes local cover art, and gates 
 ```bash
 cd wiggly-brand-jingle-format-kit/v3
 npm install
-cp public/format-repositories/brand-jingle-v1/.env.example .env.local
+# Add ELEVENLABS_API_KEY and BUFFER_API_KEY to secrets.env or export in environment
 npm run format:jingle -- check
 npm run format:jingle -- init --run=my-jingle --url=https://example.com
 ```

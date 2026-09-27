@@ -9,6 +9,7 @@
   "scripts": {
     "check:kit": "node kit-smoke.mjs",
     "format:talking-fish-news": "node --import tsx scripts/talking-fish-news-format.ts",
+    "publish": "node runtime/publish.mjs inputs/distribution.json",
     "test": "node --import tsx tests/talking-fish-news-repo.test.ts && node kit-smoke.mjs"
   },
   "dependencies": {

@@ -502,6 +502,10 @@ assert.equal(
 assert.ok(profile.handoff);
 assert.match(
   profile.handoff.requiredInputs.join(" "),
+  /secrets\.env configured with CARTESIA_API_KEY .* and TYPESAFE_API_KEY/,
+);
+assert.match(
+  profile.handoff.requiredInputs.join(" "),
   /five artist-reviewed gestures/,
 );
 assert.match(
@@ -801,8 +805,14 @@ assert.match(includedAssetsSource, /Classical Animation Pipeline/);
 assert.match(includedAssetsSource, /Zero keyword fallbacks/);
 assert.match(
   connectionsSource,
-  /No subscriptions\. No API keys\. It runs on Apple silicon\./,
+  /Runs locally on Apple silicon\. BYOK for autonomous director & voice\./,
 );
+assert.match(connectionsSource, /BYOK Provider Keys/);
+assert.match(connectionsSource, /TYPESAFE_API_KEY/);
+assert.match(connectionsSource, /CARTESIA_API_KEY/);
+assert.match(connectionsSource, /zero silent fallbacks per Wiggly Rule 12/);
+assert.match(connectionsSource, /Social Publisher \(Buffer MCP or API\)/);
+assert.match(connectionsSource, /BUFFER_API_KEY/);
 assert.match(connectionsSource, /Everything stays local/);
 assert.match(connectionsSource, /It hears the words, too/);
 assert.match(connectionsSource, /same Shaz rig/);

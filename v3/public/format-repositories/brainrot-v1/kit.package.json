@@ -9,6 +9,7 @@
   "scripts": {
     "check:kit": "node kit-smoke.mjs",
     "format:brainrot": "tsx scripts/brainrot-format.ts",
+    "publish": "node runtime/publish.mjs inputs/distribution.json",
     "test": "tsx tests/brainrot-agent-runner.test.ts && node kit-smoke.mjs"
   },
   "dependencies": {

@@ -9,6 +9,7 @@
   "scripts": {
     "format:lego": "node --import tsx scripts/lego-music-video-format.ts",
     "smoke": "node --import tsx scripts/lego-music-video-format.ts smoke",
+    "publish": "node runtime/publish.mjs inputs/distribution.json",
     "test": "node --import tsx tests/lego-music-video-contract.test.ts && node --import tsx tests/lego-music-video-runtime.test.ts"
   },
   "overrides": {

@@ -116,7 +116,7 @@ for (const slug of discoveryFormatSlugs) {
   if (slug === "three-d-breakdown") {
     assert.deepEqual(
       data.services.map((service) => service.name),
-      ["Replicate", "Fish Audio"],
+      ["Replicate", "Fish Audio", "Social Publisher (Buffer MCP or API)"],
     );
     assert.equal(data.workflow.length, 6);
     assert.ok(
