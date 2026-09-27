@@ -11,7 +11,7 @@ You are operating a complete runnable Wiggly Format Kit. The user supplies a top
 
 Do not rebuild, replace, translate, or imitate the renderer. Run the renderer and runner already included in this kit. A different framework or a new scene-timing loop is a failed use of the Format, even when its final video looks similar.
 
-If you received the public Wiggly Repo URL, download and unzip the **Runnable Format Kit** first. Open its `v3` folder, run `npm install`, copy `.env.example` to `.env.local`, and add only the missing key values. Then follow the commands below.
+If you received the public Wiggly Repo URL, download and unzip the **Runnable Format Kit** first. Open its `v3` folder, run `npm install`, add required provider keys (`FISH_STUDIO_APIKEY`, `BUFFER_API_KEY`) to `secrets.env` or export them in your environment. Then follow the commands below.
 
 The renderer deliberately adds a soft glow around the active speaker. This hides rough transparent-image edges and makes the speaker obvious. Preserve that behavior.
 
@@ -36,7 +36,7 @@ Run `npm run smoke` first. It makes a tiny local test video and verifies the pac
 ## Required loop
 
 1. Read this file, `requirements.json`, `worlds/<world>.json`, `layouts.json`, `scene-contract.json`, `prompts/script-system.md`, and `quality.json`.
-2. Run `npm run smoke`, then run `check`. If either fails, stop and report the exact missing local requirement. If `check` reports a missing key, ask the user to add the named key to `.env.local`. Never ask them to paste a secret into chat and never print its value.
+2. Run `npm run smoke`, then run `check`. If either fails, stop and report the exact missing local requirement. If `check` reports a missing key, ask the user to add the named key to `secrets.env`. Never ask them to paste a secret into chat and never print its value.
 3. Run `init`, then write 12–18 short scene records in the new run's `scene-plan.json`.
 4. Use only packaged role names, backgrounds, layout IDs, and assets. Do not invent character coordinates.
 5. Run `validate` before any media call. Fix every validation error first.

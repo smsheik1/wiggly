@@ -11,7 +11,7 @@ An agent can operate the package without an OpenRouter planning call. Start with
 1. Download and unzip the **Runnable Format Kit**.
 2. Open its `v3` folder and run `npm install`.
 3. Run `npm run smoke`. This free local test proves the renderer, assets, FFmpeg, Remotion, and audio mix work.
-4. Copy `.env.example` to `.env.local` and add the requested key values.
+4. Add provider keys (`FISH_STUDIO_APIKEY`, `BUFFER_API_KEY`) to `secrets.env` or export in environment.
 5. Tell Claude or Codex: “Read `public/format-repositories/otaku-explainer-v1/SKILL.md` and use the packaged renderer. Do not rebuild it.”
 
 The kit contains the real runner, renderer, dependencies, rules, layouts, and required assets. A fresh agent may write a new scene plan or story-world pack, but it must not recreate the renderer or timing pipeline.
@@ -42,7 +42,7 @@ npm run prototype:otaku -- inspect --run=<run-id>
 npm run prototype:otaku -- finalize --run=<run-id>
 ```
 
-The Fish key stays in `v3/.env.local`. Serper is needed only when a run adds a new story world. `SKILL.md` tells the agent how to research lore, choose voices, source and inspect assets, and create the world pack without adding another command or changing the renderer. The package never needs OpenRouter, Replicate, a GPU, image generation, or video generation.
+The Fish key stays in `secrets.env`. Serper is needed only when a run adds a new story world. `SKILL.md` tells the agent how to research lore, choose voices, source and inspect assets, and create the world pack without adding another command or changing the renderer. The package never needs OpenRouter, Replicate, a GPU, image generation, or video generation.
 
 ## Proof runs
 

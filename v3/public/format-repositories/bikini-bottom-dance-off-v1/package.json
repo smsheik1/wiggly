@@ -14,7 +14,8 @@
     "validate": "node runner.mjs validate",
     "render": "node runner.mjs render",
     "inspect": "node runner.mjs inspect",
-    "finalize": "node runner.mjs finalize"
+    "finalize": "node runner.mjs finalize",
+    "publish": "node runtime/publish.mjs inputs/distribution.json"
   },
   "dependencies": {
     "sharp": "0.35.3"

@@ -56,6 +56,19 @@ export function ShazPuppetRuntimeConnections({
             shapes. The same Shaz rig draws the scene.
           </Fact>
         </div>
+        <article className="mt-4 grid gap-4 border-2 border-[#080817] bg-white p-5 sm:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <h3 className="text-xl font-black">Social Publisher (Buffer MCP or API)</h3>
+          </div>
+          <div>
+            <p className="text-sm font-bold leading-6">
+              Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X.
+            </p>
+            <code className="mt-2 block break-all text-xs text-[#596176]">
+              BUFFER_API_KEY
+            </code>
+          </div>
+        </article>
       </div>
     </section>
   );

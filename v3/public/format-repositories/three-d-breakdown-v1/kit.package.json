@@ -10,6 +10,7 @@
     "check:kit": "node kit-smoke.mjs",
     "format:three-d": "node --import tsx scripts/three-d-breakdown-format.ts",
     "smoke": "node --import tsx scripts/smoke-three-d-breakdown-format.ts",
+    "publish": "node runtime/publish.mjs inputs/distribution.json",
     "test": "node --import tsx tests/three-d-breakdown-repo.test.ts && node kit-smoke.mjs"
   },
   "dependencies": {

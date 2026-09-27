@@ -104,9 +104,17 @@ function execute(program, values, options = {}) {
 }
 
 async function loadLocalEnv() {
-  for (const filename of [".env.local", ".env"]) {
-    const file = path.join(root, filename);
-    if (await exists(file)) process.loadEnvFile(file);
+  for (const candidate of [
+    path.join(root, "../../secrets.env"),
+    path.join(root, "../../../secrets.env"),
+    path.join(root, "secrets.env"),
+  ]) {
+    if (await exists(candidate)) {
+      try {
+        process.loadEnvFile(candidate);
+        break;
+      } catch {}
+    }
   }
 }
 

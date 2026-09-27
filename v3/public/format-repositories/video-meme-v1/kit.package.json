@@ -9,6 +9,7 @@
   "scripts": {
     "check:kit": "node kit-smoke.mjs",
     "format:video-meme": "tsx scripts/video-meme-format.ts",
+    "publish": "node runtime/publish.mjs inputs/distribution.json",
     "test": "tsx tests/video-meme-agent-runner.test.ts && node kit-smoke.mjs"
   },
   "dependencies": {

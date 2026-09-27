@@ -32,10 +32,9 @@ const VOICE_PRESETS = {
 async function loadApiKey() {
   if (process.env.FISH_STUDIO_APIKEY?.trim()) return process.env.FISH_STUDIO_APIKEY.trim();
   const candidatePaths = [
-    path.join(repoRoot, '../../../.env.local'),
-    path.join(repoRoot, '../../../../secrets.env'),
+    path.join(repoRoot, '../../secrets.env'),
     path.join(repoRoot, '../../../secrets.env'),
-    path.join(repoRoot, '../../.env.local')
+    path.join(repoRoot, '../../../../secrets.env')
   ];
   for (const candidate of candidatePaths) {
     try {

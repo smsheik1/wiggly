@@ -32,10 +32,44 @@
       "purpose": "create an English transcript with word timestamps before body-language planning"
     }
   ],
-  "environmentVariables": [],
-  "providerCalls": [],
-  "networkRequired": false,
-  "networkRequiredForOperation": false,
+  "providers": [
+    {
+      "name": "Social Publisher (Buffer MCP or API)",
+      "environmentVariables": [
+        "BUFFER_API_KEY"
+      ],
+      "optional": true,
+      "purpose": "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
+    },
+    {
+      "name": "Typesafe / Jev System One",
+      "environmentVariables": [
+        "TYPESAFE_API_KEY"
+      ],
+      "optional": false,
+      "purpose": "Autonomous actor direction, camera pacing, and scene choreography with zero silent fallbacks."
+    },
+    {
+      "name": "Cartesia",
+      "environmentVariables": [
+        "CARTESIA_API_KEY"
+      ],
+      "optional": false,
+      "purpose": "Official neural voice synthesis for Shaz dialogue."
+    }
+  ],
+  "environmentVariables": [
+    "BUFFER_API_KEY",
+    "TYPESAFE_API_KEY",
+    "CARTESIA_API_KEY"
+  ],
+  "providerCalls": [
+    "director:jev",
+    "voice:cartesia",
+    "distribute:buffer"
+  ],
+  "networkRequired": true,
+  "networkRequiredForOperation": true,
   "networkMayBeRequiredForNpmInstall": true,
-  "estimatedCost": "$0"
+  "estimatedCost": "Free tier / BYOK API keys"
 }

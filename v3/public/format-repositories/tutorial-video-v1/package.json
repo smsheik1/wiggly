@@ -10,6 +10,7 @@
     "voice": "node runtime/voice.mjs",
     "make": "node runner.mjs make",
     "smoke": "node runner.mjs smoke",
+    "publish": "node runtime/publish.mjs inputs/distribution.json",
     "build": "node build-kit.mjs"
   },
   "dependencies": {

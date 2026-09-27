@@ -22,7 +22,7 @@ node runner.mjs finalize --run=my-promotion --human-review=pass
 npm run package
 ```
 
-If the run has no approved narration, copy `.env.example` to `.env.local`, set the Fish API key, and copy the selected presenter's `referenceId` from `assets/voice-presets.json` into `SQUILLIAM_VOICE_ID`. For Squilliam, use the operator's approved private clone instead. Validate first, obtain provider approval when required, and add `--approve-provider` to `render`. Fish variables may appear as unconfigured during `check`; they are optional when the selected example already includes `audio.wav`.
+If the run has no approved narration, add the Fish API key (`FISH_STUDIO_APIKEY`) to root `secrets.env` (or export in environment), and copy the selected presenter's `referenceId` from `assets/voice-presets.json` into `SQUILLIAM_VOICE_ID`. For Squilliam, use the operator's approved private clone instead. Validate first, obtain provider approval when required, and add `--approve-provider` to `render`. Fish variables may appear as unconfigured during `check`; they are optional when the selected example already includes `audio.wav`.
 
 ## Fixed and replaceable boundaries
 

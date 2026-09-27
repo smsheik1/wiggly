@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "episode": "fixtures/ogtool.json",
+  "media": "goldens/ogtool-break-the-rules.mp3",
+  "mode": "shareNow",
+  "platforms": {
+    "youtube": {
+      "enabled": true,
+      "title": "OGTool Official Brand Jingle: Track AI Search Visibility #Shorts",
+      "description": "Official brand jingle generated for OGTool.\n\n#Shorts #Jingle #BrandAudio #ElevenLabs #Music",
+      "categoryId": "10",
+      "privacy": "public"
+    },
+    "instagram": {
+      "enabled": true,
+      "type": "reel",
+      "shouldShareToFeed": true,
+      "caption": "The official OGTool brand jingle. Turn your value proposition into an unforgettable earworm. 🎵✨\n.\n.\n#brandjingle #elevenlabs #audio #music #marketing #reels"
+    },
+    "twitter": {
+      "enabled": true,
+      "text": "Turn your brand value into an unforgettable 30-second jingle. Listen to the new OGTool track: 🎵📻 #BrandJingle #Marketing"
+    },
+    "tiktok": {
+      "enabled": true,
+      "caption": "New brand jingle for OGTool is an earworm 🎵🎧 #brandjingle #marketing #music #ai #fyp",
+      "allowDuet": true,
+      "allowStitch": true
+    }
+  }
+}

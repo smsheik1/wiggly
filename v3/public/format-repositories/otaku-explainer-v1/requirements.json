@@ -9,6 +9,19 @@
       "name": "SERPER_API_KEY",
       "requiredFor": ["new-story-world-assets"],
       "description": "Finds character, background, and instrumental music candidates only when a story world is not already packaged."
+    },
+    {
+      "name": "BUFFER_API_KEY",
+      "requiredFor": ["publish"],
+      "description": "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
+    }
+  ],
+  "providers": [
+    {
+      "name": "Social Publisher (Buffer MCP or API)",
+      "environmentVariables": ["BUFFER_API_KEY"],
+      "optional": true,
+      "purpose": "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
     }
   ],
   "localTools": [
@@ -25,5 +38,5 @@
     "image generation",
     "video generation"
   ],
-  "secretPolicy": "Read keys from the downloaded kit's v3/.env.local. Never write secret values to plans, logs, reports, or run records."
+  "secretPolicy": "Read keys from the repo-root secrets.env or environment variables. Never write secret values to plans, logs, reports, or run records."
 }

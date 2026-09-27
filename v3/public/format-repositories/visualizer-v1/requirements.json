@@ -4,6 +4,11 @@
     "binaries": ["ffmpeg", "ffprobe"],
     "install": "npm install"
   },
+  "secretPolicy": {
+    "source": "secrets.env",
+    "forbidden": [".env.local"],
+    "rule": "Read secrets in memory only from repo-root secrets.env. Never log or persist."
+  },
   "providers": [
     {
       "id": "gemini-tts",
@@ -21,6 +26,15 @@
         "estimatedCostPerSecondUsd": 0.0005,
         "freeTierMayApply": true
       }
+    },
+    {
+      "id": "social-publisher",
+      "name": "Social Publisher (Buffer MCP or API)",
+      "purpose": "Simultaneous multi-platform publishing to YouTube Shorts, Instagram Reels, TikTok, and X.",
+      "environmentVariable": "BUFFER_API_KEY",
+      "requiredFor": ["distribution"],
+      "optional": true,
+      "providerCost": "Free tier available / BYOK"
     }
   ],
   "explicitlyNotUsed": [

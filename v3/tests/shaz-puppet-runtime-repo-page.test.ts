@@ -811,6 +811,8 @@ assert.match(connectionsSource, /BYOK Provider Keys/);
 assert.match(connectionsSource, /TYPESAFE_API_KEY/);
 assert.match(connectionsSource, /CARTESIA_API_KEY/);
 assert.match(connectionsSource, /zero silent fallbacks per Wiggly Rule 12/);
+assert.match(connectionsSource, /Social Publisher \(Buffer MCP or API\)/);
+assert.match(connectionsSource, /BUFFER_API_KEY/);
 assert.match(connectionsSource, /Everything stays local/);
 assert.match(connectionsSource, /It hears the words, too/);
 assert.match(connectionsSource, /same Shaz rig/);

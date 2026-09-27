@@ -1,9 +1,39 @@
 {
+  "secretPolicy": {
+    "source": "secrets.env",
+    "forbidden": [".env.local"],
+    "rule": "Read secrets in memory only from repo-root secrets.env. Never log or persist."
+  },
+  "providers": [
+    {
+      "id": "elevenlabs-music",
+      "name": "ElevenLabs",
+      "purpose": "Generate one approved song with ElevenLabs Music v2.",
+      "environmentVariable": "ELEVENLABS_API_KEY",
+      "requiredFor": ["music"],
+      "optional": false
+    },
+    {
+      "id": "social-publisher",
+      "name": "Social Publisher (Buffer MCP or API)",
+      "purpose": "Simultaneous multi-platform publishing to YouTube Shorts, Instagram Reels, TikTok, and X.",
+      "environmentVariable": "BUFFER_API_KEY",
+      "requiredFor": ["distribution"],
+      "optional": true,
+      "providerCost": "Free tier available / BYOK"
+    }
+  ],
   "environment": {
     "ELEVENLABS_API_KEY": {
       "requiredFor": ["music"],
       "secret": true,
       "purpose": "Generate one approved song with ElevenLabs Music v2."
+    },
+    "BUFFER_API_KEY": {
+      "requiredFor": ["distribution"],
+      "secret": true,
+      "optional": true,
+      "purpose": "Simultaneous multi-platform publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
     }
   },
   "tools": {
