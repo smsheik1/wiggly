@@ -1,4 +1,4 @@
-import { CircleDollarSign, Laptop, ShieldCheck } from "lucide-react";
+import { KeyRound, Laptop, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import type { ShazPuppetRuntimeTrustData } from "./shazPuppetRuntimeTrust.server";
 
@@ -28,7 +28,7 @@ export function ShazPuppetRuntimeConnections({
           id="accounts-youll-connect-title"
           className="mt-2 text-4xl font-black leading-none sm:text-5xl"
         >
-          No subscriptions. No API keys. It runs on Apple silicon.
+          Runs locally on Apple silicon. BYOK for autonomous director & voice.
         </h2>
         <div className="mt-6 grid border-2 border-[#080817] bg-white min-[701px]:grid-cols-3">
           <Fact
@@ -40,11 +40,12 @@ export function ShazPuppetRuntimeConnections({
             FFmpeg, and Apple’s command-line tools are required.
           </Fact>
           <Fact
-            icon={<CircleDollarSign aria-hidden="true" />}
-            title="$0 service fees"
+            icon={<KeyRound aria-hidden="true" />}
+            title="BYOK Provider Keys"
           >
-            The workflow makes no network calls and uses no paid generation
-            service.
+            Autonomous actor direction requires TYPESAFE_API_KEY (Jev System
+            One), and official voice synthesis requires CARTESIA_API_KEY. Add
+            them to secrets.env with zero silent fallbacks per Wiggly Rule 12.
           </Fact>
           <Fact
             icon={<ShieldCheck aria-hidden="true" />}

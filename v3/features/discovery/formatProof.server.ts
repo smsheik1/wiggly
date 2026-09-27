@@ -643,6 +643,7 @@ const formatConfigs: FormatProfileConfig[] = [
     handoff: {
       requiredInputs: [
         "A story topic, or run `npm run scout` to pull breaking trends from Reddit/X curators",
+        "secrets.env configured with CARTESIA_API_KEY (voice) and TYPESAFE_API_KEY (Jev autonomous director)",
         "One dialogue audio file, or an agent-generated script following writer-playbook.md",
         "One built-in background; Sisters Room is the default",
         "Talk to Camera for ordinary speech, or a short sequence made from the five artist-reviewed gestures",
