@@ -8,7 +8,7 @@
     "height": 1000
   },
   "sourceFrame": 45,
-  "runtimeHash": "6da1f48982614b10baeb4a11ca63ad4aa4594c9945d32f2b15275bb8e3e27538",
+  "runtimeHash": "480d2e91d07b115cb0e161c0d5a2f9e8ec022a49463f8647695575f296662533",
   "method": "Rendered and exported from each verified model using the official runtime's Collada loader, scale, material-name transparency rules, and presenter pose; newsroom geometry and chrome were omitted. Legacy black vertex-color channels were removed from GLB exports so embedded textures remain visible in standards-based viewers.",
   "previews": [
     {

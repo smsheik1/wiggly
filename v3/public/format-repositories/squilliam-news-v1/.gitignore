@@ -7,5 +7,4 @@ agent-runs/*
 !agent-runs/.gitkeep
 downloads/*.zip
 downloads/*.sha256
-!downloads/wiggly-squilliam-news-format-kit.zip
 !downloads/wiggly-squilliam-news-format-kit.zip.sha256

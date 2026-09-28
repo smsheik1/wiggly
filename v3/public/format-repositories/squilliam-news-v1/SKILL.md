@@ -25,13 +25,14 @@ Ask one question at a time. If the user requests the packaged We The Artists pro
 4. Change only the new run's `content.json`, `assets/story/*`, `asset-sources.json`, and optional approved `audio/source.wav`.
 5. Read the script aloud and inspect every story image at phone size.
 6. Run `node runner.mjs validate --run=<run-id>` before any provider call.
-7. If narration is missing, report the Fish model and current cost, then ask once when the call may charge or consume a limited quota.
-8. Run `node runner.mjs render --run=<run-id> --approve-provider` only after approval. Omit the flag when approved narration already exists.
-9. Run `node runner.mjs inspect --run=<run-id>`, then use the host environment's media viewer to show the emitted contact-sheet and playable-video paths. If the GUI viewer is unavailable, use packaged Playwright with installed Chrome to play the actual MP4; do not create a preview renderer.
-10. Ask the user to confirm factual accuracy, voice identity, pronunciation, body language, lip sync, joke, and CTA.
-11. Run `node runner.mjs finalize --run=<run-id> --human-review=pass` only after approval.
-12. Return the final playable MP4.
-13. Multi-Platform Social Distribution (Optional):
+7. Direct character acting performance, camera motion, and ticker badges via Jev System One: `node runtime/direct.mjs --content=agent-runs/<run-id>/content.json --out=agent-runs/<run-id>/direction.json` (or with `--dry-run` for offline deterministic variety planning). Enforces variety-first choreography with zero silent fallbacks under Rule 12.
+8. If narration is missing, report the Fish model and current cost, then ask once when the call may charge or consume a limited quota.
+9. Run `node runner.mjs render --run=<run-id> --approve-provider` only after approval. Omit the flag when approved narration already exists.
+10. Run `node runner.mjs inspect --run=<run-id>`, then use the host environment's media viewer to show the emitted contact-sheet and playable-video paths. If the GUI viewer is unavailable, use packaged Playwright with installed Chrome to play the actual MP4; do not create a preview renderer.
+11. Ask the user to confirm factual accuracy, voice identity, pronunciation, body language, lip sync, joke, and CTA.
+12. Run `node runner.mjs finalize --run=<run-id> --human-review=pass` only after approval.
+13. Return the final playable MP4.
+14. Multi-Platform Social Distribution (Optional):
     When the bulletin is finalized and approved, distribute it across YouTube Shorts, X/Twitter, Instagram, and TikTok via the packaged `runtime/publish.mjs` CLI or connected Buffer MCP tools:
     - Author platform copy in `inputs/distribution.json` (YouTube Shorts title ≤100 chars, categoryId "23" or "25", duration ≤60s; Twitter/X ≤280 chars; TikTok ≤2200 chars; Instagram non-empty caption).
     - Dry-run validation: `node runtime/publish.mjs --dry-run inputs/distribution.json examples/we-the-artists/evidence/final.mp4`.

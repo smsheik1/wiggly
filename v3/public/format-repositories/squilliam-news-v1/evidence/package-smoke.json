@@ -3,7 +3,7 @@
   "testedAt": "2026-08-05T16:09:29Z",
   "archive": "downloads/wiggly-squilliam-news-format-kit.zip",
   "testedArchiveSha256": "c4ef96473f0e929a6323b7aad746a2c91cf291cb5ac39e4a8adf901623bcde1e",
-  "runtimeHash": "6da1f48982614b10baeb4a11ca63ad4aa4594c9945d32f2b15275bb8e3e27538",
+  "runtimeHash": "480d2e91d07b115cb0e161c0d5a2f9e8ec022a49463f8647695575f296662533",
   "cleanExtractionDirectory": "/private/tmp/wiggly-squilliam-interactive-package.fkCtzO/wiggly-squilliam-news-format-kit",
   "commands": [
     "npm install --ignore-scripts",
@@ -62,7 +62,7 @@
     "lazyLoaded": true,
     "portraitDimensions": "800 × 1000",
     "background": "white",
-    "portraitRuntimeHash": "6da1f48982614b10baeb4a11ca63ad4aa4594c9945d32f2b15275bb8e3e27538",
+    "portraitRuntimeHash": "480d2e91d07b115cb0e161c0d5a2f9e8ec022a49463f8647695575f296662533",
     "portraitHashTests": "pass",
     "embeddedTextureAndBlackVertexColorTests": "pass"
   },
@@ -87,7 +87,7 @@
   "currentPromotionEvidence": {
     "formatVersion": "0.2.1-proof",
     "fullLengthProofs": 2,
-    "sharedRuntimeHash": "6da1f48982614b10baeb4a11ca63ad4aa4594c9945d32f2b15275bb8e3e27538",
+    "sharedRuntimeHash": "480d2e91d07b115cb0e161c0d5a2f9e8ec022a49463f8647695575f296662533",
     "distinctContentHashes": true,
     "distinctVideoHashes": true,
     "automaticInspection": "pass",

@@ -55,7 +55,7 @@
       "friction": "After the facial cutouts were restored, close playback review showed Squilliam's supposed blink removed only the red pupils while the yellow eye fields stayed open.",
       "rootCause": "The source Collada eye-scale joints influence the pupil overlay, not an eyelid or the entire eye, so treating those joints as blink controls created a disappearing-pupil gesture.",
       "smallestFix": "Mark pupil-only scale rigs as non-blinking and animate blinks only for characters with verified lid controls. Preserve the full eye art continuously instead of inventing a broken blink.",
-      "evidence": "The pupil-blink proof is archived under examples/we-the-artists/evidence/history/v0.2.1-pupil-blink. Current Squilliam and Squidward smoke sheets retain yellow eyes and red pupils in every sample; both full proofs share runtime hash 6da1f48982614b10baeb4a11ca63ad4aa4594c9945d32f2b15275bb8e3e27538."
+      "evidence": "The pupil-blink proof is archived under examples/we-the-artists/evidence/history/v0.2.1-pupil-blink. Current Squilliam and Squidward smoke sheets retain yellow eyes and red pupils in every sample; both full proofs share runtime hash 480d2e91d07b115cb0e161c0d5a2f9e8ec022a49463f8647695575f296662533."
     },
     {
       "status": "proven",

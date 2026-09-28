@@ -4,7 +4,7 @@
 
 The fixed Format is the verified character-pack contract, studio, camera, presenter-derived gesture system, desk-safe arm retargeting, mouth/jaw-bone lip sync, ten monitor layouts, 30-second timeline, renderer, and quality gates. Replaceable content includes the verified `characterId`, promotion script, facts, ticker, slide copy, story images, pronunciation overrides, provenance, and approved narration.
 
-The two full promotional proofs below were freshly rendered and automatically inspected under corrected version `0.2.1-proof`. They share current runtime fingerprint `6da1f48982614b10baeb4a11ca63ad4aa4594c9945d32f2b15275bb8e3e27538` while carrying different content and video hashes. Historical v0.1 evidence, the human-rejected v0.2.0 eye-regression evidence, and the superseded pupil-only blink render remain available under each example's `evidence/history/` directory.
+The two full promotional proofs below were freshly rendered and automatically inspected under corrected version `0.2.1-proof`. They share current runtime fingerprint `480d2e91d07b115cb0e161c0d5a2f9e8ec022a49463f8647695575f296662533` while carrying different content and video hashes. Historical v0.1 evidence, the human-rejected v0.2.0 eye-regression evidence, and the superseded pupil-only blink render remain available under each example's `evidence/history/` directory.
 
 ## Proof 1 — We The Artists
 

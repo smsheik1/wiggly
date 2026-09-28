@@ -3,7 +3,7 @@
   "formatVersion": "0.2.1-proof",
   "status": "pass",
   "reviewedAt": "2026-08-05T03:54:00Z",
-  "runtimeHash": "6da1f48982614b10baeb4a11ca63ad4aa4594c9945d32f2b15275bb8e3e27538",
+  "runtimeHash": "480d2e91d07b115cb0e161c0d5a2f9e8ec022a49463f8647695575f296662533",
   "renderer": "runtime/renderer/app.js",
   "fixture": "fixtures/smoke/content.json",
   "motionFramesAvailable": 900,
