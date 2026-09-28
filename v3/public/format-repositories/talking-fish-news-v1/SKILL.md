@@ -72,15 +72,19 @@ Run commands from the downloaded kit's `v3` directory.
 14. Run `script-prompt --run=<id>`.
 15. Use the generated prompt yourself and save the four beats in `script.json`.
 16. Run `validate --run=<id>`.
-17. Run `estimate --run=<id>`.
-18. Show the complete script and estimate.
-19. Ask: `Ready to make the fish voice?`
-20. Wait for a clear yes.
-21. Run `voice --run=<id> --approve-voice` once.
-22. Run `render --run=<id>`.
-23. Run `inspect --run=<id>`.
-24. Watch the full MP4 yourself, then let the user watch it and see the contact sheet.
-25. Only after the user says it passes, run `finalize --run=<id> --human-verdict=pass`.
+17. Direct the broadcast camera moves, news ticker badges, and deadpan fish anchor expressions with Jev System One:
+    - Run `node runtime/direct.mjs <run-dir>/script.json` (or `npm run direct`).
+    - Jev evaluates all 4 story beats to choreograph dynamic broadcast camera framing (`static-broadcast`, `zoom-in-evidence`, `push-in-anchor`, `subtle-pan`), broadcast ticker badges (`BREAKING NEWS`, `INVESTIGATION`, `SCIENTIFIC BREAKTHROUGH`, `BIKINI BOTTOM UPDATE`, `THE VERDICT`), and deadpan fish expressions.
+    - Requires `TYPESAFE_API_KEY` configured in repo-root `secrets.env` (Rule 12: Zero silent fallbacks).
+18. Run `estimate --run=<id>`.
+19. Show the complete script and estimate.
+20. Ask: `Ready to make the fish voice?`
+21. Wait for a clear yes.
+22. Run `voice --run=<id> --approve-voice` once.
+23. Run `render --run=<id>`.
+24. Run `inspect --run=<id>`.
+25. Watch the full MP4 yourself, then let the user watch it and see the contact sheet.
+26. Only after the user says it passes, run `finalize --run=<id> --human-verdict=pass`.
 
 ## Story rules
 

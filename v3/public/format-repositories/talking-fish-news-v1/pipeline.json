@@ -1,5 +1,5 @@
 {
-  "progress": "Research -> Concepts -> Script -> Voice -> Render -> Deliver -> Distribute",
+  "progress": "Research -> Concepts -> Script -> Direct -> Voice -> Render -> Deliver -> Distribute",
   "stages": [
     {
       "id": "Research",
@@ -17,6 +17,12 @@
       "id": "Script",
       "output": "Four short news beats mapped to four evidence visuals",
       "providerCall": false,
+      "approvalRequired": false
+    },
+    {
+      "id": "Direct",
+      "output": "Jev autonomous actor director: choreographed camera moves, broadcast ticker badges, and deadpan fish anchor expressions across all 4 beats",
+      "providerCall": true,
       "approvalRequired": false
     },
     {

@@ -6,6 +6,15 @@
   },
   "providers": [
     {
+      "id": "typesafe",
+      "name": "Typesafe / Jev System One",
+      "purpose": "Autonomous actor direction, editorial comedic grading, and broadcast camera choreography with zero silent fallbacks.",
+      "environmentVariable": "TYPESAFE_API_KEY",
+      "requiredFor": ["direct", "script"],
+      "optional": false,
+      "providerCost": "BYOK via secrets.env"
+    },
+    {
       "id": "fish-studio",
       "purpose": "Fixed fish-anchor voice",
       "model": "s2.1-pro-free",
