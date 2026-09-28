@@ -18,6 +18,10 @@
       "output": "Run the contract validator to ensure all media files exist, durations match audio, and contacts are properly mapped."
     },
     {
+      "id": "direct-presenter",
+      "output": "Direct 2D avatar reaction cues, laugh/shock choreography, and comedic flip timing using Jev System One autonomous actor direction with zero silent fallbacks."
+    },
+    {
       "id": "render-and-inspect",
       "output": "Use the unchanged official compositor runtime/render.mjs to render the 1080x1920 MP4, then inspect receipt and media before accepting.",
       "approvalRequired": true
