@@ -9,6 +9,7 @@
     "smoke": "node tests/smoke.mjs",
     "generate": "node runtime/generate.mjs",
     "publish": "node runtime/publish.mjs",
+    "direct": "node runtime/direct.mjs",
     "scout": "node runtime/scout.mjs",
     "critique": "node runtime/critique.mjs"
   },

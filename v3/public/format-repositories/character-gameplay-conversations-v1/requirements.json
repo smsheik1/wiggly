@@ -12,6 +12,14 @@
       "environmentVariables": ["BUFFER_API_KEY"],
       "optional": true,
       "purpose": "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
+    },
+    {
+      "name": "Typesafe / Jev System One",
+      "environmentVariables": ["TYPESAFE_API_KEY"],
+      "model": "jev-latest",
+      "purpose": "Autonomous actor direction, dialogue timing, pacing choreography, and comedic turn delivery.",
+      "pricingSource": "https://typesafe.ai/pricing",
+      "approval": "Mandatory autonomous direction for character choreography and variety-first staging with zero silent fallbacks."
     }
   ],
   "paidApprovalRequired": true,
