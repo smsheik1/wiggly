@@ -58,6 +58,14 @@ node runner.mjs review-script --run=<id> --input=/absolute/draft.json
 
 Validation happens before canonical input is replaced. The generated `script-review.html`, `timed-role-sheet.md`, and exact WAV clips show wording, timing, characters, caption ownership, vocalizations, overlap, cameras, emphasis, background, title, episode label, evidence, and uncertainty. The page works through `file://` without a server.
 
+Direct character performance, dynamic camera framing, and bounce timing with TypeSafe Jev System One:
+
+```sh
+node runtime/direct.mjs /absolute/draft.json --out=/absolute/directed-draft.json
+```
+
+Use `--dry-run` for offline deterministic variety planning. Strictly enforces variety-first choreography with zero silent fallbacks under Rule 12.
+
 An operator with prepared real audio and a candidate may instead use the advanced fresh-run path: `init --run=<fresh-id> --audio=/absolute/audio.wav --input=/absolute/draft.json`. Both initialization paths reject run collisions.
 
 ## 4. Show an honest review before approval

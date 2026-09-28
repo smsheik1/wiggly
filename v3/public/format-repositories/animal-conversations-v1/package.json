@@ -19,6 +19,7 @@
     "render": "node runner.mjs render",
     "inspect": "node runner.mjs inspect",
     "finalize": "node runner.mjs finalize",
+    "direct": "node runtime/direct.mjs",
     "publish": "node runtime/publish.mjs",
     "build:kit": "node build-kit.mjs"
   },
