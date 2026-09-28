@@ -160,11 +160,21 @@ def smoke() -> None:
     configure_engine()
     smoke_dir = RUN / "smoke"
     smoke_dir.mkdir(parents=True, exist_ok=True)
-    frames = [
-        engine.frame_image(sentence.lesson, sentence.role, chunk, index)
-        for index, sentence in enumerate(engine.SENTENCES)
-        for chunk in sentence.chunks
-    ]
+    directed_plan = engine.load_directed_plan()
+    frames = []
+    for sentence_idx, sentence in enumerate(engine.SENTENCES):
+        beat_plan = directed_plan.get(sentence_idx)
+        pose_override = beat_plan.get("mugsyPose") if beat_plan else None
+        for chunk in sentence.chunks:
+            frames.append(
+                engine.frame_image(
+                    sentence.lesson,
+                    sentence.role,
+                    chunk,
+                    len(frames),
+                    pose_override=pose_override,
+                )
+            )
     sheet = Image.new("RGB", (540, ((len(frames) + 2) // 3) * 320), "white")
     for index, frame in enumerate(frames):
         thumb = ImageOps.fit(frame, (180, 320), method=Image.Resampling.LANCZOS)

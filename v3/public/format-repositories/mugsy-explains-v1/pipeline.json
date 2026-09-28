@@ -2,6 +2,7 @@
   "steps": [
     "choose-topic",
     "write-three-comparisons",
+    "direct-actor",
     "collect-six-proof-images",
     "smoke",
     "validate",
@@ -20,6 +21,10 @@
     {
       "id": "write-three-comparisons",
       "output": "Fifteen snappy sentences with tight spoken phrasing"
+    },
+    {
+      "id": "direct-actor",
+      "output": "Jev autonomous actor director: choreographed pose variety, whiteboard staging, and camera motion across all 15 sentences"
     },
     {
       "id": "collect-six-proof-images",

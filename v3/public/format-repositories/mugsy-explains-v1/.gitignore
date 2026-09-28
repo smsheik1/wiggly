@@ -6,4 +6,6 @@ run/contact/
 run/smoke/
 run/inspection.json
 run/render-manifest.json
+run/directed-plan.json
+run/timeline.json
 final/

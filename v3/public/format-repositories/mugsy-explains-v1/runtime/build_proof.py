@@ -163,14 +163,41 @@ def place_card(canvas: Image.Image, visual: Image.Image, box: tuple[int, int, in
     canvas.paste(fitted, (x1, y1), rounded_mask(fitted.size, 34))
 
 
-def build_host(role: str) -> Image.Image:
-    pose_name = {
-        "a": "point-left.png",
-        "b": "point-right.png",
-        "question": "question.png",
-        "explain_a": "coffee-explain.png",
-        "explain_b": "raise-hand.png",
-    }[role]
+def load_directed_plan() -> dict[int, dict]:
+    plan_file = RUN / "directed-plan.json"
+    if not plan_file.exists():
+        plan_file = ROOT / "directed-plan.json"
+    if not plan_file.exists():
+        return {}
+    try:
+        data = json.loads(plan_file.read_text())
+        beats = data.get("beats", [])
+        if isinstance(beats, list):
+            return {b.get("beatIndex", idx): b for idx, b in enumerate(beats)}
+    except Exception:
+        pass
+    return {}
+
+
+def build_host(role: str, pose_override: str | None = None) -> Image.Image:
+    if pose_override:
+        pose_name = f"{pose_override}.png" if not pose_override.endswith(".png") else pose_override
+        if not (SOURCE_HOST / pose_name).is_file():
+            pose_name = {
+                "a": "point-left.png",
+                "b": "point-right.png",
+                "question": "question.png",
+                "explain_a": "coffee-explain.png",
+                "explain_b": "raise-hand.png",
+            }.get(role, "question.png")
+    else:
+        pose_name = {
+            "a": "point-left.png",
+            "b": "point-right.png",
+            "question": "question.png",
+            "explain_a": "coffee-explain.png",
+            "explain_b": "raise-hand.png",
+        }.get(role, "question.png")
     host = Image.open(SOURCE_HOST / pose_name).convert("RGBA")
     alpha_box = host.getchannel("A").getbbox()
     if not alpha_box:
@@ -184,7 +211,13 @@ def build_host(role: str) -> Image.Image:
     return host
 
 
-def frame_image(lesson: int, role: str, chunk: str, sequence_index: int) -> Image.Image:
+def frame_image(
+    lesson: int,
+    role: str,
+    chunk: str,
+    sequence_index: int,
+    pose_override: str | None = None,
+) -> Image.Image:
     canvas = Image.new("RGBA", (WIDTH, HEIGHT), (255, 255, 255, 255))
     draw = ImageDraw.Draw(canvas)
 
@@ -206,9 +239,10 @@ def frame_image(lesson: int, role: str, chunk: str, sequence_index: int) -> Imag
     caption_font = fit_font(chunk, 940, 100, 58)
     draw.text((540, 630), chunk, anchor="ma", font=caption_font, fill=(12, 12, 24))
 
-    host = build_host(role)
+    host = build_host(role, pose_override=pose_override)
     host_x = (WIDTH - host.width) // 2
-    host_y = 825 if role == "question" else 850
+    is_question_pose = pose_override == "question" if pose_override else (role == "question")
+    host_y = 825 if is_question_pose else 850
     canvas.alpha_composite(host, (host_x, host_y))
     return canvas.convert("RGB")
 
@@ -330,15 +364,24 @@ def build_frames(sentence_durations: list[float]) -> list[dict[str, object]]:
     if FRAMES.exists():
         shutil.rmtree(FRAMES)
     FRAMES.mkdir(parents=True)
+    directed_plan = load_directed_plan()
     timeline: list[dict[str, object]] = []
     cursor = 0.0
     frame_index = 0
     if len(SENTENCES) != len(sentence_durations):
         raise ValueError("Every sentence must have one measured audio duration.")
-    for sentence, sentence_duration in zip(SENTENCES, sentence_durations):
+    for sentence_idx, (sentence, sentence_duration) in enumerate(zip(SENTENCES, sentence_durations)):
+        beat_plan = directed_plan.get(sentence_idx)
+        pose_override = beat_plan.get("mugsyPose") if beat_plan else None
         chunk_duration = sentence_duration / len(sentence.chunks)
         for chunk in sentence.chunks:
-            frame = frame_image(sentence.lesson, sentence.role, chunk, frame_index)
+            frame = frame_image(
+                sentence.lesson,
+                sentence.role,
+                chunk,
+                frame_index,
+                pose_override=pose_override,
+            )
             frame_path = FRAMES / f"frame-{frame_index:03d}.png"
             frame.save(frame_path, quality=96)
             timeline.append(
@@ -350,6 +393,9 @@ def build_frames(sentence_durations: list[float]) -> list[dict[str, object]]:
                     "sentence": sentence.text,
                     "lesson": sentence.lesson + 1,
                     "role": sentence.role,
+                    "pose": pose_override or sentence.role,
+                    "camera": beat_plan.get("cameraMotion", "static") if beat_plan else "static",
+                    "badge": beat_plan.get("badge", "HEAD TO HEAD") if beat_plan else "HEAD TO HEAD",
                     "path": frame_path.as_posix(),
                 }
             )

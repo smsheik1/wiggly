@@ -1,7 +1,14 @@
 {
-  "localTools": ["python3", "ffmpeg", "ffprobe"],
+  "localTools": ["node", "python3", "ffmpeg", "ffprobe"],
   "pythonPackages": ["Pillow", "numpy", "ormsgpack"],
   "providers": [
+    {
+      "name": "Typesafe / Jev System One",
+      "purpose": "Autonomous actor direction, camera framing, and whiteboard staging with zero silent fallbacks.",
+      "optional": false,
+      "environmentVariables": ["TYPESAFE_API_KEY"],
+      "pricingSource": "https://typesafe.ai/pricing"
+    },
     {
       "name": "Fish Audio",
       "environmentVariable": "FISH_STUDIO_APIKEY",

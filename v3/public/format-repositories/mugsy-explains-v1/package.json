@@ -7,9 +7,11 @@
     "node": ">=22"
   },
   "scripts": {
+    "direct": "node runtime/direct.mjs content.json",
     "fetch-proof": "node tools/fetch-proof.mjs",
     "auto-proofs": "node tools/auto-fetch-proofs.mjs",
-    "publish": "node runtime/publish.mjs"
+    "publish": "node runtime/publish.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "sharp": "^0.33.5"

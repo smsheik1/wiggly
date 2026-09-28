@@ -16,16 +16,20 @@ Ask only one question at a time. If the user asks for the included Wiggly exampl
    - **Batch 1-click:** `node tools/auto-fetch-proofs.mjs content.json` (or `npm run auto-proofs`) automatically searches, downloads, and formats all 6 proof cards into `assets/proof/`.
    - **Individual:** `node tools/fetch-proof.mjs "<query>" assets/proof/<filename>.png` (or `npm run fetch-proof -- --query="<query>" --out="assets/proof/<filename>.png"`).
    Never edit `runtime/build_proof.py` for content.
-4. Before validation, read the fifteen sentences aloud and inspect the six proof images at phone size. Fix A/B pairs that do not answer the same viewer question, unclear labels, awkward spoken grammar, repeated lessons, whole-page screenshots, and proof that cannot be understood in one second.
-5. Run `python3 runner.py validate` before voice generation.
-6. Report the Fish model and voice: `Mugsy Explains - Official Voice` (`a126d52c2d20443bb024aeef10e741bf`, `$0 on s2.1-pro-free`).
-7. Ask once before generating new narration.
-8. Run `python3 runner.py render` with `FISH_STUDIO_APIKEY` in the environment.
-9. Run `python3 runner.py inspect` and show the contact sheet.
-10. Ask the user to confirm voice identity, pronunciation, and creative fit.
-11. Run `python3 runner.py finalize --human-review pass` only after approval.
-12. Return the final playable MP4.
-13. (Optional) Run `node runtime/publish.mjs --dry-run inputs/distribution.json goldens/wiggly-format-explainer.mp4` to validate social distribution.
+4. Direct Mugsy's acting choreography and camera framing with Jev System One:
+   - Run `npm run direct` (or `node runtime/direct.mjs content.json`).
+   - Jev evaluates all 15 sentences for variety-first acting (`point-left`, `point-right`, `question`, `coffee-explain`, `raise-hand`), camera motions (`static`, `punch-in`, `zoom-left`, `zoom-right`), and whiteboard badges (`HEAD TO HEAD`, `THE TRAP`, `THE WINNER`, `REALITY CHECK`, `CORE RULE`).
+   - Requires `TYPESAFE_API_KEY` configured in repo-root `secrets.env` (Rule 12: Zero silent fallbacks).
+5. Before validation, read the fifteen sentences aloud and inspect the six proof images at phone size. Fix A/B pairs that do not answer the same viewer question, unclear labels, awkward spoken grammar, repeated lessons, whole-page screenshots, and proof that cannot be understood in one second.
+6. Run `python3 runner.py validate` before voice generation.
+7. Report the Fish model and voice: `Mugsy Explains - Official Voice` (`a126d52c2d20443bb024aeef10e741bf`, `$0 on s2.1-pro-free`).
+8. Ask once before generating new narration.
+9. Run `python3 runner.py render` with `FISH_STUDIO_APIKEY` in the environment.
+10. Run `python3 runner.py inspect` and show the contact sheet.
+11. Ask the user to confirm voice identity, pronunciation, and creative fit.
+12. Run `python3 runner.py finalize --human-review pass` only after approval.
+13. Return the final playable MP4.
+14. (Optional) Run `node runtime/publish.mjs --dry-run inputs/distribution.json goldens/wiggly-format-explainer.mp4` to validate social distribution.
 
 Stop loudly on missing tools, keys, invalid content, failed inspection, or an unapproved voice. Do not switch providers. Do not make image- or video-generation calls.
 

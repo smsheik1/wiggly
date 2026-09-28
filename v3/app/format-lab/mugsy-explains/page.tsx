@@ -183,6 +183,7 @@ export default function MugsyExplainsFormatPage() {
           <article className="rounded-lg border border-slate-300 bg-white p-5 shadow-sm">
             <h2 className="font-bold">What the agent runs</h2>
             <div className="mt-4 rounded-md bg-slate-950 p-4 font-mono text-xs leading-6 text-slate-100">
+              npm run direct<br />
               python3 runner.py smoke<br />
               python3 runner.py validate<br />
               python3 runner.py render<br />

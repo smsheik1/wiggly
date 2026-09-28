@@ -22,6 +22,7 @@ This proof kit turns three A-versus-B lessons into a 25-35 second vertical expla
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
+npm run direct # Choreograph Mugsy's acting poses & staging with Jev System One
 .venv/bin/python runner.py smoke
 .venv/bin/python runner.py validate
 FISH_STUDIO_APIKEY=... .venv/bin/python runner.py render
