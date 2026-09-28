@@ -14,6 +14,11 @@
       "name": "BUFFER_API_KEY",
       "requiredFor": ["publish"],
       "description": "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
+    },
+    {
+      "name": "TYPESAFE_API_KEY",
+      "requiredFor": ["direct"],
+      "description": "Autonomous anime explainer director, scene staging, layout choice, and comedic anime timing."
     }
   ],
   "providers": [
@@ -22,6 +27,14 @@
       "environmentVariables": ["BUFFER_API_KEY"],
       "optional": true,
       "purpose": "Simultaneous headless publishing to YouTube Shorts, Instagram Reels, TikTok, and X."
+    },
+    {
+      "name": "Typesafe / Jev System One",
+      "purpose": "Autonomous anime explainer director, scene staging, layout choice, and comedic anime timing.",
+      "environmentVariables": ["TYPESAFE_API_KEY"],
+      "model": "jev-latest",
+      "pricingSource": "https://typesafe.ai/pricing",
+      "approval": "Mandatory autonomous direction for character choreography and variety-first staging with zero silent fallbacks."
     }
   ],
   "localTools": [

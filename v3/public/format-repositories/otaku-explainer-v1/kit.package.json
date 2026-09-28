@@ -12,6 +12,7 @@
     "prototype:otaku": "tsx scripts/otaku-format.ts",
     "prototype:otaku:render": "tsx scripts/render-otaku-proofs.ts",
     "publish": "node runtime/publish.mjs inputs/distribution.json",
+    "direct": "node runtime/direct.mjs",
     "test": "tsx tests/otaku-format-runtime.test.ts && node kit-smoke.mjs"
   },
   "dependencies": {
