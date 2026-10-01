@@ -1,1 +1,37 @@
-{"version":"2.0.0","rubrics":"runtime/contracts.mjs criteria + Review schema","script":"facts, relationship, clarity, emotional purpose, timing and common sense; reject defects with evidence rather than taste","audio":"ffprobe duration, ffmpeg silence, STT diff, speaking rate, speaker similarity against hashed storyteller sample, direct listening for integrity/delivery/safety","characters":"important cast and age completeness, actual references, likeness, stylized rendering, anatomy, consistency, four full-body views and eight expressions","reviewerIndependence":"distinct actual worker from author; IDs do not prove independence by themselves","missingPerception":"inconclusive","limits":{"successiveReviewRejectionsBeforeEscalation":2,"generationRequestsPerDeliverableDependencySet":3,"defaultPaidAllowance":0},"automaticMeasurementsBundled":["duration","silence"],"workerMeasurementsRequired":["STT","speaking rate","speaker similarity"],"proofScope":"isolated contract/HTTP/media-measurement tests, no real provider quality proof","finalization":"blocked until background/video/music/assembly design and validation are implemented"}
+{
+  "version": "2.0.0",
+  "rubrics": "runtime/contracts.mjs criteria + Review schema",
+  "script": "facts, relationship, clarity, emotional purpose, timing and common sense; reject defects with evidence rather than taste",
+  "audio": "ffprobe duration, ffmpeg silence, STT diff, speaking rate, speaker similarity against hashed storyteller sample, direct listening for integrity/delivery/safety",
+  "characters": "important cast and age completeness, actual references, likeness, stylized rendering, anatomy, consistency, four full-body views and eight expressions",
+  "reviewerIndependence": "distinct actual worker from author; IDs do not prove independence by themselves",
+  "missingPerception": "inconclusive",
+  "limits": {
+    "successiveReviewRejectionsBeforeEscalation": 2,
+    "generationRequestsPerDeliverableDependencySet": 3,
+    "defaultPaidAllowance": 0
+  },
+  "automaticMeasurementsBundled": [
+    "duration",
+    "silence"
+  ],
+  "workerMeasurementsRequired": [
+    "STT",
+    "speaking rate",
+    "speaker similarity"
+  ],
+  "proofScope": "isolated contract/HTTP/media-measurement tests, no real provider quality proof",
+  "finalization": "blocked until background/video/music/assembly design and validation are implemented",
+  "evaluationFoundation": {
+    "dataset": "evaluation/dataset.json",
+    "cases": 22,
+    "inventoryAssets": 145,
+    "calibrationCases": 13,
+    "heldoutCases": 9,
+    "runner": "node runner.mjs eval",
+    "modelJudgesQualified": false,
+    "knownAnatomyDefect": "inconclusive/missed by local rules; actual model inspection pending",
+    "productionRouting": "advisory evidence only; existing review/human gates retained",
+    "langsmith": "optional local examples export; no upload or tracing enabled"
+  }
+}

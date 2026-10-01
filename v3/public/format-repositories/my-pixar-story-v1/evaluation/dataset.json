@@ -238,13 +238,14 @@
           "reason": "Full-body Slim Shady stage likeness, bleached hair, tank top, sweatpants, and tattoos match reference perfectly"
         },
         "requiredCriteria": [
-          "facts",
-          "relationship",
-          "clarity",
-          "emotional-purpose",
-          "timing",
-          "common-sense"
-        ]
+          "likeness",
+          "style",
+          "anatomy",
+          "turnaround",
+          "expressions",
+          "consistency"
+        ],
+        "expectedPerception": "direct-image"
       },
       "label": {
         "criterion": "review-evidence",
@@ -495,7 +496,8 @@
           "emotional-purpose",
           "timing",
           "common-sense"
-        ]
+        ],
+        "expectedPerception": "direct-text"
       },
       "label": {
         "criterion": "review-evidence",

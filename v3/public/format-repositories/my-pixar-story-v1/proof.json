@@ -2,7 +2,7 @@
   "date": "2026-10-01",
   "formatVersion": "2.0.0",
   "scope": "orchestration checkpoint; not finished-film or real media quality proof",
-  "testsPassed": 17,
+  "testsPassed": 27,
   "cleanExtraction": "npm ci, check, test, smoke passed",
   "blindAgent": "actual host-authored grandmother script; actual separate-worker text reviews; isolated simulated human revision; restart/stale-review checks; paused at genuine voiceSample gate, sequence 6, zero jobs/allowances",
   "finalRunnerCompatibility": "final extracted runner resumed the same isolated checkpoint unchanged",
@@ -15,5 +15,19 @@
     "video defect detection/repair",
     "backgrounds, shots, music, assembly, film finalization",
     "multi-platform/native-addon installation beyond tested macOS ARM Node 26.8.1"
-  ]
+  ],
+  "evaluationFoundation": {
+    "cases": 22,
+    "inventoryRecords": 145,
+    "calibrationCases": 13,
+    "holdoutCases": 9,
+    "testsPassed": 27,
+    "dataFirstCommit": "7586ebce",
+    "knownAnatomyDefectsMissed": 1,
+    "semanticVoiceAnatomyJudgesQualified": false,
+    "freshPackageProof": "27 tests, preflight, both smoke fixtures, calibration/holdout, immutable SQLite checkpoint; incomplete reviewer responses discovered and fixed with guardrail",
+    "paidProviderCalls": 0,
+    "productionCredentialsRead": false,
+    "remoteTracingOrUpload": false
+  }
 }
