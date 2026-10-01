@@ -406,6 +406,16 @@ Before committing to a dependency, prove a small vertical slice with isolated mo
 
 The distribution proof is a fresh agent receiving only the Format package and desired outcome: it must discover requirements, use the official runtime, recover the correct stage, obey gates, inspect and repair defects, and return the finished film without rebuilding the workflow. Keep portable package entry points and authoritative production state stable regardless of which agent harness operates them. Framework adoption remains a proposal until its benefits are demonstrated against that proof.
 
+### ComfyUI comparison — complementary media execution candidate
+
+ComfyUI and LangGraph both use graphs, but their documented strengths differ. ComfyUI provides reusable node workflows for image, video, audio, text, and 3D generation; LangGraph provides explicit agent/workflow control with persistence and human interrupts. ComfyUI is not limited to local image models: it supports partner API nodes, local execution, and cloud services. Its workflows can be invoked programmatically, and its managed API can package pinned nodes/models/dependencies as versioned deployments. See [ComfyUI official repository](https://github.com/Comfy-Org/ComfyUI) and [Comfy API deployment documentation](https://support.comfy.org/articles/2703236295-comfy-api-deploy-your-comfyui-workflow-as-an-api).
+
+**Fit assessment:** LangGraph is the more direct candidate for our story-production state and approval/repair loops. ComfyUI becomes useful when a specific media recipe benefits from visually authored, reusable processing steps, open-model controls, or managed GPU execution. It could sit behind a generation tool invoked by the official Format runner; it need not replace the project orchestrator. Custom Comfy nodes can implement additional control logic, but that would be our implementation work, not evidence that the required memoir approval/state contract is already supplied.
+
+Examples of possible ComfyUI value are reference preparation, supported pose/identity conditioning, generation followed by supported upscale/post-processing, and packaging an exact media workflow with its requirements. These are possibilities to verify on chosen models, not adopted production steps. A Comfy workflow does not add controls to a closed provider that its API does not expose, guarantee the same pixels across runs, or automatically detect extra limbs. Wrapping a single existing Muse/Cartesia/video API call may add little value compared with calling it directly.
+
+If used, ship the tested workflow and its version/requirements as supporting Format assets. Keep authorized input versions, stage checks, review decisions, and repair budgets in the official runner's authoritative state. Account for each paid operation inside the workflow; a single workflow submission must not conceal unauthorized video calls. Decide local hardware versus hosted execution and credentials explicitly. Neither ComfyUI nor LangGraph is adopted by this comparison.
+
 ## Decision log
 
 | Date | Decision | Reason |
