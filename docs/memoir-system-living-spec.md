@@ -2,7 +2,7 @@
 
 Status: design in progress; LangGraph orchestration checkpoint implemented through character sheets. Media quality and finished-film proof remain pending.
 Last updated: October 1, 2026.  
-Scope: the packaged, semi-autonomous workflow through script approval, audio lock, and character design lock. Background development follows; its detailed workflow and later production stages remain to be designed.
+Scope: the packaged, semi-autonomous workflow through script approval, audio lock, and character design lock. Background concept development is now specified; its runtime integration and later production stages remain to be implemented and refined.
 
 ## Purpose
 
@@ -85,7 +85,7 @@ Existing questionnaire and focused follow-up intake
       → reference-grounded sheet generation ↔ agent review
       → user sheet approval ↔ revision
   → CHARACTER DESIGN LOCK (all required characters complete)
-  → background development (details to be designed)
+  → story-led background concepts, review/selection and location lock (runtime pending)
   → scene composition, animation, and final review (to be designed)
 ```
 
@@ -187,9 +187,35 @@ The visual reviewer inspects the actual output for all required views and expres
 
 Lock character design only when **every current required character/variant** has a selected design, reviewed sheet prompt, completed sheet, passing agent review, and explicit user approval tied to its exact file version. Recheck completeness from the current roster; do not infer it from a total image count.
 
-## 8. Background development boundary
+## 8. Background development — approved design, runtime pending
 
-Background development unlocks only after character design lock, which itself depends on current audio lock. Establish the settings needed by the approved story and their relationship to the four beats next. Background candidate counts, layout rules, and detailed review criteria are still to be decided. The same agent-review/user-approval pattern applies; scene composition and video remain pending their own defined gates.
+Background generation unlocks only after current audio lock and complete character design lock. Intake can flag locations and missing references earlier without generating images or advancing production.
+
+**Story-led locations:** Extract the locations needed by the approved story. Four beats do not require four different locations; reuse a setting when the memory calls for it. Use these six families as guidance, not a restrictive menu or a reason to substitute an unrelated setting:
+
+| Family | Example settings | Typical memory purpose |
+| --- | --- | --- |
+| Home and belonging | Kitchen, living room, bedroom, porch, backyard | Family rituals, comfort, growing up |
+| Childhood and discovery | Schoolyard, playground, treehouse, neighborhood street | First attempts, friendship, small adventures |
+| Work and perseverance | Workshop, garage, diner, farm, modest office | Sacrifice, learning, building a life |
+| Journeys and transitions | Car interior, roadside stop, station, airport | Leaving home, moving, trips together |
+| Nature and shared adventures | Lake, beach, woods, campsite, snowy hill | Wonder, freedom, bonding |
+| Meaningful gatherings | Birthday table, wedding garden, holiday room | Celebration, milestones, togetherness |
+
+Preserve the storyteller's culture, geography and era: a Mumbai apartment kitchen, Ohio farmhouse and Mexican courtyard must not default to one generic American home. Create ordinary places with cinematic emotional presence. Favor stylized 3D shapes, tactile materials, deliberate color and lighting, readable staging and meaningful personal details; simplify distracting clutter. Environmental styling must agree with the approved characters. Pixar discusses set design and stylization as storytelling tools in its [official stylization article](https://prod.renderman.pixar.com/stories/stylization-at-pixar); this is design inspiration, not a provider capability guarantee.
+
+**Per-location workflow:**
+
+1. Author a location brief bound to the current script and relevant beats: place, era, meaningful objects, layout, required action and supplied photos. Ask focused questions only for missing details that matter; distinguish supplied details from proposed set dressing.
+2. Generate three inexpensive environment concepts, initially without characters, within the current bounded image allowance. Use any supplied location references for their intended setting role.
+3. Have the agent inspect the actual concepts for memory fidelity, style fit, spatial coherence, useful staging, period/cultural details and visual defects. Each rejection needs evidence and a specific repair. Missing perception remains inconclusive. Repair/review before presenting passing options to the user.
+4. The user selects and approves a reviewed concept, or requests changes/rejects. Stay in this location loop until the exact current deliverable is confirmed.
+5. Lock the chosen location reference and continuity notes. Generate additional angles only when planned shots need them; those derived references follow the same review/user-approval pattern. Track meaningful prop positions, entrances, room geometry, light direction, time and intentional changes.
+6. Build subsequent scene keyframes using the actual approved character-sheet images and location references. Text naming a reference does not substitute for passing its image to the provider.
+
+**A location is not a finished shot:** An approved empty environment does not approve character placement, scale, acting, prop contact or framing. Validate the action's spatial needs in the brief: for Grandma and a child baking, the counter height, working space and camera view must support both characters and their interaction. Scene composition and video retain separate future approval gates.
+
+**State and revision requirements:** Track unique location IDs, beat mapping, brief versions, candidates, selected asset hash/version, review findings, human approval, continuity notes and dependent scene assets. Changes invalidate the affected references and dependent compositions rather than reopening unrelated locations or character sheets. Explain the impact before applying changes. Exact scene-level dependency rules, reference handoff, provider behavior and executable gates still require implementation and proof; the current runtime deliberately stops at backgrounds.
 
 ## V1 human oversight and video spending gate
 
@@ -270,7 +296,7 @@ Prove that known video defects are caught and withheld from user presentation, s
 - Where will the scoped character-sheet Markdown recipe live in the eventual package, and how does it compare with the actual source recipe?
 - Does each materially different age require its own selected design and sheet, and how do we preserve identity across those variants?
 - What references suffice for supporting loved ones, and what is the explicit rule for incidental extras?
-- What background design and approval workflow follows character design lock?
+- How should the approved background workflow be implemented, including location variants, additional-angle review and precise scene dependencies?
 - How do scene plans, animation, and final audiovisual review follow approved characters and backgrounds?
 - What interface and storage make the package portable without overbuilding the orchestrator?
 - Should expression seven match the tutorial's ANGRY, or remain DETERMINED? These are different expressions, not interchangeable labels.
@@ -445,6 +471,7 @@ The proposed combination for this Format is: agent operates packaged entry point
 | 2026-10-01 | Perform intake common sense checks and display revision dependency impacts. | Discover feasibility gaps early and preserve user understanding and valid work during changes. |
 | 2026-10-01 | Automatically reject and repair obvious video generation defects before user presentation, within an agreed allowance. | The reviewer must catch extra limbs and similar defects itself. This explicitly narrows the earlier every-video-call approval rule for technical repairs; creative changes remain human-approved. Retry limits and permitted adjustments still need definition. |
 | 2026-10-01 | Adopt LangGraph in the portable Format runner, with direct provider adapters. | Explicit user approval after comparing frameworks; persistent approval/review state belongs inside the package. |
+| 2026-10-01 | Let approved memories determine locations; compare three environment concepts per location and lock reviewed, user-approved references. | Six location families guide rather than restrict generation; scene composition must separately prove that characters and actions fit the space. Background runtime remains pending. |
 | 2026-10-01 | Build scoped labeled examples before graders; keep held-out story families separate. | Measure false approvals, incorrect rejections and unresolved defects before trusting automated reviewers. LangSmith export remains optional and local. |
 | 2026-10-01 | Use API-based video models; do not require local video-model inference. | The user clarified the intended provider approach while evaluating ComfyUI. ComfyUI remains an optional workflow tool, not an adopted dependency. |
 
@@ -454,7 +481,7 @@ The proposed combination for this Format is: agent operates packaged entry point
 
 **Implemented:** LangGraph interrupt nodes and embedded SQLite checkpoints own project state. The operating host agent authors/reviews via structured pending tasks and validated events; an explicitly configured `runTask` bridge can execute one worker task. The package does not silently choose an external writer/reviewer model. Exact artifact versions/digests, dependency invalidation, original human approval messages, reviewer evidence, current clone identity, media hashes, request snapshots, submission markers, receipts and explicit bounded operation allowances are recorded. Unrelated notes do not advance stages. Invalid/stale responses are checked before a resume value is persisted. Changing the script reopens dependent audio and character planning while preserving the original sample and clone.
 
-**Implemented stage sequence:** existing five questionnaire answer groups → four-beat script loop → genuine sample/consent → Cartesia private clone → measured/listened audition review and human approval → four narration files reviewed and human-approved as a set → audio lock → complete roster → three reference-conditioned Muse candidates per required character → user selection → host-authored prompt using selected image plus scoped recipe → prompt review → reference-conditioned sheet review and human approval → repeat for every roster entry. Backgrounds remain a pending design stage. `render` and `finalize` stop; this checkpoint cannot create or certify a finished film.
+**Implemented stage sequence:** existing five questionnaire answer groups → four-beat script loop → genuine sample/consent → Cartesia private clone → measured/listened audition review and human approval → four narration files reviewed and human-approved as a set → audio lock → complete roster → three reference-conditioned Muse candidates per required character → user selection → host-authored prompt using selected image plus scoped recipe → prompt review → reference-conditioned sheet review and human approval → repeat for every roster entry. Background concept design is approved in section 8; its executable stage remains pending. `render` and `finalize` stop; this checkpoint cannot create or certify a finished film.
 
 **Provider wiring:** direct hosted Cartesia clone/TTS and Muse `/v1/images/edits` adapters are documentation-checked and covered by isolated HTTP tests. Clone upload includes actual sample bytes, language and private access; TTS uses the current clone, locked text, speed 1, API version `2026-08-14` and default stable snapshot `sonic-3.6-2026-08-27`. Muse receives actual reference bytes with three candidates or one sheet. The request is snapshotted before exact authorization or reservation from an explicit allowance. Submission is checkpointed before network calls; subrequest started markers and completed receipts support collection without duplicate calls. Unknown outcomes stop for reconciliation. A partial narration batch containing an unknown subrequest needs operator reconciliation rather than automatic replay. Canonical credentials are read only from the explicitly identified ignored `secrets.env`; no keys were read for implementation or free tests.
 
