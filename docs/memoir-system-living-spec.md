@@ -163,7 +163,23 @@ Sheet standard:
 - Clean neutral-grey studio background, even lighting, consistent stylized materials, and empty hands in the turnaround poses. No cropped bodies, missing panels, duplicate views substituted for required angles, or inconsistent character identities.
 - All expressions remain the same person as the selected design; expressions change acting, not facial identity or age. Proportions suit the character's age rather than applying a generic adult template to children.
 
-The existing `PIXAR-PROMPTER.md` character contract is reference material for the technical recipe, not an authority over this new workflow's four-beat timing or audio-first stage order. The existing runtime's four-angle/eight-expression layout supplies a starting layout. The user-mentioned attached example was not available in this chat; exact visual alignment with that example remains unverified. Package a scoped, versioned sheet recipe before implementation and register its path/version in this master spec rather than importing the old production workflow wholesale.
+The existing `PIXAR-PROMPTER.md` character contract is reference material for the technical recipe, not an authority over this new workflow's four-beat timing or audio-first stage order. The supplied sheet example confirms the four-angle turnaround above two rows of four expressions. Package a scoped, versioned sheet recipe before implementation and register its path/version in this master spec rather than importing the old production workflow wholesale. The prompt-authoring screenshot names `dan-kiefts-pixar-prompter (3) copy.md`, but does not contain that file's text; do not assume it is identical to the existing repo file.
+
+### Supplied visual references
+
+These user-supplied examples are preserved with the spec so they survive temporary attachment cleanup. They illustrate workflow and layout; Mia's physical traits and clothing are example content, not defaults for other characters. The pictured chat instruction is an illustration of the prompt-authoring step, not a request to generate Mia now.
+
+| Example | Meaning in the workflow |
+| --- | --- |
+| [Selected character image](assets/memoir-system/selected-character-example.png) | A single approved full-body design. Its expressive pose is acceptable at selection; the later turnaround uses a neutral pose while preserving identity. |
+| [Image plus Markdown authoring step](assets/memoir-system/prompt-authoring-example.png) | Give the prompt author the selected image, the actual recipe file, and the character's name to obtain a complete sheet prompt. This is distinct from the image-generation call. |
+| [Completed character sheet](assets/memoir-system/character-sheet-example.png) | Four full-body views across the top, then eight face/expression views in two rows of four, on a shared grey background. Preserve recognizable identity, hairstyle, costume, and proportions across panels. |
+
+![Selected character design example](assets/memoir-system/selected-character-example.png)
+
+![Standardized turnaround and expression sheet example](assets/memoir-system/character-sheet-example.png)
+
+The supplied sheet shows expression crops tightly near its bottom edge. Use its arrangement as the target, while validating that production sheets include all required facial features with usable margins rather than reproducing screenshot edge clipping. Expression names in the rubric above are explicit production requirements; a static example cannot prove that a depicted open mouth is a talking performance.
 
 Generate the sheet with the **actual approved character image supplied as reference input**. A prompt saying “match Mia” or “use the selected image” without sending that image is invalid. Resolve the reference through its character ID and approved version, never through an arbitrary approved sheet or guessed filename.
 
@@ -229,7 +245,7 @@ Before claiming this design works, prove: script revision cannot skip approvals;
 - Should users approve narration beat by beat, approve the full set, or have both options?
 - What voice audition best exposes identity and delivery problems?
 - When and how is the piano score introduced and approved? Narration lock and final mixed-audio review may be separate gates.
-- Where will the scoped character-sheet Markdown recipe and visual layout example live in the eventual package?
+- Where will the scoped character-sheet Markdown recipe live in the eventual package, and how does it compare with the actual `dan-kiefts-pixar-prompter (3) copy.md` source? Visual examples are now preserved under `docs/assets/memoir-system/`.
 - Does each materially different age require its own selected design and sheet, and how do we preserve identity across those variants?
 - What references suffice for supporting loved ones, and what is the explicit rule for incidental extras?
 - What background design and approval workflow follows character design lock?
@@ -249,6 +265,7 @@ Before claiming this design works, prove: script revision cannot skip approvals;
 | 2026-10-01 | Generate three Muse design candidates per required character before selection. | Compare inexpensive alternatives before committing to costly animation. |
 | 2026-10-01 | Compile sheets from the approved character image and standardized Markdown recipe. | Ground turnaround and expressions in a chosen identity rather than text-only resemblance. |
 | 2026-10-01 | Require agent and user approval for every important character's sheet before backgrounds. | Make roster completeness and identity consistency enforceable stage dependencies. |
+| 2026-10-01 | Preserve the supplied design, prompt-authoring, and sheet examples with this spec. | Clarify the image-to-prompt-to-sheet handoff and provide a durable visual layout reference. |
 
 ## Implementation and evidence status
 
