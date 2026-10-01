@@ -377,6 +377,31 @@ The proposed camera/subject/environment structure is a useful prompt template ca
 
 **Proposed evidence path, not authorized generation:** After the established locks, select a representative scene and review its starting frame for feasible anatomy, pose, contacts, and staging. Compare the current prompt with a concise action-focused prompt at the same duration and provider/settings; then compare durations separately. Keep seed fixed if supported, but do not assume deterministic results. Record exact requests and time-localized outcomes; a single lucky result does not verify a universal rule. Experimental calls require user authorization; ordinary technical repair retries follow the scoped exception above. Evaluate readable storytelling as well as fewer defects before adopting a low-motion policy or clip-length cap.
 
+## Orchestration framework assessment — recommendation, not adoption
+
+Reviewed October 1, 2026 against current official documentation and the v3 package manifest. No framework has been installed or selected by the user. The current v3 application uses TypeScript/Next.js and does not list LangGraph, LangChain, or Antigravity SDK as direct dependencies.
+
+**Recommendation among the three candidates: evaluate LangGraph's TypeScript runtime as the workflow controller.** Our requirements are explicit stage gates, author/reviewer repair loops, durable human approval pauses, artifact invalidation, and resumable provider jobs. These fit a controlled workflow. Keep writer, reviewer, and media-provider calls behind small interfaces; an agent role need not become a separate persistent autonomous process.
+
+| Candidate | Documented role and strengths | Fit and tradeoff for this system |
+| --- | --- | --- |
+| LangGraph | Low-level orchestration combining deterministic steps and model-driven steps, persistence, human interrupts, and recovery. It supports JavaScript/TypeScript and does not require the full LangChain framework. | Best fit of these three for controlling the production stages. We still author the state schema, legal transitions, approval/version checks, budget enforcement, and generation tools. |
+| LangChain | Higher-level model/tool integrations and agent-loop components built on LangGraph. | Optional convenience within a writing/review step. Do not add it merely to orchestrate this workflow if direct provider SDKs suffice. It is not a separate competing persistence solution to layer over the same project. |
+| Antigravity SDK | Python agent harness with tools, context management, subagents, policies, session persistence, and lifecycle hooks. | A credible choice for agents needing its harness and local tools. Saved conversations and permission rules do not automatically define our artifact approvals and dependencies. Its documented Python runtime adds another language/service boundary to the present TypeScript app. Evaluate it if its worker capabilities justify that boundary; combining it with LangGraph is possible in principle but not the v1 default recommendation. |
+
+Sources: [LangGraph TypeScript overview](https://docs.langchain.com/oss/javascript/langgraph/overview), [LangChain's framework comparison](https://www.langchain.com/oss-overview), [Antigravity SDK overview](https://www.antigravity.google/docs/sdk/overview), [Antigravity session persistence](https://www.antigravity.google/docs/sdk/lifecycle), and [Antigravity tool policies](https://www.antigravity.google/docs/sdk/policies). This is a fit assessment, not a claim that Antigravity cannot implement the workflow or that LangGraph enforces our rules automatically.
+
+### Proposed ownership and safeguards
+
+- The workflow controller owns current stage, approved artifact versions/dependencies, pending user decision, provider job references, and repair allowance. Maintain one authoritative project state; do not independently advance a JSON run manifest, chat memory, and framework checkpoint as competing state machines. Choose the persistence/manifest relationship explicitly when implementing.
+- The conversation agent interprets feedback and requests semantic actions. The controller validates them. An unrelated message cannot set audio lock or authorize a new production stage; explicit user redirection remains supported with visible dependency invalidation.
+- Writing and review remain model-driven; stage permission, required approvals, reference completeness, and retry budget checks remain deterministic code. Every generation tool enforces its prerequisites even if invoked outside the intended graph path.
+- The automatic video defect loop is generate → inspect → localized repair → regenerate within allowance → inspect again. Only a passing candidate reaches user approval. A framework routes review results; it cannot supply reliable audio listening, identity matching, or anatomical/temporal defect detection by itself.
+- Use persistent checkpoint storage, not an in-memory saver, for restart recovery. A paused approval must resume the same project and artifact version, even days later. See [LangGraph persistence](https://docs.langchain.com/oss/javascript/langgraph/persistence).
+- Approval and provider submission should be distinct operations. LangGraph restarts interrupted nodes from their beginning; repeated execution can duplicate side effects. Persist request identity, authorization consumption, submission status, and returned job ID, use provider idempotency where supported, and reconcile uncertain submissions before any retry. Checkpointing alone does not guarantee exactly-once paid API calls. See [LangGraph interrupt and side-effect rules](https://docs.langchain.com/oss/javascript/langgraph/interrupts).
+
+Before committing to a dependency, prove a small vertical slice with isolated mocks: writer/reviewer repair, durable user pause/resume, stale approval rejection, an enforced audio-first gate, bounded technical repairs, and restart during provider submission without a duplicate request. Compare its complexity with a small persisted TypeScript state machine. Choose the simpler implementation that meets those proofs; do not build a large agent framework merely because the product is described as agentic. Deployment, storage, and portable-package support remain implementation decisions.
+
 ## Decision log
 
 | Date | Decision | Reason |
