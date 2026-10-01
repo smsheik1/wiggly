@@ -40,14 +40,21 @@ We are designing this system from the ground up. The existing Eminem run, five-c
 14. Use Muse Image to generate **three design candidates per character by default**, anchored to authentic references. The agent reviews them and the user chooses and approves one before sheet production.
 15. Build each character sheet from the selected character image plus the standardized Markdown prompt recipe: four full-body turnaround views and eight expressions. Pass the actual selected image to generation; text references to an unseen image do not count.
 16. **All required character sheets must pass agent review and user approval before background development begins.** No omitted characters, placeholder sheets, or real-run bypasses.
+17. The writer elevates raw memories into skilled, clear storytelling. The user does not need storytelling ability; preserving weak phrasing is not the goal. Keep authentic facts and emotional intent, use language children can understand, and avoid overwriting or forced sentiment.
+18. **V1 is narration over memories.** The approved storyteller voice narrates while characters act the memories. On-screen spoken dialogue and narration lip-sync are not v1 requirements.
+19. Reviewer rejection requires evidence tied to an agreed criterion and a specific repair. Personal preference alone is not a rejection reason. Repeated writer/reviewer disagreement returns to the user.
+20. **V1 deliberately uses more human decisions.** Perfect the workflow and learn from reviewed outputs before reducing oversight or introducing broad automatic approval.
+21. **Every video-generation call needs explicit human approval before submission**, including replacements, rerolls, extensions, and additional paid attempts. Approval to review a result or continue the stage is not blanket permission to generate more video. Text and image generation may proceed autonomously within the current approved stage and bounded allowance; deliverable approval gates still apply.
+22. Run **common sense checks during intake and script review**: flag missing character references, age variants, locations, difficult actions, and other feasibility gaps before script lock. Planning does not authorize pre-audio-lock image generation.
+23. Show the consequences of proposed changes: affected shots/assets and approvals, what remains valid, and estimated rerun cost/time. Update only actual dependencies; do not silently rebuild unrelated work.
 
 ## Roles and authority
 
 | Role | Responsibility | Authority limit |
 | --- | --- | --- |
 | Orchestrator | Maintain state, dispatch work, preserve context, route feedback, enforce gates, and report the next decision. | Cannot approve on the user's behalf or treat casual conversation as a stage transition. |
-| Script writer | Convert authentic answers into four coherent emotional beats; revise against specific feedback. | Cannot invent personal memories as facts or change an approved script silently. |
-| Narrative reviewer | Check factual grounding, emotional connection, relationship/POV consistency, clarity, and timing feasibility. | Approval permits user presentation; it does not lock the script. |
+| Script writer | Elevate authentic raw memories into four clear, engaging emotional beats, understandable to children; revise against specific feedback. | Cannot invent personal memories as facts, overwrite the emotional intent, or change an approved script silently. |
+| Narrative reviewer | Check factual grounding, emotional connection, relationship/POV consistency, child-accessible clarity, timing feasibility, and common sense checks. | Cannot reject solely for personal preference; rejection needs evidence and a repair. Approval permits user presentation; it does not lock the script. |
 | Voice/audio producer | Validate recordings, create the selected provider's clone, and synthesize approved narration. | Cannot substitute a preset voice or accelerate narration. |
 | Audio reviewer | Run measurable checks, directly listen, compare against the approved voice reference, and report localized findings. | Missing evidence yields an inconclusive review, never a fabricated pass. |
 | Character designer / prompt author | Establish the roster, translate real references into stylized designs, and compile full sheet prompts from the selected images and standard recipe. | Cannot pick for the user, invent identity traits, or substitute text-only grounding for required image references. |
@@ -59,8 +66,9 @@ These are responsibility boundaries. Whether each role needs a separate running 
 ## Stage sequence
 
 ```text
-Questionnaire and follow-up intake
-  → script writing ↔ narrative review
+Existing questionnaire and focused follow-up intake
+  → common sense checks and feasibility flags
+  → script writing ↔ narrative review (including common sense checks)
   → user script review ↔ revision
   → script lock
   → voice sample validation and clone creation
@@ -86,11 +94,15 @@ At every review, the outcome is approved, changes requested, rejected, or inconc
 
 Use the existing questionnaire as the intake starting point. It already covers childhood, teenage freedom, a leap of faith, romance, and what the storyteller wishes their children understood. Collect the storyteller, recipient, relationship, memories, emotional intent, and any boundaries on what to include. Accept raw spoken memories as well as written answers. Four output beats do not require four questions or removal of an existing answer group; how these answers are distilled into four beats remains to be designed. Do not propose duplicate intake questions without first checking the existing questionnaire.
 
-Preserve the original answers and any transcripts. Ask focused follow-up questions where a meaningful detail is missing. The writer can shape the language but must not manufacture biographical claims.
+Preserve the original answers and any transcripts as factual source material. Ask focused follow-up questions where a meaningful detail is missing. The paid creative value is turning weak or unstructured telling into excellent storytelling: select, structure, simplify, and rewrite the memories into a clear emotional narrative. Preserve what happened and what it meant, rather than every original sentence. Keep meaningful humor and quotes when they serve the story, but do not preserve rambling merely to imitate the source. Use language even children can understand; avoid ornate prose, forced sentiment, and invented biographical claims.
+
+**Common sense checks:** Before script lock, identify likely on-screen people and age variants, available/missing references, settings, meaningful props, and actions likely to be difficult to depict. These are preliminary planning findings, not generated assets or a replacement for the later confirmed character roster. Route gaps to a focused clarification or script/visual-plan adjustment and record their resolution. Do not approve a script while silently assuming essential missing assets or unresolved factual details will appear later.
 
 The script deliverable contains four ordered beats, their narration text, emotional purpose, and a timing estimate. Narrative review rejects unsupported memories, inconsistent direct address, generic emotional filler, confusing transitions, or copy unlikely to fit naturally.
 
-Rejected drafts return to the writer with specific reasons. Reviewer-approved drafts go to the user. User changes return to the writer and then pass review again. Approved script versions are locked and retained.
+Rejected drafts return to the writer with the failed criterion, evidence from the current draft/source, and a specific proposed repair. A reviewer may suggest a different ending but cannot reject an otherwise passing ending solely because it prefers another. Separate defects, inconclusive findings, and optional creative suggestions. Repeated disagreement goes to the user with both positions and supporting evidence; do not run an endless rewrite loop.
+
+Reviewer-approved drafts go to the user. User changes return to the writer and then pass review again. Approved script versions are locked and retained.
 
 ## 2. Voice clone
 
@@ -107,7 +119,7 @@ Requirements must be rechecked when implementing. These providers have separate 
 
 ## 3. Four narration beats
 
-Generate each beat from its locked script text using the approved clone. Preserve the raw generated audio and measured speech duration. Each final beat occupies a 15-second timeline window, including deliberate pauses and reaction space; it need not contain 15 seconds of continuous speech.
+Generate each beat from its locked script text using the approved clone as off-screen narration over memories, rather than additional character dialogue. Preserve the raw generated audio and measured speech duration. Each final beat occupies a 15-second timeline window, including deliberate pauses and reaction space; it need not contain 15 seconds of continuous speech.
 
 If speech cannot fit naturally, return the affected text to the writer, repeat narrative and user approval, then regenerate the affected audio. Delivery problems can be repaired through synthesis settings without changing the words, but still require audio review and user approval.
 
@@ -135,7 +147,7 @@ An agent-rejected beat is repaired and reviewed again. An inconclusive check sta
 
 ## 5. Establish the character roster
 
-This stage begins only after audio lock. Identify the important characters who will appear in the approved story, including supporting loved ones, not just the narrator. Confirm the roster with the user before generating designs. For each character, record a stable ID, name, story role, relevant beats, required age/appearance variants, available real-life reference photos, and any unresolved identity details.
+Generated character design begins only after audio lock. Build on the preliminary people/age/reference findings from intake common sense checks to establish the important characters who will appear in the approved story, including supporting loved ones, not just the narrator. Confirm the roster with the user before generating designs. For each character, record a stable ID, name, story role, relevant beats, required age/appearance variants, available real-life reference photos, and any unresolved identity details.
 
 Every important character requires their own design and sheet workflow. Decide explicitly whether incidental background figures need individual identity assets; do not label an important person incidental to skip the gate. Missing references stay unresolved and prompt a focused request rather than invented likeness. A reference to a character in narration does not automatically mean they must appear on screen; planned appearances belong in the roster.
 
@@ -178,6 +190,16 @@ Lock character design only when **every current required character/variant** has
 
 Background development unlocks only after character design lock, which itself depends on current audio lock. Establish the settings needed by the approved story and their relationship to the four beats next. Background candidate counts, layout rules, and detailed review criteria are still to be decided. The same agent-review/user-approval pattern applies; scene composition and video remain pending their own defined gates.
 
+## V1 human oversight and video spending gate
+
+Keep the workflow hands-on in v1. Retain the established user review steps for script, clone audition, audio beats, character selection, and sheets; later visual-stage user decisions will be designed explicitly. Do not remove these steps merely to minimize clicks or claim greater autonomy.
+
+Agents can author/revise text and generate image candidates within the current stage and its bounded spending/attempt allowance, without permission for each individual text/image call. This does not approve those results on the user's behalf, permit premature visual generation, or grant unlimited image spend. Clone and narration cost authorization remains to be specified separately; the video rule does not decide it implicitly.
+
+Before **each** video-generation submission, show the exact beat/shot or segment, current prompt and input reference versions, provider/settings, planned duration, estimated cost, and the reason for this attempt. Obtain explicit approval for that request. A batch, retry, reroll, replacement, or extension must not smuggle additional generation calls into one earlier approval. Approval becomes stale if the relevant prompt, inputs, provider, or settings change. Persist the approved request and resulting job ID so collection/resumption of that same job does not become a duplicate paid call. A genuinely new submission requires new approval.
+
+The user can inspect the outcome and approve it as a deliverable or request changes. Accepting a generated result and authorizing the next costly generation are separate decisions. These are design requirements; the actual video provider and shot structure remain undecided.
+
 ## Orchestrator state and conversation discipline
 
 The authoritative state lives in a project record on disk or in the selected persistence system, not solely in agent memory. Save after every meaningful event and before waiting on an external job.
@@ -190,6 +212,7 @@ Minimum information:
 - Confirmed character roster/version; per-character references, required variants, candidate IDs, selected design/version, sheet prompt/recipe version, sheet file/version, and both review and user approval status.
 - Current audio-lock and character-design-lock dependency versions, plus background-stage eligibility.
 - Reviewer reports and user decisions bound to exact artifact versions.
+- Intake common sense findings and their resolutions; request-specific video-generation authorization and whether it has been consumed.
 - Attempt history, provider job IDs, spend/budget, blockers, and next allowed action.
 - Revision requests, deferred ideas, and invalidated downstream approvals.
 
@@ -204,6 +227,8 @@ On resume, read state, summarize the current deliverable and pending decision, a
 For unrelated messages, acknowledge and save the idea, then return to the pending deliverable. Do not ignore an explicit user pause, cancellation, or request to revisit an earlier stage. Ambiguous comments are not approval. The system keeps the user oriented without trapping them in a workflow.
 
 ## Approval invalidation and retry discipline
+
+For a proposed revision, first display its impact in plain language, for example: “This changes beat 2 narration and two dependent shots. Beats 1, 3, and 4, and the existing character sheets, remain valid.” The actual impact comes from recorded dependencies, not a canned blanket reset. Identify which approvals reopen and which jobs would need regeneration, and show labeled cost/time estimates when available. Then apply the user's chosen scope, preserving history and valid independent assets.
 
 - Script edits invalidate affected narration and audio lock. Narrative changes that alter the full arc require full script review again.
 - Replacing the clone invalidates all narration approvals and audio lock.
@@ -242,22 +267,16 @@ Before claiming this design works, prove: script revision cannot skip approvals;
 
 ## Additional system decisions to brainstorm
 
-The following are proposed improvements, not accepted defaults or implementation approval. Their priority reflects current design judgment, not measured production evidence.
+The following remain open proposals; items decided by the user have been moved into the agreed decisions and stage rules above. Nothing here is implementation approval. Their priority reflects current design judgment, not measured production evidence.
 
 | Decision | Proposed direction | Why it matters / what to evaluate |
 | --- | --- | --- |
 | Use the emotional answer already collected | Derive the narrative through-line from the existing “what I wish my kids understood” answer and connect the selected memories to it. | This is a writer/reviewer responsibility, not a new questionnaire step. Test whether the script honors the supplied answer instead of substituting a generic message. |
-| How much the writer may polish the speaker | Preserve characteristic phrasing, humor, and direct quotes from memories while trimming for clarity. Let users compare a representative source passage with the adaptation. | A convincing clone reading generic polished prose can still feel unlike the person. Review verbal identity as well as acoustic identity. |
-| Narrator voice versus on-screen dialogue | Consider single-speaker narration over acted memories for v1; evaluate dialogue/lip-sync as a separate option. | Decide whether a character's mouth should match narration at all. Off-screen narration may simplify production; performed dialogue may deepen connection but adds voices and synchronization requirements. |
 | Beat length versus shot length | Keep four 15-second narrative windows while evaluating multiple shorter shots within each. | A beat is an editorial unit, not necessarily a provider job. Compare emotional pacing and modular repair cost against the complexity of maintaining continuity across shots. |
-| Early feasibility without early visual spend | Gather available photos and flag ages, supporting cast, locations, complex actions, and missing memories during intake/script review using text only. | Audio-first generation can coexist with early planning. Surface asset problems before approving a script that depends on unavailable references, without prematurely generating sheets or backgrounds. |
-| Reviewer authority and disagreement | Separate measurable failures, uncertain findings, and creative suggestions. Require localized evidence and a repair action; escalate recurring writer/reviewer disagreement. | Avoid endless polishing or false rejections. Users can choose creative preferences, while a waiver policy for mandatory technical checks remains a separate decision; unknown evidence must not become a pass. |
-| Human approval granularity | Consider approvals at meaningful milestones, with beat-level or character-level feedback inside a consolidated review screen. Let internal prompt checks remain agent work unless the user asks to inspect them. | Preserve user ownership without demanding dozens of approvals. Compare review burden, missed defects, and the user's ability to revise one item without re-approving unrelated work. |
-| Spending authorization and progressive proof | Agree on stage budgets and bounded retries; compare producing one representative end-to-end beat before all expensive video jobs. | Three image candidates are cheap, but autonomous loops accumulate cost. A pilot beat can expose visual/audio integration problems early. All relevant stage gates still apply; no pilot bypass or automatic provider fallback. |
-| Explain the impact of revisions | Before applying an upstream production change, show affected assets, approvals, expected reruns, and estimated spend/time; record the user's chosen revision scope. | State may be technically correct yet confusing if a small edit silently triggers extensive work. Distinguish a wording change from a changed memory, person, clone, or story arc. Estimates must be labeled, not guarantees. |
+| Representative video proof before full production | Consider validating one representative beat before requesting approval for remaining video generations. | It may expose integration defects earlier, but it must follow the established gates and each generation still needs human authorization. Whether to use this ordering remains undecided. |
 | Household privacy and asset lifecycle | Decide where voice samples, clones, family photos, transcripts, and finished movies live; how users export/delete them; and whether publishing is a separate explicit action. | A private family gift and a public social post need different handling. Provider requirements and deletion behavior must be verified when choosing storage and implementing this workflow. |
 
-Suggested next discussion: determine how existing answers map to four beats, then evaluate the narrator/dialogue model and beat-versus-shot structure. Use the questionnaire already in place rather than adding another emotional-intent interview. Keep changing the design spec distinct from changing an active run: new spec versions must not silently migrate a project's approved artifacts.
+Suggested next discussion: determine how existing answers map to four beats and explain beat-versus-shot structure before deciding it. Narration over memories and higher human oversight are now agreed v1 choices. Use the questionnaire already in place rather than adding another emotional-intent interview. Keep changing the design spec distinct from changing an active run: new spec versions must not silently migrate a project's approved artifacts.
 
 ## Tutorial prompt pack assessment — proposals, not adopted rules
 
@@ -285,7 +304,7 @@ These are design comparisons, not a declaration that our current approach is bet
 | Topic | Current spec | Tutorial approach | Why the alternative might help / how to resolve |
 | --- | --- | --- | --- |
 | Production order | User-approved narration lock before any generated visual asset. | The shown workflow develops character images/sheets before video; it does not demonstrate our separate audio-lock gate. | Early visual exploration may reveal emotional tone or staging opportunities before the script is fixed. Compare that benefit against discarded images, spend, and story drift; changing our order requires an explicit decision. |
-| Voice and sound ownership | Cartesia clone and separately locked narration; piano score intended. | Video prompts include described voices, dialogue, ambience, and scene-specific music instructions. | Integrated dialogue/audio may align acting, lip movement, and sound naturally. Test whether it can preserve the approved storyteller voice and exact words; do not assume a text voice description can. Extra dialogue and effects may complement narration if deliberately approved. |
+| Voice and sound ownership | V1 uses separately locked Cartesia narration over acted memories; piano score intended. | Video prompts include described character voices, dialogue, ambience, and scene-specific music instructions. | Integrated performed dialogue remains a possible future format, not an unresolved v1 narration choice. Evaluate it separately if reopened; ambience/effects and their mix still need decisions. |
 | Beat versus shot | Four 15-second story modules; internal shot grammar remains open. | Several shots and explicit cuts within a generated segment. | Reaction shots and detail inserts may tell a memory better than one continuous view. Test continuity, controllability, timing, and cost. A beat can contain multiple shots without changing the four-beat story contract. |
 | Expression seven | DETERMINED. | ANGRY. | Anger may provide more useful facial range; determination may better fit restrained memoir acting. Choose the standard deliberately, or evaluate a versioned extension rather than treating the labels as equivalent. |
 | Reference stance | Candidate image may be expressive; turnaround is neutral. | Candidate prompt recommends a neutral full-body stance; turnaround is evenly balanced. | Neutral candidate poses may give cleaner reference geometry and easier sheet generation. Compare sheet fidelity while still giving users appealing designs to choose from. |
@@ -298,7 +317,7 @@ These are design comparisons, not a declaration that our current approach is bet
 ### Boundaries while alternatives remain undecided
 
 - Higgsfield, Seedream, Seedance, and its Sequel/Extend UI are tutorial choices, not selected dependencies or verified API capabilities for this package. Extension must eventually use the same saved project state and approved references, not rely on hidden provider conversation memory.
-- Voice descriptions and generated dialogue in the video prompts cannot replace our approved clone or locked narration. Whether to include additional dialogue, ambience, or effects remains undecided. The sample's “no music” instruction is local to that classroom scene and does not remove our intended piano score.
+- Voice descriptions and generated dialogue in the video prompts cannot replace our approved clone or locked narration. V1 narration over memories is decided; ambience/effects and their mixing remain open. The sample's “no music” instruction is local to that classroom scene and does not remove our intended piano score.
 - The sample is a multi-character classroom comedy, not a memoir template. Do not import its invented biographies, ten-child cast, running gag, or 27/30-second segment lengths.
 - “Negative prompts barely work,” “aspect ratio in text is ignored,” and “overshoot values” are author heuristics, not verified universal model behavior. Set output dimensions through the documented provider API where supported and validate returned media. Do not overshoot traits so far that the storyteller loses recognizable identity.
 - A concise prompt is useful, but the pack itself has long examples and uses negative instructions after discouraging them. Prefer a clear consistent contract; validate effectiveness on our actual provider rather than adopting absolutes.
@@ -325,6 +344,11 @@ For the future shot-plan gate, consider checking declared duration against the t
 | 2026-10-01 | Require agent and user approval for every important character's sheet before backgrounds. | Make roster completeness and identity consistency enforceable stage dependencies. |
 | 2026-10-01 | Use the shared examples to clarify layout without packaging them as reference assets. | The examples explain the intended workflow, rather than supplying reusable character content. |
 | 2026-10-01 | Record tutorial-derived improvements as proposals and compare conflicting approaches on their merits. | Better alternatives may exist; evaluate them without silently changing agreed behavior or active state. |
+| 2026-10-01 | Elevate raw memories into clear, skilled storytelling understandable to children. | Users pay for storytelling craft; authentic facts and intent matter more than reproducing weak phrasing. |
+| 2026-10-01 | V1 uses narration over memories. | Establish one clear audio/performance model without adding character dialogue requirements. |
+| 2026-10-01 | Reject only with evidence and a specific repair; repeated reviewer disagreement goes to the user. | Review enforces criteria rather than personal taste. |
+| 2026-10-01 | Keep higher human oversight in v1 and require approval for every video-generation request. | Learn and perfect the workflow while controlling its most expensive production actions. |
+| 2026-10-01 | Perform intake common sense checks and display revision dependency impacts. | Discover feasibility gaps early and preserve user understanding and valid work during changes. |
 
 ## Implementation and evidence status
 
