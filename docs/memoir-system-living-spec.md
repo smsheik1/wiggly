@@ -537,3 +537,12 @@ Dots and separately hosted persistent bots are deferred. Continue with the packa
 **Cross-stage requirement:** Bind specialist tasks and tool permissions to current deliverables in the existing authoritative state. Agents own creative responsibilities; an independent reviewer checks them; the human confirms deliverables; the orchestrator validates transitions and costs. Names and instruction text alone cannot enforce tool access or prove review independence. Retain the current host-worker path rather than assuming a permanently autonomous team has already been installed.
 
 **Recommended immediate slice:** Implement the approved background loop through location lock, while calibrating visual review on real examples. Keep video blocked until shot/keyframe gates and qualified video inspection exist. Earlier Cartesia/Muse wiring is covered by isolated tests but still needs authorized real-provider proof; do not describe the existing script-to-sheet checkpoint as proven real-media production.
+
+
+### Background research — limited book preview, not full-book review
+
+**Access status:** Read the available foreword (page 7) of Amid Amidi's *The Art of Pixar* via the [publisher-authorized Google Books preview](https://books.google.com/books?id=1EHNCgAAQBAJ&printsec=frontcover). The preview reached an unavailable-page/viewing-limit notice before the main discussion. The full book, introduction and environment gallery have not been read. Do not attribute detailed production rules to unread pages.
+
+**Supported observation:** The foreword explains how a sequence of color studies communicates the story's emotional progression, and how color and lighting can affect what an audience understands.
+
+**Proposal for our Format, not yet adopted:** Add a concise four-beat color/lighting plan to the background agent's brief. Evaluate location concepts against the film's emotional progression as well as individual quality. Keep room layout and meaningful objects consistent while permitting intentional lighting/time variants. This is our adaptation, not a claim that the book prescribes our workflow. Text planning may precede visual production; any generated color-study images remain behind audio and character locks. Full-book study requires an accessible copy supplied by the user or another authorized source.
