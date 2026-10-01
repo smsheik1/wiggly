@@ -191,7 +191,7 @@ Lock character design only when **every current required character/variant** has
 
 Background generation unlocks only after current audio lock and complete character design lock. Intake can flag locations and missing references earlier without generating images or advancing production.
 
-**Story-led locations:** Extract the locations needed by the approved story. Four beats do not require four different locations; reuse a setting when the memory calls for it. Use these six families as guidance, not a restrictive menu or a reason to substitute an unrelated setting:
+**Story-led locations:** Extract locations and meaningful place details from both the existing questionnaire answers and the approved story. Questionnaire details may ground a setting even when they are omitted from the narration. Record which answer or approved beat supports each location; resolve any conflict explicitly rather than silently choosing or inventing a place. Four beats do not require four different locations; reuse a setting when the memory calls for it. Use these six families as guidance, not a restrictive menu or a reason to substitute an unrelated setting:
 
 | Family | Example settings | Typical memory purpose |
 | --- | --- | --- |
@@ -206,7 +206,7 @@ Preserve the storyteller's culture, geography and era: a Mumbai apartment kitche
 
 **Per-location workflow:**
 
-1. Author a location brief bound to the current script and relevant beats: place, era, meaningful objects, layout, required action and supplied photos. Ask focused questions only for missing details that matter; distinguish supplied details from proposed set dressing.
+1. Author a location brief bound to the current questionnaire answers, script and relevant beats: place, era, meaningful objects, layout, required action and supplied photos. Ask focused questions only for missing details that matter; distinguish supplied details from proposed set dressing.
 2. Generate three inexpensive environment concepts, initially without characters, within the current bounded image allowance. Use any supplied location references for their intended setting role.
 3. Have the agent inspect the actual concepts for memory fidelity, style fit, spatial coherence, useful staging, period/cultural details and visual defects. Each rejection needs evidence and a specific repair. Missing perception remains inconclusive. Repair/review before presenting passing options to the user.
 4. The user selects and approves a reviewed concept, or requests changes/rejects. Stay in this location loop until the exact current deliverable is confirmed.
