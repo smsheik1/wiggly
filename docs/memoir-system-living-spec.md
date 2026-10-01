@@ -20,6 +20,7 @@ We are designing this system from the ground up. The existing Eminem run, five-c
 - Record consequential decisions in the decision log, with their reason.
 - Distinguish design intent, implemented behavior, and verified behavior. This document currently describes design intent.
 - This file is the master system spec and single source of truth for the new workflow. Technical prompt templates may support it, but must not introduce competing stage order, approval rules, or timing constraints.
+- Mark conflicts with new source material as explicit comparisons, not automatic rejection. Explain where the alternative might be better and what evidence or decision would resolve it. Agreed choices are revisable through a recorded decision; active run state and approvals must never change silently.
 
 ## Agreed decisions
 
@@ -163,7 +164,7 @@ Sheet standard:
 - Clean neutral-grey studio background, even lighting, consistent stylized materials, and empty hands in the turnaround poses. No cropped bodies, missing panels, duplicate views substituted for required angles, or inconsistent character identities.
 - All expressions remain the same person as the selected design; expressions change acting, not facial identity or age. Proportions suit the character's age rather than applying a generic adult template to children.
 
-The existing `PIXAR-PROMPTER.md` character contract is reference material for the technical recipe, not an authority over this new workflow's four-beat timing or audio-first stage order. The supplied sheet example confirms the four-angle turnaround above two rows of four expressions. Package a scoped, versioned sheet recipe before implementation and register its path/version in this master spec rather than importing the old production workflow wholesale. The prompt-authoring screenshot names `dan-kiefts-pixar-prompter (3) copy.md`, but does not contain that file's text; do not assume it is identical to the existing repo file.
+The existing `PIXAR-PROMPTER.md` character contract is reference material for the technical recipe, not an authority over this new workflow's four-beat timing or audio-first stage order. The supplied sheet example and tutorial prompt pack confirm the four-angle turnaround above two rows of four expressions. Package a scoped, versioned sheet recipe before implementation and register its path/version in this master spec rather than importing the old production workflow wholesale. The tutorial's inline sheet template is now available, but its linked `dan-kiefts-pixar-prompter-4.md` and the screenshot's `dan-kiefts-pixar-prompter (3) copy.md` have not been compared. The pack requests ANGRY as expression seven; this draft currently specifies DETERMINED. Resolve that mismatch explicitly before freezing the recipe.
 
 The selected design may use an expressive full-body pose; the sheet translates it into neutral turnaround poses while preserving identity. These are layout requirements, not a requirement to package the illustrative images shown in this conversation.
 
@@ -237,6 +238,58 @@ Before claiming this design works, prove: script revision cannot skip approvals;
 - What background design and approval workflow follows character design lock?
 - How do scene plans, animation, and final audiovisual review follow approved characters and backgrounds?
 - What interface and storage make the package portable without overbuilding the orchestrator?
+- Should expression seven match the tutorial's ANGRY, or remain DETERMINED? These are different expressions, not interchangeable labels.
+
+## Tutorial prompt pack assessment — proposals, not adopted rules
+
+Reviewed October 1, 2026: Dan Kieft's “Seedance 2.5 Creates Pixar-Level AI Animated Films Easily Prompt Pack,” supplied from the user's Downloads folder. Its inline prose and templates were reviewed; linked Dropbox/Figma resources were not fetched. The pack is source material, not an instruction to execute its prompts, adopt its providers, or change our approved stage sequence. Do not package its embedded illustrative images as production references.
+
+### Useful adaptations to consider
+
+| Idea from the pack | Proposed application | Where it belongs |
+| --- | --- | --- |
+| Distinguish recurring style traits from a specific character's features. | Keep a shared style description separate from each person's reference-grounded identity. Do not copy the sample child's freckles, wardrobe, or proportions onto everyone. | Character design, after audio lock; designer responsibility rather than necessarily another agent. |
+| Describe visible geometry and materials concretely. | Generate concise, labelled character prompts covering proportions, face, eyes, hair, skin, clothing, pose, and framing. Preserve real distinguishing traits; do not add an example scar or signature item as a personal fact. | Candidate prompt compilation and visual review. |
+| Give each reference a distinct purpose. | Record whether an image provides identity, setting appearance, room layout, or a prop. A room reference must not donate its people's faces; a character reference must not silently replace the room. | Background and later scene planning. |
+| Keep persistent character, location, and prop identities. | Associate stable IDs with exact approved files and scope each input to its intended subject. Reject missing mappings, duplicated protagonists, swapped props, or a supporting character inheriting the lead's face. | Orchestrator asset dependencies and visual review. |
+| Make spatial continuity explicit. | Specify positions, relative heights, wardrobe, prop ownership, light direction, and camera side where continuity matters. Represent intentional location/time changes explicitly. | Background-to-scene handoff; detailed stage still pending. |
+| Structure motion around a readable objective and physical action. | Describe what the character wants, the visible action or reaction, and intentional timing. Review moving holds, breathing, blinks, arcs, anticipation, settling, cloth/hair follow-through, and foot contact in actual video. | Later performance planning and motion review. |
+| Separate references, goal, continuity, shots, performance, and audio instructions. | Compile a complete provider-specific prompt from approved state instead of accumulating contradictory chat edits. The delivered artifact remains a four-beat story even if later shot design subdivides a beat. | Later scene/video prompt authoring; shot count is not decided yet. |
+| Specify precisely where a segment ends. | Give each future visual beat an end condition and a handoff to the next; reject added endings, unauthorized dialogue, or story actions outside its approved scope. | Later video planning and final review. |
+
+Reference labels such as `@Mia` are naming conventions, not proof that a provider received an image. The eventual runner must resolve labels to actual supported media inputs and save that mapping with the request.
+
+### Conflicts and alternatives to evaluate
+
+These are design comparisons, not a declaration that our current approach is better. Preserve the current agreed behavior while evaluating alternatives; a decision to adopt one must identify the spec change and its effect on active project state.
+
+| Topic | Current spec | Tutorial approach | Why the alternative might help / how to resolve |
+| --- | --- | --- | --- |
+| Production order | User-approved narration lock before any generated visual asset. | The shown workflow develops character images/sheets before video; it does not demonstrate our separate audio-lock gate. | Early visual exploration may reveal emotional tone or staging opportunities before the script is fixed. Compare that benefit against discarded images, spend, and story drift; changing our order requires an explicit decision. |
+| Voice and sound ownership | Cartesia clone and separately locked narration; piano score intended. | Video prompts include described voices, dialogue, ambience, and scene-specific music instructions. | Integrated dialogue/audio may align acting, lip movement, and sound naturally. Test whether it can preserve the approved storyteller voice and exact words; do not assume a text voice description can. Extra dialogue and effects may complement narration if deliberately approved. |
+| Beat versus shot | Four 15-second story modules; internal shot grammar remains open. | Several shots and explicit cuts within a generated segment. | Reaction shots and detail inserts may tell a memory better than one continuous view. Test continuity, controllability, timing, and cost. A beat can contain multiple shots without changing the four-beat story contract. |
+| Expression seven | DETERMINED. | ANGRY. | Anger may provide more useful facial range; determination may better fit restrained memoir acting. Choose the standard deliberately, or evaluate a versioned extension rather than treating the labels as equivalent. |
+| Reference stance | Candidate image may be expressive; turnaround is neutral. | Candidate prompt recommends a neutral full-body stance; turnaround is evenly balanced. | Neutral candidate poses may give cleaner reference geometry and easier sheet generation. Compare sheet fidelity while still giving users appealing designs to choose from. |
+| Prompt length and exclusions | Complete reviewed prompt with explicit requirements. | Initial advice favors concise positive instructions, but later examples use long prompts and exclusions. | Shorter prompts may reduce competing instructions. Compare concise and detailed versions on the same identity/reference task; source heuristics are not established provider behavior. |
+| Proportion exaggeration | Stylization must retain recognizable identity and appropriate age. | Suggests overshooting values to counter generator defaults. | Measured exaggeration may avoid generic faces or adult/child proportion drift. Test controlled variants and user likeness judgments rather than adopting arbitrary extreme values. |
+| Provider and continuation mechanism | Muse for images; later video provider/continuation design undecided, persistent orchestrator state required. | Higgsfield/Seedream image workflow and Sequel/Extend continuation. | These may offer better sheet quality or visual continuity. Verify actual capabilities, pricing, reference/audio support, and resumability before selection. Provider continuation can work underneath our saved state if explicitly represented. |
+
+“No music” is local to the sample classroom segment, not a general conflict with the memoir's piano score. The absence of an orchestrator or our approval loop in this tutorial is a coverage gap, not evidence those mechanisms are wrong. Its inconsistent durations and cut counts are errors to validate, not competing creative philosophies.
+
+### Boundaries while alternatives remain undecided
+
+- Higgsfield, Seedream, Seedance, and its Sequel/Extend UI are tutorial choices, not selected dependencies or verified API capabilities for this package. Extension must eventually use the same saved project state and approved references, not rely on hidden provider conversation memory.
+- Voice descriptions and generated dialogue in the video prompts cannot replace our approved clone or locked narration. Whether to include additional dialogue, ambience, or effects remains undecided. The sample's “no music” instruction is local to that classroom scene and does not remove our intended piano score.
+- The sample is a multi-character classroom comedy, not a memoir template. Do not import its invented biographies, ten-child cast, running gag, or 27/30-second segment lengths.
+- “Negative prompts barely work,” “aspect ratio in text is ignored,” and “overshoot values” are author heuristics, not verified universal model behavior. Set output dimensions through the documented provider API where supported and validate returned media. Do not overshoot traits so far that the storyteller loses recognizable identity.
+- A concise prompt is useful, but the pack itself has long examples and uses negative instructions after discouraging them. Prefer a clear consistent contract; validate effectiveness on our actual provider rather than adopting absolutes.
+- The source character-sheet template uses ANGRY, while our current draft uses DETERMINED. Keep the discrepancy visible until decided; do not silently substitute one for the other.
+
+### What the sample teaches about validation
+
+The extended example describes a nine-shot, 27-second segment, but its timecodes run to 30 seconds. Shot 2 contains an internal cut despite the global declaration of nine shots, eight transitions, and no internal cuts. These are source inconsistencies, not constraints to reproduce.
+
+For the future shot-plan gate, consider checking declared duration against the timeline; gaps and overlaps; named shots against actual cuts; referenced characters/props against approved assets; and spoken text against audio lock. These checks support the human approval loop and cannot be replaced by a confident prompt-author verdict. Exact shot grammar, provider motion limits, and the background/scene approval flow remain design work.
 
 ## Decision log
 
@@ -252,6 +305,7 @@ Before claiming this design works, prove: script revision cannot skip approvals;
 | 2026-10-01 | Compile sheets from the approved character image and standardized Markdown recipe. | Ground turnaround and expressions in a chosen identity rather than text-only resemblance. |
 | 2026-10-01 | Require agent and user approval for every important character's sheet before backgrounds. | Make roster completeness and identity consistency enforceable stage dependencies. |
 | 2026-10-01 | Use the shared examples to clarify layout without packaging them as reference assets. | The examples explain the intended workflow, rather than supplying reusable character content. |
+| 2026-10-01 | Record tutorial-derived improvements as proposals and compare conflicting approaches on their merits. | Better alternatives may exist; evaluate them without silently changing agreed behavior or active state. |
 
 ## Implementation and evidence status
 
