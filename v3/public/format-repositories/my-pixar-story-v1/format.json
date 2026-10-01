@@ -1,0 +1,1 @@
+{"id":"my-pixar-story-v1","version":"2.0.0","status":"orchestration-checkpoint","name":"My Pixar Story","entrypoint":"SKILL.md","runner":"runner.mjs","durationSeconds":60,"beats":4,"aspectRatio":"16:9","implementedThrough":"character-sheets","filmReady":false,"legacyRunMigration":false}

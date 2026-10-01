@@ -1,0 +1,15 @@
+# My Pixar Story — LangGraph Format runtime v2.0.0
+
+A portable, agent-operated Wiggly Format for turning a loved one's memories into a planned 60-second theatrical 3D animated memoir: four 15-second beats, their own cloned narration, widescreen imagery, acoustic piano and cinematic lighting.
+
+**Current checkpoint: runnable orchestration through character sheets.** Background design, shot planning, video generation, music, assembly and final film inspection are pending design. `render` and `finalize` deliberately stop. This is not a finished film generator or a proven autonomous media reviewer.
+
+Read **SKILL.md** to operate it. Install with `npm ci`; run `npm run check`, `npm test` and `npm run smoke`. No Wiggly application checkout or cloud database is required. The package uses embedded SQLite for LangGraph checkpoints and direct hosted-provider APIs. No ComfyUI, local AI models, Antigravity dependency or additional chat-agent framework.
+
+The operating host agent writes and reviews artifacts. LangGraph controls saved state, approval pauses and legal transitions. `work` exposes the next structured task; an explicitly configured worker module can automate one task. This package does not silently choose an outside writing/review model or launch guessed host CLI commands.
+
+Cartesia is the default voice-clone/TTS path; Muse uses actual reference images for three candidates and the selected character's standardized sheet. No stock voice or text-only identity fallback. The current provider adapters are documentation-checked and tested with isolated HTTP mocks; no real clone, narration or image generation was performed for this implementation.
+
+Tests demonstrate persistence, typed transitions, review/approval loops, file hashing, natural-speed requests, reference transmission and request recovery. They do not prove voice likeness, animation quality, reliable defect perception or commercial readiness. Automatic STT and speaker embedding tools are not bundled: capable review workers must supply their measured results or mark review inconclusive.
+
+The archive includes pinned dependencies, contracts, recipes, two questionnaire examples, official runner and free tests. It excludes secrets, installed dependencies, run checkpoints and prior celebrity outputs. The canonical evolving design remains Wiggly's `docs/memoir-system-living-spec.md`; this README is operational status, not another master design.

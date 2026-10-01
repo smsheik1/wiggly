@@ -1,0 +1,1 @@
+Read SKILL.md before operating this Format. Use runner.mjs as the only v2 workflow entry point. Do not use a sibling app checkout, legacy runner, or old state.json. Do not invent approvals or media-review evidence.
