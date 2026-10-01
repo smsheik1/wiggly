@@ -44,7 +44,7 @@ We are designing this system from the ground up. The existing Eminem run, five-c
 18. **V1 is narration over memories.** The approved storyteller voice narrates while characters act the memories. On-screen spoken dialogue and narration lip-sync are not v1 requirements.
 19. Reviewer rejection requires evidence tied to an agreed criterion and a specific repair. Personal preference alone is not a rejection reason. Repeated writer/reviewer disagreement returns to the user.
 20. **V1 deliberately uses more human decisions.** Perfect the workflow and learn from reviewed outputs before reducing oversight or introducing broad automatic approval.
-21. **Every video-generation call needs explicit human approval before submission**, including replacements, rerolls, extensions, and additional paid attempts. Approval to review a result or continue the stage is not blanket permission to generate more video. Text and image generation may proceed autonomously within the current approved stage and bounded allowance; deliverable approval gates still apply.
+21. **Initial video generation and creative changes need explicit human approval of the request.** The reviewer must catch obvious generation defects, reject them internally, and route a specific repair for automatic regeneration before presenting a passing result to the user. These technical repair retries are a narrow exception to the earlier every-call approval rule and operate within an agreed retry/spending allowance. Extensions, new shots, and creative rerolls still require approval. Text and image generation may proceed autonomously within the current approved stage and bounded allowance; deliverable approval gates still apply.
 22. Run **common sense checks during intake and script review**: flag missing character references, age variants, locations, difficult actions, and other feasibility gaps before script lock. Planning does not authorize pre-audio-lock image generation.
 23. Show the consequences of proposed changes: affected shots/assets and approvals, what remains valid, and estimated rerun cost/time. Update only actual dependencies; do not silently rebuild unrelated work.
 
@@ -196,7 +196,13 @@ Keep the workflow hands-on in v1. Retain the established user review steps for s
 
 Agents can author/revise text and generate image candidates within the current stage and its bounded spending/attempt allowance, without permission for each individual text/image call. This does not approve those results on the user's behalf, permit premature visual generation, or grant unlimited image spend. Clone and narration cost authorization remains to be specified separately; the video rule does not decide it implicitly.
 
-Before **each** video-generation submission, show the exact beat/shot or segment, current prompt and input reference versions, provider/settings, planned duration, estimated cost, and the reason for this attempt. Obtain explicit approval for that request. A batch, retry, reroll, replacement, or extension must not smuggle additional generation calls into one earlier approval. Approval becomes stale if the relevant prompt, inputs, provider, or settings change. Persist the approved request and resulting job ID so collection/resumption of that same job does not become a duplicate paid call. A genuinely new submission requires new approval.
+Before initial video generation, show the exact beat/shot or segment, current prompt and input reference versions, provider/settings, planned duration, estimated cost, and the reason for this attempt. Obtain explicit approval for that request. Extensions, additional shots, creative changes, and rerolls for preference require their own approval. Approval becomes stale when relevant inputs or settings change outside the authorized technical repair scope. Persist the authorization and resulting job ID so collection/resumption of that same job does not become a duplicate paid call.
+
+**Automatic technical repair exception, agreed October 1:** The reviewer should independently detect obvious defects such as extra limbs, broken anatomy, missing or duplicating props, and visible temporal corruption. Reject the defective attempt internally with localized evidence and a specific repair, return it to the video producer, regenerate within the agreed repair allowance, and review the replacement. Never advance the failed attempt or present it as the user's deliverable. The user reviews only an agent-passing candidate. Store failed attempts and diagnostic evidence for audit; do not routinely show defective media to the user. This exception authorizes narrowly scoped technical repairs, not new story actions, changed character identity, or creative preference changes. It never bypasses audio lock, approved references, or current stage dependencies.
+
+The automatic retry ceiling, aggregate cost allowance, and permitted prompt/settings adjustments remain to be defined before implementing this exception. When that allowance is exhausted or a repair would change approved creative intent, pause and explain the blocker and proposed remedy in plain language; showing the defective clip is optional if the user asks to inspect it. External API failures still stop immediately under the repo's provider-failure rule; they are not creative defect retries.
+
+Video review must cover the full clip over time, including limb/prop interactions and transitions. A first-frame likeness check or a few attractive stills cannot pass temporal quality. Retain localized evidence for failures; if the reviewer cannot inspect the motion reliably, its result is inconclusive and the clip cannot advance. Validate the reviewer against known defective clips, including the driving example, before claiming this loop catches common generation failures.
 
 The user can inspect the outcome and approve it as a deliverable or request changes. Accepting a generated result and authorizing the next costly generation are separate decisions. These are design requirements; the actual video provider and shot structure remain undecided.
 
@@ -212,7 +218,7 @@ Minimum information:
 - Confirmed character roster/version; per-character references, required variants, candidate IDs, selected design/version, sheet prompt/recipe version, sheet file/version, and both review and user approval status.
 - Current audio-lock and character-design-lock dependency versions, plus background-stage eligibility.
 - Reviewer reports and user decisions bound to exact artifact versions.
-- Intake common sense findings and their resolutions; request-specific video-generation authorization and whether it has been consumed.
+- Intake common sense findings and their resolutions; request-specific video-generation authorization and whether it has been consumed; technical repair scope, retry/spending allowance, consumption, and parent attempt for each repair.
 - Attempt history, provider job IDs, spend/budget, blockers, and next allowed action.
 - Revision requests, deferred ideas, and invalidated downstream approvals.
 
@@ -248,12 +254,15 @@ The eventual package includes one canonical operator manual, an official runner,
 
 Before claiming this design works, prove: script revision cannot skip approvals; interrupted runs resume correctly; unrelated conversation cannot advance state; all four audio beats are measured and heard; script/voice edits invalidate dependent approvals; and image/video generation is blocked before audio lock. Prove that generated sheet requests contain the correct selected image, another character's approval cannot unlock production, stale reviews cannot approve replacements, and backgrounds stay blocked until the complete current roster has agent- and user-approved sheets. Include a real ordinary-person proof, not only a celebrity fixture.
 
+Prove that known video defects are caught and withheld from user presentation, specific repairs return to production, replacements receive fresh media review, and technical retries cannot exceed their allowance or change approved creative intent. A failed review must never be recorded as a pass merely to keep production moving.
+
 ## Open questions and next discussions
 
 - How should the existing questionnaire answers be distilled into four meaningful beats while preserving the storyteller's intended message?
 - What narrative rubric and timing budget preserve intimate natural speech?
 - Which speech-to-text, speaker-similarity, and audio-listening systems have verified capabilities for this workflow?
 - What measured thresholds, retry ceiling, and spending limit should apply?
+- What automatic video defect-repair allowance and prompt/settings changes should be approved with the initial request?
 - Should users approve narration beat by beat, approve the full set, or have both options?
 - What voice audition best exposes identity and delivery problems?
 - When and how is the piano score introduced and approved? Narration lock and final mixed-audio review may be separate gates.
@@ -273,7 +282,7 @@ The following remain open proposals; items decided by the user have been moved i
 | --- | --- | --- |
 | Use the emotional answer already collected | Derive the narrative through-line from the existing “what I wish my kids understood” answer and connect the selected memories to it. | This is a writer/reviewer responsibility, not a new questionnaire step. Test whether the script honors the supplied answer instead of substituting a generic message. |
 | Beat length versus shot length | Keep four 15-second narrative windows while evaluating multiple shorter shots within each. | A beat is an editorial unit, not necessarily a provider job. Compare emotional pacing and modular repair cost against the complexity of maintaining continuity across shots. |
-| Representative video proof before full production | Consider validating one representative beat before requesting approval for remaining video generations. | It may expose integration defects earlier, but it must follow the established gates and each generation still needs human authorization. Whether to use this ordering remains undecided. |
+| Representative video proof before full production | Consider validating one representative beat before requesting approval for remaining video generations. | It may expose integration defects earlier, but it must follow the established gates and the video authorization/technical repair rules. Whether to use this ordering remains undecided. |
 | Household privacy and asset lifecycle | Decide where voice samples, clones, family photos, transcripts, and finished movies live; how users export/delete them; and whether publishing is a separate explicit action. | A private family gift and a public social post need different handling. Provider requirements and deletion behavior must be verified when choosing storage and implementing this workflow. |
 
 Suggested next discussion: determine how existing answers map to four beats and explain beat-versus-shot structure before deciding it. Narration over memories and higher human oversight are now agreed v1 choices. Use the questionnaire already in place rather than adding another emotional-intent interview. Keep changing the design spec distinct from changing an active run: new spec versions must not silently migrate a project's approved artifacts.
@@ -357,7 +366,7 @@ Read-only evidence came from the existing `/Users/shaz/Projects/wiggly` checkout
 - **Audio approval:** The current video runtime accepts a narration attempt with `status === "ready"` and permits an audio-first bypass. That establishes generation readiness, not agent review, user approval, or current four-beat audio lock. Our already-agreed rules require the latter and block all visual generation until that lock.
 - **Motion director integration:** The runtime calls the motion director and logs its returned arc type, but submits the original storyboard prompt rather than applying the returned direction. A “verified” log is not proof that the director influenced generation. The caught provider failure also continues the workflow, contrary to the repo's explicit provider-failure rule.
 - **Request provenance and resumption:** Video attempts retain provider/model, prediction ID, and output, but not the complete submitted prompt/settings or input artifact version/hash. The job ID is saved only after polling and downloading finish. An interruption can therefore lose the local record of an already submitted job. The new orchestrator must persist authorization and submission state, then save the returned job ID immediately and resume collection rather than repeat generation.
-- **Human authorization:** A command-line approval flag is not a durable record of the user's approval of exact inputs and settings. Our request-specific authorization requirement remains unchanged.
+- **Human authorization:** A command-line approval flag is not a durable record of the user's approval of exact inputs and settings or a scoped technical repair allowance. Record both before generation; automatic technical defect retries are the explicitly agreed exception, not blanket permission for new creative calls.
 - **Prompt coherence:** The saved storyboard's beat 4 scene-level video prompt describes a phone call, while its shot A prompt describes holding a newborn. The runtime prioritizes the scene-level field. The new system needs one compiled request per approved shot, with provenance, rather than contradictory alternative text fields.
 
 ### Conflicts and experiments to consider
@@ -366,7 +375,7 @@ The pasted plan writes five locked Eminem prompts into an old storyboard. Our sy
 
 The proposed camera/subject/environment structure is a useful prompt template candidate. A static camera is valid; every shot does not need a move. Prop contact must agree with the actual reference pose. Environmental effects must agree with the setting and memory. Exact blink counts, “zero movement,” and poetic emotion labels are requests to evaluate, not enforceable physics. Screen-within-screen scenes and interacting subjects need explicit continuity checks; freezing the outer character does not ensure the inset child or prop stays stable.
 
-**Proposed evidence path, not authorized generation:** After the established locks, select a representative scene and review its starting frame for feasible anatomy, pose, contacts, and staging. Compare the current prompt with a concise action-focused prompt at the same duration and provider/settings; then compare durations separately. Keep seed fixed if supported, but do not assume deterministic results. Record exact requests and time-localized outcomes; a single lucky result does not verify a universal rule. Every paid video submission still needs the user's specific approval. Evaluate readable storytelling as well as fewer defects before adopting a low-motion policy or clip-length cap.
+**Proposed evidence path, not authorized generation:** After the established locks, select a representative scene and review its starting frame for feasible anatomy, pose, contacts, and staging. Compare the current prompt with a concise action-focused prompt at the same duration and provider/settings; then compare durations separately. Keep seed fixed if supported, but do not assume deterministic results. Record exact requests and time-localized outcomes; a single lucky result does not verify a universal rule. Experimental calls require user authorization; ordinary technical repair retries follow the scoped exception above. Evaluate readable storytelling as well as fewer defects before adopting a low-motion policy or clip-length cap.
 
 ## Decision log
 
@@ -388,6 +397,7 @@ The proposed camera/subject/environment structure is a useful prompt template ca
 | 2026-10-01 | Reject only with evidence and a specific repair; repeated reviewer disagreement goes to the user. | Review enforces criteria rather than personal taste. |
 | 2026-10-01 | Keep higher human oversight in v1 and require approval for every video-generation request. | Learn and perfect the workflow while controlling its most expensive production actions. |
 | 2026-10-01 | Perform intake common sense checks and display revision dependency impacts. | Discover feasibility gaps early and preserve user understanding and valid work during changes. |
+| 2026-10-01 | Automatically reject and repair obvious video generation defects before user presentation, within an agreed allowance. | The reviewer must catch extra limbs and similar defects itself. This explicitly narrows the earlier every-video-call approval rule for technical repairs; creative changes remain human-approved. Retry limits and permitted adjustments still need definition. |
 
 ## Implementation and evidence status
 
