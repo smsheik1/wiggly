@@ -84,7 +84,7 @@ At every review, the outcome is approved, changes requested, rejected, or inconc
 
 ## 1. Questionnaire and narrative
 
-Collect the storyteller, recipient, relationship, memories, emotional intent, and any boundaries on what to include. Accept raw spoken memories as well as written answers. The questions and their number are still to be designed; four beats do not require exactly four questions.
+Use the existing questionnaire as the intake starting point. It already covers childhood, teenage freedom, a leap of faith, romance, and what the storyteller wishes their children understood. Collect the storyteller, recipient, relationship, memories, emotional intent, and any boundaries on what to include. Accept raw spoken memories as well as written answers. Four output beats do not require four questions or removal of an existing answer group; how these answers are distilled into four beats remains to be designed. Do not propose duplicate intake questions without first checking the existing questionnaire.
 
 Preserve the original answers and any transcripts. Ask focused follow-up questions where a meaningful detail is missing. The writer can shape the language but must not manufacture biographical claims.
 
@@ -225,7 +225,7 @@ Before claiming this design works, prove: script revision cannot skip approvals;
 
 ## Open questions and next discussions
 
-- What questionnaire reliably produces four meaningful beats without forcing every life into the same arc?
+- How should the existing questionnaire answers be distilled into four meaningful beats while preserving the storyteller's intended message?
 - What narrative rubric and timing budget preserve intimate natural speech?
 - Which speech-to-text, speaker-similarity, and audio-listening systems have verified capabilities for this workflow?
 - What measured thresholds, retry ceiling, and spending limit should apply?
@@ -246,7 +246,7 @@ The following are proposed improvements, not accepted defaults or implementation
 
 | Decision | Proposed direction | Why it matters / what to evaluate |
 | --- | --- | --- |
-| Emotional target before writing | Ask what the recipient should understand about the storyteller after watching; agree on one central emotional idea. | Four life milestones can become a compressed biography. Test whether one coherent message produces a more personal film without forcing a tearjerker or invented vulnerability. |
+| Use the emotional answer already collected | Derive the narrative through-line from the existing “what I wish my kids understood” answer and connect the selected memories to it. | This is a writer/reviewer responsibility, not a new questionnaire step. Test whether the script honors the supplied answer instead of substituting a generic message. |
 | How much the writer may polish the speaker | Preserve characteristic phrasing, humor, and direct quotes from memories while trimming for clarity. Let users compare a representative source passage with the adaptation. | A convincing clone reading generic polished prose can still feel unlike the person. Review verbal identity as well as acoustic identity. |
 | Narrator voice versus on-screen dialogue | Consider single-speaker narration over acted memories for v1; evaluate dialogue/lip-sync as a separate option. | Decide whether a character's mouth should match narration at all. Off-screen narration may simplify production; performed dialogue may deepen connection but adds voices and synchronization requirements. |
 | Beat length versus shot length | Keep four 15-second narrative windows while evaluating multiple shorter shots within each. | A beat is an editorial unit, not necessarily a provider job. Compare emotional pacing and modular repair cost against the complexity of maintaining continuity across shots. |
@@ -257,7 +257,7 @@ The following are proposed improvements, not accepted defaults or implementation
 | Explain the impact of revisions | Before applying an upstream production change, show affected assets, approvals, expected reruns, and estimated spend/time; record the user's chosen revision scope. | State may be technically correct yet confusing if a small edit silently triggers extensive work. Distinguish a wording change from a changed memory, person, clone, or story arc. Estimates must be labeled, not guarantees. |
 | Household privacy and asset lifecycle | Decide where voice samples, clones, family photos, transcripts, and finished movies live; how users export/delete them; and whether publishing is a separate explicit action. | A private family gift and a public social post need different handling. Provider requirements and deletion behavior must be verified when choosing storage and implementing this workflow. |
 
-Suggested next discussion: settle the emotional target, the narrator/dialogue model, and beat-versus-shot structure first. These influence the questionnaire, script rubric, voice workflow, visual plan, and practical review burden. Keep changing the design spec distinct from changing an active run: new spec versions must not silently migrate a project's approved artifacts.
+Suggested next discussion: determine how existing answers map to four beats, then evaluate the narrator/dialogue model and beat-versus-shot structure. Use the questionnaire already in place rather than adding another emotional-intent interview. Keep changing the design spec distinct from changing an active run: new spec versions must not silently migrate a project's approved artifacts.
 
 ## Tutorial prompt pack assessment — proposals, not adopted rules
 
