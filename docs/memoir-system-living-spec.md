@@ -546,3 +546,12 @@ Dots and separately hosted persistent bots are deferred. Continue with the packa
 **Supported observation:** The foreword explains how a sequence of color studies communicates the story's emotional progression, and how color and lighting can affect what an audience understands.
 
 **Proposal for our Format, not yet adopted:** Add a concise four-beat color/lighting plan to the background agent's brief. Evaluate location concepts against the film's emotional progression as well as individual quality. Keep room layout and meaningful objects consistent while permitting intentional lighting/time variants. This is our adaptation, not a claim that the book prescribes our workflow. Text planning may precede visual production; any generated color-study images remain behind audio and character locks. Full-book study requires an accessible copy supplied by the user or another authorized source.
+
+
+### Environment design research — practical sources
+
+**Read:** Mark Cordell Holmes's [first-person Pixar set-design case studies](https://www.markcordellholmes.com/visual-storytelling), including the written discussions of *The Incredibles*, *Ratatouille* and *Lifted*. He describes checking sets against camera/action needs and character scale, specifying production details, and reusing assets for new scenes. The page's illustrations were not successfully retrieved; this is a reading of its written explanations.
+
+**Identified, not fully read:** Hans Bacher's *Dream Worlds: Production Design for Animation* is a Disney-oriented teaching reference with composition, camera and staging sections. Its [authorized contents listing](https://www.oreilly.com/library/view/dream-worlds-production/9780240520933/006_9780080926926_contents.html) was checked; it is not a Pixar-specific room-design manual. The publisher page was unavailable on direct fetch.
+
+**Proposed refinement for our background brief:** Record action space, relative furniture/character scale, useful camera views, meaningful prop positions and a simple spatial layout. Review these before locking a master environment. A beautiful empty room must still support its memory's actions. Keep required additional-angle requests scoped to actual shots; image references and continuity notes do not guarantee a geometrically consistent 3D set. These are design proposals pending acceptance and runtime proof, not instructions to build a 3D modeling pipeline. The color-script proposal remains complementary.
