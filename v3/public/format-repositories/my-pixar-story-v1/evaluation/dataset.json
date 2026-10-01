@@ -1,0 +1,794 @@
+{
+  "schemaVersion": 1,
+  "id": "memoir-starter-v1",
+  "purpose": "scope-specific offline evaluator calibration; never production approval",
+  "caseCount": 22,
+  "cases": [
+    {
+      "id": "eminem-pixar-v1-raw-audio-1",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "eminem-pixar-v1/audio/audio-beat-1.wav",
+          "sha256": "f66aadde16477577048b916b63674bb1faaa2a0000c08ff187ec45d1763bafaf",
+          "bytes": 409268,
+          "durationSeconds": 8.4
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 8.4 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 1",
+        "repair": ""
+      }
+    },
+    {
+      "id": "eminem-pixar-v1-raw-audio-2",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "eminem-pixar-v1/audio/audio-beat-2.wav",
+          "sha256": "c24f2e51629f69ec1551bbbf32436b8f322a8b2b1101202d459e5874abae0419",
+          "bytes": 297908,
+          "durationSeconds": 6.08
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 6.08 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 2",
+        "repair": ""
+      }
+    },
+    {
+      "id": "eminem-pixar-v1-raw-audio-3",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "eminem-pixar-v1/audio/audio-beat-3.wav",
+          "sha256": "2708122258c0d2d5861c1fb5f9358c00893e064650f6ca2a6729f05c47c32594",
+          "bytes": 294068,
+          "durationSeconds": 6.0
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 6.0 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 3",
+        "repair": ""
+      }
+    },
+    {
+      "id": "eminem-pixar-v1-raw-audio-4",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "eminem-pixar-v1/audio/audio-beat-4.wav",
+          "sha256": "9a7d2ab4087a79c38d6a7ad41740f0c6373a68f32195c6909d34c2f2162b40fe",
+          "bytes": 342068,
+          "durationSeconds": 7.0
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 7.0 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 4",
+        "repair": ""
+      }
+    },
+    {
+      "id": "eminem-pixar-v1-raw-audio-5",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "eminem-pixar-v1/audio/audio-beat-5.wav",
+          "sha256": "225de5a992e1fc55b4dcdefd30de5deef97527a3113b6c8a31a48fc0097a1d56",
+          "bytes": 320948,
+          "durationSeconds": 6.56
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 6.56 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 5",
+        "repair": ""
+      }
+    },
+    {
+      "id": "eminem-pixar-v1-fitted-audio-1",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "eminem-pixar-v1/scene-1-audio-fitted.wav",
+          "sha256": "fa320c358572d72e45a9cd65da378df1a6484367885c18125a9acb4f585777ef",
+          "bytes": 595278,
+          "durationSeconds": 12.4
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 12.4 seconds. Compared to the explicit v2 15-second maximum only; this does not judge the original legacy run.",
+        "location": "whole fitted stem 1",
+        "repair": ""
+      }
+    },
+    {
+      "id": "eminem-pixar-v1-fitted-audio-2",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "eminem-pixar-v1/scene-2-audio-fitted.wav",
+          "sha256": "530a9eca60ba4ff327559b33b616c4a017b06aedf517ddc407a83a1c252cd24a",
+          "bytes": 595278,
+          "durationSeconds": 12.4
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 12.4 seconds. Compared to the explicit v2 15-second maximum only; this does not judge the original legacy run.",
+        "location": "whole fitted stem 2",
+        "repair": ""
+      }
+    },
+    {
+      "id": "eminem-pixar-v1-composition-v2",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "kind": "composition",
+      "origin": "saved-output",
+      "input": {
+        "source": {
+          "locator": "eminem-pixar-v1/storyboard.json",
+          "sha256": "dba9c8bdf426eefdd82f22276ab64cf18fa11c67ad946d86924c4ccbfa569525"
+        },
+        "manifest": {
+          "beatNumbers": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "beatDurations": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "totalDurationSeconds": 100
+        },
+        "target": {
+          "beats": 4,
+          "beatSeconds": 15,
+          "totalSeconds": 60
+        }
+      },
+      "label": {
+        "criterion": "composition",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "Saved legacy manifest contains five 20-second scenes and totalDurationSeconds 100. It is incompatible with the explicit new v2 contract, not proof its old contract was defective.",
+        "location": "scenes and totalDurationSeconds",
+        "repair": "Author a new four-beat script for v2; never silently migrate the legacy run."
+      }
+    },
+    {
+      "id": "eminem-pixar-v1-review-evidence",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "kind": "review-evidence",
+      "origin": "saved-output",
+      "input": {
+        "review": {
+          "asset": "sheet-marshall",
+          "attemptNumber": 2,
+          "decision": "approved",
+          "reviewedAt": "2026-09-30T22:12:02.756Z",
+          "reason": "Full-body Slim Shady stage likeness, bleached hair, tank top, sweatpants, and tattoos match reference perfectly"
+        },
+        "requiredCriteria": [
+          "facts",
+          "relationship",
+          "clarity",
+          "emotional-purpose",
+          "timing",
+          "common-sense"
+        ]
+      },
+      "label": {
+        "criterion": "review-evidence",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "This saved approval lacks per-criterion localized checks and a declared direct-perception basis required for v2. A historical approved token is not a usable v2 evaluation label.",
+        "location": "state.json reviews[0]",
+        "repair": "Obtain a new directly perceived, criterion-specific review without promoting legacy approvals."
+      }
+    },
+    {
+      "id": "steve-jobs-pixar-v1-raw-audio-1",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "steve-jobs-pixar-v1/audio/audio-beat-1.wav",
+          "sha256": "c3929996c5b547c512a84a72ea1dd3c6b78ed8d1b0b4d876382b3323a3ae109b",
+          "bytes": 1058478,
+          "durationSeconds": 12.0
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 12.0 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 1",
+        "repair": ""
+      }
+    },
+    {
+      "id": "steve-jobs-pixar-v1-raw-audio-2",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "steve-jobs-pixar-v1/audio/audio-beat-2.wav",
+          "sha256": "ac2206e8ef71c19f081bb487daf30c44bbe1387b48640b64e31b8132f46f9b6a",
+          "bytes": 1157262,
+          "durationSeconds": 13.12
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 13.12 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 2",
+        "repair": ""
+      }
+    },
+    {
+      "id": "steve-jobs-pixar-v1-raw-audio-3",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "steve-jobs-pixar-v1/audio/audio-beat-3.wav",
+          "sha256": "49d31a7febc76e7ccbc7e7c8044911740a94c3e85300889a175632e58e3d217f",
+          "bytes": 1129038,
+          "durationSeconds": 12.8
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 12.8 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 3",
+        "repair": ""
+      }
+    },
+    {
+      "id": "steve-jobs-pixar-v1-raw-audio-4",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "steve-jobs-pixar-v1/audio/audio-beat-4.wav",
+          "sha256": "1ef77c417c5e77fa38d8f67e8af00ddbf26ffee3386e6c088a0d45aa2d77589c",
+          "bytes": 755070,
+          "durationSeconds": 8.56
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 8.56 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 4",
+        "repair": ""
+      }
+    },
+    {
+      "id": "steve-jobs-pixar-v1-raw-audio-5",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "steve-jobs-pixar-v1/audio/audio-beat-5.wav",
+          "sha256": "25b76222a15dea3b163d45d6f232c0aec7bfd5bb9c359b4d384fd69b5496daa0",
+          "bytes": 1058478,
+          "durationSeconds": 12.0
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 12.0 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 5",
+        "repair": ""
+      }
+    },
+    {
+      "id": "steve-jobs-pixar-v1-fitted-audio-1",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "steve-jobs-pixar-v1/scene-1-audio-fitted.wav",
+          "sha256": "8a3686d15b353b594f89d4d5e630ffbaa507746b987c816a70e4ce86de5e4cc4",
+          "bytes": 1326754,
+          "durationSeconds": 15.041678
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 15.041678 seconds. Compared to the explicit v2 15-second maximum only; this does not judge the original legacy run.",
+        "location": "whole fitted stem 1",
+        "repair": "Return affected text/timing to the writer; preserve natural speed and every spoken word."
+      }
+    },
+    {
+      "id": "steve-jobs-pixar-v1-fitted-audio-2",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "kind": "audio-duration",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "steve-jobs-pixar-v1/scene-2-audio-fitted.wav",
+          "sha256": "89650ab4ca807bf14dc29a37db5c1171de7cf984b630c718bdb38bc6cf55d38b",
+          "bytes": 1326754,
+          "durationSeconds": 15.041678
+        },
+        "windowSeconds": 15
+      },
+      "label": {
+        "criterion": "duration",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 15.041678 seconds. Compared to the explicit v2 15-second maximum only; this does not judge the original legacy run.",
+        "location": "whole fitted stem 2",
+        "repair": "Return affected text/timing to the writer; preserve natural speed and every spoken word."
+      }
+    },
+    {
+      "id": "steve-jobs-pixar-v1-composition-v2",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "kind": "composition",
+      "origin": "saved-output",
+      "input": {
+        "source": {
+          "locator": "steve-jobs-pixar-v1/storyboard.json",
+          "sha256": "9282ba5365a0b928771a25930cb3310fde67271013e301b3c7b59d0aecb0ab59"
+        },
+        "manifest": {
+          "beatNumbers": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "beatDurations": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "totalDurationSeconds": 100
+        },
+        "target": {
+          "beats": 4,
+          "beatSeconds": 15,
+          "totalSeconds": 60
+        }
+      },
+      "label": {
+        "criterion": "composition",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "Saved legacy manifest contains five 20-second scenes and totalDurationSeconds 100. It is incompatible with the explicit new v2 contract, not proof its old contract was defective.",
+        "location": "scenes and totalDurationSeconds",
+        "repair": "Author a new four-beat script for v2; never silently migrate the legacy run."
+      }
+    },
+    {
+      "id": "steve-jobs-pixar-v1-review-evidence",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "kind": "review-evidence",
+      "origin": "saved-output",
+      "input": {
+        "review": {
+          "asset": "storyboard",
+          "attemptNumber": 1,
+          "decision": "approved",
+          "reviewedAt": "2026-09-30T04:38:19.891Z"
+        },
+        "requiredCriteria": [
+          "facts",
+          "relationship",
+          "clarity",
+          "emotional-purpose",
+          "timing",
+          "common-sense"
+        ]
+      },
+      "label": {
+        "criterion": "review-evidence",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "This saved approval lacks per-criterion localized checks and a declared direct-perception basis required for v2. A historical approved token is not a usable v2 evaluation label.",
+        "location": "state.json reviews[0]",
+        "repair": "Obtain a new directly perceived, criterion-specific review without promoting legacy approvals."
+      }
+    },
+    {
+      "id": "eminem-driving-extra-hand",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "kind": "video-anatomy",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "eminem-pixar-v1/videos/clip-2-att1.mp4",
+          "sha256": "23542daf855620c4373032a577f19fbe0d3d2f7bb972dca52da4753588cfa950",
+          "bytes": 9098738,
+          "durationSeconds": 15.041667
+        },
+        "inspectionTimestampSeconds": 5,
+        "expectedAnatomy": "One driver with two arms/hands."
+      },
+      "label": {
+        "criterion": "anatomy",
+        "status": "fail",
+        "authority": "direct-frame-inspection",
+        "confirmed": true,
+        "evidence": "Directly inspected source frame at t=5.0s: hand on upper steering-wheel rim, a separate microphone-holding hand, and another hand at lower wheel rim, all belonging to the single driver. Matches the defect discussed with the user.",
+        "location": "t=5.0s, steering wheel and microphone",
+        "repair": "Regenerate only under an authorized technical-repair allowance; simplify hand/prop action and re-inspect."
+      }
+    },
+    {
+      "id": "grandma-host-script-v1",
+      "group": "grandma-proof",
+      "split": "calibration",
+      "kind": "script-structure",
+      "origin": "host-authored-isolated-proof",
+      "input": {
+        "inputs": {
+          "subject": {
+            "fullName": "June Walker",
+            "preferredName": "Grandma June",
+            "recipientName": "Leo",
+            "relationshipToRecipient": "grandparent"
+          },
+          "answers": {
+            "scene1Childhood": {
+              "memory": "My mother taught me to knead bread in our small kitchen. I got flour on my nose."
+            },
+            "scene2TeenFreedom": {
+              "memory": "I took the bus to my first bakery job, carrying the apron she had sewn."
+            },
+            "scene3LeapOfFaith": {
+              "memory": "When the bakery closed, I started baking for neighbors at home."
+            },
+            "scene4Romance": {
+              "memory": "Your grandpa carried the heavy bread baskets. He always sneaked one warm roll."
+            },
+            "scene5LegacyFinale": {
+              "memory": "Leo, I want you to remember our Sunday bread. Making something for someone is a way to say I love you."
+            }
+          }
+        },
+        "script": {
+          "beats": [
+            {
+              "beat": 1,
+              "durationSeconds": 15,
+              "narration": "Leo, my mother taught me to knead bread in our small kitchen. I got flour on my nose. Those are the hands and the kitchen I remember.",
+              "emotionalPurpose": "Invite Leo into a concrete childhood memory of learning and care.",
+              "sourceAnswers": [
+                "scene1Childhood"
+              ]
+            },
+            {
+              "beat": 2,
+              "durationSeconds": 15,
+              "narration": "Later, I took the bus to my first bakery job. I carried the apron my mother had sewn. Something from our kitchen came along with me.",
+              "emotionalPurpose": "Connect a step into independence with the care carried from home.",
+              "sourceAnswers": [
+                "scene2TeenFreedom"
+              ]
+            },
+            {
+              "beat": 3,
+              "durationSeconds": 15,
+              "narration": "When the bakery closed, I began baking for neighbors at home. Your grandpa carried the heavy bread baskets, and always sneaked one warm roll. That was our team.",
+              "emotionalPurpose": "Turn a setback into mutual care with a warm, source-grounded comic detail.",
+              "sourceAnswers": [
+                "scene3LeapOfFaith",
+                "scene4Romance"
+              ]
+            },
+            {
+              "beat": 4,
+              "durationSeconds": 15,
+              "narration": "Leo, I want you to remember our Sunday bread. Making something for someone is a way to say I love you. That is the memory I want you to keep.",
+              "emotionalPurpose": "Pass the explicit source message of love directly from grandmother to grandson.",
+              "sourceAnswers": [
+                "scene5LegacyFinale"
+              ]
+            }
+          ],
+          "commonSenseChecks": [
+            {
+              "category": "character",
+              "finding": "June, her mother, Grandpa and Leo are named by role in the answers.",
+              "resolution": "Preserve the supplied relationships. Actual references and full names for mother and Grandpa are pending roster intake after audio lock; Leo is addressed, not assumed on screen."
+            },
+            {
+              "category": "age",
+              "finding": "Childhood, first-job and later married/home-baking stages imply different June age variants; exact ages are absent.",
+              "resolution": "Do not invent numeric ages. Confirm age variants and their actual references at roster intake before producing images."
+            },
+            {
+              "category": "location",
+              "finding": "Small kitchen, bus, bakery and home are explicit; no city, era, bus route or bakery name is given.",
+              "resolution": "Use only those settings in narration; do not invent autobiographical setting details."
+            },
+            {
+              "category": "prop",
+              "finding": "Bread dough, flour, sewn apron, bread baskets and a warm roll are explicit.",
+              "resolution": "Retain these memory anchors; no extra branded or time-specific props are required."
+            },
+            {
+              "category": "action",
+              "finding": "Kneading dough and carrying heavy bread baskets are grounded in source; bus travel needs no risky action.",
+              "resolution": "Later shot planning must keep kneading and carrying physically plausible; no production shots are claimed now."
+            },
+            {
+              "category": "fact",
+              "finding": "The fifth questionnaire answer supplies the Sunday bread legacy, but there are only four output beats.",
+              "resolution": "Combine bakery closure and Grandpa helping in beat 3, preserve all five answer groups, and give the Sunday bread message its own final beat."
+            }
+          ]
+        }
+      },
+      "label": {
+        "criterion": "structure",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "Actual host-authored acceptance draft has four ordered 15-second beat declarations with narration, emotional purposes and cited questionnaire sources. Structural pass only; source person and human approvals were isolated fixtures.",
+        "location": "beats 1\u20134",
+        "repair": ""
+      }
+    },
+    {
+      "id": "grandma-host-script-v2",
+      "group": "grandma-proof",
+      "split": "calibration",
+      "kind": "script-structure",
+      "origin": "host-authored-isolated-proof",
+      "input": {
+        "inputs": {
+          "subject": {
+            "fullName": "June Walker",
+            "preferredName": "Grandma June",
+            "recipientName": "Leo",
+            "relationshipToRecipient": "grandparent"
+          },
+          "answers": {
+            "scene1Childhood": {
+              "memory": "My mother taught me to knead bread in our small kitchen. I got flour on my nose."
+            },
+            "scene2TeenFreedom": {
+              "memory": "I took the bus to my first bakery job, carrying the apron she had sewn."
+            },
+            "scene3LeapOfFaith": {
+              "memory": "When the bakery closed, I started baking for neighbors at home."
+            },
+            "scene4Romance": {
+              "memory": "Your grandpa carried the heavy bread baskets. He always sneaked one warm roll."
+            },
+            "scene5LegacyFinale": {
+              "memory": "Leo, I want you to remember our Sunday bread. Making something for someone is a way to say I love you."
+            }
+          }
+        },
+        "script": {
+          "beats": [
+            {
+              "beat": 1,
+              "durationSeconds": 15,
+              "narration": "Leo, my mother taught me to knead bread in our small kitchen. I got flour on my nose. Those are the hands and the kitchen I remember.",
+              "emotionalPurpose": "Invite Leo into a concrete childhood memory of learning and care.",
+              "sourceAnswers": [
+                "scene1Childhood"
+              ]
+            },
+            {
+              "beat": 2,
+              "durationSeconds": 15,
+              "narration": "Later, I took the bus to my first bakery job. I carried the apron my mother had sewn. Something from our kitchen came along with me.",
+              "emotionalPurpose": "Connect a step into independence with the care carried from home.",
+              "sourceAnswers": [
+                "scene2TeenFreedom"
+              ]
+            },
+            {
+              "beat": 3,
+              "durationSeconds": 15,
+              "narration": "When the bakery closed, I began baking for neighbors at home. Your grandpa carried the heavy bread baskets, and always sneaked one warm roll. That was our team.",
+              "emotionalPurpose": "Turn a setback into mutual care with a warm, source-grounded comic detail.",
+              "sourceAnswers": [
+                "scene3LeapOfFaith",
+                "scene4Romance"
+              ]
+            },
+            {
+              "beat": 4,
+              "durationSeconds": 15,
+              "narration": "Leo, I want you to remember our Sunday bread. Making something for someone is a way to say I love you.",
+              "emotionalPurpose": "Pass the explicit source message of love directly from grandmother to grandson.",
+              "sourceAnswers": [
+                "scene5LegacyFinale"
+              ]
+            }
+          ],
+          "commonSenseChecks": [
+            {
+              "category": "character",
+              "finding": "June, her mother, Grandpa and Leo are named by role in the answers.",
+              "resolution": "Preserve the supplied relationships. Actual references and full names for mother and Grandpa are pending roster intake after audio lock; Leo is addressed, not assumed on screen."
+            },
+            {
+              "category": "age",
+              "finding": "Childhood, first-job and later married/home-baking stages imply different June age variants; exact ages are absent.",
+              "resolution": "Do not invent numeric ages. Confirm age variants and their actual references at roster intake before producing images."
+            },
+            {
+              "category": "location",
+              "finding": "Small kitchen, bus, bakery and home are explicit; no city, era, bus route or bakery name is given.",
+              "resolution": "Use only those settings in narration; do not invent autobiographical setting details."
+            },
+            {
+              "category": "prop",
+              "finding": "Bread dough, flour, sewn apron, bread baskets and a warm roll are explicit.",
+              "resolution": "Retain these memory anchors; no extra branded or time-specific props are required."
+            },
+            {
+              "category": "action",
+              "finding": "Kneading dough and carrying heavy bread baskets are grounded in source; bus travel needs no risky action.",
+              "resolution": "Later shot planning must keep kneading and carrying physically plausible; no production shots are claimed now."
+            },
+            {
+              "category": "fact",
+              "finding": "The fifth questionnaire answer supplies the Sunday bread legacy, but there are only four output beats.",
+              "resolution": "Combine bakery closure and Grandpa helping in beat 3, preserve all five answer groups, and give the Sunday bread message its own final beat."
+            }
+          ]
+        }
+      },
+      "label": {
+        "criterion": "structure",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "Actual host-authored acceptance draft has four ordered 15-second beat declarations with narration, emotional purposes and cited questionnaire sources. Structural pass only; source person and human approvals were isolated fixtures.",
+        "location": "beats 1\u20134",
+        "repair": ""
+      }
+    },
+    {
+      "id": "eminem-voice-likeness-unresolved",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "kind": "audio-voice",
+      "origin": "saved-output",
+      "input": {
+        "media": {
+          "locator": "eminem-pixar-v1/audio/audio-beat-1.wav",
+          "sha256": "f66aadde16477577048b916b63674bb1faaa2a0000c08ff187ec45d1763bafaf",
+          "bytes": 409268,
+          "durationSeconds": 8.4
+        },
+        "referenceSample": null
+      },
+      "label": {
+        "criterion": "voice-match",
+        "status": "inconclusive",
+        "authority": "capability-audit",
+        "confirmed": true,
+        "evidence": "No genuine storyteller sample/consent with a matching measured comparison was supplied for this evaluator task. Existing audio alone cannot establish voice likeness.",
+        "location": "whole stem",
+        "repair": ""
+      }
+    }
+  ]
+}

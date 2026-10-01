@@ -1,0 +1,15 @@
+# Evaluator development dataset — data first
+
+This starter collection was inventoried and labelled before implementing the offline graders. It contains 22 scope-specific cases: 20 drawn from two saved legacy runs and two actually host-authored scripts from an explicitly isolated operating proof. The inventory records 145 original assets with SHA-256 provenance. No original run, checkpoint, approval, audio or video was modified, and no provider calls were made.
+
+**A passing duration label is not a good-audio label.** These are narrowly scoped expected findings. Ten original narration stems and four fitted stems have objective timing labels; two fitted Steve stems exceed the new 15-second maximum. Two five-scene/100-second legacy manifests are incompatible with the explicitly requested v2 four-beat/60-second target. That comparison does not retroactively fail their old contracts. Two legacy approval records lack the evidence required by the new review contract. Old `approved` strings are not accepted as truth about media quality.
+
+The driving video has one directly inspected anatomical defect at 5 seconds: upper-wheel hand, microphone hand and lower-wheel hand on the single driver. This confirms that instant, not complete motion or audio review. The original source video is identified by immutable hash; it is not packaged or presented as a finished deliverable. Voice likeness remains inconclusive without a genuine reference sample and measured comparison. The two Grandma drafts have structural labels only; previous independent host reviews are not relabelled as human calibration gold.
+
+All Eminem-family data and both versions of the Grandma story are in calibration. All Steve-family cases are held out. Related drafts, stems, fitted derivatives and run approvals stay together. Asset hashes are also checked for cross-split duplicates. This tiny held-out set tests objective rules; it does not qualify a general script judge, voice judge or anatomy detector. It contains no held-out anatomy failure yet.
+
+Label fields record criterion, status, authority, confirmation, localized evidence and repair. Authorities are objective measurement, direct frame inspection or capability audit. Human semantic/creative labels are still needed before model-based evaluators can be qualified. The available set is intentionally skewed toward timing/contract checks; report results by criterion rather than claiming a misleading overall quality accuracy.
+
+The package carries text/measurement snapshots and provenance, not personal media. Optional actual-file verification uses the caller's local `--media-root` directory. Missing or changed files stop that verification; snapshot mode is always identified and never impersonates fresh media inspection. Future examples from ordinary storytellers and known-bad/known-good audio/video should be added with genuine review labels, keeping related cases in one split.
+
+This folder is an offline test collection. Its labels, recorded predictions and reports cannot approve a production artifact or mutate the LangGraph project. The master design remains `docs/memoir-system-living-spec.md`.

@@ -1,0 +1,1657 @@
+{
+  "schemaVersion": 1,
+  "source": "User-named Format agent-runs directory; original files unchanged. Absolute root deliberately omitted.",
+  "files": [
+    {
+      "locator": "eminem-pixar-v1/audio/audio-beat-1.wav",
+      "bytes": 409268,
+      "sha256": "f66aadde16477577048b916b63674bb1faaa2a0000c08ff187ec45d1763bafaf",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 8.4,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/audio/audio-beat-2.wav",
+      "bytes": 297908,
+      "sha256": "c24f2e51629f69ec1551bbbf32436b8f322a8b2b1101202d459e5874abae0419",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 6.08,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/audio/audio-beat-3.wav",
+      "bytes": 294068,
+      "sha256": "2708122258c0d2d5861c1fb5f9358c00893e064650f6ca2a6729f05c47c32594",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 6.0,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/audio/audio-beat-4.wav",
+      "bytes": 342068,
+      "sha256": "9a7d2ab4087a79c38d6a7ad41740f0c6373a68f32195c6909d34c2f2162b40fe",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 7.0,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/audio/audio-beat-5.wav",
+      "bytes": 320948,
+      "sha256": "225de5a992e1fc55b4dcdefd30de5deef97527a3113b6c8a31a48fc0097a1d56",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 6.56,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-1-att1.webp",
+      "bytes": 508220,
+      "sha256": "9f46e8174ea77e35e3d3879b052e26f89346938dff8f08936285033988c1fd98",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-1-att2.webp",
+      "bytes": 419206,
+      "sha256": "74699f4efd8d054a15112c708fb26f6e61c80e88d931e5b3db8ef7190e23cd52",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-1-att3.webp",
+      "bytes": 475026,
+      "sha256": "df4b2db96870869fa2ff90805a509956be49c3d20a572a7871a615cb749856a8",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-1-att4.webp",
+      "bytes": 393584,
+      "sha256": "a25c3ad04a7853257cf3149bbb51dcc28948a2e8a103711c98a3c19c0e9cee21",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-1-att5.webp",
+      "bytes": 481848,
+      "sha256": "315382e6a91968c6b64e3716ac47facc29dc9feabd28d70de0ce43cac99802bf",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-2-att1.webp",
+      "bytes": 497078,
+      "sha256": "9e8370ab703045b667e14281378afe2c5ebfe273dd46157497a0a3a64bf10968",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-2-att2.webp",
+      "bytes": 406704,
+      "sha256": "63715f4106779e387bf58b271f07e567d1fbcee676326e3bb30a9b2c156e2c94",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-2-att3.webp",
+      "bytes": 406172,
+      "sha256": "a1f63a49bce713737a1cf2dbee1a7046d0ef5cce341931e6a3904544f30c3af8",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-2-att4.webp",
+      "bytes": 372398,
+      "sha256": "e9049fa9ba8fc5c9f058a64240426334f768de44949dcf3e221c06472d925bbd",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-2-att5.webp",
+      "bytes": 385308,
+      "sha256": "2b5061271d9e8117534ceccbfbe8308b58c4c9f6e7ab90c339f3155810a2eabe",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-2-att6.webp",
+      "bytes": 332522,
+      "sha256": "3a5939b0f0b319e5d24ce904da75059355b2de727d631883bb273481fa51deaa",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-3-att1.webp",
+      "bytes": 277850,
+      "sha256": "818530a9a26e373f240e9f51f8fed1fc012cae647d7bce227e8dd698b0555b3b",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-3-att2.webp",
+      "bytes": 284258,
+      "sha256": "14bc642959248cd287eb7dff1e38673beae5015dee9da07c57931d541ef5dd6b",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-3-att3.webp",
+      "bytes": 243914,
+      "sha256": "905a8cd6ac994354858e66b57c9b40811e8ef3cb840df56f3ff98ec802b37181",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-3-att4.webp",
+      "bytes": 246418,
+      "sha256": "ffe6ac8f9c2aa58869b858c7e17c281145bf47999624cca8ce8b12e2889b510f",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-3-att5.webp",
+      "bytes": 273086,
+      "sha256": "ceba086ad6f29b08a476f79a91b8eeae8d064a99a6217091552c9c64ce0567d9",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-4-att1.webp",
+      "bytes": 481194,
+      "sha256": "355270cfd894941a158dcc121240a6041a993fd010dc096a92f6f0d53eb820d6",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-4-att10.webp",
+      "bytes": 274278,
+      "sha256": "03b26f6780c58f8714ebc93c41e5a5ad96d4b207de102267b3e0e63918ac4dae",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-4-att2.webp",
+      "bytes": 355124,
+      "sha256": "548d6e3f3d2d2fc7aaa4930d1648a2a608e539878e8e4a50f3554d1d528bfa64",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-4-att3.webp",
+      "bytes": 368806,
+      "sha256": "2737f33ba4cb8a425e024300b45757ab575b5cef59fcc669354cf9b37509f784",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-4-att4.webp",
+      "bytes": 268358,
+      "sha256": "6d3c1976acfbba19bd849b7003e6e130f9d60dabd0ee35389de256438a643307",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-4-att5.webp",
+      "bytes": 280616,
+      "sha256": "c0049fc77af946f20379a46635d10a61dc167966a8026e7ecfb664baff98f3d9",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-4-att6.webp",
+      "bytes": 264800,
+      "sha256": "f0ae19b4b5761e9abd1e17df205121f9ee6cdc826f89483219db503b457d1a38",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-4-att7.webp",
+      "bytes": 233212,
+      "sha256": "7a16d0381000dc6ccfdc9d4399da9698442c9614f022b10104841e96da05b3c3",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-4-att8.webp",
+      "bytes": 247908,
+      "sha256": "014301c8df2c60973da49a0333ceb093d5eed57da8062355889462cecb2c1804",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-4-att9.webp",
+      "bytes": 260570,
+      "sha256": "ece3b579cdf632df444a044cb33c767ccca0e8ca1c1a0bba993eb8dde000f748",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-5-att1.webp",
+      "bytes": 493334,
+      "sha256": "c456fe51c5fdd5b621e292be6ea4302b7c02e09f96a1f7ceeb85ef4ad95ff34f",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-5-att10.webp",
+      "bytes": 317860,
+      "sha256": "a6b1b248876c83ed783ed49e3c949734bd784f0f24ece755fae2a0587703c97a",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-5-att11.webp",
+      "bytes": 460430,
+      "sha256": "035e0780582fbb8c03ff2e84bf339b442a9dd324380d04039d0f26b8f219c1af",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-5-att2.webp",
+      "bytes": 437478,
+      "sha256": "de0bb26879913458778169947f779341a151f89742a895d816c2c915c58bb357",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-5-att3.webp",
+      "bytes": 497512,
+      "sha256": "8c587a7d0f568ff70135f76913df07302a402e1600a853d2089e66053c5ab6a5",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-5-att4.webp",
+      "bytes": 538864,
+      "sha256": "293098d907c1eb799bc2cde3a199530974254ab72c37f7f63106bd289d071e49",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-5-att5.webp",
+      "bytes": 470874,
+      "sha256": "7fdc4fdec48aa3a005a14d3995f78837419a5c5b4b5fc2c06c81df240584f5b6",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-5-att6.webp",
+      "bytes": 335206,
+      "sha256": "884fd1f808edb6818990deaacf94b2c655ade90e4256f4cc8ce64ca27a1bdfc4",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-5-att7.webp",
+      "bytes": 359618,
+      "sha256": "fe4182e3abf497ee987ffd393f6147eff79cc1a2733c0cc7d8b6d96f485c3100",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-5-att8.webp",
+      "bytes": 357226,
+      "sha256": "628ffcce92dcbff02039f2d81b4102f627834b3faba5dc867af10ca71747fc16",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/keyframe-5-att9.webp",
+      "bytes": 323550,
+      "sha256": "0adc9c1f4a6aa33fedf6cdafd501bcd84deb9da4b675007e2d7321d2e62a0aa9",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/sheet-hailie-att1.webp",
+      "bytes": 446114,
+      "sha256": "5826c1a42c74e14e5c50fcdc8de99385a06cc746d8e8bdc54467e65c684006f2",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/sheet-marshall-att1.webp",
+      "bytes": 232758,
+      "sha256": "cfcdaf74b6b71af0f3138bc1a72d390f99a1872bd205a56bab4fdcd994904d59",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/sheet-marshall-att2.webp",
+      "bytes": 264922,
+      "sha256": "33c4b5ea9a7119764b2f5097ac875ac1b1b9066a38d72e771730cb5e77359c6f",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/images/sheet-marshall-mature-att1.webp",
+      "bytes": 252704,
+      "sha256": "fb06716f947dd43f6d02e7d8a2c9fd02827d81100e1eb644d744e583371cb755",
+      "group": "eminem-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "eminem-pixar-v1/inputs.json",
+      "bytes": 5521,
+      "sha256": "0631f255a0b942c8f573b125cb231d036364e7159b65f6895c16a673ce65bc12",
+      "group": "eminem-legacy",
+      "type": ".json"
+    },
+    {
+      "locator": "eminem-pixar-v1/master-16x9-pixar.mp4",
+      "bytes": 10740966,
+      "sha256": "4e1ec9449d09ca51cf2be980b91fa32c3087096c8ef89633a18c22bd060217c4",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 54.25,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/quality-report.json",
+      "bytes": 311,
+      "sha256": "c21ee4ad89d66d5f8a4fbb6d7d3a1b49286a4a270b167e37ef85cebe6d52d272",
+      "group": "eminem-legacy",
+      "type": ".json"
+    },
+    {
+      "locator": "eminem-pixar-v1/raw-master.mp4",
+      "bytes": 10439183,
+      "sha256": "c7923b7ff274505bb4dcf910f8d146307420d069f91d35736c0eae7c5822f1d2",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 54.25,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/reference-marshall-mature.jpg",
+      "bytes": 344192,
+      "sha256": "a3e99e76f5f3cab82d023ca8881182e704ca9bb409c95e26e67fda3c6d07a16d",
+      "group": "eminem-legacy",
+      "type": ".jpg"
+    },
+    {
+      "locator": "eminem-pixar-v1/reference-marshall.png",
+      "bytes": 373286,
+      "sha256": "f1dac4b566a8f48f5e3266885b4347b7c58b284931dea2c85b41f8ba1baf99c6",
+      "group": "eminem-legacy",
+      "type": ".png"
+    },
+    {
+      "locator": "eminem-pixar-v1/references/ref-1999-slim-shady.jpg",
+      "bytes": 123924,
+      "sha256": "dcd982cdbd2e1ca0eaf3f51aefc1bcb38b5939954ad3c415612e1240fa906d79",
+      "group": "eminem-legacy",
+      "type": ".jpg"
+    },
+    {
+      "locator": "eminem-pixar-v1/references/ref-mature-2021.jpg",
+      "bytes": 1260033,
+      "sha256": "478dee60dfc239c2844cf3d1c7a73ae34218b127cd28a6f2895c129ab5e2fa9a",
+      "group": "eminem-legacy",
+      "type": ".jpg"
+    },
+    {
+      "locator": "eminem-pixar-v1/references/ref-mature-beard-2018.png",
+      "bytes": 316677,
+      "sha256": "9a496d681082c66bd41360690987b181f2979721121e25503899779c0001d840",
+      "group": "eminem-legacy",
+      "type": ".png"
+    },
+    {
+      "locator": "eminem-pixar-v1/references/ref-mature-user-provided.jpg",
+      "bytes": 344192,
+      "sha256": "a3e99e76f5f3cab82d023ca8881182e704ca9bb409c95e26e67fda3c6d07a16d",
+      "group": "eminem-legacy",
+      "type": ".jpg"
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-1-audio-fitted.wav",
+      "bytes": 595278,
+      "sha256": "fa320c358572d72e45a9cd65da378df1a6484367885c18125a9acb4f585777ef",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 12.4,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-1-muxed.mp4",
+      "bytes": 2598882,
+      "sha256": "a9440cecd88cc3a82a18b1f40ed7e5ac103018d97b33ed5338a40003e866fab1",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 12.416667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-1-trimmed.wav",
+      "bytes": 361512,
+      "sha256": "0c5d2e8690b07a5c0557f5bf50459187cd1c6d0119fe7ec8d6d2ee3dc3594db3",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 7.529875,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-2-audio-fitted.wav",
+      "bytes": 595278,
+      "sha256": "530a9eca60ba4ff327559b33b616c4a017b06aedf517ddc407a83a1c252cd24a",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 12.4,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-2-muxed.mp4",
+      "bytes": 3867869,
+      "sha256": "ac2cb0c518b8feb6d455830850a23a44197c45213b14a4926b449e30583cacad",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 12.416667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-2-trimmed.wav",
+      "bytes": 254796,
+      "sha256": "2ba3b121cd2d5f13730b2d8c5cc525d0af5cf17eebc4022c3ec56f48a6222b5c",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 5.306625,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-3-audio-fitted.wav",
+      "bytes": 595278,
+      "sha256": "d5094f088c37892301844befae93f2174f8acdfd0ebcd9a072c121b9a08ab366",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 12.4,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-3-muxed.mp4",
+      "bytes": 2445309,
+      "sha256": "bd50f806679d164423844aec141a824cbc2c7e62ccea614c53f5d36dd6a47fcf",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 12.416667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-3-trimmed.wav",
+      "bytes": 245438,
+      "sha256": "dc71f98d5113f07edc377e6362dd33eeb5996471008d309865bd402bfbe73a42",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 5.111667,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-4-audio-fitted.wav",
+      "bytes": 595278,
+      "sha256": "56d1b7b112a02085e6d72b577b50b7d17ab96e702334dc4838d84a709dfa6f99",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 12.4,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-4-muxed.mp4",
+      "bytes": 1671431,
+      "sha256": "df53670d73221fe7e715f7e122b3cfe6a27e0001f2c3e6343e1237d41fc22170",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 12.416667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-4-trimmed.wav",
+      "bytes": 298724,
+      "sha256": "c22e0c6a229fc6d81a7267b724bd4e127419b3f2599601da42f68562994ea21a",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 6.221792,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-5-audio-fitted.wav",
+      "bytes": 318078,
+      "sha256": "497f4e54434d716e47d00aeb528662393c3a080bf65e6c880c2ddeb887eae03f",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 6.625,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-5-muxed.mp4",
+      "bytes": 914321,
+      "sha256": "6372ba4d4f965837b7f948a47b04e0a37bcb8c1b327813e460f96e3063d680a0",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 6.625,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/scene-5-trimmed.wav",
+      "bytes": 281372,
+      "sha256": "aae2d1133ac1fc04072598b4d26f4d9ea0b42e76f1ac102610f0c4dc9f08e505",
+      "group": "eminem-legacy",
+      "type": ".wav",
+      "durationSeconds": 5.860292,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/state.json",
+      "bytes": 26674,
+      "sha256": "0bb4ed036680ae14c2f412c7fbf204207dc8056242f3e99e93a4f4948a34ee50",
+      "group": "eminem-legacy",
+      "type": ".json"
+    },
+    {
+      "locator": "eminem-pixar-v1/storyboard.json",
+      "bytes": 41123,
+      "sha256": "dba9c8bdf426eefdd82f22276ab64cf18fa11c67ad946d86924c4ccbfa569525",
+      "group": "eminem-legacy",
+      "type": ".json"
+    },
+    {
+      "locator": "eminem-pixar-v1/videos/clip-1-att1.mp4",
+      "bytes": 9073204,
+      "sha256": "fd2c6f6d8c74ce166fa4c50792086e5bfd90d2df2de54d3647abcf5a5951f7a4",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 15.041667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/videos/clip-1-att2.mp4",
+      "bytes": 7582357,
+      "sha256": "e2762018f0ad88af41a5ad1d33fac8ebacb32319902efa1fa3f4cb8712ec0e95",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 15.041667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/videos/clip-2-att1.mp4",
+      "bytes": 9098738,
+      "sha256": "23542daf855620c4373032a577f19fbe0d3d2f7bb972dca52da4753588cfa950",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 15.041667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/videos/clip-3-att1.mp4",
+      "bytes": 3123274,
+      "sha256": "f52c4d4f255e40c5ed89997f56c12ba1526f917d4c6104ecf39e725627b972ae",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 13.041667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/videos/clip-4-att1.mp4",
+      "bytes": 2799590,
+      "sha256": "8343ed44f0ff166ea7a06033e520cb9b58ab24c5785f2cae2a481b359c80624d",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 13.041667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/videos/clip-5-att1.mp4",
+      "bytes": 3206978,
+      "sha256": "c215a6210374e92d78683130be1ba8562dd881178684f70185e6d3dc8c162650",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 13.041667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        }
+      ]
+    },
+    {
+      "locator": "eminem-pixar-v1/videos/clip-5-att2.mp4",
+      "bytes": 538244,
+      "sha256": "8d1a26e0d48b6ffa4831259ecfde734116e5e0c6fc68b6dc72f94f40ac2a062f",
+      "group": "eminem-legacy",
+      "type": ".mp4",
+      "durationSeconds": 6.625,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/audio/audio-beat-1.wav",
+      "bytes": 1058478,
+      "sha256": "c3929996c5b547c512a84a72ea1dd3c6b78ed8d1b0b4d876382b3323a3ae109b",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 12.0,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/audio/audio-beat-2.wav",
+      "bytes": 1157262,
+      "sha256": "ac2206e8ef71c19f081bb487daf30c44bbe1387b48640b64e31b8132f46f9b6a",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 13.12,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/audio/audio-beat-3.wav",
+      "bytes": 1129038,
+      "sha256": "49d31a7febc76e7ccbc7e7c8044911740a94c3e85300889a175632e58e3d217f",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 12.8,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/audio/audio-beat-4.wav",
+      "bytes": 755070,
+      "sha256": "1ef77c417c5e77fa38d8f67e8af00ddbf26ffee3386e6c088a0d45aa2d77589c",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 8.56,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/audio/audio-beat-5.wav",
+      "bytes": 1058478,
+      "sha256": "25b76222a15dea3b163d45d6f232c0aec7bfd5bb9c359b4d384fd69b5496daa0",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 12.0,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/anchor-1-end-att1.webp",
+      "bytes": 544500,
+      "sha256": "598d97b07fcf2e13e7c5386b3240442e66d60b2bb27fb74dcfde07a2f1ad965e",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/anchor-1-start-att1.webp",
+      "bytes": 593444,
+      "sha256": "f3ef28ffaa633ccbe87972e2e8223d5ce8d961898c4f0c77458e9fa5a72054dc",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/anchor-1-start-att2.webp",
+      "bytes": 615024,
+      "sha256": "edcb8264bbd2c55060b34b432f73514399f5d0b5a03d2563d1b77009576fd9aa",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/anchor-2-end-att1.webp",
+      "bytes": 336988,
+      "sha256": "be60dacc1e1f0fba490751564d67a07f2ff4cbe792543089719b403a8c1e4903",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/anchor-2-start-att1.webp",
+      "bytes": 491978,
+      "sha256": "a9b1a290174b1b1ff79f27294b4a8d5d351209b6de289cbaeadeae71336ad68e",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/anchor-3-end-att1.webp",
+      "bytes": 402556,
+      "sha256": "e78da24ed9186a6cf25805f76d7ec4b434d32f4c8115b792fe486ac944985cf6",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/anchor-3-start-att1.webp",
+      "bytes": 530704,
+      "sha256": "97bee16ca654fd301dd2819768720810c9aaf944d7d9ff583a245afb325bbd1e",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/anchor-4-end-att1.webp",
+      "bytes": 412650,
+      "sha256": "de77f1a612a72ca3533e1c3ce31fe5531b5983e0ce8e8755c9d9fdd6c09c80d2",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/anchor-4-start-att1.webp",
+      "bytes": 491042,
+      "sha256": "4734311363a4199a32d18dc0cd67c0f05d939c35218b5923bb98162ad037e4f3",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/anchor-5-end-att1.webp",
+      "bytes": 359068,
+      "sha256": "d59d80301910ee32cc6000a683176e074c97531da79101fb6a51c14e3f65498e",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/anchor-5-start-att1.webp",
+      "bytes": 323276,
+      "sha256": "2b235008661707e5e2f85fd5a77495c1e7c24c44c704925a5ccc457dee396250",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/keyframe-1-att1.webp",
+      "bytes": 451594,
+      "sha256": "c2f9dd4e840d509976dd6fe9e93e203e3a60bceb2d70acd34c4dcd0cf37723c0",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/keyframe-2-att1.webp",
+      "bytes": 443578,
+      "sha256": "dfd9c307e0aa62357a1b99ffd4d524c12c519de3826acf4ab53bb5ae67978e11",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/keyframe-3-att1.webp",
+      "bytes": 457832,
+      "sha256": "03123bf1dd7b35158883ef9e23d1282233a387c9db2b6eca54bbd43f9d62ddd9",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/keyframe-3-att2.webp",
+      "bytes": 449020,
+      "sha256": "13b2b1b7d07fe71131929bfca6a6eeff83d4911b849bad011f2efb9276c2d14f",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/keyframe-4-att1.webp",
+      "bytes": 377404,
+      "sha256": "50ad43a155a2906d0d4c1501028cf807131edd043e6afdffc46c401fcf81c1e5",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/keyframe-5-att1.webp",
+      "bytes": 308812,
+      "sha256": "70e77495055fc154dd025afde5409ed56673eddbafe2ae7922238ed3bc4f06e7",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/ref-laurene.jpg",
+      "bytes": 2592283,
+      "sha256": "5a33351493f41eee792702ab606d5801630a7d355d9308753a69d3ac5b6fb629",
+      "group": "steve-legacy",
+      "type": ".jpg"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/ref-lisa.jpg",
+      "bytes": 233733,
+      "sha256": "43aa011182371df1e35c1996ca571cba93ba5298e61c8315edd878e5d9e71d75",
+      "group": "steve-legacy",
+      "type": ".jpg"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/ref-steve.jpg",
+      "bytes": 1583600,
+      "sha256": "9358e4746a7c69e1aa39ae2f89df43d9856922951615ecb091c5f559aea78a9d",
+      "group": "steve-legacy",
+      "type": ".jpg"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/ref-woz.jpg",
+      "bytes": 234597,
+      "sha256": "212fe891f121592d6e1b13bd547ff34f11c2056c5a5bc07db03bb70f0d14756f",
+      "group": "steve-legacy",
+      "type": ".jpg"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/sheet-laurene-att1.webp",
+      "bytes": 239672,
+      "sha256": "2ac981680c8afdc40b38f22413403b57663c17f4c89d1eb936629d7690ba6322",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/sheet-laurene-att2.webp",
+      "bytes": 324100,
+      "sha256": "16b448bbdfb7f61897ee3ef8e0b05284dc1207959681c71f50cbec33ac5fe728",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/sheet-laurene-att3.webp",
+      "bytes": 232064,
+      "sha256": "9139ecb997fd452605e7d425440a5f2e3c73c0ac2871f047e966bbce65cafab0",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/sheet-lisa-att1.webp",
+      "bytes": 293984,
+      "sha256": "1703da2814179d1b4462b50fd54c244f76109d98575318607f7549b635511d64",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/sheet-steve-att1.webp",
+      "bytes": 235238,
+      "sha256": "4f5e6e5334bea9eabf533a388caab66848838ccaf5689d863d9d2ab4e911347d",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/sheet-steve-att2.webp",
+      "bytes": 233988,
+      "sha256": "a2e9da2409c25f04eb589ba9da75e20fd9ec54a81cde6389030e2abfeca24763",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/sheet-woz-att1.webp",
+      "bytes": 334628,
+      "sha256": "858485434739018f0ba5d47a938579b30f26ecfe0053403402f3e8be8093342c",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/sheet-woz-att2.webp",
+      "bytes": 385032,
+      "sha256": "1919e84d233de84f73ead60fb6025c2b10cf6870db8c4bbe546c1089607b2246",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/sheet-woz-att3.webp",
+      "bytes": 383096,
+      "sha256": "d076a7ec5279b33261640da95ebbf8655e9edaf58d318b73fbbfb1509c059969",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/images/storyboard-att1.webp",
+      "bytes": 626208,
+      "sha256": "13c3e097d7e74ada607e9be7ac7bb75bc3670d007c8d6bd0329eeeca81d2df07",
+      "group": "steve-legacy",
+      "type": ".webp"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/inputs.json",
+      "bytes": 6759,
+      "sha256": "c03ea66b406b2bf7c76ed365c47612a60e7b89f98b6760606094cd8dd4d185d9",
+      "group": "steve-legacy",
+      "type": ".json"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/master-16x9-pixar.mp4",
+      "bytes": 8666405,
+      "sha256": "0b37a69042909a56be5080301c00d4fe064f743a93a44677fd88ef533c204228",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 58.666712,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/quality-report.json",
+      "bytes": 319,
+      "sha256": "11dcecf466a5b54eccaecf32d324446b181af3f367daf5de1a8e739cd563f619",
+      "group": "steve-legacy",
+      "type": ".json"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/raw-master.mp4",
+      "bytes": 8488917,
+      "sha256": "7aab3bfebbd62a9ab2d083387dc4d940b0d015627bdb384eb8d397ee75f2ae78",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 58.666712,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-1-audio-fitted.wav",
+      "bytes": 1326754,
+      "sha256": "8a3686d15b353b594f89d4d5e630ffbaa507746b987c816a70e4ce86de5e4cc4",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 15.041678,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-1-muxed.mp4",
+      "bytes": 4985672,
+      "sha256": "05918d93f7efb418a954db371cb884f7b8630de5c6b10d94be1c1a29cc5e37db",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 15.041678,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-1-trimmed.wav",
+      "bytes": 1017520,
+      "sha256": "34331c51e716ab526418678040d014317577cc5dcf753f4d4db3cade6d04e918",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 11.535624,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-2-audio-fitted.wav",
+      "bytes": 1326754,
+      "sha256": "89650ab4ca807bf14dc29a37db5c1171de7cf984b630c718bdb38bc6cf55d38b",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 15.041678,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-2-muxed.mp4",
+      "bytes": 4745409,
+      "sha256": "144eb1917822422659c036b40f7c35cf74c9e952e9832bfcae587aa795e2a4eb",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 15.041678,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-2-trimmed.wav",
+      "bytes": 1115826,
+      "sha256": "7fe1994bc41d5a2dbc43e98c401e3371dc3ffdab53b595b2bd4cc064e6fa203b",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 12.650204,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-3-audio-fitted.wav",
+      "bytes": 1326754,
+      "sha256": "54a32d2ebe2042ea713deb28d1793e3b5932fbbd0909942a5aace2f48792e042",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 15.041678,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-3-muxed.mp4",
+      "bytes": 4107621,
+      "sha256": "deede94dc7788ff3fed459a0b291f57203533b6b7a57e5c68fdf2ba60c970e73",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 15.041678,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-3-trimmed.wav",
+      "bytes": 1091532,
+      "sha256": "13c39353f393437d805ed736a6d1ea96788f2be2a0e5c656abf0eb811119aecb",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 12.374762,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-4-muxed.mp4",
+      "bytes": 9056825,
+      "sha256": "423e660ed56b17a0e15d20b345a73ed9f1787be1ba0dee23c251d1a0dc21e96b",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 21.2,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-5-audio-fitted.wav",
+      "bytes": 1326754,
+      "sha256": "65dd694984204ebaf6b0fb881dea41bae6f6f2f560e9ea92583e9c02bb2910d2",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 15.041678,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-5-muxed.mp4",
+      "bytes": 3830836,
+      "sha256": "93f8dddb920d74bd5e64cb706d07c25ffafbaab8ddd48861a0611bafc0f4bdc3",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 15.041678,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/scene-5-trimmed.wav",
+      "bytes": 1028188,
+      "sha256": "f2c026a8b5b1b1d5ac2bf5198104c30e48ac6e660b88a82f6f8bfe97d5ab1de3",
+      "group": "steve-legacy",
+      "type": ".wav",
+      "durationSeconds": 11.656576,
+      "streams": [
+        {
+          "type": "audio",
+          "codec": "pcm_s16le",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/script.md",
+      "bytes": 1925,
+      "sha256": "cf4a25210af5fad5e32ccbd3496c6f5a9aa1b9318cde350e1851bf5cefc4974b",
+      "group": "steve-legacy",
+      "type": ".md"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/state.json",
+      "bytes": 18174,
+      "sha256": "d331c332017636b0cbfd639420a60a51e3a120645272a401f06ccdc07aca4724",
+      "group": "steve-legacy",
+      "type": ".json"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/storyboard.json",
+      "bytes": 41887,
+      "sha256": "9282ba5365a0b928771a25930cb3310fde67271013e301b3c7b59d0aecb0ab59",
+      "group": "steve-legacy",
+      "type": ".json"
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/videos/clip-1-att1.mp4",
+      "bytes": 10761483,
+      "sha256": "ad706f34df6be03d380452d6ecc8bcecd36acd5cb64185e6eaacc75b32201c55",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 20.031333,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/videos/clip-1-att2.mp4",
+      "bytes": 4744152,
+      "sha256": "347c851456a5eae07194fe879f3c35b664ff891b86c1edb019c1e531b3f29203",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 15.041667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/videos/clip-2-att1.mp4",
+      "bytes": 9956110,
+      "sha256": "19ff1eef272f5089e4b11dabb96b09244a46bf756a1284b6de9f749acc8bae56",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 20.031333,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/videos/clip-2-att2.mp4",
+      "bytes": 4469775,
+      "sha256": "8bbbba52c0b15500ae03285fce35233cc2cd8a3ace945f7b946465f1737d86af",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 15.041667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/videos/clip-3-att1.mp4",
+      "bytes": 11216819,
+      "sha256": "bbfb7503fc6d69a57b9ea599b312e86a802aef0e6b83746ebbe5ca791a9170eb",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 20.031333,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/videos/clip-3-att2.mp4",
+      "bytes": 3848122,
+      "sha256": "057dc25590775faebf78602c0a2f0899e70081f2f09482ffc8d4f9589f5331b6",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 15.041667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/videos/clip-4-att1.mp4",
+      "bytes": 8880846,
+      "sha256": "817a96f2215a26fc0a7180f5823887200f4169910f4435c02c5eae34f1bf94b4",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 20.031333,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/videos/clip-5-att1.mp4",
+      "bytes": 7054959,
+      "sha256": "3318289b2f6dd3740a1280a26b6ef6a1fd20637552168db9065ae9d2f3c8b655",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 20.031333,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "type": "audio",
+          "codec": "aac",
+          "width": null,
+          "height": null
+        }
+      ]
+    },
+    {
+      "locator": "steve-jobs-pixar-v1/videos/clip-5-att2.mp4",
+      "bytes": 3592867,
+      "sha256": "a1572dd465da9b18a063f16d4b89386506e8e1b8e9a07cf109240c47f6720c91",
+      "group": "steve-legacy",
+      "type": ".mp4",
+      "durationSeconds": 15.041667,
+      "streams": [
+        {
+          "type": "video",
+          "codec": "h264",
+          "width": 864,
+          "height": 496
+        }
+      ]
+    }
+  ]
+}
