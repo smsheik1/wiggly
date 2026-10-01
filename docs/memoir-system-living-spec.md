@@ -47,6 +47,7 @@ We are designing this system from the ground up. The existing Eminem run, five-c
 21. **Initial video generation and creative changes need explicit human approval of the request.** The reviewer must catch obvious generation defects, reject them internally, and route a specific repair for automatic regeneration before presenting a passing result to the user. These technical repair retries are a narrow exception to the earlier every-call approval rule and operate within an agreed retry/spending allowance. Extensions, new shots, and creative rerolls still require approval. Text and image generation may proceed autonomously within the current approved stage and bounded allowance; deliverable approval gates still apply.
 22. Run **common sense checks during intake and script review**: flag missing character references, age variants, locations, difficult actions, and other feasibility gaps before script lock. Planning does not authorize pre-audio-lock image generation.
 23. Show the consequences of proposed changes: affected shots/assets and approvals, what remains valid, and estimated rerun cost/time. Update only actual dependencies; do not silently rebuild unrelated work.
+24. Video generation uses API-based models. The Format does not require local AI video-model inference.
 
 ## Roles and authority
 
@@ -408,6 +409,8 @@ The distribution proof is a fresh agent receiving only the Format package and de
 
 ### ComfyUI comparison — complementary media execution candidate
 
+**API-only video constraint clarified by the user:** Local video-model execution is not a reason to add ComfyUI to this Format. ComfyUI can still compose hosted API calls and processing steps, but it is optional. Given our described provider calls, prefer evaluating LangGraph with direct provider adapters first; add ComfyUI only if a concrete reusable media recipe demonstrates a benefit. This is a recommendation, not adoption of LangGraph. Standard local media inspection or editing tools are distinct from running AI video models locally.
+
 ComfyUI and LangGraph both use graphs, but their documented strengths differ. ComfyUI provides reusable node workflows for image, video, audio, text, and 3D generation; LangGraph provides explicit agent/workflow control with persistence and human interrupts. ComfyUI is not limited to local image models: it supports partner API nodes, local execution, and cloud services. Its workflows can be invoked programmatically, and its managed API can package pinned nodes/models/dependencies as versioned deployments. See [ComfyUI official repository](https://github.com/Comfy-Org/ComfyUI) and [Comfy API deployment documentation](https://support.comfy.org/articles/2703236295-comfy-api-deploy-your-comfyui-workflow-as-an-api).
 
 **Fit assessment:** LangGraph is the more direct candidate for our story-production state and approval/repair loops. ComfyUI becomes useful when a specific media recipe benefits from visually authored, reusable processing steps, open-model controls, or managed GPU execution. It could sit behind a generation tool invoked by the official Format runner; it need not replace the project orchestrator. Custom Comfy nodes can implement additional control logic, but that would be our implementation work, not evidence that the required memoir approval/state contract is already supplied.
@@ -441,6 +444,7 @@ The proposed combination for this Format is: agent operates packaged entry point
 | 2026-10-01 | Keep higher human oversight in v1 and require approval for every video-generation request. | Learn and perfect the workflow while controlling its most expensive production actions. |
 | 2026-10-01 | Perform intake common sense checks and display revision dependency impacts. | Discover feasibility gaps early and preserve user understanding and valid work during changes. |
 | 2026-10-01 | Automatically reject and repair obvious video generation defects before user presentation, within an agreed allowance. | The reviewer must catch extra limbs and similar defects itself. This explicitly narrows the earlier every-video-call approval rule for technical repairs; creative changes remain human-approved. Retry limits and permitted adjustments still need definition. |
+| 2026-10-01 | Use API-based video models; do not require local video-model inference. | The user clarified the intended provider approach while evaluating ComfyUI. ComfyUI remains an optional workflow tool, not an adopted dependency. |
 
 ## Implementation and evidence status
 
