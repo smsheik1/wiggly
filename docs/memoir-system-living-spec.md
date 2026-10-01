@@ -416,6 +416,10 @@ Examples of possible ComfyUI value are reference preparation, supported pose/ide
 
 If used, ship the tested workflow and its version/requirements as supporting Format assets. Keep authorized input versions, stage checks, review decisions, and repair budgets in the official runner's authoritative state. Account for each paid operation inside the workflow; a single workflow submission must not conceal unauthorized video calls. Decide local hardware versus hosted execution and credentials explicitly. Neither ComfyUI nor LangGraph is adopted by this comparison.
 
+**User-supplied integration example:** [Muse Studio](https://github.com/benjiyaya/Muse-Studio) documents LangGraph agent paths, ComfyUI image/video workflows, and Remotion export. Its README and the accessible description of the [linked tutorial](https://www.patreon.com/aifuturetech/posts/comfyui-ai-muse-153744609) were reviewed; the two linked YouTube pages could not be retrieved, and their videos were not watched. This is evidence of a concrete integration example, not proof of how frequently the combination is used or that the example meets our approval/audio-lock/review requirements. The repository currently displays an archived status; use it as architectural reference unless separately evaluated for adoption.
+
+The proposed combination for this Format is: agent operates packaged entry points → official runner uses LangGraph to control state and dispatch approved work → generation tools call tested ComfyUI workflows or direct provider APIs → reviewer returns evidence → runner repairs within allowance or presents a passing candidate for human approval. The user need not manipulate a ComfyUI node canvas. ComfyUI supports programmatic submission, job history, and execution updates through its [documented server API](https://docs.comfy.org/development/comfyui-server/comms_routes). “Brain and art department” is a useful shorthand; LLMs perform writing/judgment, and the workflow controller enforces our coded production rules.
+
 ## Decision log
 
 | Date | Decision | Reason |
