@@ -10,9 +10,9 @@ import {loadKey,remediation,atomicJson} from './providers.mjs';
 
 const exec=promisify(execFile),base='https://generativelanguage.googleapis.com';
 export const GEMINI_REVIEW_MODEL='gemini-3.8-flash';
-// Live Google HTTP 400 established a 24 FPS ceiling. Declare that cap in the
-// qualified profile and evidence; never claim every source frame was inspected.
-export const GEMINI_REVIEW_PROFILE={model:GEMINI_REVIEW_MODEL,api:'v1beta/interactions',video:'static at min(measured source FPS,24), high resolution',audio:'original audio; video audio extracted to mono 48kHz PCM',thinking:'high',maxOutputTokens:8192};
+// Operator-selected 4 FPS review profile, below the observed 24 FPS provider
+// ceiling. Never claim that sampled coverage inspects every source frame.
+export const GEMINI_REVIEW_PROFILE={model:GEMINI_REVIEW_MODEL,api:'v1beta/interactions',video:'static at min(measured source FPS,4), high resolution',audio:'original audio; video audio extracted to mono 48kHz PCM',thinking:'high',maxOutputTokens:8192};
 const Observation=z.object({startSeconds:z.number().nonnegative(),endSeconds:z.number().nonnegative(),finding:z.string().min(1),repair:z.string(),severity:z.enum(['info','minor','major'])}).strict();
 const Report=z.object({perceptible:z.boolean(),coverageStartSeconds:z.number().nonnegative(),coverageEndSeconds:z.number().positive(),summary:z.string().min(1),observations:z.array(Observation),limitations:z.array(z.string())}).strict();
 const mime={'.wav':'audio/wav','.mp3':'audio/mp3','.m4a':'audio/mp4','.flac':'audio/flac','.ogg':'audio/ogg','.mp4':'video/mp4','.mov':'video/mov','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp'};
@@ -60,7 +60,7 @@ export function createGeminiReviewTools({secretsPath,receiptDirectory,maxCalls=0
  const inspect=async(tool,{file,worker,task})=>{
   if(!task?.taskId||!worker?.workerId)throw new Error('Gemini perception requires a current bound crew task.');
   if(tool==='watchVideo'&&(!file.width||!file.durationSeconds||!(file.fps>0&&file.fps<=60)))throw new Error('Gemini video review requires a measured source FPS ≤60.');
-  const samplingFps=tool==='watchVideo'?Math.min(file.fps,24):undefined;
+  const samplingFps=tool==='watchVideo'?Math.min(file.fps,4):undefined;
   await verifyFiles(file);
   const context=tool==='watchVideo'?contextFor(task):{step:task.step,criteria:task.criteria};
   const refs=tool==='watchVideo'?[...taskAssets(task).values()].filter(f=>f.width&&!f.durationSeconds):[];

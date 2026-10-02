@@ -31,13 +31,13 @@ test('Gemini listens to exact media bytes, binds receipts and reuses a finished 
  }finally{await rm(f.dir,{recursive:true});}
 });
 
-test('Gemini video declares source FPS and the observed 24 FPS provider cap, with scoped references and permissions',async()=>{
+test('Gemini video uses the approved 4 FPS profile with scoped references and permissions',async()=>{
  const f=await fixture(true);let body,calls=0;
  try{
   const imagePath=join(f.dir,'ref.png');execFileSync('ffmpeg',['-v','error','-i',f.file.path,'-frames:v','1',imagePath]);const ref=await importMedia(imagePath,f.dir);f.task.references=[{file:ref}];f.task.dependencies=[{id:'script@1',content:{beats:[{narration:'ISOLATED locked memory'}]}}];
   const tools=createGeminiReviewTools({...f.options,fetcher:async(_url,options)=>{calls++;body=JSON.parse(options.body);return f.response();}}),receipt=[];
   const scoped=crewTools(f.task,f.worker,tools,r=>receipt.push(r));const result=await scoped('watchVideo',{sha256:f.file.sha256});
-  assert.equal(body.input.find(p=>p.type==='video').processing.fps,24);assert.equal(body.input.find(p=>p.type==='video').resolution,'high');assert.ok(body.input.some(p=>p.type==='image'));assert.match(body.input.at(-1).text,/ISOLATED locked memory/);assert.equal(result.samplingFps,24);assert.equal(result.sourceFps,30);assert.equal(receipt[0].modelVersion,'gemini-3.8-flash');
+  assert.equal(body.input.find(p=>p.type==='video').processing.fps,4);assert.equal(body.input.find(p=>p.type==='video').resolution,'high');assert.ok(body.input.some(p=>p.type==='image'));assert.match(body.input.at(-1).text,/ISOLATED locked memory/);assert.equal(result.samplingFps,4);assert.equal(result.sourceFps,30);assert.equal(receipt[0].modelVersion,'gemini-3.8-flash');
   await assert.rejects(scoped('watchVideo',{sha256:'0'.repeat(64)}),/SCOPE_DENIED/);
   await assert.rejects(crewTools(f.task,{...f.worker,role:'script-writer'},tools)('watchVideo',{sha256:f.file.sha256}),/PERMISSION_DENIED/);assert.equal(calls,1);
  }finally{await rm(f.dir,{recursive:true});}

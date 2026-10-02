@@ -45,7 +45,7 @@
           "watchVideo"
         ],
         "calls": "explicit --review-calls 0\u201332 per invocation, default 0; no automatic fallback/retry",
-        "profile": "static min(source FPS,24) video, high resolution; original audio/separate mono 48kHz PCM from video",
+        "profile": "static min(source FPS,4) video (operator-selected), high resolution; original audio/separate mono 48kHz PCM from video",
         "qualification": "not production-qualified; profile changes require explicit crew refresh and held-out qualification"
       }
     }

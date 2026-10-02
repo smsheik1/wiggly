@@ -213,7 +213,7 @@
     "model": "gemini-3.8-flash",
     "implemented": [
       "scoped actual audio/video tools",
-      "static min(source FPS,24) video with references",
+      "static min(source FPS,4) video with references",
       "independent role/model/tool receipts",
       "bounded inference calls and uncertain-request stop",
       "Files API upload receipts",
@@ -222,14 +222,14 @@
     "mockedFocusedTestsPassed": 24,
     "productionQualified": false,
     "remaining": [
-      "live video verification after explicit24FPS correction",
+      "live video verification and real defect qualification at the selected4FPS profile",
       "independent STT",
       "calibrated speaker similarity",
       "genuine human-labelled reviewer qualification"
     ],
     "savedProjectStateMutated": false,
     "liveAudioTransport": "PASS: correctly heard the hidden synthetic phrase; response recovered locally without a duplicate request after unnecessary interaction-ID check was fixed",
-    "liveVideoTransport": "BLOCKED: Google HTTP400 rejected 30 FPS; cap24 now explicit/mock-tested; no retry/fallback submitted",
+    "liveVideoTransport": "BLOCKED: Google HTTP400 rejected30FPS; no retry/fallback submitted. Operator subsequently selected4FPS; live4FPS verification remains pending.",
     "observedFailuresAndFixes": [
       "store:false completed response may omit ID; retain request/response digests and recover finished output offline",
       "Provider rejects fps>24; declare min(source FPS,24), expose both source/sampling and bind qualification profile",
@@ -244,6 +244,21 @@
     "independentAdversarialProbesPassed": 4,
     "blindAudit": "PASS for packaged connection: fresh npm ci/check/smoke/105 tests,4 independent adversarial probes; no production qualification",
     "auditedCodeArchiveSha256": "edde57f565903d4f654ea48b97fb71e4390a33a795f654a11772c970da58ff00",
-    "simplificationReview": "Lean already. Direct adapter, existing broker and synchronous counter; no new dependency/framework/renderer."
+    "simplificationReview": "Lean already. Direct adapter, existing broker and synchronous counter; no new dependency/framework/renderer.",
+    "samplingUpdate": {
+      "date": "2026-10-02",
+      "operatorChoice": "4ps is fine",
+      "selectedFps": 4,
+      "belowSourceFrameRate": "min(source FPS,4)",
+      "previousSamplingFps": 24,
+      "reason": "Avoid an unmeasured maximum-density default; compare actual defect detection at lower cost",
+      "providerCalls": 0,
+      "projectStateMutated": false,
+      "productionQualified": false,
+      "focusedTestsPassed": 16,
+      "freshPackageMediaTestsPassed": 7,
+      "freshPackageCheckAndSmoke": "PASS",
+      "liveVerification": "not performed; no paid calls"
+    }
   }
 }
