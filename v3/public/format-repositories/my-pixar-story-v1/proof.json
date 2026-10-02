@@ -382,6 +382,14 @@
     "savedProductionRunMutated": false,
     "aiVideoGenerations": 0,
     "realProductionProof": false,
-    "packageVerification": "pending final clean extraction"
+    "packageVerification": "PASS: fresh npm ci/check/parent+grandparent smoke, 137 tests, 10 invented regression cases and offline eval; independent CLI refusal/recovery probes; no paid calls or real production proof",
+    "blindAuditReport": "/tmp/my-pixar-story-v2-audit.sOvGNX/AUDIT-REPORT.md",
+    "auditedArchiveBeforeFinalMetadata": "6b180b5d7cb376a5a4dcaa0b4b37d5617332cae20dadacf9b2ff53db2ec6f666",
+    "auditFindingsFixed": [
+      "Removed stale final-package pending marker",
+      "Classified Replicate key as required at video stage and Gemini as conditional shipped-Codex media review key"
+    ],
+    "simplificationReview": "Lean already. Ship. Existing schemas/events/tools extended; no added dependency, competing state store, generic agent framework or renderer.",
+    "implementationCommit": "146e77ae"
   }
 }

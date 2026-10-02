@@ -71,7 +71,7 @@ async function main() {
     const tools = Object.fromEntries(['ffprobe', 'ffmpeg', 'tar'].map(tool => [tool, spawnSync(tool, ['-version'], { stdio: 'ignore' }).error?.code !== 'ENOENT']));
     const renderer=await verifyRenderer();
     print({ formatVersion: VERSION, node: process.version, tools, renderer:renderer.manifest.renderer, dependencies: 'LangGraph + SQLite loaded',
-      requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY'], optionalKeys:['REPLICATE_API_TOKEN','ELEVENLABS_API_KEY','GEMINI_API_KEY (Codex media review)'], credentialsRead: false, productionStageLimit: 'supervised v1 through private finalization; every media lock needs human review and every video request needs exact human authorization; qualified policy remains available; real production proof not performed' });
+      requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY', 'REPLICATE_API_TOKEN (video stage)'], conditionalKeys:['GEMINI_API_KEY (shipped Codex media review)'], optionalKeys:['ELEVENLABS_API_KEY (generated music/effects; imports need no key)'], credentialsRead: false, productionStageLimit: 'supervised v1 through private finalization; every media lock needs human review and every video request needs exact human authorization; qualified policy remains available; real production proof not performed' });
     if (Object.values(tools).some(v => !v)) process.exitCode = 1; return;
   }
   if (command === 'schema') {

@@ -4,7 +4,7 @@ Last updated: October 2, 2026. Owner: Shaz + implementing agent.
 
 [The living spec](memoir-system-living-spec.md) is the design authority; this checklist records implementation and evidence. The operator explicitly authorized **human-supervised v1** while deferring formal reviewer qualification. That supersedes the old requirement to stop all development for human-labelled media. It does not certify reviewers or authorize paid media, AI video or a real production film test.
 
-**Current boundary:** Supervised v1 core is implemented through private finalization. New projects default supervised; older checkpoints retain qualified mode without migration. Actual media perception/measurements and exact human approval still control locks. Source checks pass; final clean-package/blind checks are pending below. No existing rehearsal, approvals or provider jobs were changed by this work.
+**Current boundary:** Supervised v1 core is implemented through private finalization. New projects default supervised; older checkpoints retain qualified mode without migration. Actual media perception/measurements and exact human approval still control locks. Source and fresh-package checks pass; the final package/commit evidence appears below. No existing rehearsal, approvals or provider jobs were changed by this work.
 
 ## Core implementation
 
@@ -22,7 +22,7 @@ Last updated: October 2, 2026. Owner: Shaz + implementing agent.
 - [x] **Complete offline protocol:** Isolated supervised script → narration → cast/sheets → intentions/backgrounds → compositions → video receipts → sound imports/edit → separate film reviews/human → complete. SQLite reopened after every event; no network or generated film. Test: `supervised-studio`.
 - [x] **Private lifecycle:** Document local immutable run/media/receipts, authorized provider uploads, no automatic publish/retention/deletion/refunds; abandon retains existing jobs for provider reconciliation. Copy the full run folder and preserve absolute asset paths.
 - [x] **Core source checks:** 137 tests, check and parent/grandparent smoke pass. Logs `/tmp/memoir-v1-all-tests.log`, `/tmp/memoir-supervised-studio-tests.log`. These prove mechanics, not creative production quality.
-- [ ] **Release package:** Final consistent instructions/proof/archive; clean extraction npm ci/check/test/smoke; mandatory fresh-agent proof; simplification review; commit/push and safely synchronize the operator's format directory. No app renderer changes.
+- [x] **Release package:** Clean npm ci/check/test/smoke and fresh-agent refusal/recovery proof pass: 137 tests, 10 invented regression cases, zero dependency advisories; report `/tmp/my-pixar-story-v2-audit.sOvGNX/AUDIT-REPORT.md`. Stale proof marker and video-key classification fixed. Ponytail review: Lean already. Ship; no dependency/framework/renderer added. Implementation commit `146e77ae` pushed on `codex/memoir-supervised-v1`; verified kit/archive synchronized to `/Users/shaz/Projects/wiggly` after baseline comparison and backup; primary check/smoke pass. Final-byte recheck confirms the archive. See [release evidence](proofs/memoir-supervised-v1-release.json) and [blind audit](proofs/memoir-supervised-v1-package-audit.md). No app renderer changes.
 
 ## Deferred evidence before claiming trustworthy autonomous review
 

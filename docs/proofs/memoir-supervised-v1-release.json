@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-02",
+  "branch": "codex/memoir-supervised-v1",
+  "implementationCommit": "146e77ae",
+  "archiveSha256": "87f7b5d788ace274cbd11ab852fb4c46e38c2b40c5cf599d55d6ba61f27156e5",
+  "sourceFullTests": 137,
+  "freshPackageFullTests": 137,
+  "finalByteReadinessTests": 3,
+  "regressionCases": 10,
+  "smokeInputs": [
+    "parent",
+    "grandparent"
+  ],
+  "primaryCheckSmoke": "PASS",
+  "primarySync": "/tmp/memoir-v1-primary-sync.json",
+  "backup": "/tmp/memoir-supervised-v1-primary-backup-20261002",
+  "auditReport": "memoir-supervised-v1-package-audit.md",
+  "simplificationVerdict": "Lean already. Ship. No dependency, generic framework, competing state store or renderer added.",
+  "scope": "Human-supervised v1 implementation and offline mechanics; formal qualification and real production film proof deferred",
+  "paidMediaCalls": 0,
+  "aiVideoGenerations": 0,
+  "existingRunsMutated": false
+}
