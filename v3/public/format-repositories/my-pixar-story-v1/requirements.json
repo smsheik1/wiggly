@@ -61,7 +61,9 @@
         "qualification": "not production-qualified; independent of Gemini listening and speaker measurement",
         "estimate": "Positive --transcription-cost-usd in supervised mode; project-wide reserved-estimate ceiling plus call cap"
       }
-    }
+    },
+    "questionnaireReviewer": "Sage checks existing answers/facts/relationships/ages/locations; human ANSWERS LOCK before writing, no storytelling grade",
+    "characterPromptEngineer": "Cleo uses locked script/cast/photos plus supporting answers; bound recipe/prompt receives independent Sage review and human approval before three Muse candidates"
   },
   "storage": "per-run embedded SQLite checkpoints and immutable local assets/receipts; retain directory as a unit",
   "approval": "real human deliverable approvals; exact paid-request authorization or explicit bounded operation allowance",

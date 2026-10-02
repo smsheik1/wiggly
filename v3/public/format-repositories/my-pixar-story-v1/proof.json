@@ -391,5 +391,20 @@
     ],
     "simplificationReview": "Lean already. Ship. Existing schemas/events/tools extended; no added dependency, competing state store, generic agent framework or renderer.",
     "implementationCommit": "146e77ae"
+  },
+  "answersCharacterRefinement": {
+    "date": "2026-10-02",
+    "workflowRevision": 3,
+    "scope": "answers lock, reviewed character prompts, explicit natural-rate 15s narration windows; mechanics only",
+    "testsPassed": 144,
+    "provider": "meta-muse",
+    "sourceSamplePreservation": "synthetic PCM speech-prefix bytes unchanged; tail digital silence only; no real voice-quality claim",
+    "sqliteRehearsal": "full isolated protocol reopened after every event, including new answers and character prompt stages",
+    "legacyState": "missing revision field loads revision 2; no existing run changed",
+    "blindPackageAudit": "fresh extraction npm ci/check/smoke and 144 tests pass; independent CLI answers-lock/refusal/restart proof pass; final-byte recheck recorded in Wiggly docs/proofs",
+    "paidProviderCalls": 0,
+    "productionCredentialsRead": false,
+    "productionQualityProven": false,
+    "simplificationReview": "ponytail-review: Lean already. Ship. Reused existing review/event/worker machinery; no added dependency, framework or renderer."
   }
 }

@@ -25,7 +25,7 @@
       "end": 60
     }
   ],
-  "audio": "four natural-speed narration stems, reviewed as a set; unused time remains a pause rather than accelerated speech",
+  "audio": "revision 3: four exact 15.0s windows containing natural-speed narration plus recorded silence-only tails; originals retained; overlong speech returns to script revision; legacy stems unchanged",
   "target": "60-second 16:9 theatrical 3D animated memoir, own voice, acoustic piano",
   "renderer": "One shared RemotionAdScene \u2192 AdRenderSurface \u2192 memoir-film composition for local Player preview and export; FFmpeg audio mixing and inspection only",
   "clipTiming": "variable short clips cover each approved shot exactly; four 15-second beats remain fixed; no speed changes",
@@ -40,5 +40,7 @@
   },
   "intakeConfirmationSchema": "node runner.mjs schema intake-confirmation",
   "earlyLockName": "narration lock (audioLocked compatibility export)",
-  "reviewPolicy": "new supervised; old qualified; actual media human confirmation required in supervised"
+  "reviewPolicy": "new supervised; old qualified; actual media human confirmation required in supervised",
+  "answersSchema": "node runner.mjs schema answers",
+  "characterPromptSchema": "node runner.mjs schema characterPrompt"
 }

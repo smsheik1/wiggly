@@ -5,13 +5,15 @@
   "stages": [
     "existing questionnaire (5 answer groups)",
     "explicit actual host crew bindings; inherited host models, role-scoped format tools",
+    "existing answers organized \u2192 Sage questionnaire review/clarifications \u2192 human confirmation \u2192 ANSWERS LOCK before script",
     "four-beat script author \u2192 independent reviewer \u2192 human",
-    "script human approval also records voice consent, photo rights/guardian authority, exact cast/age references or interpreted/omitted likeness, resolved intake findings",
+    "answers human confirmation records rights/consent/person-age references and resolved findings; script reuses unchanged inventory and resolves any new findings",
     "storyteller sample + consent",
     "Cartesia private clone",
     "clone audition measured/listened/reviewed \u2192 human",
-    "four narration stems measured/listened/reviewed \u2192 human narration lock",
+    "four narration sources at natural speed \u2192 silence-only 15.0s windows with original provenance \u2192 measured/listened/STT review \u2192 human all-four NARRATION LOCK",
     "complete character/age roster \u2192 reviewer \u2192 human",
+    "per character/age: Cleo character design prompt from locked script + cast + actual photos; questionnaire supporting \u2192 Sage review/repair \u2192 human prompt approval",
     "per character: 3 reference-conditioned Muse candidates \u2192 reviewer \u2192 human selection",
     "per character: selected image + scoped Markdown recipe \u2192 host-authored sheet prompt \u2192 reviewer",
     "per character: reference-conditioned sheet \u2192 reviewer \u2192 human",
@@ -45,7 +47,11 @@
     "script intake inventory/rights/resolutions before lock",
     "shot intentions before supervised backgrounds",
     "durable cumulative provider estimate ceiling before generation/review/STT",
-    "current impact digest before rewinding human-locked dependencies"
+    "current impact digest before rewinding human-locked dependencies",
+    "ANSWERS LOCK before script writing in revision 3",
+    "approved exact character design prompt before three Muse candidates in revision 3",
+    "natural speech retained; explicit silence-only 15.0s windows with source provenance"
   ],
-  "defaultReviewPolicy": "supervised; legacy remains qualified"
+  "defaultReviewPolicy": "supervised; legacy remains qualified",
+  "workflowRevision": "3 for new supervised runs; missing field and qualified initializer retain revision 2; no silent checkpoint migration"
 }

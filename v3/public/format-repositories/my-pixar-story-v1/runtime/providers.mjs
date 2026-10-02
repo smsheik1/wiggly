@@ -5,17 +5,18 @@ import { executeVideo } from './video-provider.mjs';
 import { shotReferences } from './shots.mjs';
 import { digest } from './contracts.mjs';
 import { assertAllowed, keyFor } from './gates.mjs';
-import { importMedia, verifyFiles } from './media.mjs';
+import { importMedia, verifyFiles, narrationWindow } from './media.mjs';
 const artifact = (p, key) => p.artifacts.findLast(a => a.key === key && a.valid);
 export function requestDescriptor(p, plan) {
   if(plan.operation==='video'){if(plan.parameters.model)throw new Error('Video adapter uses Seedance 2.0; unsupported model override.');const b=videoBinding(p);if(!(plan.estimatedCostUsd>0))throw new Error('Video needs an operator-verified positive cost estimate.');return {prompt:plan.parameters.prompt,endpoint:'https://api.replicate.com/v1/models/bytedance/seedance-2.0/predictions',frame:b.frame.content.files[0],input:{prompt:plan.parameters.prompt,duration:b.clip.generationSeconds,resolution:'1080p',aspect_ratio:'16:9',generate_audio:false}};}
   if(['music','effect'].includes(plan.operation)){if(plan.parameters.model)throw new Error('Sound adapters use their documented fixed models.');if(!(plan.estimatedCostUsd>0))throw new Error('Sound generation needs a verified positive cost estimate.');const target=plan.operation==='music'?artifact(p,'soundPlan').content.music:effectFor(p);if(target.mode!=='generate')throw new Error('Imported sound cannot invoke a provider.');return {prompt:plan.parameters.prompt,endpoint:`https://api.elevenlabs.io/v1/${plan.operation==='music'?'music':'sound-generation'}?output_format=mp3_44100_128`,body:plan.operation==='music'?{prompt:target.prompt,music_length_ms:60000,model_id:'music_v2_5',force_instrumental:true}:{text:target.prompt,duration_seconds:target.durationSeconds,model_id:'eleven_text_to_sound_v2',loop:false},provenance:target.provenance};}
   const sample = artifact(p, 'voiceSample')?.content;
   if (plan.operation === 'clone') return { endpoint: 'https://api.cartesia.ai/voices/clone', cartesiaVersion: plan.parameters.cartesiaVersion ?? '2026-08-14',
-    clip: sample.files[0], language: sample.language, name: `${p.inputs.subject.preferredName} — ${p.id}`, access: 'private' };
+    clip: sample.files[0], language: sample.language, name: `${(artifact(p,'answers')?.content.inputs??p.inputs).subject.preferredName} — ${p.id}`, access: 'private' };
   if (['audition', 'narration'].includes(plan.operation)) return { endpoint: 'https://api.cartesia.ai/tts/bytes', cartesiaVersion: plan.parameters.cartesiaVersion ?? '2026-08-14',
     model_id: plan.parameters.model ?? 'sonic-3.6-2026-08-27', voice: artifact(p, 'clone').content.voiceId, language: sample.language,
     transcripts: artifact(p, 'script').content.beats.slice(0, plan.operation === 'audition' ? 1 : 4).map(b => b.narration),
+    ...(plan.operation==='narration'&&p.workflowRevision===3?{beatWindowSeconds:15}:{}),
     output_format: { container: 'wav', encoding: 'pcm_s16le', sample_rate: 44100 }, generation_config: { speed: 1, volume: 1 } };
   let images, n;
   if (plan.operation === 'keyframe') { images = shotReferences(p).map(r => r.file); n = 1; }
@@ -100,7 +101,9 @@ export async function executeJob(p, job, runDir, apiKey, fetcher = fetch, collec
         { 'Content-Type': 'application/json', 'Cartesia-Version': request.cartesiaVersion }, true);
       files.push(file);
     }
-    result = job.plan.operation === 'audition' ? { files, voiceId: request.voice, transcript: request.transcripts[0] } : { files, voiceId: request.voice, transcripts: request.transcripts, model: request.model_id };
+    const windows=request.beatWindowSeconds===15?[]:null;
+    if(windows)for(const [i,file] of files.entries())windows.push(await narrationWindow(file,runDir,join(dir,`window-${i}.wav`)));
+    result = job.plan.operation === 'audition' ? { files, voiceId: request.voice, transcript: request.transcripts[0] } : { files:windows?windows.map(w=>w.file):files, voiceId: request.voice, transcripts: request.transcripts, model: request.model_id,...(windows?{sourceFiles:files,tailSilenceSeconds:windows.map(w=>w.tailSilenceSeconds)}:{}) };
   } else {
     const images = await Promise.all(request.images.map(async f => ({ image_url: `data:image/${extname(f.path).slice(1).replace('jpg', 'jpeg')};base64,${(await readFile(f.path)).toString('base64')}` })));
     const { endpoint, images: _refs, ...body } = request;

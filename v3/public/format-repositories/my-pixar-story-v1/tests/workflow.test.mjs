@@ -9,12 +9,12 @@ import { inputs, script, file, event, send, authored, reviewed, approved, produc
 
 test('five answer groups feed exactly four 15-second beats; stable digest ignores object key ordering', () => {
   assert.equal(Object.keys(inputs.answers).length, 5);
-  assert.throws(() => send(initialProject('x', inputs), 'artifact', { workerId: 'writer', content: { ...script, beats: [...script.beats, script.beats[0]] } }), /4/);
+  assert.throws(() => send(initialProject('x',inputs,{workflowRevision:2}), 'artifact', { workerId: 'writer', content: { ...script, beats: [...script.beats, script.beats[0]] } }), /4/);
   assert.equal(digest({ a: 1, b: 2 }), digest({ b: 2, a: 1 }));
 });
 
 test('author → evidenced rejection → repair → independent pass → user lock; stale replies cannot advance', () => {
-  let p = authored(initialProject('x', inputs)); const stale = event(p, 'review');
+  let p = authored(initialProject('x',inputs,{workflowRevision:2})); const stale = event(p, 'review');
   p = reviewed(p, 'rejected'); assert.equal(p.gate, 'author');
   p = authored(p); assert.equal(current(p).version, 2); assert.equal(p.artifacts[0].valid, false);
   assert.throws(() => applyEvent(p, stale), /STALE_TASK/);
@@ -24,7 +24,7 @@ test('author → evidenced rejection → repair → independent pass → user lo
 });
 
 test('unrelated notes preserve stage; reviewer cannot approve its own writing or reject by taste', () => {
-  let p = authored(initialProject('x', inputs));
+  let p = authored(initialProject('x',inputs,{workflowRevision:2}));
   const a = current(p); const good = event(p, 'review', { workerId: 'writer', artifactId: a.id, artifactDigest: a.digest, review: reviewed(p).artifacts.at(-1).review });
   assert.throws(() => applyEvent(p, good), /distinct reviewer/);
   const before = p.step; p = send(p, 'note', { message: 'Tell me about LangGraph.' }); assert.equal(p.step, before); assert.equal(p.gate, 'review');
@@ -36,19 +36,19 @@ test('unrelated notes preserve stage; reviewer cannot approve its own writing or
 test('SQLite process-independent restart, invalid response leaves current interrupt healthy', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'memoir-state-')); let w = openWorkflow(join(dir, 'state.sqlite'));
   try {
-    const first = await w.init('x', inputs); const e = event(first.project, 'artifact', { workerId: 'writer', content: script });
+    const first = await w.init('x',inputs,{workflowRevision:2}); const e = event(first.project, 'artifact', { workerId: 'writer', content: script });
     await w.respond('x', e); w.close(); w = openWorkflow(join(dir, 'state.sqlite'));
     const recovered = await w.status('x'); assert.equal(recovered.pending.gate, 'review');
     await assert.rejects(w.respond('x', e), /STALE_TASK/); assert.equal((await w.status('x')).pending.taskId, recovered.pending.taskId);
     await w.respond('x', event(recovered.project, 'review', { workerId: 'reviewer', artifactId: current(recovered.project).id, artifactDigest: current(recovered.project).digest,
       review: reviewed(recovered.project).artifacts.at(-1).review }));
     assert.equal((await w.status('x')).pending.gate, 'human');
-    await assert.rejects(w.init('x', inputs), /already exists/);
+    await assert.rejects(w.init('x',inputs,{workflowRevision:2}), /already exists/);
   } finally { w.close(); await rm(dir, { recursive: true }); }
 });
 
 test('audio-first cannot be bypassed; alternate/stock voice cannot masquerade as clone', () => {
-  const p = initialProject('x', inputs);
+  const p = initialProject('x',inputs,{workflowRevision:2});
   for (const kind of ['candidates', 'sheet', 'background', 'keyframe', 'video']) assert.throws(() => assertAllowed(p, kind), /AUDIO_LOCK/);
   const ready = audioProject(); assert.equal(audioLocked(ready), true); assert.equal(ready.step, 'roster');
   const clone = ready.artifacts.find(a => a.key === 'clone');

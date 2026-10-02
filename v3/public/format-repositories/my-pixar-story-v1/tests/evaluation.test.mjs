@@ -97,7 +97,7 @@ test('offline CLI leaves an existing checkpoint untouched and default tasks excl
 });
 
 test('advisory evidence binds the current artifact but cannot certify facts or approve it', async () => {
-  const p = authored(initialProject('test', inputs)); const before = digest(p); const r = await artifactEvidence(p);
+  const p = authored(initialProject('test',inputs,{workflowRevision:2})); const before = digest(p); const r = await artifactEvidence(p);
   assert.equal(r.artifactId, 'script@1'); assert.equal(r.productionApproval, false); assert.equal(digest(p), before);
   assert.equal(r.checks.find(c => c.criterion === 'facts').status, 'inconclusive');
 });

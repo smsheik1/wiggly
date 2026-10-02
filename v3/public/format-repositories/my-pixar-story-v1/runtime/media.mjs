@@ -23,6 +23,16 @@ export async function importMedia(source, runDir) {
   if (sha(await readFile(path)) !== sha256) throw new Error('Immutable asset collision/tampering.');
   return { path, sha256, bytes: bytes.length, ...await probe(path) };
 }
+// Only append silence. Overlong speech stays untouched for evidenced script repair.
+export async function narrationWindow(file, runDir, outputPath) {
+  await verifyFiles(file);
+  if(file.durationSeconds>15)return {file,tailSilenceSeconds:0};
+  if(file.durationSeconds===15)return {file,tailSilenceSeconds:0};
+  await exec('ffmpeg',['-v','error','-y','-i',file.path,'-af','apad=whole_dur=15','-t','15','-ar','44100','-c:a','pcm_s16le',outputPath]);
+  const padded=await importMedia(outputPath,runDir);
+  if(padded.durationSeconds!==15)throw new Error('NARRATION_WINDOW_MISMATCH: silence-only padding must produce exactly 15 seconds.');
+  return {file:padded,tailSilenceSeconds:15-file.durationSeconds};
+}
 export async function verifyFiles(value) {
   if (!value || typeof value !== 'object') return;
   if(value.evidenceDirectory&&value.qualified===true&&value.datasetDigest){await (await import('../evaluation/audio-qualification.mjs')).verifyAudioQualificationEvidence(value);return;}

@@ -38,7 +38,7 @@ We are designing this system from the ground up. The existing Eminem run, five-c
 11. Audio review combines measurements and direct listening; neither replaces the other.
 12. User review presents four separately playable audio files with the corresponding script beats in an ordered list.
 13. After narration lock, establish the story's character roster. Every important character needs an individually approved design and standardized character sheet; an approved sheet for one character cannot unlock another.
-14. Use Muse Image to generate **three design candidates per character by default**, anchored to authentic references. The agent reviews them and the user chooses and approves one before sheet production.
+14. Review and human-approve each character design prompt from locked script, cast/age and actual photos; questionnaire answers support them. Use Muse Image to generate **three design candidates per character by default**, anchored to authentic references. The agent reviews them and the user chooses and approves one before sheet production.
 15. Build each character sheet from the selected character image plus the standardized Markdown prompt recipe: four full-body turnaround views and eight expressions. Pass the actual selected image to generation; text references to an unseen image do not count.
 16. **All required character sheets must pass agent review and user approval before background development begins.** No omitted characters, placeholder sheets, or real-run bypasses.
 17. The writer elevates raw memories into skilled, clear storytelling. The user does not need storytelling ability; preserving weak phrasing is not the goal. Keep authentic facts and emotional intent, use language children can understand, and avoid overwriting or forced sentiment.
@@ -49,7 +49,7 @@ We are designing this system from the ground up. The existing Eminem run, five-c
 22. Run **common sense checks during intake and script review**: flag missing character references, age variants, locations, difficult actions, and other feasibility gaps before script lock. Planning does not authorize pre-narration-lock image generation.
 23. Show the consequences of proposed changes: affected shots/assets and approvals, what remains valid, and estimated rerun cost/time. Update only actual dependencies; do not silently rebuild unrelated work.
 24. Video generation uses API-based models. The Format does not require local AI video-model inference.
-25. **Narration lock** means the approved script, storyteller clone/audition, and four measured, listened-to, human-approved narration stems are current. Music and effects come later; final mixed audio has its own review. This renames the design term previously called “audio lock”; user-facing runtime messages now use narration lock; compatibility exports and old error identifiers remain to protect checkpoints.
+25. New supervised projects deliver four exact 15.0-second audio files by appending recorded silence after shorter natural speech; keep unmodified sources. Overlong speech returns to script revision/review/human approval. **Narration lock** means the approved script, storyteller clone/audition, and four measured, listened-to, human-approved narration stems are current. Music and effects come later; final mixed audio has its own review. This renames the design term previously called “audio lock”; user-facing runtime messages now use narration lock; compatibility exports and old error identifiers remain to protect checkpoints.
 26. Human feedback distinguishes **change a detail**, **redo the current deliverable from scratch**, and **abandon the project**, alongside approval. Redo preserves source facts and other valid project assets; abandonment stops new work and requires explicit handling of existing jobs and retention/deletion. Neither is an overloaded “reject” command.
 27. A qualified visual reviewer needs a versioned rubric, actual perception, measurable identity/anatomy/text checks with stated limitations, and genuine held-out qualification. An invented-persona regression suite with planted traps runs on every pipeline change; it tests regression behavior and does not replace real-media qualification.
 28. **October 2 supervised-v1 decision:** Finish the core workflow without waiting for formal qualification. Actual-media advisory review and explicit human confirmation replace qualification as the default v1 lock policy. No scores, perception, consent or human labels may be invented; qualified mode remains an explicit stricter option. Existing checkpoints retain their policy.
@@ -61,6 +61,7 @@ We are designing this system from the ground up. The existing Eminem run, five-c
 | Role | Responsibility | Authority limit |
 | --- | --- | --- |
 | Orchestrator | Maintain state, dispatch work, preserve context, route feedback, enforce gates, and report the next decision. | Cannot approve on the user's behalf or treat casual conversation as a stage transition. |
+| Questionnaire reviewer (Sage) | Check usable facts, relationships, people/ages, places and feasibility against existing answers and focused clarifications. | Cannot grade storyteller talent or invent missing facts; the human confirms ANSWERS LOCK. |
 | Script writer | Elevate authentic raw memories into four clear, engaging emotional beats, understandable to children; revise against specific feedback. | Cannot invent personal memories as facts, overwrite the emotional intent, or change an approved script silently. |
 | Narrative reviewer | Check factual grounding, emotional connection, relationship/POV consistency, child-accessible clarity, timing feasibility, and common sense checks. | Cannot reject solely for personal preference; rejection needs evidence and a repair. Approval permits user presentation; it does not lock the script. |
 | Voice/audio producer | Validate recordings, create the selected provider's clone, and synthesize approved narration. | Cannot substitute a preset voice or accelerate narration. |
@@ -75,24 +76,28 @@ These are responsibility boundaries. Whether each role needs a separate running 
 
 ```text
 Existing questionnaire and focused follow-up intake
-  → common sense checks and feasibility flags
+  → questionnaire review ↔ focused human clarifications
+  → human confirmation of facts, rights/references and findings → ANSWERS LOCK
   → script writing ↔ narrative review (including common sense checks)
-  → user script review + rights/voice consent/reference decisions + finding resolutions ↔ revision
+  → user script review + resolution of any new script findings ↔ revision
   → script lock
   → voice sample validation and clone creation
   → audio qualification only in deliberately selected qualified mode
   → clone review and user audition approval
-  → four narration beats ↔ audio review and repair
+  → four natural-rate narration sources + explicit silence-only tails → four 15.0-second files
+  → audio review and repair (overlong speech → reviewed/human-approved script change)
   → user audio review ↔ revision
   → NARRATION LOCK
   → character roster establishment and user confirmation
   → for EACH required character:
-      three design candidates ↔ agent review
+      character prompt from locked script + cast/age + photos (questionnaire supports)
+      → independent prompt review ↔ repair → human prompt approval
+      → three Muse design candidates with actual photo references ↔ agent review
       → user selection and design approval ↔ revision
       → sheet prompt compilation, independent review and human approval
       → reference-grounded sheet generation ↔ agent review
       → user sheet approval ↔ revision
-  → CHARACTER DESIGN LOCK (all required characters complete)
+  → CAST LOCK (all required characters and ages complete)
   → reviewed/human-approved shot intentions and required scene/location/angle inventory
   → background briefs, prompts, masters and separately reviewed required angles
   → reviewed/human-approved staging confirmation against actual references
@@ -109,7 +114,7 @@ Existing questionnaire and focused follow-up intake
 
 At every review, the outcome is approved, changes requested, rejected, or inconclusive. Provider failures and missing requirements are blockers, not creative rejection or permission to advance.
 
-This is the implemented supervised v1 order, not a claim of qualified production quality. Older checkpoints retain the qualified/backgrounds-first path without silent migration. Narration lock precedes all generated images, including optional storyboard images.
+This is the implemented supervised v1 order, not a claim of qualified production quality. Older checkpoints retain their stored stage order and review policy without silent migration; missing workflowRevision means revision 2. New supervised projects use revision 3, including the separate answers and character prompt locks. Narration lock precedes all generated images, including optional storyboard images.
 
 ## Human response semantics
 
@@ -120,7 +125,7 @@ This is the implemented supervised v1 order, not a claim of qualified production
 | Redo from scratch | Discard the current creative approach for this deliverable. | Author a new attempt from source facts and the stated feedback; preserve immutable history and still-valid independent assets. Project budget and attempt history do not silently reset. |
 | Abandon project | Stop pursuing this project. | Stop dispatch/new paid submissions, preserve/reconcile outstanding provider jobs, and make storage/deletion an explicit action. Abandonment does not imply data deletion or provider refunds. |
 
-Runtime gap: `changes` and human `reject` currently both reopen authoring; dedicated redo and abandonment lifecycle actions remain to be implemented. Agent defect rejection is a separate evidenced repair outcome, not project abandonment. Ambiguous complaints require classification/clarification, never invented approval or cancellation.
+Runtime behavior: `changes` and human `reject` reopen authoring, `redo` preserves source facts/history while replacing the approach, and `abandon` stops production while retaining reconciliation history. Agent defect rejection is a separate evidenced repair outcome, not project abandonment. Ambiguous complaints require classification/clarification, never invented approval or cancellation.
 
 ## Qualified visual reviewer and regression requirements
 
@@ -780,3 +785,17 @@ Verification: all 137 source tests passed, including the complete supervised pro
 
 
 Release closeout: [fresh-package audit](proofs/memoir-supervised-v1-package-audit.md) passes 137/137 tests and independent refusal/recovery probes; final-byte check/readiness tests and both smoke inputs pass. [Release evidence](proofs/memoir-supervised-v1-release.json) records the final archive hash, implementation checkpoint and sync boundary. The verified format/archive is copied into the operator's primary repository after a clean baseline comparison and reversible backup; its check/smoke pass. No user run, approval or provider job was changed. Formal qualification and real production film proof remain deferred, as explicitly scoped above.
+
+### 2026-10-02 — Approved answers, character prompt and narration refinements
+
+The operator accepted the refined intake/narration/character flows and explicitly retained **Muse Image**, replacing the proposed Nano Banana 2 label. No alternate image provider was added. New supervised projects use workflow revision 3; old missing revision fields load as revision 2 with their current stage sequence. This does not reset or upgrade saved production runs.
+
+Existing questionnaire → Leo organizes facts without writing the story → Sage Questionnaire Reviewer ↔ focused clarification → human confirms **ANSWERS LOCK** → Leo script → Sage script review → human **SCRIPT LOCK**. Use the current questionnaire, not a second intake. The questionnaire reviewer checks usable facts/relationships/ages/locations, not storytelling talent. The writer elevates raw memories into strong, child-understandable storytelling. Consent/person-age/reference decisions live with the confirmed answers; script approval reuses them and resolves any new script findings. Changing that inventory requires confirmed answers rewind. The original storyteller identity stays fixed for a project; a different storyteller needs a new project/sample/clone. Raw inputs stay immutable; separately reviewed and human-confirmed clarifications become the downstream source.
+
+Cartesia clone → audition review/listen/measure → human **VOICE LOCK** → four natural-rate narration sources → silence-only 15.0-second windows with original source hashes/hold durations → independent listening/STT/measurements → human all-four approval → **NARRATION LOCK**. No acceleration or cut words. Overlong speech stays untouched for a script repair. Report rate using unpadded source duration when available; it still includes natural pauses. This implements modular fifteen-second containers, not a demand for exactly fifteen seconds of uninterrupted speech.
+
+Confirmed complete cast/ages → for each entry: Cleo character prompt from locked script + cast + actual photos (answers support) → Sage prompt review/repair → human prompt approval → Muse receives exact prompt and actual photos → three designs → Vera image review/repair → human selects one → Pia sheet prompt using selected image/standard recipe → review/human → Muse selected-image-conditioned four-angle/eight-expression sheet → Vera review → human → repeat every entry → **CAST LOCK**. Missing/bad essential references return to the human. No-photo interpretation remains explicitly unverified, never silently photo-grounded. Candidate defects now return to prompt repair; prompt changes do not reset consecutive rejected candidate-set escalation or the three-bundle cast-dependent cap.
+
+Verification: new free regression tests check answer/source/clarification/rewind bindings, unchanged old checkpoint policy, prompt/photo/recipe bindings, exact Muse provider and three-candidate requests, candidate repair escalation, unchanged digital speech samples after silence padding, four natural-speed mocked Cartesia calls and offline receipt recovery. The full isolated supervised rehearsal now includes both new gates across SQLite restarts. This remains mechanics evidence; no real provider/model call or AI video generation is authorized by this checkpoint.
+
+Source verification: **144 tests pass**, including seven refinement tests and the full restart rehearsal; check and parent/grandparent smoke pass. Fresh extracted package installs/checks and passes the same 144 tests plus an independent CLI source-digest/refusal/restart/answers-lock proof. Ponytail review: Lean already. Ship; this extends existing roles/gates rather than adding a framework, dependency or renderer. Final package fingerprint and audit are recorded in `docs/proofs/memoir-answers-character-release.json`.

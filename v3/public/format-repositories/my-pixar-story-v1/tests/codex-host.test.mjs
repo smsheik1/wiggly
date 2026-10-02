@@ -38,7 +38,7 @@ test('Codex bridge uses the explicitly selected model, real role threads and sco
  const dir=await mkdtemp(join(tmpdir(),'memoir-codex-protocol-')),mock=fixture({respondTool:true}),host=new CodexHost({cwd:dir,spawnProcess:mock.spawnProcess});host.profile=async()=> 'isolated-host-profile';
  try{
   await host.initialize();const crew=await host.startCrew();assert.equal(DEFAULT_WORKER_MODEL,'gpt-5.6-sol');assert.equal(crew.workers.length,Object.keys(crewRoles).length);assert.equal(new Set(crew.workers.map(w=>w.workerId)).size,crew.workers.length);
-  const p=send(initialProject('bridge',inputs),'configure-crew',{actor:'human',message:'ISOLATED bridge',crew});const task=taskFor(p);
+  const p=send(initialProject('bridge',inputs,{workflowRevision:2}),'configure-crew',{actor:'human',message:'ISOLATED bridge',crew});const task=taskFor(p);
   const result=await runCrewTask(p,task,host);assert.equal(result.workerId,crew.workers[0].workerId);assert.deepEqual(result.content,script);
   const start=mock.requests.find(r=>r.method==='thread/start');assert.equal(start.params.allowProviderModelFallback,false);assert.equal(start.params.sandbox,'read-only');assert.equal(start.params.dynamicTools[0].name,'wiggly_tool');
   assert.match(mock.requests.find(r=>r.id===999).result.contentItems[0].text,/TOOL_PERMISSION_DENIED/);
@@ -70,7 +70,7 @@ test('bounded driver preserves SQLite task state and stops for human and product
  const dir=await mkdtemp(join(tmpdir(),'memoir-codex-drive-'));const workflow=openWorkflow(join(dir,'checkpoints.sqlite'));
  const crew={workers:Object.entries(crewRoles).map(([role,{name}])=>({workerId:`isolated-${role}`,name,role,modelVersion:'isolated-host',capabilityVersion:'isolated-tools',execution:'host'}))};let calls=0;
  const host={runTask:async(task,{worker})=>{calls++;return task.gate==='author'?{taskId:task.taskId,actor:'agent',workerId:worker.workerId,action:'artifact',content:script}:{taskId:task.taskId,actor:'reviewer',workerId:worker.workerId,action:'review',artifactId:task.artifact.id,artifactDigest:task.artifact.digest,review:{decision:'approved',perception:'direct-text',modelVersion:worker.modelVersion,capabilityVersion:worker.capabilityVersion,checks:task.criteria.map(criterion=>({criterion,status:'pass',location:'ISOLATED script fixture',evidence:'ISOLATED fixture comparison',repair:''}))}};}};
- try{let status=await workflow.init('run',inputs);await workflow.respond('run',event(status.project,'configure-crew',{actor:'human',message:'ISOLATED configure',crew}));const result=await driveCrew(workflow,'run',host,{receiptDirectory:join(dir,'dispatch')});assert.equal(result.completed,2);assert.equal(result.status.project.gate,'human');assert.equal((await driveCrew(workflow,'run',host,{receiptDirectory:join(dir,'dispatch')})).completed,0);assert.equal(calls,2);
+ try{let status=await workflow.init('run',inputs,{workflowRevision:2});await workflow.respond('run',event(status.project,'configure-crew',{actor:'human',message:'ISOLATED configure',crew}));const result=await driveCrew(workflow,'run',host,{receiptDirectory:join(dir,'dispatch')});assert.equal(result.completed,2);assert.equal(result.status.project.gate,'human');assert.equal((await driveCrew(workflow,'run',host,{receiptDirectory:join(dir,'dispatch')})).completed,0);assert.equal(calls,2);
   const current=result.status.pending.artifact;await workflow.respond('run',{taskId:result.status.pending.taskId,actor:'human',action:'approve',artifactId:current.id,artifactDigest:current.digest,message:'ISOLATED fixture approval',intakeConfirmation:intakeFixture(result.status.project)});assert.equal((await driveCrew(workflow,'run',host,{receiptDirectory:join(dir,'dispatch')})).completed,0);assert.equal(calls,2);
   await assert.rejects(driveCrew(workflow,'run',host,{maxTasks:100,receiptDirectory:join(dir,'dispatch')}),/bounded/);
  }finally{workflow.close();await rm(dir,{recursive:true});}
@@ -89,7 +89,7 @@ test('completed worker receipts survive a checkpoint failure; uncertain turns ar
  const dir=await mkdtemp(join(tmpdir(),'memoir-dispatch-recovery-')),workflow=openWorkflow(join(dir,'state.sqlite'));
  const crew={workers:Object.entries(crewRoles).map(([role,{name}])=>({workerId:`isolated-${role}`,name,role,modelVersion:'isolated-host',capabilityVersion:'isolated-tools',execution:'host'}))};let calls=0;
  const host={runTask:async(task,{worker})=>{calls++;return {taskId:task.taskId,actor:'agent',action:'artifact',workerId:worker.workerId,content:script};}},options={maxTasks:1,receiptDirectory:join(dir,'dispatch')};
- try{const init=await workflow.init('run',inputs);await workflow.respond('run',event(init.project,'configure-crew',{actor:'human',message:'ISOLATED',crew}));
+ try{const init=await workflow.init('run',inputs,{workflowRevision:2});await workflow.respond('run',event(init.project,'configure-crew',{actor:'human',message:'ISOLATED',crew}));
   await assert.rejects(driveCrew({status:workflow.status,respond:async()=>{throw new Error('ISOLATED checkpoint unavailable');}},'run',host,options),/checkpoint unavailable/);assert.equal(calls,1);
   const result=await driveCrew(workflow,'run',host,options);assert.equal(calls,1);assert.equal(result.status.project.gate,'review');
   const task=result.status.pending;await writeFile(join(options.receiptDirectory,task.taskId+'.json'),JSON.stringify({status:'started',taskId:task.taskId,workerDigest:(await import('../runtime/contracts.mjs')).digest(task.crewWorker)}));
@@ -109,7 +109,7 @@ test('known malformed finished output stays inspectable and can receive a bounde
  const dir=await mkdtemp(join(tmpdir(),'memoir-invalid-repair-')),workflow=openWorkflow(join(dir,'state.sqlite'));
  const crew={workers:Object.entries(crewRoles).map(([role,{name}])=>({workerId:`isolated-${role}`,name,role,modelVersion:'isolated-host',capabilityVersion:'isolated-tools',execution:'host'}))};let calls=0,repair;
  const host={runTask:async(task,{worker})=>{calls++;repair=task.repairFeedback;return {taskId:task.taskId,actor:'agent',action:'artifact',workerId:worker.workerId,content:calls===1?{beats:[]}:script};}},options={maxTasks:1,receiptDirectory:join(dir,'dispatch')};
- try{const init=await workflow.init('run',inputs);await workflow.respond('run',event(init.project,'configure-crew',{actor:'human',message:'ISOLATED',crew}));
+ try{const init=await workflow.init('run',inputs,{workflowRevision:2});await workflow.respond('run',event(init.project,'configure-crew',{actor:'human',message:'ISOLATED',crew}));
   await assert.rejects(driveCrew(workflow,'run',host,options),/RESULT_REJECTED/);assert.equal((await workflow.status('run')).project.gate,'author');
   await assert.rejects(driveCrew(workflow,'run',host,options),/RESULT_REJECTED/);assert.equal(calls,1);
   const result=await driveCrew(workflow,'run',host,{...options,repairInvalid:true});assert.equal(calls,2);assert.ok(repair.error);assert.deepEqual(repair.previousEvent.content,{beats:[]});assert.equal(result.status.project.gate,'review');
@@ -121,7 +121,7 @@ test('known finished role and JSON errors permit evidenced repair; unknown trans
   const dir=await mkdtemp(join(tmpdir(),'memoir-invalid-'+kind+'-')),workflow=openWorkflow(join(dir,'state.sqlite'));
   const crew={workers:Object.entries(crewRoles).map(([role,{name}])=>({workerId:`isolated-${role}`,name,role,modelVersion:'isolated-host',capabilityVersion:'isolated-tools',execution:'host'}))};let calls=0,repair;
   const host={runTask:async(task,{worker})=>{calls++;repair=task.repairFeedback;if(calls===1&&kind==='json')throw Object.assign(new Error('INVALID_WORKER_EVENT: ISOLATED finished JSON'),{knownFinished:true,finishedResult:'malformed JSON'});if(kind==='transport')throw new Error('ISOLATED timeout, outcome unknown');return {taskId:task.taskId,actor:'agent',action:calls===1?'approve':'artifact',workerId:worker.workerId,content:script};}},options={maxTasks:1,receiptDirectory:join(dir,'dispatch')};
-  try{const init=await workflow.init('run',inputs);await workflow.respond('run',event(init.project,'configure-crew',{actor:'human',message:'ISOLATED',crew}));
+  try{const init=await workflow.init('run',inputs,{workflowRevision:2});await workflow.respond('run',event(init.project,'configure-crew',{actor:'human',message:'ISOLATED',crew}));
    await assert.rejects(driveCrew(workflow,'run',host,options),kind==='transport'?/timeout/:/RESULT_REJECTED/);
    if(kind==='transport'){await assert.rejects(driveCrew(workflow,'run',host,{...options,repairInvalid:true}),/DISPATCH_UNCERTAIN/);assert.equal(calls,1);}
    else{const result=await driveCrew(workflow,'run',host,{...options,repairInvalid:true});assert.ok(repair.error);assert.equal(calls,2);assert.equal(result.status.project.gate,'review');}

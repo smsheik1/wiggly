@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-02",
+  "branch": "codex/memoir-answers-character-prompts",
+  "scope": "approved answers lock, character design prompt gate, Muse retained and natural-rate fifteen-second narration windows",
+  "workflowRevision": 3,
+  "formatVersion": "2.0.0",
+  "archive": "v3/public/format-repositories/my-pixar-story-v1/my-pixar-story-v2.0.0.tgz",
+  "archiveSha256": "d893a37cb4ef7801caab021b791fe25ccc1ee093f1732d69cf30b008bef053fc",
+  "sourceTestsPassed": 144,
+  "freshPackageTestsPassed": 144,
+  "finalByteFocusedTestsPassed": 7,
+  "sourceCheckSmokePassed": true,
+  "freshPackageCleanInstallCheckSmokePassed": true,
+  "finalByteCheckSmokePassed": true,
+  "independentCLIProof": "wrong source digest and premature approval refused without checkpoint mutation; reviewed answers survived restart; exact confirmed answers lock led to script",
+  "packageAudit": "memoir-answers-character-package-audit.md",
+  "sourceLogs": [
+    "/tmp/memoir-refined-finaltests.log",
+    "/tmp/memoir-refined-check.log",
+    "/tmp/memoir-refined-smoke.log",
+    "/tmp/memoir-refined-pack.log"
+  ],
+  "noRealProvidersOrMedia": true,
+  "credentialsRead": false,
+  "existingRunsChanged": false,
+  "realHumanLabelsOrApprovalsCreated": false,
+  "productionFilmQualityProven": false,
+  "simplificationReview": "ponytail-review: Lean already. Ship. Existing stage/review/worker machinery extended; no new dependency, framework or renderer.",
+  "remaining": "formal calibrated review and real production film proof still deferred; per-beat regeneration still deferred"
+}

@@ -40,7 +40,7 @@ test('older checkpoints retain qualified policy and cannot silently skip qualifi
 test('supervised policy and human media evidence survive a new SQLite connection',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'memoir-supervised-'));let w=openWorkflow(join(dir,'state.sqlite'));
  try{
-  let s=await w.init('supervised',inputs);assert.equal(s.project.reviewMode,'supervised');
+  let s=await w.init('supervised',inputs,{workflowRevision:2});assert.equal(s.project.reviewMode,'supervised');
   const task=s.pending.taskId;w.close();w=openWorkflow(join(dir,'state.sqlite'));s=await w.status('supervised');
   assert.equal(s.pending.taskId,task);assert.equal(s.project.reviewMode,'supervised');assert.equal(s.pending.reviewPolicy.humanMediaConfirmationRequired,true);
  }finally{w.close();await rm(dir,{recursive:true});}
@@ -106,14 +106,14 @@ test('one durable ceiling covers generation and inference; failures and rewinds 
  assert.equal(p.budget.reservations.length,1);
 });
 test('zero budget refuses paid generation and inference; accounting survives SQLite restart without changing creative task',async()=>{
- let p=approved(reviewed(authored(initialProject('zero',inputs))));
+ let p=approved(reviewed(authored(initialProject('zero',inputs,{workflowRevision:2}))));
  p=send(p,'artifact',{actor:'human',workerId:'human',content:{files:[file()],consent:true,language:'en'}});
  p=send(p,'plan',{plan:{provider:'cartesia',operation:'clone',estimatedCostUsd:.1,parameters:{}}});const j=p.jobs.at(-1);
  assert.throws(()=>send(p,'authorize',{jobId:j.id,artifactDigest:j.digest,message:'ISOLATED'}),/BUDGET_EXCEEDED/);
  assert.throws(()=>send(p,'reserve-compute',{actor:'runtime',reservation:{id:'zero',provider:'gemini',estimatedCostUsd:.01}}),/BUDGET_EXCEEDED/);
  const dir=await mkdtemp(join(tmpdir(),'memoir-budget-'));let w=openWorkflow(join(dir,'state.sqlite'));
  try{
-  let s=await w.init('budget',inputs);s=await w.respond('budget',{taskId:s.pending.taskId,actor:'human',action:'set-budget',budgetLimitUsd:.1,message:'ISOLATED'});
+  let s=await w.init('budget',inputs,{workflowRevision:2});s=await w.respond('budget',{taskId:s.pending.taskId,actor:'human',action:'set-budget',budgetLimitUsd:.1,message:'ISOLATED'});
   const task=s.pending.taskId;s=await w.respond('budget',{taskId:task,actor:'runtime',action:'reserve-compute',reservation:{id:'r1',provider:'gemini',estimatedCostUsd:.05}});
   w.close();w=openWorkflow(join(dir,'state.sqlite'));s=await w.status('budget');assert.equal(s.pending.taskId,task);assert.equal(s.pending.budget.totalReservedUsd,.05);
   s=await w.respond('budget',{taskId:task,actor:'runtime',action:'reserve-compute',reservation:{id:'r1',provider:'gemini',estimatedCostUsd:.05}});assert.equal(s.project.budget.reservations.length,1);
@@ -121,7 +121,7 @@ test('zero budget refuses paid generation and inference; accounting survives SQL
 });
 
 test('script lock needs actual human rights/reference and common-sense resolutions; later cast cannot switch identities or ages',()=>{
- const p=reviewed(authored(initialProject('intake',inputs))),a=current(p);
+ const p=reviewed(authored(initialProject('intake',inputs,{workflowRevision:2}))),a=current(p);
  const approve=intake=>send(p,'approve',{artifactId:a.id,artifactDigest:a.digest,message:'ISOLATED',...(intake?{intakeConfirmation:intake}:{})});
  assert.throws(()=>approve(),/INTAKE_CONFIRMATION_REQUIRED/);
  const base=intakeFixture(p);
