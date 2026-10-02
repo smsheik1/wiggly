@@ -11,7 +11,7 @@ const mime={'.wav':'audio/wav','.mp3':'audio/mpeg','.m4a':'audio/mp4','.flac':'a
 async function readJson(path){try{return JSON.parse(await readFile(path,'utf8'));}catch(e){if(e.code==='ENOENT')return null;throw e;}}
 
 // Independent ASR: send only audio and its declared language, never the script.
-export function createCartesiaTranscriptionTool({secretsPath,receiptDirectory,maxCalls=0,fetcher=fetch}={}){
+export function createCartesiaTranscriptionTool({secretsPath,receiptDirectory,maxCalls=0,beforeRequest,fetcher=fetch}={}){
  if(!secretsPath||!receiptDirectory)throw new Error('Cartesia transcription needs canonical secrets and durable receipts.');
  if(!Number.isInteger(maxCalls)||maxCalls<0||maxCalls>32)throw new Error('Use a bounded --transcription-calls between 0 and 32.');
  let submitted=0;const inFlight=new Map();
@@ -39,6 +39,7 @@ export function createCartesiaTranscriptionTool({secretsPath,receiptDirectory,ma
   if(started)throw new Error(`STT_REQUEST_UNCERTAIN: inspect ${dir}; no automatic resubmission.`);
   if(submitted>=maxCalls)throw new Error('STT_BUDGET_REQUIRED: supply explicit bounded --transcription-calls; no request submitted.');
   submitted++; // Reserve synchronously before reading credentials/audio.
+  await beforeRequest?.({provider:'cartesia-stt',requestDigest,task});
   let key;
   try{
    key=await loadKey('cartesia',secretsPath);

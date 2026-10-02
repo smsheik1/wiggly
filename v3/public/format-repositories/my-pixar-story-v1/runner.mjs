@@ -4,7 +4,7 @@ import { resolve, join, dirname } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { z } from 'zod';
-import { VERSION, Content, Event, Review, Plans, Inputs, digest } from './runtime/contracts.mjs';
+import { VERSION, Content, Event, Review, Plans, Inputs, IntakeConfirmation, digest } from './runtime/contracts.mjs';
 import { openWorkflow, revisionImpact } from './runtime/workflow.mjs';
 import { importMedia, verifyFiles, measureAudio } from './runtime/media.mjs';
 import { executeJob, loadKey, remediation, checkProvider } from './runtime/providers.mjs';
@@ -47,7 +47,7 @@ function presentation(status) {
     jobs: project.jobs.map(j => ({ id: j.id, status: j.status, digest: j.digest, providerJobId: j.providerJobId })), allowances: project.allowances };
 }
 async function verifySubmission(status,event){
-  await verifyFiles(event.content);
+  await verifyFiles({content:event.content,intakeConfirmation:event.intakeConfirmation});
   if(['artifact','plan','approve','authorize','owner-review'].includes(event.action)||event.action==='review'&&event.review?.decision!=='inconclusive')await verifyFiles(status.project.artifacts.filter(a=>a.valid));
 }
 async function main() {
@@ -71,11 +71,11 @@ async function main() {
     const tools = Object.fromEntries(['ffprobe', 'ffmpeg', 'tar'].map(tool => [tool, spawnSync(tool, ['-version'], { stdio: 'ignore' }).error?.code !== 'ENOENT']));
     const renderer=await verifyRenderer();
     print({ formatVersion: VERSION, node: process.version, tools, renderer:renderer.manifest.renderer, dependencies: 'LangGraph + SQLite loaded',
-      requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY'], optionalKeys:['REPLICATE_API_TOKEN','ELEVENLABS_API_KEY','GEMINI_API_KEY (Codex media review)'], credentialsRead: false, productionStageLimit: 'final film; video blocked until reviewer qualification and human authorization; real production proof not performed' });
+      requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY'], optionalKeys:['REPLICATE_API_TOKEN','ELEVENLABS_API_KEY','GEMINI_API_KEY (Codex media review)'], credentialsRead: false, productionStageLimit: 'supervised v1 through private finalization; every media lock needs human review and every video request needs exact human authorization; qualified policy remains available; real production proof not performed' });
     if (Object.values(tools).some(v => !v)) process.exitCode = 1; return;
   }
   if (command === 'schema') {
-    const name = args[0]; const schema = name === 'crew' ? Crew : name === 'event' ? Event : name === 'review' ? Review : name === 'plan' ? Plans : name === 'inputs' ? Inputs : Content[name];
+    const name = args[0]; const schema = name === 'crew' ? Crew : name === 'event' ? Event : name === 'review' ? Review : name === 'plan' ? Plans : name === 'inputs' ? Inputs : name==='intake-confirmation'?IntakeConfirmation:Content[name];
     if (!schema) throw new Error('schema needs event/review/plan/inputs or a supported artifact kind.'); print(z.toJSONSchema(schema)); return;
   }
   const release = await lock(); const workflow = openWorkflow(join(runDir, 'checkpoints.sqlite'));
@@ -88,7 +88,10 @@ async function main() {
     if(['crew-start','crew-refresh','drive-codex','work-codex'].includes(command)){
       const reviewCalls=Number(option('review-calls','0'));
       const transcriptionCalls=Number(option('transcription-calls','0'));
-      const perceptionTools={...createGeminiReviewTools({secretsPath,receiptDirectory:join(runDir,'gemini-reviews'),maxCalls:reviewCalls}),...createCartesiaTranscriptionTool({secretsPath,receiptDirectory:join(runDir,'cartesia-transcriptions'),maxCalls:transcriptionCalls})};
+      const reviewCost=Number(option('review-cost-usd','0')),transcriptionCost=Number(option('transcription-cost-usd','0'));
+      let budgetQueue=Promise.resolve();
+      const beforeRequest=async({provider,requestDigest,task})=>{if(status.project.reviewMode!=='supervised')return;const amount=provider==='gemini'?reviewCost:transcriptionCost;if(!Number.isFinite(amount)||amount<=0)throw new Error('ACCOUNT_ESTIMATE_REQUIRED: set positive --review-cost-usd / --transcription-cost-usd before paid inference.');budgetQueue=budgetQueue.then(async()=>{const latest=await workflow.status('project');if(latest.pending.taskId!==task.taskId)throw new Error('STALE_TASK: inference reservation belongs to an older task.');await workflow.respond('project',{taskId:task.taskId,actor:'runtime',action:'reserve-compute',reservation:{id:provider+':'+requestDigest,provider,estimatedCostUsd:amount}});});return budgetQueue;};
+      const perceptionTools={...createGeminiReviewTools({secretsPath,receiptDirectory:join(runDir,'gemini-reviews'),maxCalls:reviewCalls,beforeRequest}),...createCartesiaTranscriptionTool({secretsPath,receiptDirectory:join(runDir,'cartesia-transcriptions'),maxCalls:transcriptionCalls,beforeRequest})};
       const host=new CodexHost({cwd:join(runDir,'host-workspace'),perceptionTools,perceptionProfile:{media:GEMINI_REVIEW_PROFILE,transcription:CARTESIA_STT_PROFILE},onProgress:({worker,item})=>process.stderr.write(`${worker}: ${item}\n`)});
       try{
         if(['crew-start','crew-refresh'].includes(command)){
@@ -144,7 +147,7 @@ async function main() {
     if(command==='present'){print(await presentDeliverable(status));return;}
     if (command === 'status' || command === 'inspect') { print({...presentation(status),...(command==='inspect'&&current(status.project,'film')?{filmMeasurements:await inspectFilm(current(status.project,'film').content.files[0])}:{})}); return; }
     if (command === 'impact') { print(revisionImpact(status.project, args[0])); return; }
-    if (command === 'validate') { for (const a of status.project.artifacts.filter(a => a.valid)) await verifyFiles(a.content); print({ valid: true, pending: status.pending.step, sequence: status.project.sequence }); return; }
+    if (command === 'validate') { for (const a of status.project.artifacts.filter(a => a.valid)) await verifyFiles(a); print({ valid: true, pending: status.pending.step, sequence: status.project.sequence }); return; }
     if (command === 'measure') { const a = status.project.artifacts.findLast(a => a.key === args[0] && a.valid); if (!a?.content.files) throw new Error('Specify an existing audio artifact key, e.g. narration or audition.'); print(await Promise.all(a.content.files.map(measureAudio))); return; }
     if (command === 'respond') {
       const event = await json(args[0]);

@@ -28,9 +28,9 @@ export const Crew=z.object({workers:z.array(z.object({workerId:text,name:text,ro
 });
 export function roleFor(p){
  if(p.gate==='owner-review')return 'background-product-owner';
- if(p.gate==='review')return p.step==='film'?(p.artifacts.findLast(a=>a.key==='film'&&a.valid)?.visualReview && reviewPassed(p.artifacts.findLast(a=>a.key==='film'&&a.valid)?.visualReview)?'audio-reviewer':'visual-reviewer'):['audition','narration','music','effect'].includes(p.step)?'audio-reviewer':['candidates','sheet','backgroundCandidates','backgroundAngle','keyframe','video'].includes(p.step)?'visual-reviewer':'text-reviewer';
+ if(p.gate==='review')return p.step==='film'?(reviewPassed(p.artifacts.findLast(a=>a.key==='film'&&a.valid)?.visualReview)?'audio-reviewer':'visual-reviewer'):['audition','narration','music','effect'].includes(p.step)?'audio-reviewer':['candidates','sheet','backgroundCandidates','backgroundAngle','keyframe','video'].includes(p.step)?'visual-reviewer':'text-reviewer';
  if(p.gate==='produce')return 'generation-planner';
- return ({script:'script-writer',roster:'cast-designer',sheetPrompt:'sheet-prompter',backgrounds:'background-product-owner',backgroundBrief:'background-product-owner',backgroundAngleBrief:'background-product-owner',backgroundPrompt:'pixar-prompter',backgroundAnglePrompt:'pixar-prompter',shots:'shot-planner',keyframePrompt:'composition-writer',videoPlan:'motion-director',videoPrompt:'video-prompt-engineer',soundPlan:'sound-designer',music:'sound-designer',effect:'sound-designer',editPlan:'film-editor'})[p.step]??'orchestrator';
+ return ({script:'script-writer',roster:'cast-designer',sheetPrompt:'sheet-prompter',backgrounds:'background-product-owner',backgroundBrief:'background-product-owner',backgroundAngleBrief:'background-product-owner',backgroundPrompt:'pixar-prompter',backgroundAnglePrompt:'pixar-prompter',shotIntentions:'shot-planner',shots:'shot-planner',keyframePrompt:'composition-writer',videoPlan:'motion-director',videoPrompt:'video-prompt-engineer',soundPlan:'sound-designer',music:'sound-designer',effect:'sound-designer',editPlan:'film-editor'})[p.step]??'orchestrator';
 }
 export function assignedWorker(p){return p.crew?.workers.find(w=>w.role===roleFor(p));}
 export function assertCrewEvent(p,event){
@@ -44,7 +44,7 @@ function filesIn(value,out=new Map()){
  if(value.path&&value.sha256&&value.bytes){const f=File.parse(value);out.set(f.sha256,f);return out;}
  for(const v of Object.values(value))filesIn(v,out);return out;
 }
-export function taskAssets(task){return filesIn({artifact:task.artifact,dependencies:task.dependencies,visualReferences:task.visualReferences,references:task.references,availableLocations:task.availableLocations,videoBinding:task.videoBinding,sample:task.voiceReference});}
+export function taskAssets(task){return filesIn({artifact:task.artifact,dependencies:task.dependencies,visualReferences:task.visualReferences,references:task.references,availableLocations:task.availableLocations,videoBinding:task.videoBinding,sample:task.voiceReference,intake:task.intakeConfirmation});}
 export function crewTools(task,worker,adapters={},record=()=>{}){
  const allowed=crewRoles[worker.role]?.tools??[],assets=taskAssets(task);
  const get=async hash=>{const file=assets.get(hash);if(!file)throw new Error('ASSET_SCOPE_DENIED: use a hash from this current task.');await verifyFiles(file);return file;};

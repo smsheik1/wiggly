@@ -77,3 +77,13 @@ test('identical concurrent STT requests share a result without consuming the nex
   await tools.transcribe({...f,task:{...f.task,taskId:'next-legitimate-task'}});assert.equal(calls,2);
  }finally{await rm(f.dir,{recursive:true});}
 });
+
+test('project reservation blocks network first and completed cache consumes no additional reservation',async()=>{
+ const f=await fixture();let calls=0,reserved=0;
+ try{
+  const denied=createCartesiaTranscriptionTool({...f.options,beforeRequest:async()=>{throw new Error('PROJECT_BUDGET_EXCEEDED');},fetcher:async()=>{calls++;throw new Error('Must not fetch');}});
+  await assert.rejects(denied.transcribe(f),/PROJECT_BUDGET_EXCEEDED/);assert.equal(calls,0);
+  const tools=createCartesiaTranscriptionTool({...f.options,beforeRequest:async({requestDigest,task})=>{reserved++;assert.ok(requestDigest);assert.equal(task.taskId,f.task.taskId);},fetcher:async()=>{calls++;return Response.json(f.response);}});
+  await tools.transcribe(f);await tools.transcribe(f);assert.equal(reserved,1);assert.equal(calls,1);
+ }finally{await rm(f.dir,{recursive:true});}
+});

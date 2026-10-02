@@ -105,3 +105,13 @@ test('Gemini readiness is one authenticated metadata GET for the selected model,
  const f=await fixture();let count=0;
  try{const report=await checkProvider('gemini',f.secretsPath,async(url,options)=>{count++;assert.equal(options.method,'GET');assert.equal(options.body,undefined);assert.equal(options.headers['x-goog-api-key'],'ISOLATED_SECRET');assert.ok(url.endsWith('/models/gemini-3.8-flash'));return new Response(JSON.stringify({name:'models/gemini-3.8-flash'}));});assert.equal(count,1);assert.equal(report.generationReady,false);assert.equal(report.projectStateMutated,false);}finally{await rm(f.dir,{recursive:true});}
 });
+
+test('project reservation blocks network first and completed cache consumes no additional reservation',async()=>{
+ const f=await fixture();let calls=0,reserved=0;
+ try{
+  const denied=createGeminiReviewTools({...f.options,beforeRequest:async()=>{throw new Error('PROJECT_BUDGET_EXCEEDED');},fetcher:async()=>{calls++;throw new Error('Must not fetch');}});
+  await assert.rejects(denied.listenAudio(f),/PROJECT_BUDGET_EXCEEDED/);assert.equal(calls,0);
+  const tools=createGeminiReviewTools({...f.options,beforeRequest:async({requestDigest,task})=>{reserved++;assert.ok(requestDigest);assert.equal(task.taskId,f.task.taskId);},fetcher:async()=>{calls++;return f.response();}});
+  await tools.listenAudio(f);await tools.listenAudio(f);assert.equal(reserved,1);assert.equal(calls,1);
+ }finally{await rm(f.dir,{recursive:true});}
+});

@@ -351,5 +351,37 @@
       "networkCalls": 0,
       "missingNamedKey": "ELEVENLABS_API_KEY"
     }
+  },
+  "historicalEntries": "Earlier dated checkpoints retain their results/gaps for provenance. supervisedV1 is the current implementation status and supersedes old qualification blockers for supervised operation.",
+  "supervisedV1": {
+    "date": "2026-10-02",
+    "status": "implemented human-supervised v1; production proof pending",
+    "scope": "No AI video generation or real end-to-end production proof",
+    "review": "Default supervised, actual-media advisory review then explicit human confirmation; legacy qualified policy unchanged",
+    "implemented": [
+      "human-confirmed intake rights/age/reference inventory and hash-bound common-sense resolutions",
+      "reviewed/human-approved shot intentions before backgrounds, followed by staging confirmation",
+      "human approval of character-sheet prompt before generation",
+      "durable generation/Gemini/STT reserved-estimate ceiling beginning at zero; actual charges unverified",
+      "exact impact acknowledgement before locked-work rewind; detail/redo/abandon persisted",
+      "original voice sample presentation alongside audition and four narration stems",
+      "every supervised video request and repair requires exact human spending authorization",
+      "invented-persona routing/binding regressions run in tests and before packaging"
+    ],
+    "sourceTests": 137,
+    "sourceLog": "/tmp/memoir-v1-all-tests.log",
+    "offlineRehearsal": "complete supervised protocol through SQLite restart after every event; isolated fixtures, zero provider calls, no generated film",
+    "regression": "10 invented protocol cases, no genuine human labels or perceptual quality proof",
+    "deferred": [
+      "formal speaker/face/hand/OCR measurements and genuine reviewer qualification",
+      "per-beat narration repair/approval",
+      "real production media and end-to-end film proof",
+      "additional hosts/OS verification",
+      "music research and Wiggly app integration"
+    ],
+    "savedProductionRunMutated": false,
+    "aiVideoGenerations": 0,
+    "realProductionProof": false,
+    "packageVerification": "pending final clean extraction"
   }
 }

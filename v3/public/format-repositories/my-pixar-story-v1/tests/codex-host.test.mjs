@@ -7,7 +7,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {CodexHost,driveCrew,DEFAULT_WORKER_MODEL} from '../runtime/codex-host.mjs';
 import {openWorkflow,initialProject,taskFor} from '../runtime/workflow.mjs';
-import {inputs,script,event,send} from './helpers.mjs';
+import {inputs,intakeFixture,script,event,send} from './helpers.mjs';
 import {crewRoles,runCrewTask} from '../runtime/crew.mjs';
 
 function fixture({respondTool=false,toolName='generateVideo',failTurn=false,wrongModel=false,failStartAt=0}={}){
@@ -71,7 +71,7 @@ test('bounded driver preserves SQLite task state and stops for human and product
  const crew={workers:Object.entries(crewRoles).map(([role,{name}])=>({workerId:`isolated-${role}`,name,role,modelVersion:'isolated-host',capabilityVersion:'isolated-tools',execution:'host'}))};let calls=0;
  const host={runTask:async(task,{worker})=>{calls++;return task.gate==='author'?{taskId:task.taskId,actor:'agent',workerId:worker.workerId,action:'artifact',content:script}:{taskId:task.taskId,actor:'reviewer',workerId:worker.workerId,action:'review',artifactId:task.artifact.id,artifactDigest:task.artifact.digest,review:{decision:'approved',perception:'direct-text',modelVersion:worker.modelVersion,capabilityVersion:worker.capabilityVersion,checks:task.criteria.map(criterion=>({criterion,status:'pass',location:'ISOLATED script fixture',evidence:'ISOLATED fixture comparison',repair:''}))}};}};
  try{let status=await workflow.init('run',inputs);await workflow.respond('run',event(status.project,'configure-crew',{actor:'human',message:'ISOLATED configure',crew}));const result=await driveCrew(workflow,'run',host,{receiptDirectory:join(dir,'dispatch')});assert.equal(result.completed,2);assert.equal(result.status.project.gate,'human');assert.equal((await driveCrew(workflow,'run',host,{receiptDirectory:join(dir,'dispatch')})).completed,0);assert.equal(calls,2);
-  const current=result.status.pending.artifact;await workflow.respond('run',{taskId:result.status.pending.taskId,actor:'human',action:'approve',artifactId:current.id,artifactDigest:current.digest,message:'ISOLATED fixture approval'});assert.equal((await driveCrew(workflow,'run',host,{receiptDirectory:join(dir,'dispatch')})).completed,0);assert.equal(calls,2);
+  const current=result.status.pending.artifact;await workflow.respond('run',{taskId:result.status.pending.taskId,actor:'human',action:'approve',artifactId:current.id,artifactDigest:current.digest,message:'ISOLATED fixture approval',intakeConfirmation:intakeFixture(result.status.project)});assert.equal((await driveCrew(workflow,'run',host,{receiptDirectory:join(dir,'dispatch')})).completed,0);assert.equal(calls,2);
   await assert.rejects(driveCrew(workflow,'run',host,{maxTasks:100,receiptDirectory:join(dir,'dispatch')}),/bounded/);
  }finally{workflow.close();await rm(dir,{recursive:true});}
 });

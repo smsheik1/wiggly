@@ -65,7 +65,7 @@ test('missing STT, similarity or actual audio perception prevents narration lock
 });
 
 test('request authorization binds exact snapshot; begin/job ID persists and duplicate submission is rejected', () => {
-  let p = approved(reviewed(authored(initialProject('x', inputs))));
+  let p = approved(reviewed(authored(initialProject('x', inputs,{reviewMode:'qualified'}))));
   p = send(p, 'artifact', { actor: 'human', workerId: 'human', content: { files: [file()], consent: true, language: 'en' } });
   p = send(p, 'plan', { plan: { provider: 'cartesia', operation: 'clone', estimatedCostUsd: 0.1, parameters: {} } });
   const j = p.jobs[0]; assert.equal(p.gate, 'authorize'); assert.equal(j.request.clip.sha256, file().sha256);

@@ -3,7 +3,7 @@ import { readFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openWorkflow, assertAllowed, revisionImpact, current } from './runtime/workflow.mjs';
-import { event, send, authored, reviewed, approved } from './tests/helpers.mjs';
+import { event, send, authored, reviewed, approved, intakeFixture } from './tests/helpers.mjs';
 const dir = await mkdtemp(join(tmpdir(), 'wiggly-memoir-smoke-'));
 try {
   for (const name of ['parent', 'grandparent']) {
@@ -18,7 +18,7 @@ try {
     w.close(); w = openWorkflow(path);
     const resumed = await w.status(name); assert.equal(resumed.pending.gate, 'human');
     for (const kind of ['candidates', 'sheet', 'video']) assert.throws(() => assertAllowed(resumed.project, kind), /AUDIO_LOCK/);
-    const locked = approved(resumed.project); await w.respond(name, event(resumed.project, 'approve', { artifactId: current(resumed.project).id, artifactDigest: current(resumed.project).digest, message: 'ISOLATED MOCK human approval; not a real creative approval.' }));
+    const locked = approved(resumed.project); await w.respond(name, event(resumed.project, 'approve', { artifactId: current(resumed.project).id, artifactDigest: current(resumed.project).digest, message: 'ISOLATED MOCK human approval; not a real creative approval.',intakeConfirmation:intakeFixture(resumed.project) }));
     assert.equal((await w.status(name)).pending.step, 'voiceSample');
     assert.deepEqual(revisionImpact(locked, 'script@1').affected, ['script@1']); w.close();
     process.stdout.write(`${name}: persistent author/reviewer/user loop + audio-first gates passed (isolated fixture).\n`);

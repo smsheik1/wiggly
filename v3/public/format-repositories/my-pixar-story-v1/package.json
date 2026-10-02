@@ -13,7 +13,8 @@
     "pack:kit": "node pack.mjs",
     "eval": "node runner.mjs eval",
     "eval:holdout": "node runner.mjs eval --split holdout",
-    "build:renderer": "node build-renderer.mjs"
+    "build:renderer": "node build-renderer.mjs",
+    "regression": "node --test tests/supervised-regression.test.mjs"
   },
   "dependencies": {
     "@langchain/core": "1.1.48",

@@ -23,7 +23,7 @@ function contextFor(task){
  const simplify=value=>Array.isArray(value)?value.map(simplify):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).filter(([k])=>!['path','bytes','crew','worker','imageUrl'].includes(k)).map(([k,v])=>[k,simplify(v)])):value;
  return simplify({step:task.step,criteria:task.criteria,artifact:task.artifact,dependencies:task.dependencies,videoBinding:task.videoBinding,visualReferences:task.visualReferences});
 }
-export function createGeminiReviewTools({secretsPath,receiptDirectory,maxCalls=0,fetcher=fetch,wait=ms=>new Promise(r=>setTimeout(r,ms))}={}){
+export function createGeminiReviewTools({secretsPath,receiptDirectory,maxCalls=0,beforeRequest,fetcher=fetch,wait=ms=>new Promise(r=>setTimeout(r,ms))}={}){
  if(!secretsPath||!receiptDirectory)throw new Error('Gemini review needs the canonical secrets path and durable receipt directory.');
  if(!Number.isInteger(maxCalls)||maxCalls<0||maxCalls>32)throw new Error('Use a bounded --review-calls between 0 and 32.');
  let submitted=0;const inFlight=new Map();
@@ -90,6 +90,7 @@ export function createGeminiReviewTools({secretsPath,receiptDirectory,maxCalls=0
   if(submitted>=maxCalls)throw new Error('GEMINI_REVIEW_BUDGET_REQUIRED: supply an explicit bounded --review-calls; no request submitted.');
   // Reserve before any await: concurrent tool requests cannot exceed the cap.
   submitted++;
+  await beforeRequest?.({provider:'gemini',requestDigest,task});
   let key;
   try{
    key=await loadKey('gemini',secretsPath);

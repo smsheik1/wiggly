@@ -37,5 +37,8 @@
     "height": 1080,
     "clipTiming": "integer startFrame/durationFrames; sourceOffsetSeconds on 30fps grid; speed unchanged",
     "audio": "one mixed approved track shared by preview/export"
-  }
+  },
+  "intakeConfirmationSchema": "node runner.mjs schema intake-confirmation",
+  "earlyLockName": "narration lock (audioLocked compatibility export)",
+  "reviewPolicy": "new supervised; old qualified; actual media human confirmation required in supervised"
 }

@@ -45,5 +45,13 @@
   "video": "entire-file direct-video coverage bound to qualified worker/model and current hash; localized rejection repair; no guarantee all defects detected",
   "sound": "actual direct listening for piano/no vocals/fit, measured duration, provenance/usage rights",
   "assembly": "Shared Remotion composition; FFmpeg audio mix, original narration at 0/15/30/45, no atempo, approved trims/ducking/fades",
-  "audioQualification": "separate actual held-out human-labelled audio; integrity/transcript/natural-rate/voice-match/mix/safety each minimum two usable and two broken, zero errors; model/tool profile bound; no production Ava currently qualified"
+  "audioQualification": "separate actual held-out human-labelled audio; integrity/transcript/natural-rate/voice-match/mix/safety each minimum two usable and two broken, zero errors; model/tool profile bound; no production Ava currently qualified",
+  "supervisedV1": {
+    "perception": "required direct actual media; unavailable stays inconclusive",
+    "qualification": "deferred; no invented scores or human labels",
+    "provisional": "advisory candidate with direct perception, no known failing criterion; human confirms all media criteria",
+    "voiceIdentity": "human comparison against original sample; score unavailable until calibrated tool connected",
+    "videoRepairs": "every request exact human authorization",
+    "regression": "invented binding/routing corpus, never qualification evidence"
+  }
 }

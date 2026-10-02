@@ -1,6 +1,6 @@
 # Personal Animated Memoir — Living System Spec
 
-Status: LangGraph workflow implemented through final-film approval and local finalization; actual reviewer qualification and real media quality remain unproven.
+Status: Human-supervised v1 implemented through private finalization; formal reviewer qualification and real production quality remain deferred/unproven.
 Last updated: October 2, 2026.
 Scope: the packaged semi-autonomous workflow from existing questionnaire answers through private finalization. Real end-to-end production proof is explicitly excluded; actual video/paid generation is prohibited during this work.
 
@@ -27,7 +27,7 @@ We are designing this system from the ground up. The existing Eminem run, five-c
 
 1. Version 1 has **four 15-second beats, totaling 60 seconds**. Future durations may change; the modular beat structure remains.
 2. The system supplies a questionnaire and uses the answers to write an intimate narrative for the named recipient.
-3. Every deliverable passes agent review before presentation for user approval.
+3. Every deliverable receives evidenced independent agent review before user approval. Supervised v1 allows an explicitly unqualified advisory candidate only with actual perception and no known failing criterion; the human confirms all media checks.
 4. Only explicit user approval of the exact deliverable version advances its stage.
 5. Revision requests and complaints remain in the current deliverable's loop. Complete rejection returns to its authoring stage without silently discarding the source memories.
 6. An orchestrator keeps persistent project state and controls legal stage transitions.
@@ -45,13 +45,16 @@ We are designing this system from the ground up. The existing Eminem run, five-c
 18. **V1 is narration over memories.** The approved storyteller voice narrates while characters act the memories. On-screen spoken dialogue and narration lip-sync are not v1 requirements.
 19. Reviewer rejection requires evidence tied to an agreed criterion and a specific repair. Personal preference alone is not a rejection reason. Repeated writer/reviewer disagreement returns to the user.
 20. **V1 deliberately uses more human decisions.** Perfect the workflow and learn from reviewed outputs before reducing oversight or introducing broad automatic approval.
-21. **Initial video generation and creative changes need explicit human approval of the request.** The reviewer must catch obvious generation defects, reject them internally, and route a specific repair for automatic regeneration before presenting a passing result to the user. These technical repair retries are a narrow exception to the earlier every-call approval rule and operate within an agreed retry/spending allowance. Extensions, new shots, and creative rerolls still require approval. Text and image generation may proceed autonomously within the current approved stage and bounded allowance; deliverable approval gates still apply.
+21. **Initial video generation and creative changes need explicit human approval of the request.** The reviewer must catch obvious generation defects, reject them internally, and route a specific repair for automatic regeneration before presenting a passing result to the user. The October 2 supervised-v1 decision overrides the automatic-spend exception: each video repair requires exact human request authorization. Bounded automatic technical repairs remain available only in deliberately selected qualified mode. Extensions, new shots, and creative rerolls still require approval. Text and image generation may proceed autonomously within the current approved stage and bounded allowance; deliverable approval gates still apply.
 22. Run **common sense checks during intake and script review**: flag missing character references, age variants, locations, difficult actions, and other feasibility gaps before script lock. Planning does not authorize pre-narration-lock image generation.
 23. Show the consequences of proposed changes: affected shots/assets and approvals, what remains valid, and estimated rerun cost/time. Update only actual dependencies; do not silently rebuild unrelated work.
 24. Video generation uses API-based models. The Format does not require local AI video-model inference.
-25. **Narration lock** means the approved script, storyteller clone/audition, and four measured, listened-to, human-approved narration stems are current. Music and effects come later; final mixed audio has its own review. This renames the design term previously called “audio lock”; existing runtime identifiers remain until an explicit compatible implementation change.
+25. **Narration lock** means the approved script, storyteller clone/audition, and four measured, listened-to, human-approved narration stems are current. Music and effects come later; final mixed audio has its own review. This renames the design term previously called “audio lock”; user-facing runtime messages now use narration lock; compatibility exports and old error identifiers remain to protect checkpoints.
 26. Human feedback distinguishes **change a detail**, **redo the current deliverable from scratch**, and **abandon the project**, alongside approval. Redo preserves source facts and other valid project assets; abandonment stops new work and requires explicit handling of existing jobs and retention/deletion. Neither is an overloaded “reject” command.
 27. A qualified visual reviewer needs a versioned rubric, actual perception, measurable identity/anatomy/text checks with stated limitations, and genuine held-out qualification. An invented-persona regression suite with planted traps runs on every pipeline change; it tests regression behavior and does not replace real-media qualification.
+28. **October 2 supervised-v1 decision:** Finish the core workflow without waiting for formal qualification. Actual-media advisory review and explicit human confirmation replace qualification as the default v1 lock policy. No scores, perception, consent or human labels may be invented; qualified mode remains an explicit stricter option. Existing checkpoints retain their policy.
+29. **Shot intentions lead backgrounds:** Sam plans the story action, framing, space and required locations/angles first; Beau/Pia then produce those backgrounds, and Sam confirms staging against actual approved images.
+30. **One provider-spend ceiling:** It begins at $0 and only a real human can set/increase it. Durable conservative reservations cover generation, paid perception and transcription; estimates are not invoices.
 
 ## Roles and authority
 
@@ -74,10 +77,10 @@ These are responsibility boundaries. Whether each role needs a separate running 
 Existing questionnaire and focused follow-up intake
   → common sense checks and feasibility flags
   → script writing ↔ narrative review (including common sense checks)
-  → user script review ↔ revision
+  → user script review + rights/voice consent/reference decisions + finding resolutions ↔ revision
   → script lock
   → voice sample validation and clone creation
-  → independent audio-reviewer qualification and approval
+  → audio qualification only in deliberately selected qualified mode
   → clone review and user audition approval
   → four narration beats ↔ audio review and repair
   → user audio review ↔ revision
@@ -86,14 +89,15 @@ Existing questionnaire and focused follow-up intake
   → for EACH required character:
       three design candidates ↔ agent review
       → user selection and design approval ↔ revision
-      → sheet prompt compilation and review
+      → sheet prompt compilation, independent review and human approval
       → reference-grounded sheet generation ↔ agent review
       → user sheet approval ↔ revision
   → CHARACTER DESIGN LOCK (all required characters complete)
-  → background scene/location registry, briefs, prompts, masters and required angles
-  → reviewed and human-approved shot plan (current runtime order)
+  → reviewed/human-approved shot intentions and required scene/location/angle inventory
+  → background briefs, prompts, masters and separately reviewed required angles
+  → reviewed/human-approved staging confirmation against actual references
   → reference-grounded scene keyframes, review and human approval
-  → visual-reviewer qualification and approval
+  → visual qualification only in deliberately selected qualified mode
   → motion/clip plan and exact keyframe-bound video prompts
   → human spending authorization → API video jobs and full-clip review/repair
   → human approval of passing clips
@@ -105,7 +109,7 @@ Existing questionnaire and focused follow-up intake
 
 At every review, the outcome is approved, changes requested, rejected, or inconclusive. Provider failures and missing requirements are blockers, not creative rejection or permission to advance.
 
-This is the implemented mechanical order, not a claim of qualified production quality. The proposed shot-intentions-before-backgrounds change is tracked in the remaining-work checklist and has not been adopted in code. Narration lock precedes all generated images, including optional storyboard images.
+This is the implemented supervised v1 order, not a claim of qualified production quality. Older checkpoints retain the qualified/backgrounds-first path without silent migration. Narration lock precedes all generated images, including optional storyboard images.
 
 ## Human response semantics
 
@@ -272,13 +276,13 @@ Bank use follows the same actual-image review, one-location-at-a-time selection,
 
 Keep the workflow hands-on in v1. Retain the established user review steps for script, clone audition, audio beats, character selection, and sheets; later visual-stage user decisions will be designed explicitly. Do not remove these steps merely to minimize clicks or claim greater autonomy.
 
-Agents can author/revise text and generate image candidates within the current stage and its bounded spending/attempt allowance, without permission for each individual text/image call. This does not approve those results on the user's behalf, permit premature visual generation, or grant unlimited image spend. Clone and narration cost authorization remains to be specified separately; the video rule does not decide it implicitly.
+Agents can author/revise text and generate image candidates within the current stage and its bounded spending/attempt allowance, without permission for each individual text/image call. This does not approve those results on the user's behalf, permit premature visual generation, or grant unlimited image spend. Clone/narration also need an exact request authorization or an explicit bounded operation allowance, together with the aggregate project ceiling; deliverable approval never authorizes a paid request.
 
 Before initial video generation, show the exact beat/shot or segment, current prompt and input reference versions, provider/settings, planned duration, estimated cost, and the reason for this attempt. Obtain explicit approval for that request. Extensions, additional shots, creative changes, and rerolls for preference require their own approval. Approval becomes stale when relevant inputs or settings change outside the authorized technical repair scope. Persist the authorization and resulting job ID so collection/resumption of that same job does not become a duplicate paid call.
 
-**Automatic technical repair exception, agreed October 1:** The reviewer should independently detect obvious defects such as extra limbs, broken anatomy, missing or duplicating props, and visible temporal corruption. Reject the defective attempt internally with localized evidence and a specific repair, return it to the video producer, regenerate within the agreed repair allowance, and review the replacement. Never advance the failed attempt or present it as the user's deliverable. The user reviews only an agent-passing candidate. Store failed attempts and diagnostic evidence for audit; do not routinely show defective media to the user. This exception authorizes narrowly scoped technical repairs, not new story actions, changed character identity, or creative preference changes. It never bypasses narration lock, approved references, or current stage dependencies.
+**Qualified-mode automatic technical repair exception, agreed October 1; supervised v1 override October 2:** The reviewer should independently detect obvious defects such as extra limbs, broken anatomy, missing or duplicating props, and visible temporal corruption. Reject the defective attempt internally with localized evidence and a specific repair, return it to the video producer, regenerate within the agreed repair allowance, and review the replacement. Never advance the failed attempt or present it as the user's deliverable. The user reviews only an agent-passing candidate. Store failed attempts and diagnostic evidence for audit; do not routinely show defective media to the user. This exception authorizes narrowly scoped technical repairs, not new story actions, changed character identity, or creative preference changes. It never bypasses narration lock, approved references, or current stage dependencies.
 
-The runtime implements bounded technical-repair allowances, attempt caps and repair-only prompt binding. A cumulative project-wide spending ceiling remains unfinished; account-specific estimates and any broader settings changes still require explicit authorization. When that allowance is exhausted or a repair would change approved creative intent, pause and explain the blocker and proposed remedy in plain language; showing the defective clip is optional if the user asks to inspect it. External API failures still stop immediately under the repo's provider-failure rule; they are not creative defect retries.
+The runtime implements bounded technical-repair allowances, attempt caps and repair-only prompt binding. Supervised v1 now has a cumulative durable provider-estimate ceiling, initially $0 and increased only by a human; account-specific estimates and any broader settings changes still require explicit authorization. When that allowance is exhausted or a repair would change approved creative intent, pause and explain the blocker and proposed remedy in plain language; showing the defective clip is optional if the user asks to inspect it. External API failures still stop immediately under the repo's provider-failure rule; they are not creative defect retries.
 
 Video review must cover the full clip over time, including limb/prop interactions and transitions. A first-frame likeness check or a few attractive stills cannot pass temporal quality. Retain localized evidence for failures; if the reviewer cannot inspect the motion reliably, its result is inconclusive and the clip cannot advance. Validate the reviewer against known defective clips, including the driving example, before claiming this loop catches common generation failures.
 
@@ -756,3 +760,20 @@ Claude's suggested shot-before-background order is under consideration: reviewed
 ### 2026-10-02 — Narration terminology, human choices and visual regression
 
 The operator explicitly renamed the early audio lock to narration lock, distinguished detail changes/redo/abandonment, and required a defined qualified visual reviewer plus an invented-persona trap regression suite on every pipeline change. These decisions are recorded above and in the checklist. This documentation change does not rename runtime APIs, add cancellation semantics, install perception measurements, or qualify any worker; those implementation tasks remain open. The current stage summary and background/video statements were corrected to reflect the implemented mechanical workflow. Earlier dated checkpoint limits remain historical evidence, not current runtime limits.
+
+
+### 2026-10-02 — Supervised v1 implementation (supersedes qualification blockers)
+
+The operator asked to finish v1 after explicitly deferring formal qualification. New projects default to supervised review. Saved projects without an explicit policy retain qualified mode; no existing run was migrated, approved, reset or generated here. Actual listening/viewing and independent STT/measurements remain mandatory. Ava may mark calibrated voice identity inconclusive within a provisional, directly perceived candidate; the human compares the genuine sample and confirms every audio criterion. Known failed criteria never reach the user as usable deliverables. Every supervised video request and repair needs exact human spending authorization. Formal speaker, face/hand/OCR measurements and genuine held-out qualification are deferred, not implemented or certified by these mechanics tests.
+
+Script approval now records actual human voice consent, per-person/age photo rights, authority for minors, reference/interpretation/omission decisions and a hash-bound resolution for each common-sense finding. Missing references explicitly marked await-reference block script lock. Interpretation carries unverified likeness notes; no-photo interpreted entries can proceed from approved description, while a genuine reference decision requires measured images. The later cast must exactly match that human-approved inventory. Generation still waits for narration lock.
+
+All sheets and their prompts receive human approval. Sam's reviewed shot intentions precede Beau/Pia's background production; final staging preserves approved action/camera/timing/cast and refines placement against actual approved room images. Locked-work detail changes and redos require the exact current impact digest. Abandon stops new production without deleting inputs, receipts or jobs; outstanding outcomes need exact human reconciliation at the original provider.
+
+The project-wide provider budget begins at $0. Human set-budget/increase, bounded call/request approval and positive account estimates are separate gates. Generation and paid Gemini/STT estimates reserve before network traffic; failures/uncertain outcomes retain reservations. Cached results do not reserve again. Runtime accounting preserves the creative task ID while persisting to SQLite. It does not claim final provider charges or account subscription costs.
+
+The shipped host boundary is macOS local Codex with explicit GPT-5.6 Sol workers, Gemini 3.8 Flash audio/video observations at 4 FPS and independent Cartesia STT. The format broker scopes assets/tools/actions and has no secret, generation or human-approval tools. Reviewer bindings are pinned after approved media in supervised v1; a new profile needs a separate project. Human records remain a trusted local operator boundary, not multi-user authentication. Other hosts/OSes, local/remote deletion automation and Wiggly app integration remain separate work.
+
+Four narration stems are still one deliverable; per-beat repair/approval is deferred. Original sample playback now accompanies them. Private finalization retains the existing score/import path; music research and any new music-provider setup remain deferred extras. Copy/retain the whole run folder; current absolute asset paths must stay valid. Authorized providers receive only bound media; there is no automatic publication or cloud retention service.
+
+Verification: all 137 source tests passed, including the complete supervised protocol through SQLite restart at every event. The fixed invented-persona corpus runs under npm test and packaging, exercising good controls, identity/age/stale-reference traps, contact/geography/text failures and missing perception. These are explicitly invented protocol observations, not fresh model detections or human calibration labels. Full-clip coverage refusals are covered independently. Parent/grandparent smoke uses the same official runtime without provider calls. Final package evidence is recorded in proof.json and the remaining-work checklist. No AI video or real end-to-end film proof was run.

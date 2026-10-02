@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { initialProject, applyEvent, taskFor, current } from '../runtime/workflow.mjs';
-import { criteria } from '../runtime/contracts.mjs';
+import { criteria, digest } from '../runtime/contracts.mjs';
 export const inputs = JSON.parse(await readFile(new URL('../examples/parent.json', import.meta.url), 'utf8'));
 export const script = {
   beats: [
@@ -29,7 +29,8 @@ export function reviewed(p, decision = 'approved', extra = {}) {
     review: { decision, perception, checks: taskFor(p).criteria.map((criterion, i) => ({ criterion, status: decision === 'approved' ? 'pass' : i === 0 ? 'fail' : 'pass', location: 'beat 1',
       evidence: decision === 'approved' ? 'Isolated contract test finding.' : 'Locked intake says bicycle; draft incorrectly says airplane.', repair: decision === 'approved' ? '' : 'Restore the bicycle.' })), measurements,...(audio?{modelVersion:'ISOLATED-audio-v1',capabilityVersion:'ISOLATED-tools-v1',coverage:{artifactSha256:a.content.files[0].sha256,audioFiles:a.content.files.map(f=>({sha256:f.sha256,seconds:f.durationSeconds}))}}:{}), ...(['video','film'].includes(p.step)&&!audio?{modelVersion:'ISOLATED-visual-v1',coverage:{artifactSha256:a.content.files[0].sha256,videoSeconds:a.content.files[0].durationSeconds,...(p.step==='film'?{audioSeconds:a.content.files[0].durationSeconds}:{})}}:{}), ...extra } });
 }
-export function approved(p, extra = {}) { const a = current(p); return send(p, 'approve', { artifactId: a.id, artifactDigest: a.digest, message: 'ISOLATED TEST human approval', ...extra }); }
+export function intakeFixture(p){return {voiceConsent:true,characters:[{id:'alex',name:'Alex',ageVariant:'adult',minor:false,photoRights:true,references:[{path:'/isolated-test/background-1.png',sha256:file(1).sha256,bytes:100,width:1600,height:900}],likeness:'reference',decisionNotes:'ISOLATED reference decision'}],resolvedFindings:current(p).content.commonSenseChecks.map(c=>({findingDigest:digest({category:c.category,finding:c.finding}),resolution:'ISOLATED human resolution; narrated childhood may be staged without child likeness.'}))};}
+export function approved(p, extra = {}) { const a = current(p); return send(p, 'approve', { artifactId: a.id, artifactDigest: a.digest, message: 'ISOLATED TEST human approval', ...(p.reviewMode==='supervised'&&p.step==='script'?{intakeConfirmation:intakeFixture(p)}:{}), ...extra }); }
 export function produce(p, result, extra = {}) {
   p = send(p, 'plan', { plan: { provider: ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe'].includes(p.step) ? 'meta-muse' : p.step==='video'?'replicate':['music','effect'].includes(p.step)?'elevenlabs':'cartesia', operation: p.step, estimatedCostUsd: 0.05, parameters: ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe'].includes(p.step) ||['video','music','effect'].includes(p.step) ? { prompt: p.step === 'sheet' ? current(p, `sheetPrompt:${p.characterId}`).content.prompt : result.prompt } : {} } });
   if (p.gate === 'authorize') { const job = p.jobs.at(-1); p = send(p, 'authorize', { jobId: job.id, artifactDigest: job.digest, message: 'ISOLATED TEST request authorization' }); }
