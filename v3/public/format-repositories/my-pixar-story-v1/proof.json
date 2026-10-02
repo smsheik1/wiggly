@@ -222,14 +222,14 @@
     "mockedFocusedTestsPassed": 24,
     "productionQualified": false,
     "remaining": [
-      "live video verification and real defect qualification at the selected4FPS profile",
+      "real defect qualification at the selected 4 FPS profile",
       "independent STT",
       "calibrated speaker similarity",
       "genuine human-labelled reviewer qualification"
     ],
     "savedProjectStateMutated": false,
     "liveAudioTransport": "PASS: correctly heard the hidden synthetic phrase; response recovered locally without a duplicate request after unnecessary interaction-ID check was fixed",
-    "liveVideoTransport": "BLOCKED: Google HTTP400 rejected30FPS; no retry/fallback submitted. Operator subsequently selected4FPS; live4FPS verification remains pending.",
+    "liveVideoTransport": "PASS: exact Gemini 3.8 Flash at 4 FPS correctly reported blue from 0\u20131s and green from 1\u20132s on the two-second local synthetic clip. Earlier 30 FPS HTTP400 preserved; no AI video generated.",
     "observedFailuresAndFixes": [
       "store:false completed response may omit ID; retain request/response digests and recover finished output offline",
       "Provider rejects fps>24; declare min(source FPS,24), expose both source/sampling and bind qualification profile",
@@ -237,8 +237,8 @@
     ],
     "sourceTestsPassed": 105,
     "sourceCheckAndSmoke": "PASS: official check and parent/grandparent smoke; no renderer changes",
-    "inferencePostAttempts": 2,
-    "completedInferenceResponses": 1,
+    "inferencePostAttempts": 3,
+    "completedInferenceResponses": 2,
     "actualAccountChargeVerified": false,
     "freshArchiveTestsPassed": 105,
     "independentAdversarialProbesPassed": 4,
@@ -259,6 +259,21 @@
       "freshPackageMediaTestsPassed": 7,
       "freshPackageCheckAndSmoke": "PASS",
       "liveVerification": "not performed; no paid calls"
+    },
+    "liveSamplingVerification": {
+      "date": "2026-10-02",
+      "model": "gemini-3.8-flash",
+      "samplingFps": 4,
+      "sourceFps": 30,
+      "durationSeconds": 2,
+      "requestDigest": "e7f0324f60f203b1f0e4dd4c11074e4b39caa15ce8746db834e732704b748a94",
+      "result": "PASS: accurately identified the color transition at one second",
+      "newInferencePostAttempts": 1,
+      "syntheticTransportOnly": true,
+      "productionQualified": false,
+      "aiVideoGenerationCalls": 0,
+      "savedProjectStateMutated": false,
+      "independentSttOrSpeakerMeasurement": false
     }
   }
 }
