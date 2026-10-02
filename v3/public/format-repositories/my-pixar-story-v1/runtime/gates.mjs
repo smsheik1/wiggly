@@ -3,14 +3,19 @@ export const imageSteps = ['candidates', 'sheet', 'backgroundCandidates', 'backg
 export const authorSteps = ['audioReviewerQualification','script', 'roster', 'sheetPrompt', 'backgrounds', 'backgroundBrief', 'backgroundPrompt', 'backgroundAngleBrief', 'backgroundAnglePrompt', 'shots', 'keyframePrompt', 'reviewerQualification', 'videoPlan', 'videoPrompt', 'soundPlan', 'editPlan'];
 export const keyFor = p => ['videoPrompt','video'].includes(p.step) ? `${p.step}:${p.clipId}` : p.step === 'effect' ? `effect:${p.effectId}` : ['keyframePrompt', 'keyframe'].includes(p.step) ? `${p.step}:${p.shotId}` : backgroundSteps.includes(p.step) ? `${p.step}:${p.locationId}${p.step.startsWith('backgroundAngle') ? ':' + p.angleId : ''}` : ['candidates', 'sheetPrompt', 'sheet'].includes(p.step) ? `${p.step}:${p.characterId}` : p.step;
 export const current = (p, key = keyFor(p)) => p.artifacts.findLast(a => a.key === key && a.valid);
-export const locked = (p, key) => { const a = current(p, key); return !!(a?.approvedBy && a.review?.decision === 'approved' && (a.kind!=='film'||a.visualReview?.decision==='approved'&&a.audioReview?.decision==='approved'&&a.visualReviewedBy!==a.audioReviewedBy)); };
+export const supervised = p => p.reviewMode === 'supervised';
+export const reviewPassed = r => ['approved','provisional'].includes(r?.decision);
+export const locked = (p, key) => { const a = current(p, key); return !!(a?.approvedBy && reviewPassed(a.review) && (!supervised(p) || !a.content.files || a.humanReview?.decision === 'approved') && (a.kind!=='film'||reviewPassed(a.visualReview)&&reviewPassed(a.audioReview)&&a.visualReviewedBy!==a.audioReviewedBy)); };
 const matchesWorker=(p,role,q)=>{const w=p.crew?.workers.find(w=>w.role===role);return !w||w.workerId===q?.workerId&&w.modelVersion===q?.modelVersion&&w.capabilityVersion===q?.capabilityVersion;};
-export const audioLocked = p => matchesWorker(p,'audio-reviewer',current(p,'audioReviewerQualification')?.content) && ['script', 'audioReviewerQualification', 'audition', 'narration'].every(key => locked(p, key)) && !!current(p, 'clone');
+export const narrationLocked = p => (supervised(p) || matchesWorker(p,'audio-reviewer',current(p,'audioReviewerQualification')?.content) && locked(p,'audioReviewerQualification')) && ['script','audition','narration'].every(key=>locked(p,key)) && !!current(p,'clone');
+// Compatibility export for existing host integrations/checkpoints.
+export const audioLocked = narrationLocked;
 export function assertAllowed(p, kind) {
+  if(p.lifecycle==='abandoned')throw new Error('PROJECT_ABANDONED: new production is prohibited.');
   if (['reviewerQualification','videoPlan','videoPrompt','video','soundPlan','music','effect','editPlan','film'].includes(kind)) {
-    if (!audioLocked(p)) throw new Error('AUDIO_LOCK_REQUIRED');
+    if (!audioLocked(p)) throw new Error('NARRATION_LOCK_REQUIRED (AUDIO_LOCK_REQUIRED compatibility)');
     if (!locked(p,'shots') || !current(p,'shots').content.shots.every(s=>locked(p,`keyframe:${s.id}`))) throw new Error('KEYFRAME_LOCK_REQUIRED: all current keyframes need agent and human approval.');
-    if (kind !== 'reviewerQualification' && (!locked(p,'reviewerQualification')||!matchesWorker(p,'visual-reviewer',current(p,'reviewerQualification')?.content))) throw new Error('VISUAL_REVIEWER_NOT_QUALIFIED');
+    if (!supervised(p) && kind !== 'reviewerQualification' && (!locked(p,'reviewerQualification')||!matchesWorker(p,'visual-reviewer',current(p,'reviewerQualification')?.content))) throw new Error('VISUAL_REVIEWER_NOT_QUALIFIED');
     if (['videoPrompt','video'].includes(kind) && !locked(p,'videoPlan')) throw new Error('VIDEO_PLAN_LOCK_REQUIRED');
     if (kind === 'video' && !locked(p,`videoPrompt:${p.clipId}`)) throw new Error('VIDEO_PROMPT_LOCK_REQUIRED');
     if (['music','effect','editPlan','film'].includes(kind) && !locked(p,'soundPlan')) throw new Error('SOUND_PLAN_LOCK_REQUIRED');
@@ -18,7 +23,7 @@ export function assertAllowed(p, kind) {
     if (kind === 'film' && (!locked(p,'editPlan') || !locked(p,'music') || !current(p,'soundPlan').content.effects.every(e=>locked(p,`effect:${e.id}`)))) throw new Error('EDIT_SOUND_LOCK_REQUIRED');
     return;
   }
-  if ([...imageSteps, ...backgroundSteps, 'backgrounds', 'shots', 'keyframePrompt', 'keyframe', 'background', 'video'].includes(kind) && !audioLocked(p)) throw new Error('AUDIO_LOCK_REQUIRED: current script, clone audition and all four narration beats need agent and human approval.');
+  if ([...imageSteps, ...backgroundSteps, 'backgrounds', 'shots', 'keyframePrompt', 'keyframe', 'background', 'video'].includes(kind) && !audioLocked(p)) throw new Error('NARRATION_LOCK_REQUIRED (AUDIO_LOCK_REQUIRED compatibility): current script, clone audition and all four narration beats need agent and human approval.');
   if ([...backgroundSteps, 'backgrounds', 'shots', 'keyframePrompt', 'background', 'keyframe', 'video'].includes(kind)) {
     const roster = current(p, 'roster');
     if (!locked(p, 'roster') || !roster.content.characters.every(c => locked(p, `sheet:${c.id}`))) throw new Error('CHARACTER_LOCK_REQUIRED: every required character needs its own approved sheet.');

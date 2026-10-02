@@ -41,7 +41,7 @@ async function lock() {
 function presentation(status) {
   const { project, pending } = status;
   // A failed candidate never becomes the ordinary user-facing deliverable.
-  const visible = pending.artifact?.review?.decision === 'approved' || pending.gate === 'review' || pending.gate === 'author';
+  const visible = ['approved','provisional'].includes(pending.artifact?.review?.decision) || pending.gate === 'review' || pending.gate === 'author';
   return { formatVersion: VERSION, checkpointId: status.checkpointId, sequence: project.sequence, pending: { ...pending, artifact: visible ? pending.artifact : null },
     validArtifacts: project.artifacts.filter(a => a.valid).map(a => ({ id: a.id, digest: a.digest, kind: a.kind, approved: !!a.approvedBy })),
     jobs: project.jobs.map(j => ({ id: j.id, status: j.status, digest: j.digest, providerJobId: j.providerJobId })), allowances: project.allowances };
@@ -81,7 +81,7 @@ async function main() {
   const release = await lock(); const workflow = openWorkflow(join(runDir, 'checkpoints.sqlite'));
   try {
     if (command === 'init') {
-      const inputs = await json(args[0]); print(presentation(await workflow.init('project', inputs))); return;
+      const inputs = await json(args[0]); print(presentation(await workflow.init('project', inputs,{reviewMode:option('review-mode','supervised')}))); return;
     }
     if (command === 'import') { print(await importMedia(args[0], runDir)); return; }
     const status = await workflow.status('project');

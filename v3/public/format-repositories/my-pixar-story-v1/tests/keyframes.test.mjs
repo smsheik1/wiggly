@@ -45,7 +45,7 @@ test('background changes reopen affected shot prompts/frames but keep other loca
 test('SQLite restarts at keyframe prompt approval; stale and missing-perception events cannot advance',async()=>{
  const captured=captureEvents(()=>{let p=keyframeProject();return reviewed(author(p,composition(p),'composition-writer'));});
  const dir=await mkdtemp(join(tmpdir(),'keyframe-checkpoint-'));let w=openWorkflow(join(dir,'state.sqlite'));
- try {await w.init('isolated',captured.project.inputs);for(const e of captured.events)await w.respond('isolated',e);const before=await w.status('isolated');assert.equal(before.pending.gate,'human');w.close();w=openWorkflow(join(dir,'state.sqlite'));assert.equal((await w.status('isolated')).pending.taskId,before.pending.taskId);await assert.rejects(w.respond('isolated',{taskId:'stale',actor:'human',action:'approve',message:'approve'}),/STALE_TASK/);}finally{w.close();await rm(dir,{recursive:true,force:true});}
+ try {await w.init('isolated',captured.project.inputs,{reviewMode:'qualified'});for(const e of captured.events)await w.respond('isolated',e);const before=await w.status('isolated');assert.equal(before.pending.gate,'human');w.close();w=openWorkflow(join(dir,'state.sqlite'));assert.equal((await w.status('isolated')).pending.taskId,before.pending.taskId);await assert.rejects(w.respond('isolated',{taskId:'stale',actor:'human',action:'approve',message:'approve'}),/STALE_TASK/);}finally{w.close();await rm(dir,{recursive:true,force:true});}
 });
 
 test('older shot-pending checkpoint opens explicitly; rejected image escalation resolves back to its prompt',()=>{

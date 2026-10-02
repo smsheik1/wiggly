@@ -1,5 +1,5 @@
 import {rendererIdentity} from './remotion.mjs';
-import { current, locked } from './gates.mjs';
+import { current, locked, supervised } from './gates.mjs';
 import { shotReferences } from './shots.mjs';
 import { digest } from './contracts.mjs';
 import { requireVisualQualification } from '../evaluation/visual-qualification.mjs';
@@ -30,12 +30,12 @@ export function assertFilmInspection(m){if(Math.abs(m.durationSeconds-60)>.05||m
 export function studioDependencies(p){
  switch(p.step){
  case 'reviewerQualification':return []; // Reviewer calibration is independent of this story's assets.
- case 'videoPlan':return ['shots','reviewerQualification'];
- case 'videoPrompt':return ['videoPlan','reviewerQualification',`keyframe:${clipFor(p).shotId}`];
- case 'video':return ['videoPlan','reviewerQualification',`videoPrompt:${p.clipId}`,`keyframe:${clipFor(p).shotId}`];
+ case 'videoPlan':return ['shots',...(!supervised(p)?['reviewerQualification']:[])];
+ case 'videoPrompt':return ['videoPlan',...(!supervised(p)?['reviewerQualification']:[]),`keyframe:${clipFor(p).shotId}`];
+ case 'video':return ['videoPlan',...(!supervised(p)?['reviewerQualification']:[]),`videoPrompt:${p.clipId}`,`keyframe:${clipFor(p).shotId}`];
  case 'soundPlan':return ['script','narration','videoPlan'];
  case 'music':case 'effect':return ['soundPlan'];
- case 'editPlan':case 'film':case 'complete':return ['audioReviewerQualification','shots','videoPlan','narration','soundPlan','music',...current(p,'soundPlan').content.effects.map(e=>`effect:${e.id}`),...current(p,'videoPlan').content.clips.map(c=>`video:${c.id}`),...(p.step!=='editPlan'?['editPlan']:[])];
+ case 'editPlan':case 'film':case 'complete':return [...(!supervised(p)?['audioReviewerQualification']:[]),'shots','videoPlan','narration','soundPlan','music',...current(p,'soundPlan').content.effects.map(e=>`effect:${e.id}`),...current(p,'videoPlan').content.clips.map(c=>`video:${c.id}`),...(p.step!=='editPlan'?['editPlan']:[])];
  }
 }
 export function studioNext(p){

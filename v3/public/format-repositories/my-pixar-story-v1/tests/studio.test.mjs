@@ -70,7 +70,7 @@ test('final film needs full audiovisual review and human approval; malformed ren
 });
 test('every studio interrupt survives SQLite reopen; fixture workflow finishes without any provider call',async()=>{
  const {project,events}=captureEvents(()=>approved(reviewed(rendered())));const dir=await mkdtemp(join(tmpdir(),'memoir-studio-state-')),db=join(dir,'state.sqlite');let w=openWorkflow(db);
- try{await w.init('isolated',inputs);for(const e of events){await w.respond('isolated',e);w.close();w=openWorkflow(db);}const final=await w.status('isolated');assert.equal(final.project.step,'complete');assert.equal(final.project.sequence,project.sequence);assert.equal(final.project.jobs.length,project.jobs.length);assert.equal(current(final.project,'film').digest,current(project,'film').digest);}finally{w.close();await rm(dir,{recursive:true});}
+ try{await w.init('isolated',inputs,{reviewMode:'qualified'});for(const e of events){await w.respond('isolated',e);w.close();w=openWorkflow(db);}const final=await w.status('isolated');assert.equal(final.project.step,'complete');assert.equal(final.project.sequence,project.sequence);assert.equal(final.project.jobs.length,project.jobs.length);assert.equal(current(final.project,'film').digest,current(project,'film').digest);}finally{w.close();await rm(dir,{recursive:true});}
 });
 
 test('generated sound receipts traverse the graph with exact saved prompt and validated duration',()=>{

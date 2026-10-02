@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {readFile} from 'node:fs/promises';
 import {text,File} from './contracts.mjs';
 import {verifyFiles,measureAudio,probe} from './media.mjs';
+import {supervised,reviewPassed} from './gates.mjs';
 import {artifactEvidence} from './evaluators.mjs';
 // These are format capabilities, not arbitrary filesystem/network/shell access.
 export const crewRoles={
@@ -27,7 +28,7 @@ export const Crew=z.object({workers:z.array(z.object({workerId:text,name:text,ro
 });
 export function roleFor(p){
  if(p.gate==='owner-review')return 'background-product-owner';
- if(p.gate==='review')return p.step==='film'?(p.artifacts.findLast(a=>a.key==='film'&&a.valid)?.visualReview?.decision==='approved'?'audio-reviewer':'visual-reviewer'):['audition','narration','music','effect'].includes(p.step)?'audio-reviewer':['candidates','sheet','backgroundCandidates','backgroundAngle','keyframe','video'].includes(p.step)?'visual-reviewer':'text-reviewer';
+ if(p.gate==='review')return p.step==='film'?(p.artifacts.findLast(a=>a.key==='film'&&a.valid)?.visualReview && reviewPassed(p.artifacts.findLast(a=>a.key==='film'&&a.valid)?.visualReview)?'audio-reviewer':'visual-reviewer'):['audition','narration','music','effect'].includes(p.step)?'audio-reviewer':['candidates','sheet','backgroundCandidates','backgroundAngle','keyframe','video'].includes(p.step)?'visual-reviewer':'text-reviewer';
  if(p.gate==='produce')return 'generation-planner';
  return ({script:'script-writer',roster:'cast-designer',sheetPrompt:'sheet-prompter',backgrounds:'background-product-owner',backgroundBrief:'background-product-owner',backgroundAngleBrief:'background-product-owner',backgroundPrompt:'pixar-prompter',backgroundAnglePrompt:'pixar-prompter',shots:'shot-planner',keyframePrompt:'composition-writer',videoPlan:'motion-director',videoPrompt:'video-prompt-engineer',soundPlan:'sound-designer',music:'sound-designer',effect:'sound-designer',editPlan:'film-editor'})[p.step]??'orchestrator';
 }
@@ -65,7 +66,7 @@ export function crewTools(task,worker,adapters={},record=()=>{}){
  return async(name,parameters={})=>{const value=await execute(name,parameters);record({tool:name,sha256:parameters.sha256,referenceSha256:parameters.referenceSha256,seconds:value.seconds,...(value.provider?{provider:value.provider,modelVersion:value.modelVersion,requestDigest:value.requestDigest,receiptPath:value.receiptPath,samplingFps:value.samplingFps}: {})},value);return value;};
 }
 export async function prepareCrewTask(p,task){
- return task.gate==='review'?{...task,evaluatorEvidence:await artifactEvidence(p),reviewerRubric:await readFile(new URL('../evaluation/reviewer.md',import.meta.url),'utf8')}:task;
+ return task.gate==='review'?{...task,supervisionInstruction:supervised(p)?'Your review is unqualified advisory evidence. Use provisional only with direct perception and no known failures; mark unavailable calibrated voice-match inconclusive, never invent a score. Human must confirm actual media before lock. Missing listening/viewing stays inconclusive.':'Qualified review required.',evaluatorEvidence:await artifactEvidence(p),reviewerRubric:await readFile(new URL('../evaluation/reviewer.md',import.meta.url),'utf8')}:task;
 }
 export async function runCrewTask(p,task,host){
  const worker=assignedWorker(p);if(!worker)throw new Error('CREW_NOT_CONFIGURED: bind real host workers first.');
@@ -79,11 +80,11 @@ export async function runCrewTask(p,task,host){
  if(event.taskId!==task.taskId||event.actor!==task.actor||event.action!==expected)throw new Error('CREW_PERMISSION_DENIED: worker may only submit its assigned deliverable; no human approvals, state writes or provider calls.');
  assertCrewEvent(p,event);
  if(['review','owner-review'].includes(event.action)&&event.review?.decision!=='inconclusive'){
-  const required=worker.role==='audio-reviewer'?['listenAudio',...(['audition','narration'].includes(task.step)?['measureAudio','transcribe','speakerSimilarity']:[])]:worker.role==='visual-reviewer'?[['video','film'].includes(task.step)?'watchVideo':'viewImage']:[];
+  const required=worker.role==='audio-reviewer'?['listenAudio',...(['audition','narration'].includes(task.step)?['measureAudio','transcribe',...(!supervised(p)?['speakerSimilarity']:[])]:[])]:worker.role==='visual-reviewer'?[['video','film'].includes(task.step)?'watchVideo':'viewImage']:[];
   for(const file of task.artifact?.content.files??[])for(const tool of required){const receipt=receipts.find(r=>r.tool===tool&&r.sha256===file.sha256);if(!receipt||['watchVideo','listenAudio'].includes(tool)&&receipt.seconds+.02<file.durationSeconds||tool==='speakerSimilarity'&&receipt.referenceSha256!==task.voiceReference?.content.files[0].sha256)throw new Error('PERCEPTION_NOT_PERFORMED: actual current-file perception/measurement tool calls are required before a verdict.');}
   if(worker.role==='audio-reviewer'&&['audition','narration'].includes(task.step)){
    const files=task.artifact.content.files,stt=files.map(f=>outputs.get(`transcribe:${f.sha256}`)),similarity=files.map(f=>outputs.get(`speakerSimilarity:${f.sha256}`)),measured=files.map(f=>outputs.get(`measureAudio:${f.sha256}`));
-   event.review.measurements={...event.review.measurements,transcripts:stt.map(t=>t.transcript),speechToTextMethod:[...new Set(stt.map(t=>t.method))].join('; '),referenceSha256:task.voiceReference.content.files[0].sha256,speakerSimilarity:Math.min(...similarity.map(s=>s.score)),speakerSimilarityMethod:[...new Set(similarity.map(s=>s.method))].join('; '),silenceSeconds:measured.map(m=>m.silenceSeconds),speakingRateWpm:stt.map((t,i)=>(t.transcript.match(/[\p{L}\p{N}]+/gu)?.length??0)/measured[i].durationSeconds*60),measurementNotes:[event.review.measurements?.measurementNotes,...similarity.map(s=>s.calibrationNotes)].filter(Boolean).join('; ')};
+   event.review.measurements={...event.review.measurements,transcripts:stt.map(t=>t.transcript),speechToTextMethod:[...new Set(stt.map(t=>t.method))].join('; '),referenceSha256:task.voiceReference.content.files[0].sha256,...(similarity.every(Boolean)?{speakerSimilarity:Math.min(...similarity.map(s=>s.score)),speakerSimilarityMethod:[...new Set(similarity.map(s=>s.method))].join('; ')}:{speakerSimilarity:undefined,speakerSimilarityMethod:undefined}),silenceSeconds:measured.map(m=>m.silenceSeconds),speakingRateWpm:stt.map((t,i)=>(t.transcript.match(/[\p{L}\p{N}]+/gu)?.length??0)/measured[i].durationSeconds*60),measurementNotes:[event.review.measurements?.measurementNotes,...similarity.filter(Boolean).map(s=>s.calibrationNotes),...(similarity.every(Boolean)?[]:['Calibrated speaker comparison unavailable; human must compare against the original sample.'])].filter(Boolean).join('; ')};
   }
   event.review.toolEvidence=receipts;
  }

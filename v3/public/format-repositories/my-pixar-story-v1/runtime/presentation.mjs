@@ -1,12 +1,12 @@
 import {isAbsolute} from 'node:path';
 import {verifyFiles} from './media.mjs';
-import {current} from './gates.mjs';
+import {current,reviewPassed,supervised} from './gates.mjs';
 // This is chat delivery formatting, not a new media renderer or approval engine.
 export async function presentDeliverable(status){
  const {project,pending}=status,a=current(project);
  if(pending.artifact?.id!==a?.id||pending.artifact?.digest!==a?.digest)throw new Error('DELIVERY_BLOCKED: stale presentation does not match the current deliverable.');
- if(project.gate!=='human'||pending.gate!=='human'||!a?.valid||a.review?.decision!=='approved')throw new Error('DELIVERY_BLOCKED: only the current agent-passing deliverable at its human gate may be presented.');
- if(a.kind==='film'&&(a.visualReview?.decision!=='approved'||a.audioReview?.decision!=='approved'))throw new Error('DELIVERY_BLOCKED: final film needs both independent discipline passes.');
+ if(project.gate!=='human'||pending.gate!=='human'||!a?.valid||!reviewPassed(a.review))throw new Error('DELIVERY_BLOCKED: only the current agent-passing deliverable at its human gate may be presented.');
+ if(a.kind==='film'&&(!reviewPassed(a.visualReview)||!reviewPassed(a.audioReview)))throw new Error('DELIVERY_BLOCKED: final film needs both independent discipline passes.');
  await verifyFiles(project.artifacts.filter(a=>a.valid));
  const files=a.content.files??[];
  if(a.kind==='narration'&&files.length!==4)throw new Error('Narration delivery requires all four separate stems.');
@@ -16,5 +16,5 @@ export async function presentDeliverable(status){
   return {label,path:file.path,sha256:file.sha256,markdown:`![${label}](<${file.path}>)`};
  });
  const markdown=a.kind==='script'?a.content.beats.map(b=>`Beat ${b.beat} (${(b.beat-1)*15}–${b.beat*15}s)\n\n${b.narration}`).join('\n\n'):media.length?media.map(m=>m.markdown).join('\n\n'):a.content.prompt??JSON.stringify(a.content,null,2);
- return {checkpointId:status.checkpointId,sequence:project.sequence,taskId:pending.taskId,artifactId:a.id,artifactDigest:a.digest,kind:a.kind,content:a.content,media,markdown,actions:['approve','changes','reject'],requiresSelection:['candidates','backgroundCandidates'].includes(a.kind),approvalInstruction:'Present this exact current deliverable. Submit an event only after the actual human decision, with the current taskId/artifactId/artifactDigest and the real message. Explain revisionImpact before requested changes.',providerCalls:0,projectStateMutated:false};
+ return {checkpointId:status.checkpointId,sequence:project.sequence,taskId:pending.taskId,artifactId:a.id,artifactDigest:a.digest,kind:a.kind,content:a.content,media,markdown,reviewPolicy:pending.reviewPolicy,reviewStatus:supervised(project)?'unqualified-advisory':'qualified',humanCriteria:supervised(project)?(a.kind==='film'?[...new Set([...a.visualReview.checks,...a.audioReview.checks].map(c=>c.criterion))]:pending.criteria):[],voiceReference:pending.voiceReference??null,actions:['approve','changes','redo','abandon'],requiresSelection:['candidates','backgroundCandidates'].includes(a.kind),approvalInstruction:'Present this exact current deliverable. Submit an event only after the actual human decision, with the current taskId/artifactId/artifactDigest and the real message. Explain revisionImpact before requested changes.',providerCalls:0,projectStateMutated:false};
 }

@@ -6,6 +6,12 @@ description: Operate the persistent four-beat memoir workflow through final-film
 
 # Operate the current deliverable
 
+**V1 review policy:** New runs default to `supervised`. Ava/Vera supply actual-media advisory reviews; the human explicitly confirms the actual media before it locks. Formal reviewer qualification and calibrated speaker measurement are deferred, never fabricated. Listening/viewing, independent transcription, duration/silence/rate checks and exact-version human approval remain required. An unavailable speaker score stays unavailable and voice match requires human comparison with the genuine sample. `provisional` may present a directly perceived candidate with unresolved checks and no known failure; it is not a qualified pass. Missing direct perception stays inconclusive. Every video request/repair requires exact human authorization in supervised mode; no automatic repair allowance applies.
+
+Use `init ... --review-mode qualified` only for a deliberately selected qualified workflow. Older checkpoints retain their qualified policy; they are not migrated. A pre-production human `configure-review` event can explicitly select supervised mode. Media `approve` events in supervised mode require `humanReview` using the Review schema: decision approved, actual direct perception, and one passing human-confirmed finding per criterion. Final film requires direct audiovisual human confirmation after separate Ava/Vera reviews. Never author this evidence for an absent user.
+
+Human choices are `changes` (detail), `redo` (fresh approach for the current deliverable), and `abandon` (whole project), alongside approve. For rewinding locked work, first run `impact <artifactId>`, show affected/retained assets and copy its exact `impactDigest` into the actual confirmed human event. A changed sequence invalidates that acknowledgement. Redo preserves source facts/history/attempt consumption. Abandon stops new work, retains artifacts/jobs and permits exact human reconciliation of existing jobs; it does not delete files or promise refunds.
+
 You are the operating agent. Read requirements.json, scene-contract.json and quality.json. Use this package's runner.mjs; never rebuild its state machine or invoke the old app scripts. Install pinned dependencies with `npm ci`, then run `npm run check` and `npm run smoke`. Use a new absolute run directory, separate from legacy runs. Existing checkpoints cannot be reset by init.
 
 ```sh

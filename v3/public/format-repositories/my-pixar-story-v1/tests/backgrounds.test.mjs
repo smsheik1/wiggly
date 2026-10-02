@@ -38,7 +38,7 @@ test('master revision invalidates dependent angle while preserving other locatio
 test('rejection repairs technical prompt with evidence and restarts owner check',()=>{let p=approved(reviewed(author(backgroundProject(),registry)));p=approved(reviewed(author(p,brief(p))));p=ownerChecked(author(p,prompt(p),'pixar-prompter'),'rejected');assert.equal(p.gate,'author');p=author(p,prompt(p),'pixar-prompter');assert.equal(p.gate,'owner-review');});
 test('SQLite resumes exact background gate after restart and stale replies cannot advance',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'background-checkpoint-'));let w=openWorkflow(join(dir,'state.sqlite'));
- try { const {project:p,events}=captureEvents(readyForMaster);await w.init('isolated',p.inputs);
+ try { const {project:p,events}=captureEvents(readyForMaster);await w.init('isolated',p.inputs,{reviewMode:'qualified'});
    for (const e of events) await w.respond('isolated',e);
    const before=await w.status('isolated');assert.equal(before.pending.step,'backgroundCandidates');w.close();w=openWorkflow(join(dir,'state.sqlite'));
    const after=await w.status('isolated');assert.equal(after.pending.taskId,before.pending.taskId);assert.equal(after.project.locationId,'home');

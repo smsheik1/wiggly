@@ -11,7 +11,7 @@ import { shotFor, shotReferences, referenceBindings, planningReferences, validat
 import { requestDescriptor } from './providers.mjs';
 import { VERSION, Inputs, Project, Content, Review, Event, Plans, criteria, digest } from './contracts.mjs';
 
-import { keyFor, current, locked, audioLocked, assertAllowed, backgroundSteps, imageSteps, authorSteps } from './gates.mjs';
+import { keyFor, current, locked, audioLocked, assertAllowed, backgroundSteps, imageSteps, authorSteps, supervised, reviewPassed } from './gates.mjs';
 export { keyFor, current, locked, audioLocked, assertAllowed } from './gates.mjs';
 const characterRecipe=readFileSync(new URL('../character-sheet-recipe.md',import.meta.url),'utf8');
 export const characterRecipeSha256=createHash('sha256').update(characterRecipe).digest('hex');
@@ -21,8 +21,8 @@ const location = p => current(p, 'backgrounds')?.content.locations.find(l => l.i
 const briefKey = p => `${p.step === 'backgroundAnglePrompt' ? 'backgroundAngleBrief' : 'backgroundBrief'}:${p.locationId}${p.step === 'backgroundAnglePrompt' ? ':' + p.angleId : ''}`;
 const promptKey = p => `${p.step === 'backgroundAngle' ? 'backgroundAnglePrompt' : 'backgroundPrompt'}:${p.locationId}${p.step === 'backgroundAngle' ? ':' + p.angleId : ''}`;
 const isPrompt = p => ['backgroundPrompt', 'backgroundAnglePrompt'].includes(p.step);
-export function initialProject(id, inputs) {
-  return Project.parse({ formatVersion: VERSION, schemaVersion: 2, id, inputs: Inputs.parse(inputs), step: 'script', gate: 'author', characterId: null,
+export function initialProject(id, inputs, options = {}) {
+  return Project.parse({ formatVersion: VERSION, schemaVersion: 2, id, reviewMode:options.reviewMode ?? 'supervised', inputs: Inputs.parse(inputs), step: 'script', gate: 'author', characterId: null,
     sequence: 0, artifacts: [], jobs: [], history: [], allowances: [], feedback: [], reviewDisagreements: 0 });
 }
 function invalidate(p, id) {
@@ -43,7 +43,8 @@ export function revisionImpact(p, id) {
   const copy = structuredClone(p);
   if (!copy.artifacts.some(a => a.id === id && a.valid)) throw new Error('Artifact is stale or unknown.');
   const affected = invalidate(copy, revisionRoot(copy, copy.artifacts.find(a => a.id === id)).id);
-  return { affected, remainValid: copy.artifacts.filter(a => a.valid).map(a => a.id), note: 'Reopened approvals apply only to the listed dependencies.' };
+  const impact={artifactId:id,artifactDigest:copy.artifacts.find(a=>a.id===id).digest,sequence:p.sequence,affected,remainValid:copy.artifacts.filter(a=>a.valid).map(a=>a.id)};
+  return {...impact,impactDigest:digest(impact),note:'Reopened approvals apply only to the listed dependencies; redo preserves facts/history and does not reset budget or attempt caps.'};
 }
 export function dependencies(p) {
   const keys = studioDependencies(p) ?? {
@@ -59,7 +60,7 @@ export function dependencies(p) {
     keyframePrompt: ['shots', ...(['keyframePrompt', 'keyframe'].includes(p.step) ? shotReferences(p).map(r => p.artifacts.find(a => a.id === r.artifactId).key) : [])],
     keyframe: ['shots', `keyframePrompt:${p.shotId}`, ...(['keyframePrompt', 'keyframe'].includes(p.step) ? shotReferences(p).map(r => p.artifacts.find(a => a.id === r.artifactId).key) : [])],
   }[p.step];
-  return keys.map(key => { const a = current(p, key); if (!a) throw new Error(`Missing current dependency ${key}`); return a.id; });
+  return keys.filter(key=>!supervised(p)||!['audioReviewerQualification','reviewerQualification'].includes(key)).map(key => { const a = current(p, key); if (!a) throw new Error(`Missing current dependency ${key}`); return a.id; });
 }
 function next(p) {
   p.reviewDisagreements = 0;
@@ -90,7 +91,8 @@ function next(p) {
   }
   else if (p.step === 'shots') { p.shotId = current(p, 'shots').content.shots[0].id; p.step = 'keyframePrompt'; }
   else if (p.step === 'keyframePrompt') p.step = 'keyframe';
-  else if (p.step === 'keyframe') { const missing = current(p, 'shots').content.shots.find(s => !locked(p, `keyframe:${s.id}`)); p.shotId = missing?.id ?? null; p.step = missing ? 'keyframePrompt' : 'reviewerQualification'; }
+  else if (p.step === 'keyframe') { const missing = current(p, 'shots').content.shots.find(s => !locked(p, `keyframe:${s.id}`)); p.shotId = missing?.id ?? null; p.step = missing ? 'keyframePrompt' : supervised(p)?'videoPlan':'reviewerQualification'; }
+  if(supervised(p)&&p.step==='audioReviewerQualification')p.step='audition';
   p.gate = authorSteps.includes(p.step) ? 'author' : p.step === 'voiceSample' ? 'human' : p.step === 'complete' ? 'pending' : 'produce';
   // Reopening a deliverable keeps unrelated locks; do not force their regeneration.
   const reusable = ['voiceSample', 'clone'].includes(p.step) ? !!current(p) : p.step === 'sheetPrompt' ? current(p)?.review?.decision === 'approved' : locked(p, keyFor(p));
@@ -154,6 +156,8 @@ export function taskFor(p) {
   const sceneLocation = shot ? current(p, 'backgrounds').content.locations.find(l => l.id === shot.locationId) : location(p);
   const job = p.jobs.findLast(j => j.key === keyFor(p) && !['ready', 'failed'].includes(j.status));
   return { taskId: digest({ id: p.id, sequence: p.sequence, step: p.step, gate: p.gate }), projectId: p.id,
+    reviewPolicy:{mode:p.reviewMode,qualificationRequired:!supervised(p),humanMediaConfirmationRequired:supervised(p),speakerMeasurementRequired:!supervised(p),automaticVideoRepairAllowed:!supervised(p)},
+    lifecycle:p.lifecycle,
     step: p.step, gate: p.gate, clipId:p.clipId,effectId:p.effectId, characterId: p.characterId, locationId: p.locationId, angleId: p.angleId, shotId: p.shotId,
     shot,
     ...(['videoPlan','film'].includes(p.step)?{visualReferences:current(p,'shots').content.shots.map(shot=>({shot,keyframe:current(p,`keyframe:${shot.id}`),references:shotReferences(p,shot)}))}:{}),
@@ -188,36 +192,54 @@ function reopen(p,a,message){
 }
 export const filmVisualCriteria=['technical','story','visual-continuity','motion','safety','provenance'];
 export const filmAudioCriteria=['narration','mix','safety','provenance'];
-const filmCriteria=p=>current(p)?.visualReview?.decision==='approved'?filmAudioCriteria:filmVisualCriteria;
+const filmCriteria=p=>reviewPassed(current(p)?.visualReview)?filmAudioCriteria:filmVisualCriteria;
 const requiredActor = (e, actor) => { if (e.actor !== actor) throw new Error(`${e.action} requires ${actor} authority.`); };
 export function applyEvent(project, raw) {
   const p = structuredClone(Project.parse(project));
   const e = Event.parse(raw);
   if (e.taskId !== taskFor(p).taskId) throw new Error('STALE_TASK: read current status before responding.');
+  if(p.lifecycle==='abandoned'){
+    if(!['note','reconcile'].includes(e.action))throw new Error('PROJECT_ABANDONED: no new production or approvals; reconcile saved provider outcomes only.');
+    if(e.action==='reconcile'){requiredActor(e,'human');const job=p.jobs.find(j=>j.id===e.jobId);if(!job||job.digest!==e.artifactDigest||!e.message||!['confirmed-no-result','confirmed-unusable-result','confirmed-completed'].includes(e.result?.outcome))throw new Error('Abandoned reconciliation needs exact job, original human direction and confirmed outcome.');job.status=e.result.outcome==='confirmed-completed'?'ready':'failed';job.result=e.result;}
+    else if(!e.message)throw new Error('Note needs text.');
+    p.sequence++;p.history.push({sequence:p.sequence,action:e.action,actor:e.actor,message:e.message,at:new Date().toISOString()});return Project.parse(p);
+  }
   if(p.crew)Crew.parse(p.crew);
   assertCrewEvent(p,e);
-  if(e.action==='configure-crew'){requiredActor(e,'human');if(p.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status))||!e.message)throw new Error('Configure crew explicitly with reconciled jobs; never change existing bindings silently.');
+  if(e.action==='abandon'){
+    requiredActor(e,'human');if(!e.message)throw new Error('Abandon requires explicit human instruction.');
+    p.lifecycle='abandoned';p.gate='pending';
+  }else if(e.action==='configure-crew'){requiredActor(e,'human');if(p.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status))||!e.message)throw new Error('Configure crew explicitly with reconciled jobs; never change existing bindings silently.');
     const crew=Crew.parse(e.crew);if(p.crew&&digest(p.crew)===digest(crew))throw new Error('Crew is already configured with these bindings.');
     const changed=role=>p.crew&&digest(p.crew.workers.find(w=>w.role===role))!==digest(crew.workers.find(w=>w.role===role));
     const audioChanged=changed('audio-reviewer'),visualChanged=changed('visual-reviewer');
     const audio=current(p,'audioReviewerQualification'),visual=current(p,'reviewerQualification');
     if(visualChanged&&visual)invalidate(p,visual.id);
-    if(audioChanged&&audio){invalidate(p,audio.id);p.step='audioReviewerQualification';p.gate='author';}
-    else if(visualChanged&&visual){p.step='reviewerQualification';p.gate='author';}
+    if(!supervised(p)&&audioChanged&&audio){invalidate(p,audio.id);p.step='audioReviewerQualification';p.gate='author';}
+    else if(!supervised(p)&&visualChanged&&visual){p.step='reviewerQualification';p.gate='author';}
     p.crew=crew;
+  }else if(e.action==='configure-review'){
+    requiredActor(e,'human');
+    if(!e.message||!e.reviewMode||!['script','voiceSample','clone','audioReviewerQualification','reviewerQualification'].includes(p.step)||p.jobs.some(j=>!['ready','failed'].includes(j.status))||p.artifacts.some(a=>a.valid&&a.approvedBy&&['audition','narration','keyframe','video','film'].includes(a.kind)))throw new Error('Review policy change requires an explicit pre-production decision and reconciled jobs.');
+    if(p.reviewMode===e.reviewMode)throw new Error('Review policy already selected.');
+    p.reviewMode=e.reviewMode;
+    if(supervised(p)&&['audioReviewerQualification','reviewerQualification'].includes(p.step)){p.step=p.step==='audioReviewerQualification'?'audition':'videoPlan';p.gate=p.step==='audition'?'produce':'author';}
   }else if(e.action==='start-audio-review'){requiredActor(e,'human');if(locked(p,'audioReviewerQualification')||!current(p,'clone')||p.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status))||!e.message)throw new Error('Explicit audio-review upgrade requires an existing clone, no qualified audio lock and reconciled jobs.');for(const a of p.artifacts.filter(a=>a.valid&&['audition','narration'].includes(a.kind)))invalidate(p,a.id);p.step='audioReviewerQualification';p.gate='author';
   }else if(e.action==='audio-qualified'){requiredActor(e,'runtime');if(p.step!=='audioReviewerQualification'||p.gate!=='author')throw new Error('Audio qualification requires its current task.');const report=Content.audioReviewerQualification.parse(e.content),worker=p.crew?.workers.find(w=>w.role==='audio-reviewer');if(worker&&(worker.workerId!==report.workerId||worker.modelVersion!==report.modelVersion||worker.capabilityVersion!==report.capabilityVersion))throw new Error('Audio qualification must match assigned Ava model/tool profile.');addArtifact(p,report,'verified-local-audio-evaluator');
   }else if (e.action === 'qualified') {
     requiredActor(e,'runtime');if(p.step!=='reviewerQualification'||p.gate!=='author')throw new Error('Qualification requires current qualification task.');const worker=p.crew?.workers.find(w=>w.role==='visual-reviewer');if(worker&&(worker.workerId!==e.content?.workerId||worker.modelVersion!==e.content?.modelVersion||worker.capabilityVersion!==e.content?.capabilityVersion))throw new Error('Visual qualification must match assigned Vera model.');addArtifact(p,e.content,'verified-local-evaluator');
   } else if (e.action === 'note') {
     if (!e.message) throw new Error('Note needs text.');
-  } else if (['changes', 'reject'].includes(e.action)) {
+  } else if (['changes', 'redo', 'reject'].includes(e.action)) {
     requiredActor(e, 'human');
     if (p.jobs.some(j => ['submitting', 'submitted', 'uncertain'].includes(j.status))) throw new Error('Reconcile all outstanding requests before a revision.');
     let a = p.artifacts.find(a => a.id === e.artifactId && a.valid);
     if (!a || a.digest !== e.artifactDigest || !e.message) throw new Error('Revision needs the current artifact ID/digest and explicit user feedback.');
+    const impact=revisionImpact(p,a.id);
+    if(supervised(p)&&impact.affected.some(id=>p.artifacts.find(a=>a.id===id)?.approvedBy)&&e.impactDigest!==impact.impactDigest)throw new Error('REVISION_IMPACT_CONFIRMATION_REQUIRED: show current impact and obtain human confirmation of its digest.');
     a = revisionRoot(p, a);
     reopen(p,a,e.message);
+    p.feedback.at(-1).intent=e.action==='redo'?'redo':'detail';
   } else if (e.action === 'artifact') {
     if(p.step==='audioReviewerQualification')throw new Error('Use qualify-audio; a worker cannot self-certify audio expertise.');
     if(p.step==='reviewerQualification')throw new Error('Use qualify-visual to compute a report from actual held-out files; a worker cannot self-certify.');
@@ -245,28 +267,29 @@ export function applyEvent(project, raw) {
     const required=p.step==='film'?filmCriteria(p):criteria[p.step];
     const names = r.checks.map(c => c.criterion);
     if (names.length !== required.length || new Set(names).size !== names.length || required.some(c => !names.includes(c))) throw new Error('Every required criterion needs exactly one evidenced finding.');
-    const perception = ['audition', 'narration'].includes(p.step) ? 'direct-audio' : imageSteps.includes(p.step) ? 'direct-image' : p.step==='video'?'direct-video':p.step==='film'?(a.visualReview?.decision==='approved'?'direct-audio':'direct-video'):['music','effect'].includes(p.step)?'direct-audio':'direct-text';
+    const perception = ['audition', 'narration'].includes(p.step) ? 'direct-audio' : imageSteps.includes(p.step) ? 'direct-image' : p.step==='video'?'direct-video':p.step==='film'?(reviewPassed(a.visualReview)?'direct-audio':'direct-video'):['music','effect'].includes(p.step)?'direct-audio':'direct-text';
+    if(r.decision==='provisional'&&(!supervised(p)||r.perception!==perception||r.checks.some(c=>c.status==='fail')))throw new Error('Provisional review requires supervised mode, actual perception and no known failures.');
     if (r.decision === 'approved' && (r.perception !== perception || r.checks.some(c => c.status !== 'pass'))) throw new Error('Cannot approve missing perception or failing/inconclusive checks.');
     if (r.decision === 'rejected' && !r.checks.some(c => c.status === 'fail' && c.repair.trim())) throw new Error('Rejection requires a failed criterion and a specific repair.');
     if (r.checks.some(c => c.status === 'fail' && !c.repair.trim())) throw new Error('Every failure requires a specific repair.');
     const filmRepair = p.step==='film'&&r.decision==='rejected' ? (r.repairArtifactId ? p.artifacts.find(a=>a.id===r.repairArtifactId&&a.valid) : current(p,'editPlan')) : null;
     if(p.step==='film'&&r.decision==='rejected'&&r.repairTarget!=='script'&&(!filmRepair||!['editPlan','video','music','effect','keyframe','narration'].includes(filmRepair.kind)||!revisionImpact(p,filmRepair.id).affected.includes(a.id)))throw new Error('Final-film repair must target a current component used by this film.');
-    const filmAudio=p.step==='film'&&a.visualReview?.decision==='approved';
-    if(r.decision!=='inconclusive'&&(p.step==='video'||p.step==='film'&&!filmAudio)){const q=current(p,'reviewerQualification').content;requireVisualQualification(q,'video');if(r.perception!==perception||e.workerId!==q.workerId||r.modelVersion!==q.modelVersion||(q.capabilityVersion&&r.capabilityVersion!==q.capabilityVersion)||r.coverage?.artifactSha256!==a.content.files[0].sha256||(!r.coverage.videoSeconds||r.coverage.videoSeconds+1/30<a.content.files[0].durationSeconds))throw new Error('Qualified reviewer must directly inspect the entire current video/audio and bind its hash/model.');}
-    if(r.decision!=='inconclusive'&&(['audition','narration','music','effect'].includes(p.step)||filmAudio)){const q=current(p,'audioReviewerQualification')?.content;requireAudioQualification(q);if(r.perception!==perception||!locked(p,'audioReviewerQualification')||e.workerId!==q.workerId||r.modelVersion!==q.modelVersion||r.capabilityVersion!==q.capabilityVersion||e.workerId===a.visualReviewedBy)throw new Error('Qualified independent audio reviewer must bind its model and tool profile.');const coverage=r.coverage?.audioFiles;if(!coverage||coverage.length!==a.content.files.length||a.content.files.some((f,i)=>coverage[i].sha256!==f.sha256||coverage[i].seconds+.02<f.durationSeconds))throw new Error('Audio reviewer must hear every entire current file and bind its hash.');}
-    if (r.decision === 'approved' && ['audition', 'narration'].includes(p.step)) {
+    const filmAudio=p.step==='film'&&reviewPassed(a.visualReview);
+    if(r.decision!=='inconclusive'&&(p.step==='video'||p.step==='film'&&!filmAudio)){const q=supervised(p)?{workerId:e.workerId,modelVersion:r.modelVersion,capabilityVersion:r.capabilityVersion}:current(p,'reviewerQualification').content;if(!supervised(p))requireVisualQualification(q,'video');if(r.perception!==perception||e.workerId!==q.workerId||r.modelVersion!==q.modelVersion||(q.capabilityVersion&&r.capabilityVersion!==q.capabilityVersion)||r.coverage?.artifactSha256!==a.content.files[0].sha256||(!r.coverage.videoSeconds||r.coverage.videoSeconds+1/30<a.content.files[0].durationSeconds))throw new Error('Qualified reviewer must directly inspect the entire current video/audio and bind its hash/model.');}
+    if(r.decision!=='inconclusive'&&(['audition','narration','music','effect'].includes(p.step)||filmAudio)){const q=supervised(p)?{workerId:e.workerId,modelVersion:r.modelVersion,capabilityVersion:r.capabilityVersion}:current(p,'audioReviewerQualification')?.content;if(!supervised(p))requireAudioQualification(q);if(r.perception!==perception||!supervised(p)&&!locked(p,'audioReviewerQualification')||e.workerId!==q.workerId||r.modelVersion!==q.modelVersion||r.capabilityVersion!==q.capabilityVersion||e.workerId===a.visualReviewedBy)throw new Error('Qualified independent audio reviewer must bind its model and tool profile.');const coverage=r.coverage?.audioFiles;if(!coverage||coverage.length!==a.content.files.length||a.content.files.some((f,i)=>coverage[i].sha256!==f.sha256||coverage[i].seconds+.02<f.durationSeconds))throw new Error('Audio reviewer must hear every entire current file and bind its hash.');}
+    if (reviewPassed(r) && ['audition', 'narration'].includes(p.step)) {
       if (a.content.files.some(f => f.durationSeconds > 15)) throw new Error('Overlong narration cannot be approved; return the affected text to the writer, never accelerate it.');
       const m = r.measurements;
-      if (!m || !m.speechToTextMethod || !m.speakerSimilarityMethod || m.speakerSimilarity === undefined || !m.measurementNotes || m.referenceSha256 !== current(p, 'voiceSample').content.files[0].sha256 || m.transcripts?.length !== a.content.files.length || m.speakingRateWpm?.length !== a.content.files.length || m.silenceSeconds?.length !== a.content.files.length) throw new Error('Audio pass requires transcript, speaking rate, silence and speaker-similarity measurements against the actual sample.');
+      if (!m || !m.speechToTextMethod || (!supervised(p)&&(!m.speakerSimilarityMethod || m.speakerSimilarity === undefined)) || !m.measurementNotes || m.referenceSha256 !== current(p, 'voiceSample').content.files[0].sha256 || m.transcripts?.length !== a.content.files.length || m.speakingRateWpm?.length !== a.content.files.length || m.silenceSeconds?.length !== a.content.files.length) throw new Error('Audio pass requires transcript, speaking rate, silence and speaker-similarity measurements against the actual sample.');
       const words = s => s.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu)?.join(' ') ?? '';
       if (m.transcripts.some((t, i) => words(t) !== words(current(p, 'script').content.beats[i].narration))) throw new Error('Speech-to-text differs from the locked script.');
     }
-    if(p.step==='film'){if(filmAudio){a.audioReview=structuredClone(r);a.audioReviewedBy=e.workerId;}else{a.visualReview=r;a.visualReviewedBy=e.workerId;if(r.decision==='approved'){p.sequence++;p.history.push({sequence:p.sequence,action:'review',actor:e.actor,message:'Visual film review passed; awaiting independent audio review.',at:new Date().toISOString()});return Project.parse(p);}}if(filmAudio&&r.decision==='approved'){r.perception='direct-audiovisual';r.checks=criteria.film.map(c=>r.checks.find(x=>x.criterion===c)??a.visualReview.checks.find(x=>x.criterion===c));}}
+    if(p.step==='film'){if(filmAudio){a.audioReview=structuredClone(r);a.audioReviewedBy=e.workerId;}else{a.visualReview=r;a.visualReviewedBy=e.workerId;if(reviewPassed(r)){p.sequence++;p.history.push({sequence:p.sequence,action:'review',actor:e.actor,message:'Visual film review passed; awaiting independent audio review.',at:new Date().toISOString()});return Project.parse(p);}}if(filmAudio&&reviewPassed(r)){r.perception='direct-audiovisual';r.checks=criteria.film.map(c=>r.checks.find(x=>x.criterion===c)??a.visualReview.checks.find(x=>x.criterion===c));}}
     if (ownerReview) a.ownerReview = r;
     if (ownerReview && r.decision === 'approved') p.gate = 'review';
     else {
     a.review = r; a.reviewSequence=p.sequence+1;
-    if (r.decision === 'approved') { p.gate = p.step === 'sheetPrompt' ? 'produce' : 'human'; if (p.step === 'sheetPrompt') next(p); }
+    if (reviewPassed(r)) { p.gate = p.step === 'sheetPrompt' ? 'produce' : 'human'; if (p.step === 'sheetPrompt') next(p); }
     else {
       if (['keyframe','video','film'].includes(p.step) && r.decision === 'rejected') {
         p.reviewDisagreements = 0;
@@ -287,8 +310,13 @@ export function applyEvent(project, raw) {
     requiredActor(e, 'human');
     const a = current(p);
     if(p.step==='film'&&(!a?.visualReview||!a?.audioReview||a.visualReviewedBy===a.audioReviewedBy))throw new Error('Film requires separate visual and audio reviewer passes.');
-    if (p.gate !== 'human' || !a || a.review?.decision !== 'approved' || e.artifactId !== a.id || e.artifactDigest !== a.digest || !e.message) throw new Error('Human approval needs the exact current agent-passing artifact and original user message.');
+    if (p.gate !== 'human' || !a || !reviewPassed(a.review) || e.artifactId !== a.id || e.artifactDigest !== a.digest || !e.message) throw new Error('Human approval needs the exact current agent-passing artifact and original user message.');
     if (['candidates', 'backgroundCandidates'].includes(p.step)) { if (![0, 1, 2].includes(e.selection)) throw new Error('Choose one of the three candidate indexes: 0, 1, 2.'); a.selection = e.selection; }
+    if(supervised(p)&&a.content.files){
+      const h=Review.parse(e.humanReview);const needed=criteria[p.step],humanPerception=p.step==='film'?'direct-audiovisual':imageSteps.includes(p.step)?'direct-image':p.step==='video'?'direct-video':'direct-audio';
+      if(h.decision!=='approved'||h.perception!==humanPerception||h.checks.length!==needed.length||needed.some(c=>!h.checks.some(x=>x.criterion===c&&x.status==='pass')))throw new Error('HUMAN_MEDIA_REVIEW_REQUIRED: confirm every criterion on the actual current media.');
+      a.humanReview=h;
+    }
     a.approvedBy = { message: e.message, at: new Date().toISOString() }; next(p);
   } else if (e.action === 'resolve') {
     requiredActor(e, 'human');
@@ -322,9 +350,9 @@ export function applyEvent(project, raw) {
     const request = requestDescriptor(p, plan);
     const bound = { plan, request, dependencies: dependencies(p) };
     const technicalRepair = p.step==='video' && p.artifacts.findLast(a=>a.review?.decision==='rejected'&&a.dependencies.includes(current(p,'videoPlan').id)&&((a.key===keyFor(p)&&a.review.checks.some(c=>c.status==='fail'&&['integrity','anatomy','identity','continuity','motion'].includes(c.criterion)))||(a.kind==='film'&&p.artifacts.find(v=>v.id===a.review.repairArtifactId)?.key===keyFor(p)&&a.review.checks.some(c=>c.status==='fail'&&['technical','visual-continuity'].includes(c.criterion)))));
-    const userRevision = p.history.findLast(h=>['changes','reject','resolve'].includes(h.action));
+    const userRevision = p.history.findLast(h=>['changes','redo','reject','resolve'].includes(h.action));
     const repairIsCurrent = technicalRepair && (!userRevision || technicalRepair.reviewSequence>userRevision.sequence);
-    const allowance = p.allowances.findLast(a => { const used = p.jobs.filter(j => j.allowanceId === a.id); return a.operations.includes(plan.operation) && (plan.operation!=='video'||(a.repairOf===keyFor(p)&&repairIsCurrent&&current(p,`videoPrompt:${p.clipId}`).content.repairOnly)) && used.length < a.maxRequests && used.reduce((n, j) => n + j.plan.estimatedCostUsd, 0) + plan.estimatedCostUsd <= a.maxCostUsd; });
+    const allowance = p.allowances.findLast(a => { const used = p.jobs.filter(j => j.allowanceId === a.id); return a.operations.includes(plan.operation) && (plan.operation!=='video'||(!supervised(p)&&a.repairOf===keyFor(p)&&repairIsCurrent&&current(p,`videoPrompt:${p.clipId}`).content.repairOnly)) && used.length < a.maxRequests && used.reduce((n, j) => n + j.plan.estimatedCostUsd, 0) + plan.estimatedCostUsd <= a.maxCostUsd; });
     p.jobs.push({ id: `job-${p.jobs.length + 1}`, key: keyFor(p), plan, request, dependencies: bound.dependencies, digest: digest(bound), status: allowance ? 'authorized' : 'planned', ...(allowance ? { allowanceId: allowance.id, authorization: { message: allowance.message, at: new Date().toISOString() } } : {}) }); p.gate = allowance ? 'collect' : 'authorize';
   } else if (e.action === 'authorize') {
     requiredActor(e, 'human'); const j = p.jobs.findLast(j => j.key === keyFor(p));
@@ -361,9 +389,9 @@ export function openWorkflow(databasePath) {
   const graph = builder.compile({ checkpointer: saver });
   const config = id => ({ configurable: { thread_id: id }, durability: 'sync' });
   return {
-    async init(id, inputs) {
+    async init(id, inputs, options = {}) {
       if ((await graph.getState(config(id))).values.project) throw new Error('Run already exists. Existing runs are never reset or silently migrated.');
-      await graph.invoke({ project: initialProject(id, inputs) }, config(id)); return this.status(id);
+      await graph.invoke({ project: initialProject(id, inputs, options) }, config(id)); return this.status(id);
     },
     async status(id) {
       const state = await graph.getState(config(id));
