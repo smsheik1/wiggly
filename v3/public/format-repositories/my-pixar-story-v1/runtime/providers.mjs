@@ -34,11 +34,12 @@ export function requestDescriptor(p, plan) {
 }
 export async function atomicJson(path, value) { const temp = `${path}.tmp`; await writeFile(temp, JSON.stringify(value, null, 2), { mode: 0o600 }); await rename(temp, path); }
 export function remediation(provider, secretsPath) {
+  if(provider==='gemini')return `STOP: Gemini media review failed. No fallback or retry was submitted.\n1. Open https://aistudio.google.com/api-keys and sign in; select the key's Google Cloud project.\n2. Open Dashboard → Usage/Billing (https://aistudio.google.com/usage); check quota, billing and payment for that project.\n3. Open API keys → Create API key; verify Gemini API access and any key restrictions.\n4. Open ${resolve(secretsPath)} and set GEMINI_API_KEY=<your-key> on its own line. Never paste the key in chat.\n5. Inspect the run's gemini-reviews receipts before another request. An uncertain request is never automatically repeated; HTTP 429 requires waiting for the quota window.`;
   const cartesia = provider === 'cartesia'; const key = {cartesia:'CARTESIA_API_KEY','meta-muse':'META_API_KEY',replicate:'REPLICATE_API_TOKEN',elevenlabs:'ELEVENLABS_API_KEY'}[provider];
   return `STOP: ${provider} failed. No fallback or retry was submitted.\n1. Open ${{cartesia:'https://play.cartesia.ai','meta-muse':'https://dev.meta.ai',replicate:'https://replicate.com/account/billing',elevenlabs:'https://elevenlabs.io/app/settings/subscription'}[provider]} and sign in.\n2. Open the account's Billing/Usage page; check credits and payment, and add funds if needed.\n3. Open API Keys, verify access to ${{cartesia:'voice cloning and Sonic TTS','meta-muse':'Muse Image',replicate:'Seedance video; API tokens at https://replicate.com/account/api-tokens',elevenlabs:'Music/Sound Effects; API keys at https://elevenlabs.io/app/settings/api-keys'}[provider]}, and copy a valid key.\n4. Open ${resolve(secretsPath)} and set ${key}=<your-key> on its own line. Never paste the key in chat.\n5. Read status and reconcile the recorded job before another request. For 429, wait for the provider retry window; for an outage, check the provider status/support page.`;
 }
 export async function loadKey(provider, secretsPath) {
-  const name = {cartesia:'CARTESIA_API_KEY','meta-muse':'META_API_KEY',replicate:'REPLICATE_API_TOKEN',elevenlabs:'ELEVENLABS_API_KEY'}[provider];if(!name)throw new Error('Unknown provider.');
+  const name = {cartesia:'CARTESIA_API_KEY','meta-muse':'META_API_KEY',replicate:'REPLICATE_API_TOKEN',elevenlabs:'ELEVENLABS_API_KEY',gemini:'GEMINI_API_KEY'}[provider];if(!name)throw new Error('Unknown provider.');
   const source = await readFile(secretsPath, 'utf8');
   const match = source.match(new RegExp(`^\\s*(?:export\\s+)?${name}\\s*=\\s*(.+)\\s*$`, 'm'));
   if (!match) throw new Error(`Missing named ${name} in ${resolve(secretsPath)}.`);
@@ -48,16 +49,18 @@ export async function loadKey(provider, secretsPath) {
 // Metadata-only checks cannot establish paid generation entitlement or output quality.
 export async function checkProvider(provider,secretsPath,fetcher=fetch){
  const definitions={cartesia:{urls:['https://api.cartesia.ai/voices?limit=1'],docs:'https://docs.cartesia.ai/api-reference/voices/list'},'meta-muse':{urls:['https://api.meta.ai/v1/models/muse-image-1.0'],docs:'https://dev.meta.ai/docs/api-reference/models/retrieve-model'},replicate:{urls:['https://api.replicate.com/v1/account','https://api.replicate.com/v1/models/bytedance/seedance-2.0'],docs:'https://replicate.com/docs/reference/http'},elevenlabs:{urls:['https://api.elevenlabs.io/v1/user/subscription'],docs:'https://elevenlabs.io/docs/api-reference/user/subscription/get'}};
- const definition=definitions[provider];if(!definition)throw new Error('Use cartesia, meta-muse, replicate or elevenlabs.');
+ definitions.gemini={urls:['https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash'],docs:'https://ai.google.dev/api/models#method:-models.get'};
+ const definition=definitions[provider];if(!definition)throw new Error('Use cartesia, meta-muse, replicate, elevenlabs or gemini.');
  let apiKey;
  try{
   apiKey=await loadKey(provider,secretsPath);const bodies=[];
   for(const url of definition.urls){
-   const response=await fetcher(url,{method:'GET',headers:provider==='elevenlabs'?{'xi-api-key':apiKey}:{Authorization:`Bearer ${apiKey}`,...(provider==='cartesia'?{'Cartesia-Version':'2026-08-14'}:{})},redirect:'error',signal:AbortSignal.timeout(15000)});
+   const response=await fetcher(url,{method:'GET',headers:provider==='gemini'?{'x-goog-api-key':apiKey}:provider==='elevenlabs'?{'xi-api-key':apiKey}:{Authorization:`Bearer ${apiKey}`,...(provider==='cartesia'?{'Cartesia-Version':'2026-08-14'}:{})},redirect:'error',signal:AbortSignal.timeout(15000)});
    if(!response.ok){const body=await response.text();throw new Error(`GET ${url}: HTTP ${response.status}: ${body.replaceAll(apiKey,'[redacted]').slice(0,400)}`);}
    bodies.push(await response.json());
   }
   if(provider==='cartesia'&&!Array.isArray(bodies[0].data)||provider==='meta-muse'&&bodies[0].id!=='muse-image-1.0'||provider==='replicate'&&(!bodies[0].type||bodies[1].owner!=='bytedance'||bodies[1].name!=='seedance-2.0')||provider==='elevenlabs'&&typeof bodies[0].status!=='string')throw new Error('Provider metadata response does not match its documented contract.');
+  if(provider==='gemini'&&bodies[0].name!=='models/gemini-3.8-flash')throw new Error('Gemini metadata must identify the exact selected model.');
   return {provider,checkedAt:new Date().toISOString(),status:'metadata-verified',endpoints:definition.urls,documentation:definition.docs,authenticatedRead:true,...(provider==='elevenlabs'?{subscriptionStatus:bodies[0].status}:{}),generationReady:false,unverified:['paid generation entitlement and funds','account-specific price and spend estimate','actual generation/output quality'],mediaGenerationCalls:0,projectStateMutated:false};
  }catch(error){const message=apiKey?error.message.replaceAll(apiKey,'[redacted]'):error.message;throw new Error(`${message}\n${remediation(provider,secretsPath)}`);}
 }

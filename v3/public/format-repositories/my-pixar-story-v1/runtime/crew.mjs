@@ -56,12 +56,12 @@ export function crewTools(task,worker,adapters={},record=()=>{}){
   if(name==='watchVideo'&&(!file.width||!file.durationSeconds))throw new Error('Expected a measured video.');
   if(['listenAudio','transcribe'].includes(name)&&(!file.durationSeconds||(file.width&&!(await probe(file.path)).hasAudio)))throw new Error('Expected an audible file.');
   if(!adapters[name])throw new Error(`CAPABILITY_UNAVAILABLE: host must connect actual ${name}; file access/metadata are insufficient.`);
-  const result=await adapters[name]({file,worker});
+  const result=await adapters[name]({file,worker,task});
   if(name==='transcribe')return z.object({transcript:text,method:text}).parse(result);
   if(name==='viewImage')return z.object({perception:z.literal('direct-image')}).passthrough().parse(result);
   return z.object({perception:z.literal(name==='watchVideo'?'direct-video':'direct-audio'),seconds:z.number().positive()}).passthrough().parse(result);
  };
- return async(name,parameters={})=>{const value=await execute(name,parameters);record({tool:name,sha256:parameters.sha256,referenceSha256:parameters.referenceSha256,seconds:value.seconds},value);return value;};
+ return async(name,parameters={})=>{const value=await execute(name,parameters);record({tool:name,sha256:parameters.sha256,referenceSha256:parameters.referenceSha256,seconds:value.seconds,...(value.provider?{provider:value.provider,modelVersion:value.modelVersion,requestDigest:value.requestDigest,receiptPath:value.receiptPath,samplingFps:value.samplingFps}: {})},value);return value;};
 }
 export async function runCrewTask(p,task,host){
  const worker=assignedWorker(p);if(!worker)throw new Error('CREW_NOT_CONFIGURED: bind real host workers first.');

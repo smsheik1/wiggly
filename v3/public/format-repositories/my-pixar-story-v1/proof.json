@@ -172,7 +172,7 @@
   "readinessAndDelivery": {
     "date": "2026-10-02",
     "implemented": "Explicit read-only provider metadata checks and exact reviewed deliverable chat presentation",
-    "scope": "GET-only mocks and local synthetic media verify behavior; live metadata probes pending; no production media, human labels or approvals fabricated",
+    "scope": "Local synthetic/mocked behavior tests plus live authenticated metadata GETs; no production media, human labels or approvals fabricated",
     "nativeAudioVideoLimitation": "https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations",
     "stageDocumentRepair": "Audio qualification now correctly precedes audition, matching runtime gates",
     "productionReady": false,
@@ -191,5 +191,59 @@
     "simplificationReview": "Lean already. Ship. No additional dependencies,renderer or general framework.",
     "browserProof": "Actual IAB synthetic blue\u2192green Player playback/pause,60s timeline,no horizontal overflow or console errors; no perceptual qualification",
     "observedFailureAndFix": "Pinned Remotion4.0.473 dependency tree had high advisories; align kit Remotion4.0.532, rebuild official renderer, derive manifest/runtime version from installed remotion VERSION; version-alignment regression and fresh audit pass"
+  },
+  "providerMetadataChecks": {
+    "date": "2026-10-02",
+    "verified": [
+      "cartesia",
+      "meta-muse",
+      "replicate",
+      "gemini"
+    ],
+    "networkGetRequests": 5,
+    "elevenlabs": "Missing ELEVENLABS_API_KEY; stopped before network; no fallback",
+    "inferenceEntitlementVerified": false,
+    "fundsVerified": false,
+    "projectStateMutated": false,
+    "mediaGenerationCalls": 0
+  },
+  "geminiMediaReview": {
+    "date": "2026-10-02",
+    "operatorChoice": "cool use that",
+    "model": "gemini-3.8-flash",
+    "implemented": [
+      "scoped actual audio/video tools",
+      "static min(source FPS,24) video with references",
+      "independent role/model/tool receipts",
+      "bounded inference calls and uncertain-request stop",
+      "Files API upload receipts",
+      "profile-bound explicit crew refresh"
+    ],
+    "mockedFocusedTestsPassed": 24,
+    "productionQualified": false,
+    "remaining": [
+      "live video verification after explicit24FPS correction",
+      "independent STT",
+      "calibrated speaker similarity",
+      "genuine human-labelled reviewer qualification"
+    ],
+    "savedProjectStateMutated": false,
+    "liveAudioTransport": "PASS: correctly heard the hidden synthetic phrase; response recovered locally without a duplicate request after unnecessary interaction-ID check was fixed",
+    "liveVideoTransport": "BLOCKED: Google HTTP400 rejected 30 FPS; cap24 now explicit/mock-tested; no retry/fallback submitted",
+    "observedFailuresAndFixes": [
+      "store:false completed response may omit ID; retain request/response digests and recover finished output offline",
+      "Provider rejects fps>24; declare min(source FPS,24), expose both source/sampling and bind qualification profile",
+      "Reserve the call allowance synchronously before asynchronous media preparation; concurrent dynamic tools cannot race past the cap"
+    ],
+    "sourceTestsPassed": 105,
+    "sourceCheckAndSmoke": "PASS: official check and parent/grandparent smoke; no renderer changes",
+    "inferencePostAttempts": 2,
+    "completedInferenceResponses": 1,
+    "actualAccountChargeVerified": false,
+    "freshArchiveTestsPassed": 105,
+    "independentAdversarialProbesPassed": 4,
+    "blindAudit": "PASS for packaged connection: fresh npm ci/check/smoke/105 tests,4 independent adversarial probes; no production qualification",
+    "auditedCodeArchiveSha256": "edde57f565903d4f654ea48b97fb71e4390a33a795f654a11772c970da58ff00",
+    "simplificationReview": "Lean already. Direct adapter, existing broker and synchronous counter; no new dependency/framework/renderer."
   }
 }

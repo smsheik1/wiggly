@@ -15,6 +15,7 @@ import { assemblyManifest, assertFilmInspection } from './runtime/studio.mjs';
 import {presentDeliverable} from './runtime/presentation.mjs';
 import {Crew,crewRoles,runCrewTask} from './runtime/crew.mjs';
 import {CodexHost,DEFAULT_WORKER_MODEL,driveCrew} from './runtime/codex-host.mjs';
+import {createGeminiReviewTools,GEMINI_REVIEW_PROFILE} from './runtime/gemini-review.mjs';
 import {AudioCase,audioTask,qualifyAudio,requireAudioQualification} from './evaluation/audio-qualification.mjs';
 import { VisualCase, visualTask, qualifyVisual, requireVisualQualification } from './evaluation/visual-qualification.mjs';
 const root = dirname(fileURLToPath(import.meta.url));
@@ -69,7 +70,7 @@ async function main() {
     const tools = Object.fromEntries(['ffprobe', 'ffmpeg', 'tar'].map(tool => [tool, spawnSync(tool, ['-version'], { stdio: 'ignore' }).error?.code !== 'ENOENT']));
     const renderer=await verifyRenderer();
     print({ formatVersion: VERSION, node: process.version, tools, renderer:renderer.manifest.renderer, dependencies: 'LangGraph + SQLite loaded',
-      requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY'], optionalKeys:['REPLICATE_API_TOKEN','ELEVENLABS_API_KEY'], credentialsRead: false, productionStageLimit: 'final film; video blocked until reviewer qualification and human authorization; real production proof not performed' });
+      requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY'], optionalKeys:['REPLICATE_API_TOKEN','ELEVENLABS_API_KEY','GEMINI_API_KEY (Codex media review)'], credentialsRead: false, productionStageLimit: 'final film; video blocked until reviewer qualification and human authorization; real production proof not performed' });
     if (Object.values(tools).some(v => !v)) process.exitCode = 1; return;
   }
   if (command === 'schema') {
@@ -84,7 +85,9 @@ async function main() {
     if (command === 'import') { print(await importMedia(args[0], runDir)); return; }
     const status = await workflow.status('project');
     if(['crew-start','crew-refresh','drive-codex','work-codex'].includes(command)){
-      const host=new CodexHost({cwd:join(runDir,'host-workspace'),onProgress:({worker,item})=>process.stderr.write(`${worker}: ${item}\n`)});
+      const reviewCalls=Number(option('review-calls','0'));
+      const perceptionTools=createGeminiReviewTools({secretsPath,receiptDirectory:join(runDir,'gemini-reviews'),maxCalls:reviewCalls});
+      const host=new CodexHost({cwd:join(runDir,'host-workspace'),perceptionTools,perceptionProfile:GEMINI_REVIEW_PROFILE,onProgress:({worker,item})=>process.stderr.write(`${worker}: ${item}\n`)});
       try{
         if(['crew-start','crew-refresh'].includes(command)){
           const message=option('message'),model=option('model',DEFAULT_WORKER_MODEL);

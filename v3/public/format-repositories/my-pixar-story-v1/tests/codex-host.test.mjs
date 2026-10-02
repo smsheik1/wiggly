@@ -10,7 +10,7 @@ import {openWorkflow,initialProject,taskFor} from '../runtime/workflow.mjs';
 import {inputs,script,event,send} from './helpers.mjs';
 import {crewRoles,runCrewTask} from '../runtime/crew.mjs';
 
-function fixture({respondTool=false,failTurn=false,wrongModel=false,failStartAt=0}={}){
+function fixture({respondTool=false,toolName='generateVideo',failTurn=false,wrongModel=false,failStartAt=0}={}){
  const requests=[],child=new EventEmitter();child.stdout=new PassThrough();child.stderr=new PassThrough();child.kill=()=>{};
  let id=0,active;const persisted=new Set();
  const emit=value=>child.stdout.write(JSON.stringify(value)+'\n');
@@ -28,7 +28,7 @@ function fixture({respondTool=false,failTurn=false,wrongModel=false,failStartAt=
    // Early notifications and stale turns cannot substitute for this current turn.
    emit({method:'turn/completed',params:{threadId:active.threadId,turn:{id:'stale-turn',status:'completed'}}});
    emit({id:request.id,result:{turn:{id:'turn-isolated'}}});
-   if(respondTool)emit({id:999,method:'item/tool/call',params:{threadId:active.threadId,turnId:'turn-isolated',tool:'wiggly_tool',arguments:{name:'generateVideo',sha256:'unscoped',referenceSha256:null}}});else finish();
+   if(respondTool)emit({id:999,method:'item/tool/call',params:{threadId:active.threadId,turnId:'turn-isolated',tool:'wiggly_tool',arguments:{name:toolName,sha256:'unscoped',referenceSha256:null}}});else finish();
   }
  }callback();}});
  return {child,requests,spawnProcess:()=>child};
@@ -56,6 +56,14 @@ test('model/profile changes and failed host turns stop without fallback or retry
   }finally{host.close();await rm(join(dir,'crew-startup.json'),{force:true});}
  }
  await rm(dir,{recursive:true});
+});
+
+test('fatal external perception failures terminate the host turn before a worker can return a verdict',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'memoir-gemini-fatal-')),mock=fixture({respondTool:true,toolName:'listenAudio'}),host=new CodexHost({cwd:dir,spawnProcess:mock.spawnProcess});host.profile=async()=> 'isolated';
+ try{await host.initialize();const crew=await host.startCrew(),worker=crew.workers.find(w=>w.role==='audio-reviewer');
+  await assert.rejects(host.runTask({step:'music',taskId:'isolated',actor:'reviewer'},{worker,callTool:async()=>{throw Object.assign(new Error('STOP: Gemini HTTP 401 ISOLATED'),{stopDispatch:true});}}),/STOP: Gemini/);
+  assert.equal(mock.requests.filter(r=>r.method==='turn/start').length,crew.workers.length+1);
+ }finally{host.close();await rm(dir,{recursive:true});}
 });
 
 test('bounded driver preserves SQLite task state and stops for human and production gates',async()=>{

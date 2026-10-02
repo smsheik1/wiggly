@@ -16,8 +16,8 @@ async function readJson(path){try{return JSON.parse(await readFile(path,'utf8'))
 async function saveJson(path,value){await writeFile(path+'.tmp',JSON.stringify(value)+'\n',{mode:0o600});await rename(path+'.tmp',path);}
 
 export class CodexHost {
- constructor({cwd,spawnProcess=spawn,timeoutMs=180000,onProgress=()=>{}}={}){
-  this.cwd=cwd;this.timeoutMs=timeoutMs;this.onProgress=onProgress;this.sequence=0;this.pending=new Map();this.active=null;
+ constructor({cwd,spawnProcess=spawn,timeoutMs=180000,onProgress=()=>{},perceptionTools={},perceptionProfile=null}={}){
+  this.cwd=cwd;this.timeoutMs=timeoutMs;this.onProgress=onProgress;this.sequence=0;this.pending=new Map();this.active=null;this.perceptionProfile=perceptionProfile;
   this.child=spawnProcess('codex',['app-server','--stdio',...disabled.flatMap(name=>['--disable',name]),'-c','web_search="disabled"'],{stdio:['pipe','pipe','pipe']});
   this.lines=createInterface({input:this.child.stdout});
   this.lines.on('line',line=>{try{this.message(JSON.parse(line));}catch(error){this.fail(error);}});
@@ -25,7 +25,7 @@ export class CodexHost {
   this.child.stderr.on('data',()=>{});
   this.child.on('error',error=>this.fail(error));
   this.child.on('exit',()=>this.fail(new Error('CODEX_HOST_EXITED: stopped; no task/provider retry was submitted.')));
-  this.tools={viewImage:async({file})=>({perception:'direct-image',imageUrl:`data:image/${extname(file.path).slice(1).replace('jpg','jpeg')};base64,${(await readFile(file.path)).toString('base64')}`})};
+  this.tools={...perceptionTools,viewImage:async({file})=>({perception:'direct-image',imageUrl:`data:image/${extname(file.path).slice(1).replace('jpg','jpeg')};base64,${(await readFile(file.path)).toString('base64')}`})};
  }
  send(value){this.child.stdin.write(JSON.stringify(value)+'\n');}
  call(method,params){return new Promise((resolve,reject)=>{const id=++this.sequence,timer=setTimeout(()=>{this.pending.delete(id);reject(new Error(`CODEX_TIMEOUT: ${method}; stop and inspect the worker, never resubmit automatically.`));},this.timeoutMs);this.pending.set(id,{resolve,reject,timer});this.send({id,method,params});});}
@@ -54,12 +54,12 @@ export class CodexHost {
    const value=await active.callTool(arguments_.name,{sha256:arguments_.sha256,...(arguments_.referenceSha256?{referenceSha256:arguments_.referenceSha256}:{})});
    const contentItems=value.imageUrl?[{type:'inputText',text:JSON.stringify({fileSha256:arguments_.sha256,perception:value.perception})},{type:'inputImage',imageUrl:value.imageUrl}]:[{type:'inputText',text:JSON.stringify(value.bytes?{file:value.file,...(/\.(json|md|txt)$/i.test(value.file.path)?{text:value.bytes.toString('utf8')}:{instruction:'Binary media: use your permitted perception tool.'})}:value)}];
    this.send({id:message.id,result:{success:true,contentItems}});
-  }catch(error){this.send({id:message.id,result:{success:false,contentItems:[{type:'inputText',text:error.message}]}});}
+  }catch(error){if(error.stopDispatch)this.active?.reject(error);this.send({id:message.id,result:{success:false,contentItems:[{type:'inputText',text:error.message}]}});}
  }
  async initialize(){await mkdir(this.cwd,{recursive:true});await this.call('initialize',{clientInfo:{name:'wiggly_memoir',title:'Wiggly memoir studio',version:'2.0.0'},capabilities:{experimentalApi:true}});this.send({method:'initialized',params:{}});}
  async profile(){
   const version=execFileSync('codex',['--version'],{encoding:'utf8'}).trim();
-  return `${version}:${digest({sources:await Promise.all(['codex-host.mjs','crew.mjs','media.mjs','contracts.mjs'].map(name=>readFile(new URL(name,import.meta.url),'utf8'))),disabled,tool})}`;
+  return `${version}:${digest({sources:await Promise.all(['codex-host.mjs','crew.mjs','media.mjs','contracts.mjs','gemini-review.mjs','providers.mjs'].map(name=>readFile(new URL(name,import.meta.url),'utf8'))),perception:this.perceptionProfile,disabled,tool})}`;
  }
  async startCrew(model=DEFAULT_WORKER_MODEL){
   const capabilityVersion=await this.profile(),path=join(this.cwd,'crew-startup.json');

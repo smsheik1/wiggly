@@ -11,7 +11,8 @@
     "cartesia": "CARTESIA_API_KEY",
     "meta-muse": "META_API_KEY",
     "replicate": "REPLICATE_API_TOKEN (video)",
-    "elevenlabs": "ELEVENLABS_API_KEY (optional generated music/effects)"
+    "elevenlabs": "ELEVENLABS_API_KEY (optional generated music/effects)",
+    "gemini": "GEMINI_API_KEY (selected local Codex audio/video perception; separately billed)"
   },
   "hostAgent": {
     "author": "actual bound host worker or trusted runTask(task,{worker,callTool}) host integration",
@@ -25,7 +26,7 @@
     "soundDesigner": "instrumental piano and relevant effects with rights/provenance",
     "filmEditor": "approved trim/mix plan, natural-rate narration; one official local assembler",
     "visualQualification": "actual human-labelled held-out image/video anatomy, identity and continuity examples, actual independent worker predictions",
-    "compute": "current chat host model/subagents by default; optional externally configured models, no required Gemini or new model API key",
+    "compute": "current chat host for creative/reviewer workers; selected Gemini 3.8 Flash API for local Codex listening/video observations",
     "audioQualification": "separate genuinely human-labelled held-out audio, full listening, STT and speaker comparison; model/tool profile bound to Ava",
     "permissions": "runtime-enforced format broker and submission allowlists; ambient host shell/filesystem/tools require host enforcement",
     "finalFilm": "qualified distinct Vera visual and Ava audio reviews, then human approval",
@@ -35,8 +36,18 @@
       "commands": "crew-start, crew-refresh, work-codex, drive-codex",
       "cost": "Worker turns consume the signed-in account limits; no separate model API key required for ChatGPT login",
       "implemented": "Durable role threads and partial startup receipts, scoped native image delivery, explicit model/profile/requalification, durable dispatch results, bounded dispatch",
-      "missing": "Full listening/video, independent STT, calibrated speaker similarity and real reviewer qualification",
-      "modalityLimitationSource": "https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations"
+      "missing": "independent STT, calibrated speaker similarity and real reviewer qualification",
+      "modalityLimitationSource": "https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations",
+      "mediaReview": {
+        "model": "gemini-3.8-flash",
+        "tools": [
+          "listenAudio",
+          "watchVideo"
+        ],
+        "calls": "explicit --review-calls 0\u201332 per invocation, default 0; no automatic fallback/retry",
+        "profile": "static min(source FPS,24) video, high resolution; original audio/separate mono 48kHz PCM from video",
+        "qualification": "not production-qualified; profile changes require explicit crew refresh and held-out qualification"
+      }
     }
   },
   "storage": "per-run embedded SQLite checkpoints and immutable local assets/receipts; retain directory as a unit",
