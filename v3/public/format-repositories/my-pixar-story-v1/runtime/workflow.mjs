@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { extname } from 'node:path';
 import { Annotation, Command, START, StateGraph, interrupt } from '@langchain/langgraph';
 import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
+import { shotFor, shotReferences, referenceBindings, planningReferences, validateShots, validateKeyframePrompt } from './shots.mjs';
 import { requestDescriptor } from './providers.mjs';
 import { VERSION, Inputs, Project, Content, Review, Event, Plans, criteria, digest } from './contracts.mjs';
 
@@ -25,6 +26,7 @@ function invalidate(p, id) {
   return [...affected];
 }
 function revisionRoot(p, a) {
+  if (a.kind === 'keyframe') return current(p, a.key.replace('keyframe:', 'keyframePrompt:')) ?? a;
   if (!['backgroundCandidates', 'backgroundAngle'].includes(a.kind)) return a;
   const key = a.key.replace(a.kind, a.kind === 'backgroundCandidates' ? 'backgroundBrief' : 'backgroundAngleBrief');
   return current(p, key) ?? a;
@@ -45,7 +47,9 @@ export function dependencies(p) {
     backgroundCandidates: [`backgroundPrompt:${p.locationId}`],
     backgroundAngleBrief: ['backgrounds', `backgroundCandidates:${p.locationId}`],
     backgroundAnglePrompt: [`backgroundAngleBrief:${p.locationId}:${p.angleId}`, `backgroundCandidates:${p.locationId}`],
-    backgroundAngle: [`backgroundAnglePrompt:${p.locationId}:${p.angleId}`, `backgroundCandidates:${p.locationId}`], shots: ['backgrounds'],
+    backgroundAngle: [`backgroundAnglePrompt:${p.locationId}:${p.angleId}`, `backgroundCandidates:${p.locationId}`], shots: ['backgrounds', 'script', 'narration'],
+    keyframePrompt: ['shots', ...(['keyframePrompt', 'keyframe'].includes(p.step) ? shotReferences(p).map(r => p.artifacts.find(a => a.id === r.artifactId).key) : [])],
+    keyframe: ['shots', `keyframePrompt:${p.shotId}`, ...(['keyframePrompt', 'keyframe'].includes(p.step) ? shotReferences(p).map(r => p.artifacts.find(a => a.id === r.artifactId).key) : [])], video: ['shots'],
   }[p.step];
   return keys.map(key => { const a = current(p, key); if (!a) throw new Error(`Missing current dependency ${key}`); return a.id; });
 }
@@ -75,13 +79,16 @@ function next(p) {
       p.locationId = missing?.id ?? null; p.angleId = null; p.step = missing ? 'backgroundBrief' : 'shots';
     }
   }
-  p.gate = authorSteps.includes(p.step) ? 'author' : p.step === 'voiceSample' ? 'human' : p.step === 'shots' ? 'pending' : 'produce';
+  else if (p.step === 'shots') { p.shotId = current(p, 'shots').content.shots[0].id; p.step = 'keyframePrompt'; }
+  else if (p.step === 'keyframePrompt') p.step = 'keyframe';
+  else if (p.step === 'keyframe') { const missing = current(p, 'shots').content.shots.find(s => !locked(p, `keyframe:${s.id}`)); p.shotId = missing?.id ?? null; p.step = missing ? 'keyframePrompt' : 'video'; }
+  p.gate = authorSteps.includes(p.step) ? 'author' : p.step === 'voiceSample' ? 'human' : p.step === 'video' ? 'pending' : 'produce';
   // Reopening a deliverable keeps unrelated locks; do not force their regeneration.
   const reusable = ['voiceSample', 'clone'].includes(p.step) ? !!current(p) : p.step === 'sheetPrompt' ? current(p)?.review?.decision === 'approved' : locked(p, keyFor(p));
-  if (p.step !== 'shots' && reusable) next(p);
+  if (p.step !== 'video' && reusable) next(p);
 }
 function addArtifact(p, content, author) {
-  if (backgroundSteps.includes(p.step) || p.step === 'backgrounds') assertAllowed(p, p.step);
+  if (backgroundSteps.includes(p.step) || ['backgrounds', 'shots', 'keyframePrompt', 'keyframe'].includes(p.step)) assertAllowed(p, p.step);
   const key = keyFor(p);
   for (const a of p.artifacts.filter(a => a.key === key && a.valid)) invalidate(p, a.id);
   const version = p.artifacts.filter(a => a.key === key).length + 1;
@@ -120,6 +127,9 @@ function addArtifact(p, content, author) {
   }
   if (['backgroundCandidates', 'backgroundAngle'].includes(p.step) && parsed.files.some(f => Math.abs(f.width / f.height - 16 / 9) > 0.03)) throw new Error('Background plates must be measured 16:9 widescreen.');
   if (['backgroundCandidates', 'backgroundAngle'].includes(p.step) && parsed.prompt !== current(p, promptKey(p)).content.prompt) throw new Error('Background must use the approved prompt exactly.');
+  if (p.step === 'shots') validateShots(p, parsed);
+  if (p.step === 'keyframePrompt') validateKeyframePrompt(p, parsed);
+  if (p.step === 'keyframe' && (parsed.prompt !== current(p, `keyframePrompt:${p.shotId}`).content.prompt || parsed.files.some(f => Math.abs(f.width / f.height - 16 / 9) > 0.03 || f.width < 1280 || f.height < 720))) throw new Error('Keyframe must use the approved prompt and measured 16:9 production image (at least 1280×720).');
   const a = { id: `${key}@${version}`, key, kind: p.step, version, digest: digest(parsed), content: parsed,
     dependencies: dependencies(p), valid: true, authoredBy: author };
   p.artifacts.push(a);
@@ -128,19 +138,29 @@ function addArtifact(p, content, author) {
 }
 export function taskFor(p) {
   const a = current(p);
+  const shot = ['keyframePrompt', 'keyframe'].includes(p.step) ? shotFor(p) : null;
+  const sceneLocation = shot ? current(p, 'backgrounds').content.locations.find(l => l.id === shot.locationId) : location(p);
   const job = p.jobs.findLast(j => j.key === keyFor(p) && !['ready', 'failed'].includes(j.status));
   return { taskId: digest({ id: p.id, sequence: p.sequence, step: p.step, gate: p.gate }), projectId: p.id,
-    step: p.step, gate: p.gate, characterId: p.characterId, locationId: p.locationId, angleId: p.angleId,
-    role: p.gate === 'review' ? 'independent-reviewer' : p.gate === 'owner-review' || ['backgrounds', 'backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'background-product-owner' : isPrompt(p) && p.gate === 'author' ? 'pixar-prompter' : 'orchestrator',
-    immediateScenes: location(p)?.scenes.filter(s => !p.angleId || location(p).angles.find(a => a.id === p.angleId)?.sceneIds.includes(s.id)) ?? [],
+    step: p.step, gate: p.gate, characterId: p.characterId, locationId: p.locationId, angleId: p.angleId, shotId: p.shotId,
+    shot,
+    ...(p.step === 'shots' ? { availableLocations: planningReferences(p) } : {}),
+    ...(['keyframePrompt', 'keyframe'].includes(p.step) ? { references: shotReferences(p), referenceBindings: referenceBindings(p), shotDigest: digest(shotFor(p)) } : {}),
+    role: p.gate === 'review' ? 'independent-reviewer' : p.gate === 'author' && p.step === 'shots' ? 'shot-planner' : p.gate === 'author' && p.step === 'keyframePrompt' ? 'composition-writer' : p.gate === 'owner-review' || ['backgrounds', 'backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'background-product-owner' : isPrompt(p) && p.gate === 'author' ? 'pixar-prompter' : 'orchestrator',
+    immediateScenes: sceneLocation?.scenes.filter(s => shot ? s.id === shot.sceneId : !p.angleId || sceneLocation.angles.find(a => a.id === p.angleId)?.sceneIds.includes(s.id)) ?? [],
     approvedScript: current(p, 'script') ?? null, inputPriority: ['immediateScenes', 'approvedScript', 'inputs.answers'],
     ...(isPrompt(p) ? { recipe: { content: backgroundRecipe, sha256: backgroundRecipeSha256 }, ownerWorkerId: current(p, briefKey(p))?.authoredBy } : {}),
     actor: p.gate === 'review' ? 'reviewer' : ['human', 'authorize', 'escalate'].includes(p.gate) ? 'human' : 'agent',
     artifact: a ?? null, job: job ?? null, inputs: p.inputs,
     dependencies: dependencies(p).map(id => p.artifacts.find(a => a.id === id)),
     feedback: p.feedback.filter(f => f.key === keyFor(p)), criteria: criteria[p.step] ?? [],
-    instruction: p.gate === 'pending' ? p.step === 'backgrounds' ? 'Older checkpoint paused at backgrounds; explicit human start-backgrounds opens the new workflow without resetting state.' : 'Backgrounds are locked. Shot/video workflow design is pending; do not generate or finalize a film.' : p.gate === 'owner-review' ? 'The original background owner checks the complete technical prompt against the approved plain-language brief. Evidence and specific repairs are mandatory.' : p.gate === 'review' ? 'Inspect the actual current artifact. Every rejection needs localized evidence and a repair. Do not reject for taste. Missing direct perception is inconclusive. Use a different worker from the author.' : p.gate === 'produce' ? 'Prepare an exact generation plan and estimate; do not submit a paid call before its authorization. Use approved references and the selected clone.' : p.gate === 'collect' ? 'Collect or reconcile this same request. Never resubmit because polling or a process ended.' : ['backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'Write ordinary human direction as the background product owner, not a technical image prompt. Immediate scene first, approved script second, questionnaire supporting only. Separate known facts from proposed furnishings; ask about missing meaningful facts. Preserve the selected master for each angle.' : 'Operate the current deliverable only. Use the packaged contracts and review rubric.',
+    instruction: p.gate === 'pending' ? p.step === 'shots' ? 'Older checkpoint paused at shots; explicit human start-shots opens shot planning without resetting state.' : p.step === 'backgrounds' ? 'Older checkpoint paused at backgrounds; explicit human start-backgrounds opens the new workflow without resetting state.' : 'Keyframes are locked. Video workflow design is pending; do not generate or finalize a film.' : p.gate === 'owner-review' ? 'The original background owner checks the complete technical prompt against the approved plain-language brief. Evidence and specific repairs are mandatory.' : p.gate === 'review' ? 'Inspect the actual current artifact. Every rejection needs localized evidence and a repair. Do not reject for taste. Missing direct perception is inconclusive. Use a different worker from the author.' : p.gate === 'produce' ? 'Prepare an exact generation plan and estimate; do not submit a paid call before its authorization. Use approved references and the selected clone.' : p.gate === 'collect' ? 'Collect or reconcile this same request. Never resubmit because polling or a process ended.' : ['backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'Write ordinary human direction as the background product owner, not a technical image prompt. Immediate scene first, approved script second, questionnaire supporting only. Separate known facts from proposed furnishings; ask about missing meaningful facts. Preserve the selected master for each angle.' : p.step === 'shots' ? 'Plan shots for the approved immediate scenes. Cover exactly four 15-second beats without gaps/overlaps. Bind scene, cast/age variants and approved background angle. These are still keyframes; shot duration does not authorize any video generation.' : p.step === 'keyframePrompt' ? 'Write the full composition prompt using the actual setting and character reference images in supplied order. Setting controls geography; sheets control identity/age/wardrobe. Stage correct hands, contacts, props, proportions, camera and emotional acting. Single full-frame 16:9 production image, never a collage or storyboard crop. Bind shotDigest and referenceBindings. Repair only evidenced defects.' : 'Operate the current deliverable only. Use the packaged contracts and review rubric.',
   };
+}
+function repairKeyframe(p, message) {
+  const prompt = current(p, `keyframePrompt:${p.shotId}`); invalidate(p, prompt.id);
+  p.feedback.push({ key: prompt.key, message });
+  p.step = 'keyframePrompt'; p.gate = 'author';
 }
 const requiredActor = (e, actor) => { if (e.actor !== actor) throw new Error(`${e.action} requires ${actor} authority.`); };
 export function applyEvent(project, raw) {
@@ -156,7 +176,7 @@ export function applyEvent(project, raw) {
     if (!a || a.digest !== e.artifactDigest || !e.message) throw new Error('Revision needs the current artifact ID/digest and explicit user feedback.');
     a = revisionRoot(p, a);
     invalidate(p, a.id);
-    p.step = a.kind; const parts = a.key.split(':'); p.characterId = ['candidates', 'sheetPrompt', 'sheet'].includes(a.kind) ? parts[1] : null; p.locationId = backgroundSteps.includes(a.kind) ? parts[1] : null; p.angleId = a.kind.startsWith('backgroundAngle') ? parts[2] : null;
+    p.step = a.kind; const parts = a.key.split(':'); p.characterId = ['candidates', 'sheetPrompt', 'sheet'].includes(a.kind) ? parts[1] : null; p.locationId = backgroundSteps.includes(a.kind) ? parts[1] : null; p.angleId = a.kind.startsWith('backgroundAngle') ? parts[2] : null; p.shotId = ['keyframePrompt', 'keyframe'].includes(a.kind) ? parts[1] : null;
     p.gate = authorSteps.includes(a.kind) ? 'author' : a.kind === 'voiceSample' ? 'human' : 'produce';
     p.feedback.push({ key: a.key, message: e.message }); p.reviewDisagreements = 0;
   } else if (e.action === 'artifact') {
@@ -164,6 +184,10 @@ export function applyEvent(project, raw) {
     requiredActor(e, p.step === 'voiceSample' ? 'human' : 'agent');
     if (!e.workerId) throw new Error('Artifact author worker ID is required.');
     addArtifact(p, e.content, e.workerId);
+  } else if (e.action === 'start-shots') {
+    requiredActor(e, 'human');
+    if (p.step !== 'shots' || p.gate !== 'pending' || !e.message) throw new Error('Only an older shots-pending checkpoint can explicitly start shots.');
+    assertAllowed(p, 'shots'); p.gate = 'author';
   } else if (e.action === 'start-backgrounds') {
     requiredActor(e, 'human');
     if (p.step !== 'backgrounds' || p.gate !== 'pending' || !e.message) throw new Error('Only an older background-pending checkpoint can explicitly start backgrounds.');
@@ -193,8 +217,19 @@ export function applyEvent(project, raw) {
     else {
     a.review = r;
     if (r.decision === 'approved') { p.gate = p.step === 'sheetPrompt' ? 'produce' : 'human'; if (p.step === 'sheetPrompt') next(p); }
-    else { p.reviewDisagreements++; p.feedback.push({ key: a.key, message: JSON.stringify(r.checks.filter(c => c.status !== 'pass')) });
+    else {
+      if (p.step === 'keyframe' && r.decision === 'rejected') {
+        p.reviewDisagreements = 0;
+        for (const frame of p.artifacts.filter(f => f.key === a.key && f.dependencies.includes(current(p, 'shots').id) && f.review).toReversed()) {
+          if (frame.review.decision !== 'rejected') break;
+          p.reviewDisagreements++;
+        }
+      } else p.reviewDisagreements++;
+      p.feedback.push({ key: a.key, message: JSON.stringify(r.checks.filter(c => c.status !== 'pass')) });
       p.gate = r.decision === 'inconclusive' || r.repairTarget === 'script' || p.reviewDisagreements >= 2 ? 'escalate' : authorSteps.includes(p.step) ? 'author' : 'produce'; }
+    }
+    if (p.step === 'keyframe' && r.decision === 'rejected' && p.gate === 'produce') {
+      repairKeyframe(p, JSON.stringify(r.checks.filter(c => c.status !== 'pass')));
     }
   } else if (e.action === 'approve') {
     requiredActor(e, 'human');
@@ -208,6 +243,7 @@ export function applyEvent(project, raw) {
     if (p.gate !== 'escalate' || !e.message) throw new Error('Resolution needs explicit user direction at an escalation.');
     p.feedback.push({ key: keyFor(p), message: e.message }); p.reviewDisagreements = 0;
     p.gate = isPrompt(p) && current(p)?.ownerReview?.decision === 'inconclusive' ? 'owner-review' : current(p)?.review?.decision === 'inconclusive' ? 'review' : authorSteps.includes(p.step) ? 'author' : 'produce';
+    if (p.step === 'keyframe' && p.gate === 'produce') repairKeyframe(p, e.message);
   } else if (e.action === 'reconcile') {
     requiredActor(e, 'human'); const j = p.jobs.find(j => j.id === e.jobId);
     if (p.gate !== 'escalate' || !j || j.key !== keyFor(p) || j.status !== 'uncertain' || j.digest !== e.artifactDigest || !e.message) throw new Error('Reconciliation needs the exact uncertain job and explicit user direction.');
@@ -224,8 +260,9 @@ export function applyEvent(project, raw) {
     if (plan.operation !== p.step || plan.provider !== (imageSteps.includes(p.step) ? 'meta-muse' : 'cartesia')) throw new Error('Provider/operation does not match the current stage.');
     if (imageSteps.includes(p.step) && !plan.parameters.prompt) throw new Error('Image plan needs an authored prompt.');
     if (['backgroundCandidates', 'backgroundAngle'].includes(p.step) && (!locked(p, promptKey(p)) || plan.parameters.prompt !== current(p, promptKey(p)).content.prompt)) throw new Error('Use the human-approved background prompt exactly.');
+    if (p.step === 'keyframe' && (!locked(p, `keyframePrompt:${p.shotId}`) || plan.parameters.prompt !== current(p, `keyframePrompt:${p.shotId}`).content.prompt)) throw new Error('Use the human-approved keyframe prompt exactly.');
     if (p.step === 'sheet' && plan.parameters.prompt !== current(p, `sheetPrompt:${p.characterId}`).content.prompt) throw new Error('Use the approved sheet prompt exactly.');
-    if (p.jobs.filter(j => j.key === keyFor(p) && JSON.stringify(j.dependencies) === JSON.stringify(dependencies(p)) && ['submitting', 'submitted', 'ready', 'uncertain'].includes(j.status)).length >= 3) throw new Error('ATTEMPT_LIMIT: three generation requests for these dependencies. Stop and resolve the deliverable with the user.');
+    if (p.jobs.filter(j => j.key === keyFor(p) && (p.step === 'keyframe' ? j.dependencies.includes(current(p, 'shots').id) : JSON.stringify(j.dependencies) === JSON.stringify(dependencies(p))) && ['submitting', 'submitted', 'ready', 'uncertain'].includes(j.status)).length >= 3) throw new Error('ATTEMPT_LIMIT: three generation requests for these dependencies. Stop and resolve the deliverable with the user.');
     const request = requestDescriptor(p, plan);
     const bound = { plan, request, dependencies: dependencies(p) };
     const allowance = p.allowances.findLast(a => { const used = p.jobs.filter(j => j.allowanceId === a.id); return a.operations.includes(plan.operation) && used.length < a.maxRequests && used.reduce((n, j) => n + j.plan.estimatedCostUsd, 0) + plan.estimatedCostUsd <= a.maxCostUsd; });

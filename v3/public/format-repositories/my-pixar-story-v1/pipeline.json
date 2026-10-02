@@ -18,7 +18,10 @@
     "separate Pixar Markdown prompter \u2192 original owner check \u2192 independent reviewer \u2192 human prompt approval",
     "3 empty-background Muse candidates \u2192 image reviewer \u2192 human master selection",
     "per required angle: owner brief \u2192 review/human \u2192 separate prompter \u2192 owner/reviewer/human \u2192 selected master reference edit \u2192 image reviewer/human",
-    "shots/video/music/assembly: pending design"
+    "shot plan: approved scenes/reference angles/cast, exact four 15-second beat coverage \u2192 reviewer \u2192 human",
+    "per shot: reference-bound composition prompt \u2192 reviewer \u2192 human",
+    "one Muse composition with actual setting + every approved cast sheet \u2192 image reviewer \u2192 human",
+    "video/music/assembly: pending design"
   ],
   "reviewLoop": "rejection with localized criterion/evidence/repair returns to current author/producer; two successive rejections or missing perception escalate",
   "hardGates": [

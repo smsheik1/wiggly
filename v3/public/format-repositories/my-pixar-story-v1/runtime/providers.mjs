@@ -1,5 +1,6 @@
 import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { join, extname, resolve } from 'node:path';
+import { shotReferences } from './shots.mjs';
 import { digest } from './contracts.mjs';
 import { assertAllowed, keyFor } from './gates.mjs';
 import { importMedia, verifyFiles } from './media.mjs';
@@ -13,7 +14,8 @@ export function requestDescriptor(p, plan) {
     transcripts: artifact(p, 'script').content.beats.slice(0, plan.operation === 'audition' ? 1 : 4).map(b => b.narration),
     output_format: { container: 'wav', encoding: 'pcm_s16le', sample_rate: 44100 }, generation_config: { speed: 1, volume: 1 } };
   let images, n;
-  if (plan.operation === 'backgroundCandidates') { images = artifact(p, `backgroundBrief:${p.locationId}`).content.references; n = 3; }
+  if (plan.operation === 'keyframe') { images = shotReferences(p).map(r => r.file); n = 1; }
+  else if (plan.operation === 'backgroundCandidates') { images = artifact(p, `backgroundBrief:${p.locationId}`).content.references; n = 3; }
   else if (plan.operation === 'backgroundAngle') {
     const master = artifact(p, `backgroundCandidates:${p.locationId}`);
     images = [master.content.files[master.selection]]; n = 1;

@@ -122,3 +122,14 @@ test('background generation omits references; angle edit sends selected master b
     await executeJob(p,j,dir,'',()=>{throw new Error('Forbidden replay')},true);assert.equal(calls,2);
   }finally{await rm(dir,{recursive:true});}
 });
+
+test('keyframe composition uploads setting and character-sheet bytes in bound order with one image request',async()=>{
+ const {promptLocked}=await import('./shot-helpers.mjs');const {current}=await import('../runtime/workflow.mjs');
+ const {dir,image}=await fixture();try{
+  const second=join(dir,'character.png');execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-f','lavfi','-i','color=c=red:s=32x32','-frames:v','1',second]);const character=await importMedia(second,dir);
+  const p=promptLocked();p.artifacts.find(a=>a.key==='backgroundAngle:home:reverse').content.files=[image];p.artifacts.find(a=>a.key==='sheet:alex').content.files=[character];
+  const plan={provider:'meta-muse',operation:'keyframe',estimatedCostUsd:.01,parameters:{prompt:current(p,'keyframePrompt:home-0-wide').content.prompt}};const job=bind(p,{id:'keyframe-mock',plan,request:requestDescriptor(p,plan)});job.request.output_format='png';bind(p,job);
+  let calls=0;const bytes=await readFile(image.path);await executeJob(p,job,dir,'isolated',async(url,options)=>{calls++;assert.equal(url,'https://api.meta.ai/v1/images/edits');const body=JSON.parse(options.body);assert.equal(body.n,1);assert.deepEqual(body.images,[{image_url:`data:image/png;base64,${bytes.toString('base64')}`},{image_url:`data:image/png;base64,${(await readFile(character.path)).toString('base64')}`}]);return Response.json({data:[{b64_json:bytes.toString('base64')}]});});
+  await executeJob(p,job,dir,'',()=>{throw new Error('Forbidden repeat')},true);assert.equal(calls,1);
+ }finally{await rm(dir,{recursive:true});}
+});

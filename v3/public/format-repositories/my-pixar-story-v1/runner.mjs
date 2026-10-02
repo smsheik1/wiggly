@@ -51,14 +51,14 @@ async function main() {
   if (command === 'check') {
     const tools = Object.fromEntries(['ffprobe', 'ffmpeg', 'tar'].map(tool => [tool, spawnSync(tool, ['-version'], { stdio: 'ignore' }).error?.code !== 'ENOENT']));
     print({ formatVersion: VERSION, node: process.version, tools, dependencies: 'LangGraph + SQLite loaded',
-      requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY'], credentialsRead: false, productionStageLimit: 'backgrounds and required angles; shots/video not specified' });
+      requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY'], credentialsRead: false, productionStageLimit: 'approved scene keyframes; video not specified' });
     if (Object.values(tools).some(v => !v)) process.exitCode = 1; return;
   }
   if (command === 'schema') {
     const name = args[0]; const schema = name === 'event' ? Event : name === 'review' ? Review : name === 'plan' ? Plans : name === 'inputs' ? Inputs : Content[name];
     if (!schema) throw new Error('schema needs event/review/plan/inputs or a supported artifact kind.'); print(z.toJSONSchema(schema)); return;
   }
-  if (command === 'finalize' || command === 'render') throw new Error('PRODUCTION_NOT_SPECIFIED: this checkpoint implements orchestration through approved backgrounds and required angles. No film can be rendered/finalized yet.');
+  if (command === 'finalize' || command === 'render') throw new Error('PRODUCTION_NOT_SPECIFIED: this checkpoint implements orchestration through approved scene keyframes. No film can be rendered/finalized yet.');
   const release = await lock(); const workflow = openWorkflow(join(runDir, 'checkpoints.sqlite'));
   try {
     if (command === 'init') {

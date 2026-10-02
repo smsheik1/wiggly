@@ -2,7 +2,7 @@
   "date": "2026-10-01",
   "formatVersion": "2.0.0",
   "scope": "orchestration checkpoint; not finished-film or real media quality proof",
-  "testsPassed": 39,
+  "testsPassed": 51,
   "cleanExtraction": "npm ci, check, test, smoke passed",
   "blindAgent": "actual host-authored grandmother script; actual separate-worker text reviews; isolated simulated human revision; restart/stale-review checks; paused at genuine voiceSample gate, sequence 6, zero jobs/allowances",
   "finalRunnerCompatibility": "final extracted runner resumed the same isolated checkpoint unchanged",
@@ -13,7 +13,7 @@
     "live provider access/quality",
     "automatic audio/image reviewer capability",
     "video defect detection/repair",
-    "live background creative quality, shots, music, assembly, film finalization",
+    "live background/keyframe creative quality, video, music, assembly, film finalization",
     "multi-platform/native-addon installation beyond tested macOS ARM Node 26.8.1"
   ],
   "evaluationFoundation": {
@@ -38,5 +38,15 @@
     "simplificationReview": "Existing LangGraph nodes, schemas and direct adapter extended; no new dependencies or framework. Removed duplicate event-history write and unused fixture imports. Lean already. Ship.",
     "liveMediaQualityProven": false,
     "remaining": "host perceptual review qualification; scene compositions/video/music/assembly; no reference bank shipped"
+  },
+  "keyframeRuntime": {
+    "testsPassed": 51,
+    "paidProviderCalls": 0,
+    "productionCredentialsRead": false,
+    "liveMediaQualityProven": false,
+    "blindPackageProof": "final fresh extraction: npm ci/check, 51 tests, both smoke fixtures, custom CLI host-module/restart/digest/scene-role proof; second rejected frame escalates after repaired prompt approval",
+    "simplificationReview": "Extends existing stage/review/provider protocol; one scoped shot validation/reference helper, no new dependencies or renderer. Lean already. Ship.",
+    "remaining": "qualified actual visual reviewer, video/music/assembly/final film proof",
+    "observedFailureAndFix": "Blind proof found prompt approval reset image rejection count; compute consecutive per-shot rejections from saved frame reviews; regression and independent reproduction pass."
   }
 }

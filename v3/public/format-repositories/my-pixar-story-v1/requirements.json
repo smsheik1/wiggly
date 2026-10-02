@@ -16,7 +16,9 @@
     "reviewer": "independent worker with actual text/image/audio perception, STT and speaker-similarity tools",
     "missingCapability": "inconclusive; never fabricate review",
     "backgroundOwner": "plain-language scene direction and outcome check; distinct from technical prompter",
-    "backgroundPrompter": "separate worker using background-prompter.md; cannot self-review or human-approve"
+    "backgroundPrompter": "separate worker using background-prompter.md; cannot self-review or human-approve",
+    "shotPlanner": "scene-led shot plan with approved location/cast images; four exact 15-second beat timelines",
+    "compositionWriter": "single-frame reference-bound scene prompt; independent reviewer needs actual image perception"
   },
   "storage": "per-run embedded SQLite checkpoints and immutable local assets/receipts; retain directory as a unit",
   "approval": "real human deliverable approvals; exact paid-request authorization or explicit bounded operation allowance",
@@ -28,7 +30,6 @@
     "cloud database"
   ],
   "pending": [
-    "shot workflow",
     "video provider and defect repair allowance",
     "music and assembly",
     "full film quality proof",

@@ -2,7 +2,7 @@
 
 A portable, agent-operated Wiggly Format for turning a loved one's memories into a planned 60-second theatrical 3D animated memoir: four 15-second beats, their own cloned narration, widescreen imagery, acoustic piano and cinematic lighting.
 
-**Current checkpoint: runnable orchestration through approved backgrounds and required angles.** Shot planning, video generation, music, assembly and final film inspection are pending design. `render` and `finalize` deliberately stop. This is not a finished film generator or a proven autonomous media reviewer.
+**Current checkpoint: runnable orchestration through approved scene keyframes.** Video generation, music, assembly and final film inspection are pending design. `render` and `finalize` deliberately stop. This is not a finished film generator or a proven autonomous media reviewer.
 
 Read **SKILL.md** to operate it. Install with `npm ci`; run `npm run check`, `npm test` and `npm run smoke`. No Wiggly application checkout or cloud database is required. The package uses embedded SQLite for LangGraph checkpoints and direct hosted-provider APIs. No ComfyUI, local AI models, Antigravity dependency or additional chat-agent framework.
 
@@ -17,3 +17,5 @@ The archive includes pinned dependencies, contracts, recipes, two questionnaire 
 The evaluator foundation adds `npm run eval` and `npm run eval:holdout`, a data-first collection of 22 scoped cases with 145 asset provenance records, labelled prediction comparison, and a local LangSmith-ready export. The baseline honestly reports the known extra-hand clip as unresolved/missed: no autonomous anatomy judge is connected. See `evaluation/README.md` for commands, split policy, results and remaining human-label needs. Existing reviewer tasks receive advisory contract/audio evidence, never automatic approval.
 
 Backgrounds run one location at a time: scene registry → owner’s plain-language brief → separate Pixar Markdown prompter → owner check → independent review → human prompt approval → three Muse concepts → actual image review → human master selection → separately approved additional-angle prompts and reference-conditioned images. The owner’s brief also receives review and human approval in v1. All character sheets and audio must remain locked. See the background stages in SKILL.md. No setting-reference bank is shipped yet.
+
+Scene composition now plans ordered shots across four locked 15-second beats, then loops through a bound composition prompt, independent review, human approval, one reference-conditioned Muse keyframe, actual image review and human approval per shot. The adapter sends the selected setting and all cast sheets as real reference bytes. Repairs reopen the affected prompt; background revisions preserve other locations’ frames. Video remains blocked. Free tests demonstrate these contracts; no paid keyframes or production-quality visual judge were proven.
