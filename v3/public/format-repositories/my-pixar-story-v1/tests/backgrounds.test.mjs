@@ -28,7 +28,7 @@ test('three concepts require direct perception and explicit selection; angles bi
 });
 test('locations process one at a time; each angle is separately reviewed and human locked; future video stays blocked',()=>{
  let p=locationComplete();assert.equal(p.locationId,'shop');assert.equal(p.step,'backgroundBrief');
- p=approved(reviewed(author(p,brief(p))));p=approved(reviewed(ownerChecked(author(p,prompt(p),'pixar-prompter'))));p=approved(reviewed(produce(p,{files:[5,6,7].map(image),prompt:current(p,'backgroundPrompt:shop').content.prompt})),{selection:2});p=locationComplete(p);assert.equal(p.step,'shots');assert.equal(p.gate,'author');assert.throws(()=>assertAllowed(p,'video'),/PRODUCTION_NOT_SPECIFIED/);
+ p=approved(reviewed(author(p,brief(p))));p=approved(reviewed(ownerChecked(author(p,prompt(p),'pixar-prompter'))));p=approved(reviewed(produce(p,{files:[5,6,7].map(image),prompt:current(p,'backgroundPrompt:shop').content.prompt})),{selection:2});p=locationComplete(p);assert.equal(p.step,'shots');assert.equal(p.gate,'author');assert.throws(()=>assertAllowed(p,'video'),/KEYFRAME_LOCK_REQUIRED/);
 });
 test('master revision invalidates dependent angle while preserving other location locks',()=>{
  let p=locationComplete();p=approved(reviewed(author(p,brief(p))));p=approved(reviewed(ownerChecked(author(p,prompt(p),'pixar-prompter'))));p=approved(reviewed(produce(p,{files:[5,6,7].map(image),prompt:current(p,'backgroundPrompt:shop').content.prompt})),{selection:0});p=locationComplete(p);

@@ -1,11 +1,15 @@
 import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { join, extname, resolve } from 'node:path';
+import { videoBinding, effectFor } from './studio.mjs';
+import { executeVideo } from './video-provider.mjs';
 import { shotReferences } from './shots.mjs';
 import { digest } from './contracts.mjs';
 import { assertAllowed, keyFor } from './gates.mjs';
 import { importMedia, verifyFiles } from './media.mjs';
 const artifact = (p, key) => p.artifacts.findLast(a => a.key === key && a.valid);
 export function requestDescriptor(p, plan) {
+  if(plan.operation==='video'){if(plan.parameters.model)throw new Error('Video adapter uses Seedance 2.0; unsupported model override.');const b=videoBinding(p);if(!(plan.estimatedCostUsd>0))throw new Error('Video needs an operator-verified positive cost estimate.');return {prompt:plan.parameters.prompt,endpoint:'https://api.replicate.com/v1/models/bytedance/seedance-2.0/predictions',frame:b.frame.content.files[0],input:{prompt:plan.parameters.prompt,duration:b.clip.generationSeconds,resolution:'1080p',aspect_ratio:'16:9',generate_audio:false}};}
+  if(['music','effect'].includes(plan.operation)){if(plan.parameters.model)throw new Error('Sound adapters use their documented fixed models.');if(!(plan.estimatedCostUsd>0))throw new Error('Sound generation needs a verified positive cost estimate.');const target=plan.operation==='music'?artifact(p,'soundPlan').content.music:effectFor(p);if(target.mode!=='generate')throw new Error('Imported sound cannot invoke a provider.');return {prompt:plan.parameters.prompt,endpoint:`https://api.elevenlabs.io/v1/${plan.operation==='music'?'music':'sound-generation'}?output_format=mp3_44100_128`,body:plan.operation==='music'?{prompt:target.prompt,music_length_ms:60000,model_id:'music_v2_5',force_instrumental:true}:{text:target.prompt,duration_seconds:target.durationSeconds,model_id:'eleven_text_to_sound_v2',loop:false},provenance:target.provenance};}
   const sample = artifact(p, 'voiceSample')?.content;
   if (plan.operation === 'clone') return { endpoint: 'https://api.cartesia.ai/voices/clone', cartesiaVersion: plan.parameters.cartesiaVersion ?? '2026-08-14',
     clip: sample.files[0], language: sample.language, name: `${p.inputs.subject.preferredName} — ${p.id}`, access: 'private' };
@@ -30,11 +34,11 @@ export function requestDescriptor(p, plan) {
 }
 export async function atomicJson(path, value) { const temp = `${path}.tmp`; await writeFile(temp, JSON.stringify(value, null, 2), { mode: 0o600 }); await rename(temp, path); }
 export function remediation(provider, secretsPath) {
-  const cartesia = provider === 'cartesia'; const key = cartesia ? 'CARTESIA_API_KEY' : 'META_API_KEY';
-  return `STOP: ${provider} failed. No fallback or retry was submitted.\n1. Open ${cartesia ? 'https://play.cartesia.ai' : 'https://dev.meta.ai'} and sign in.\n2. Open the account's Billing/Usage page; check credits and payment, and add funds if needed.\n3. Open API Keys, verify access to ${cartesia ? 'voice cloning and Sonic TTS' : 'Muse Image'}, and copy a valid key.\n4. Open ${resolve(secretsPath)} and set ${key}=<your-key> on its own line. Never paste the key in chat.\n5. Read status and reconcile the recorded job before another request. For 429, wait for the provider retry window; for an outage, check the provider status/support page.`;
+  const cartesia = provider === 'cartesia'; const key = {cartesia:'CARTESIA_API_KEY','meta-muse':'META_API_KEY',replicate:'REPLICATE_API_TOKEN',elevenlabs:'ELEVENLABS_API_KEY'}[provider];
+  return `STOP: ${provider} failed. No fallback or retry was submitted.\n1. Open ${{cartesia:'https://play.cartesia.ai','meta-muse':'https://dev.meta.ai',replicate:'https://replicate.com/account/billing',elevenlabs:'https://elevenlabs.io/app/settings/subscription'}[provider]} and sign in.\n2. Open the account's Billing/Usage page; check credits and payment, and add funds if needed.\n3. Open API Keys, verify access to ${{cartesia:'voice cloning and Sonic TTS','meta-muse':'Muse Image',replicate:'Seedance video; API tokens at https://replicate.com/account/api-tokens',elevenlabs:'Music/Sound Effects; API keys at https://elevenlabs.io/app/settings/api-keys'}[provider]}, and copy a valid key.\n4. Open ${resolve(secretsPath)} and set ${key}=<your-key> on its own line. Never paste the key in chat.\n5. Read status and reconcile the recorded job before another request. For 429, wait for the provider retry window; for an outage, check the provider status/support page.`;
 }
 export async function loadKey(provider, secretsPath) {
-  const name = provider === 'cartesia' ? 'CARTESIA_API_KEY' : 'META_API_KEY';
+  const name = {cartesia:'CARTESIA_API_KEY','meta-muse':'META_API_KEY',replicate:'REPLICATE_API_TOKEN',elevenlabs:'ELEVENLABS_API_KEY'}[provider];if(!name)throw new Error('Unknown provider.');
   const source = await readFile(secretsPath, 'utf8');
   const match = source.match(new RegExp(`^\\s*(?:export\\s+)?${name}\\s*=\\s*(.+)\\s*$`, 'm'));
   if (!match) throw new Error(`Missing named ${name} in ${resolve(secretsPath)}.`);
@@ -42,27 +46,29 @@ export async function loadKey(provider, secretsPath) {
   if (!value) throw new Error(`Empty ${name}.`); return value;
 }
 // Each subrequest has a durable started marker and result. Unknown outcomes are never retried.
-export async function executeJob(p, job, runDir, apiKey, fetcher = fetch, collectOnly = false) {
+export async function executeJob(p, job, runDir, apiKey, fetcher = fetch, collectOnly = false, onJobId) {
   const recorded = p.jobs.find(j => j.id === job.id && j.digest === job.digest);
   if (p.gate !== 'collect' || p.step !== job.plan.operation || !recorded?.authorization || !['submitting', 'submitted', 'uncertain'].includes(recorded.status) || recorded.key !== keyFor(p) || digest({ plan: job.plan, request: job.request, dependencies: job.dependencies }) !== recorded.digest || job.dependencies.some(id => !p.artifacts.some(a => a.id === id && a.valid))) throw new Error('UNAUTHORIZED_PROVIDER_CALL: use the current recorded request after the runner checkpoints submission.');
   assertAllowed(p, p.step);
   const request = job.request; await verifyFiles(request);
   const dir = join(runDir, 'receipts', job.id); await mkdir(dir, { recursive: true });
+  if(job.plan.provider==='replicate'){const cached=join(dir,'result.json');try{return JSON.parse(await readFile(cached,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}const result=await executeVideo({...job,request:{...job.request,runDir}},dir,apiKey,fetcher,collectOnly,onJobId);if(!result.pending)await atomicJson(cached,result);return result;}
   const post = async (index, body, headers, binary = false) => {
     const receipt = join(dir, `${index}.json`); const started = join(dir, `${index}.started`);
     try { return JSON.parse(await readFile(receipt, 'utf8')); } catch (e) { if (e.code !== 'ENOENT') throw e; }
     if (collectOnly) throw new Error(`UNCERTAIN_SUBREQUEST: ${job.id}/${index}; no completed receipt exists. Collection will not submit it.`);
     try { await writeFile(started, JSON.stringify({ jobId: job.id, digest: job.digest, index }), { flag: 'wx', mode: 0o600 }); }
     catch (e) { if (e.code === 'EEXIST') throw new Error(`UNCERTAIN_SUBREQUEST: ${job.id}/${index}. Reconcile its existing result; never duplicate it.`); throw e; }
-    const response = await fetcher(request.endpoint, { method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, ...headers }, body, signal: AbortSignal.timeout(180000) });
+    const response = await fetcher(request.endpoint, { method: 'POST', headers: { ...(job.plan.provider==='elevenlabs'?{'xi-api-key':apiKey}:{Authorization:`Bearer ${apiKey}`}), ...headers }, body, signal: AbortSignal.timeout(180000) });
     if (!response.ok) { const diagnostic = (await response.text()).replaceAll(apiKey, '[redacted]').slice(0, 800); throw new Error(`HTTP ${response.status}: ${diagnostic}`); }
     let result;
-    if (binary) { const path = join(dir, `${index}.wav`); await writeFile(path, Buffer.from(await response.arrayBuffer()), { mode: 0o600 }); result = { file: await importMedia(path, runDir) }; }
+    if (binary) { const path = join(dir, `${index}.${job.plan.provider==='elevenlabs'?'mp3':'wav'}`); await writeFile(path, Buffer.from(await response.arrayBuffer()), { mode: 0o600 }); result = { file: await importMedia(path, runDir) }; }
     else result = await response.json();
     await atomicJson(receipt, result); return result;
   };
   let result;
-  if (job.plan.operation === 'clone') {
+  if(job.plan.provider==='elevenlabs'){const response=await post(0,JSON.stringify(request.body),{'Content-Type':'application/json'},true);result={files:[response.file],prompt:job.plan.parameters.prompt,provenance:request.provenance};}
+  else if (job.plan.operation === 'clone') {
     const form = new FormData(); form.append('clip', new Blob([await readFile(request.clip.path)]), `sample${extname(request.clip.path)}`);
     form.append('language', request.language); form.append('name', request.name); form.append('access', 'private');
     const response = await post(0, form, { 'Cartesia-Version': request.cartesiaVersion });

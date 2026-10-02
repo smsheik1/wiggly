@@ -18,17 +18,17 @@ export function event(p, action, extra = {}) { const value = { taskId: taskFor(p
 export const send = (p, action, extra) => applyEvent(p, event(p, action, extra));
 export const authored = p => send(p, 'artifact', { workerId: 'writer', content: script });
 export function reviewed(p, decision = 'approved', extra = {}) {
-  const a = current(p); const perception = ['audition', 'narration'].includes(p.step) ? 'direct-audio' : ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe'].includes(p.step) ? 'direct-image' : 'direct-text';
+  const a = current(p); const perception = ['audition', 'narration'].includes(p.step) ? 'direct-audio' : ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe'].includes(p.step) ? 'direct-image' : p.step==='video'?'direct-video':p.step==='film'?'direct-audiovisual':['music','effect'].includes(p.step)?'direct-audio':'direct-text';
   const measurements = ['audition', 'narration'].includes(p.step) ? { transcripts: p.step === 'audition' ? [script.beats[0].narration] : script.beats.map(b => b.narration), speechToTextMethod: 'ISOLATED TEST STT',
     referenceSha256: file().sha256, speakerSimilarity: 0.9, speakerSimilarityMethod: 'ISOLATED TEST embedding model', speakingRateWpm: Array(p.step === 'audition' ? 1 : 4).fill(80),
     silenceSeconds: Array(p.step === 'audition' ? 1 : 4).fill(0), measurementNotes: 'ISOLATED TEST ONLY: no audio-quality claim.' } : undefined;
   return send(p, 'review', { workerId: 'reviewer', artifactId: a.id, artifactDigest: a.digest,
     review: { decision, perception, checks: criteria[p.step].map((criterion, i) => ({ criterion, status: decision === 'approved' ? 'pass' : i === 0 ? 'fail' : 'pass', location: 'beat 1',
-      evidence: decision === 'approved' ? 'Isolated contract test finding.' : 'Locked intake says bicycle; draft incorrectly says airplane.', repair: decision === 'approved' ? '' : 'Restore the bicycle.' })), measurements, ...extra } });
+      evidence: decision === 'approved' ? 'Isolated contract test finding.' : 'Locked intake says bicycle; draft incorrectly says airplane.', repair: decision === 'approved' ? '' : 'Restore the bicycle.' })), measurements, ...(['video','film'].includes(p.step)?{modelVersion:'ISOLATED-visual-v1',coverage:{artifactSha256:a.content.files[0].sha256,videoSeconds:a.content.files[0].durationSeconds,...(p.step==='film'?{audioSeconds:a.content.files[0].durationSeconds}:{})}}:{}), ...extra } });
 }
 export function approved(p, extra = {}) { const a = current(p); return send(p, 'approve', { artifactId: a.id, artifactDigest: a.digest, message: 'ISOLATED TEST human approval', ...extra }); }
 export function produce(p, result, extra = {}) {
-  p = send(p, 'plan', { plan: { provider: ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe'].includes(p.step) ? 'meta-muse' : 'cartesia', operation: p.step, estimatedCostUsd: 0.05, parameters: ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe'].includes(p.step) ? { prompt: p.step === 'sheet' ? current(p, `sheetPrompt:${p.characterId}`).content.prompt : result.prompt } : {} } });
+  p = send(p, 'plan', { plan: { provider: ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe'].includes(p.step) ? 'meta-muse' : p.step==='video'?'replicate':['music','effect'].includes(p.step)?'elevenlabs':'cartesia', operation: p.step, estimatedCostUsd: 0.05, parameters: ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe'].includes(p.step) ||['video','music','effect'].includes(p.step) ? { prompt: p.step === 'sheet' ? current(p, `sheetPrompt:${p.characterId}`).content.prompt : result.prompt } : {} } });
   if (p.gate === 'authorize') { const job = p.jobs.at(-1); p = send(p, 'authorize', { jobId: job.id, artifactDigest: job.digest, message: 'ISOLATED TEST request authorization' }); }
   const job = p.jobs.at(-1); p = send(p, 'begin', { jobId: job.id, artifactDigest: job.digest });
   return send(p, 'receipt', { jobId: job.id, artifactDigest: job.digest, result, ...extra });

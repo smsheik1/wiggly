@@ -10,11 +10,15 @@
     "successiveReviewRejectionsBeforeEscalation": 2,
     "generationRequestsPerDeliverableDependencySet": 3,
     "defaultPaidAllowance": 0,
-    "keyframeRequestsPerShotPlanVersion": 3
+    "keyframeRequestsPerShotPlanVersion": 3,
+    "videoRequestsPerClipPlanVersion": 3
   },
   "automaticMeasurementsBundled": [
     "duration",
-    "silence"
+    "silence",
+    "video metadata",
+    "final loudness/true peak",
+    "black/freeze signals"
   ],
   "workerMeasurementsRequired": [
     "STT",
@@ -22,7 +26,7 @@
     "speaker similarity"
   ],
   "proofScope": "isolated contract/HTTP/media-measurement tests, no real provider quality proof",
-  "finalization": "blocked until video/music/assembly design and validation are implemented",
+  "finalization": "current asset hashes/dependencies, 60s/1080p/30fps/audio, measured -18\u2026-14 LUFS and true peak \u2264-1dB, no long black regions, full qualified audiovisual review then human; freeze detection advisory",
   "evaluationFoundation": {
     "dataset": "evaluation/dataset.json",
     "cases": 22,
@@ -32,9 +36,13 @@
     "runner": "node runner.mjs eval",
     "modelJudgesQualified": false,
     "knownAnatomyDefect": "inconclusive/missed by local rules; actual model inspection pending",
-    "productionRouting": "advisory evidence only; existing review/human gates retained",
+    "productionRouting": "advisory existing evidence plus mandatory pre-video visual qualification; no current production judge qualified",
     "langsmith": "optional local examples export; no upload or tracing enabled"
   },
   "backgrounds": "scene-first direction, known/proposed facts, staging space, empty environments, style, continuity, separate review/human lock for each required angle",
-  "keyframes": "exact shot/reference bindings; full-frame measured 16:9 at least 1280x720; scene fit, likeness, anatomy, setting continuity, staging, style, composition; independent direct-image review then human"
+  "keyframes": "exact shot/reference bindings; full-frame measured 16:9 at least 1280x720; scene fit, likeness, anatomy, setting continuity, staging, style, composition; independent direct-image review then human",
+  "visualQualification": "minimum 2 good + 2 broken heldout examples per image/video \u00d7 anatomy/identity/continuity; zero errors; actual verified files; trusted operator labels; no current judge is qualified",
+  "video": "entire-file direct-video coverage bound to qualified worker/model and current hash; localized rejection repair; no guarantee all defects detected",
+  "sound": "actual direct listening for piano/no vocals/fit, measured duration, provenance/usage rights",
+  "assembly": "original narration at 0/15/30/45, no atempo, approved trims/ducking/fades, one FFmpeg path"
 }

@@ -1,1 +1,33 @@
-{"version":"2.0.0","inputSchema":"node runner.mjs schema inputs","artifactSchemas":"node runner.mjs schema <kind>","eventSchema":"node runner.mjs schema event","beats":[{"beat":1,"start":0,"end":15},{"beat":2,"start":15,"end":30},{"beat":3,"start":30,"end":45},{"beat":4,"start":45,"end":60}],"audio":"four natural-speed narration stems, reviewed as a set; unused time remains a pause rather than accelerated speech","target":"60-second 16:9 theatrical 3D animated memoir, own voice, acoustic piano","renderer":"Pending composition design; existing Wiggly renderer boundary remains in force. No alternate renderer shipped."}
+{
+  "version": "2.0.0",
+  "inputSchema": "node runner.mjs schema inputs",
+  "artifactSchemas": "node runner.mjs schema <kind>",
+  "eventSchema": "node runner.mjs schema event",
+  "beats": [
+    {
+      "beat": 1,
+      "start": 0,
+      "end": 15
+    },
+    {
+      "beat": 2,
+      "start": 15,
+      "end": 30
+    },
+    {
+      "beat": 3,
+      "start": 30,
+      "end": 45
+    },
+    {
+      "beat": 4,
+      "start": 45,
+      "end": 60
+    }
+  ],
+  "audio": "four natural-speed narration stems, reviewed as a set; unused time remains a pause rather than accelerated speech",
+  "target": "60-second 16:9 theatrical 3D animated memoir, own voice, acoustic piano",
+  "renderer": "runtime/assemble.mjs official local film assembler; no Wiggly frontend renderer introduced",
+  "clipTiming": "variable short clips cover each approved shot exactly; four 15-second beats remain fixed; no speed changes",
+  "output": "60s 1920x1080 30fps H.264/AAC; film review/human approval and private finalized.json"
+}

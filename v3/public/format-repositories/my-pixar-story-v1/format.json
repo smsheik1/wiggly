@@ -1,14 +1,14 @@
 {
   "id": "my-pixar-story-v1",
   "version": "2.0.0",
-  "status": "orchestration-checkpoint",
+  "status": "production-proof-pending",
   "name": "My Pixar Story",
   "entrypoint": "SKILL.md",
   "runner": "runner.mjs",
   "durationSeconds": 60,
   "beats": 4,
   "aspectRatio": "16:9",
-  "implementedThrough": "reviewed-scene-keyframes",
+  "implementedThrough": "reviewed-final-film-and-local-finalization",
   "filmReady": false,
   "legacyRunMigration": false
 }

@@ -21,7 +21,11 @@
     "shot plan: approved scenes/reference angles/cast, exact four 15-second beat coverage \u2192 reviewer \u2192 human",
     "per shot: reference-bound composition prompt \u2192 reviewer \u2192 human",
     "one Muse composition with actual setting + every approved cast sheet \u2192 image reviewer \u2192 human",
-    "video/music/assembly: pending design"
+    "human-labelled held-out reviewer qualification \u2192 independent report review \u2192 human",
+    "clip motion plan \u2192 review/human",
+    "per clip: exact frame-bound video prompt \u2192 review/human \u2192 exact human spending approval \u2192 Seedance I2V \u2192 qualified full-video review \u2192 human; bounded technical repair",
+    "instrumental piano/effect plan \u2192 review/human \u2192 generate or import each sound \u2192 actual listening review/human",
+    "edit plan \u2192 review/human \u2192 official FFmpeg assembly \u2192 qualified full audiovisual review \u2192 human \u2192 private finalize"
   ],
   "reviewLoop": "rejection with localized criterion/evidence/repair returns to current author/producer; two successive rejections or missing perception escalate",
   "hardGates": [
@@ -29,6 +33,9 @@
     "all required sheets before backgrounds",
     "current version/digest and dependencies",
     "no duplicate uncertain request",
-    "no film finalization at this checkpoint"
+    "finalize only current technically passing, agent-reviewed and human-approved film",
+    "qualified full-video reviewer before video",
+    "new/creative video generation always human-authorized",
+    "repair allowance scoped to clip and technical evidence"
   ]
 }

@@ -34,8 +34,8 @@ test('generation limit survives prompt revisions for the same approved shot plan
  let p=promptLocked();for(let i=0;i<3;i++){p=generated(p);const a=current(p);p=send(p,'changes',{artifactId:a.id,artifactDigest:a.digest,message:'ISOLATED TEST adjust pose'});p=promptLocked(p);}
  assert.throws(()=>generated(p),/ATTEMPT_LIMIT/);
 });
-test('all shots get independent image review and human locks before video-pending; no video API exists',()=>{
- let p=keyframeProject();for(const shot of shotPlan.shots){assert.equal(p.shotId,shot.id);p=approved(reviewed(generated(promptLocked(p))));}assert.equal(p.step,'video');assert.equal(p.gate,'pending');assert.throws(()=>assertAllowed(p,'video'),/PRODUCTION_NOT_SPECIFIED/);
+test('all shots get independent image review and human locks before reviewer qualification; video remains blocked',()=>{
+ let p=keyframeProject();for(const shot of shotPlan.shots){assert.equal(p.shotId,shot.id);p=approved(reviewed(generated(promptLocked(p))));}assert.equal(p.step,'reviewerQualification');assert.equal(p.gate,'author');assert.throws(()=>assertAllowed(p,'video'),/VISUAL_REVIEWER_NOT_QUALIFIED/);
 });
 test('background changes reopen affected shot prompts/frames but keep other location frames and shot plan',()=>{
  let p=keyframeProject();for(const shot of shotPlan.shots)p=approved(reviewed(generated(promptLocked(p))));
