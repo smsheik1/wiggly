@@ -68,5 +68,24 @@
     ],
     "conservativeBoundary": "Final narration-source repairs escalate for human impact confirmation; v1 invalidates downstream visuals. Human film feedback reopens editor.",
     "auditedArchiveBeforeEvidenceMetadataSha256": "e6b27aa3da8b4b8eb92bb88fb031fe4e48eb60ac29c3b06afecacfb96e6a6a98"
+  },
+  "remotionInfrastructure": {
+    "status": "implemented; isolated component/browser verification, production proof excluded",
+    "renderer": "RemotionAdScene \u2192 AdRenderSurface \u2192 memoir-film",
+    "audio": "FFmpeg mix only; ffprobe/FFmpeg inspection",
+    "freeTests": 76,
+    "componentProof": "Two-second synthetic render checks source trim, exact cut, 1080p/30fps/audio; no story film or AI generation",
+    "browserProof": "Native in-app browser: blue trimmed first frame, green later shot, Play/Pause, 60s timeline and no horizontal overflow; direct audio quality not judged",
+    "remaining": [
+      "actual visual-review qualification",
+      "named specialist provisioning and perception tools",
+      "real end-to-end production proof excluded",
+      "app /create /builder /share flows not exposed"
+    ],
+    "typecheck": "Full v3 typecheck remains blocked by baseline/dependency errors: baseline overlay 168 diagnostics, current 167; none in changed memoir/render files. Focused registry/surface/parity and memoir renderer tests passed.",
+    "blindPackageProof": "Fresh extracted archive install/check/smoke and browser playback passed; final updated extracted package independently passed 76 tests; valid renderer rebuild independently changed manifest digest and rejected prior film, and stale preview/finalization are blocked.",
+    "simplificationReview": "Lean already. Ship. Reuses AdRenderSurface and RemotionAdScene; portable compiled bundle, one scoped localhost Player server, FFmpeg limited to audio mix and inspection; no generic worker framework.",
+    "productionCredentialsRead": false,
+    "actualAIVideoGenerations": 0
   }
 }

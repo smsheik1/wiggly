@@ -10,6 +10,7 @@ import { importMedia, verifyFiles, measureAudio } from './runtime/media.mjs';
 import { executeJob, loadKey, remediation } from './runtime/providers.mjs';
 import { current, locked, assertAllowed } from './runtime/gates.mjs';
 import { renderFilm, inspectFilm } from './runtime/assemble.mjs';
+import {prepareComposition, servePreview, verifyRenderer} from './runtime/remotion.mjs';
 import { assemblyManifest, assertFilmInspection } from './runtime/studio.mjs';
 import { VisualCase, visualTask, qualifyVisual, requireVisualQualification } from './evaluation/visual-qualification.mjs';
 const root = dirname(fileURLToPath(import.meta.url));
@@ -59,7 +60,8 @@ async function main() {
   if (command === 'recipe' || command === 'background-recipe') { const content = await readFile(join(root, command === 'background-recipe' ? 'background-prompter.md' : 'character-sheet-recipe.md'), 'utf8'); print({ path: join(root, command === 'background-recipe' ? 'background-prompter.md' : 'character-sheet-recipe.md'), sha256: (await import('./runtime/media.mjs')).sha(Buffer.from(content)), content }); return; }
   if (command === 'check') {
     const tools = Object.fromEntries(['ffprobe', 'ffmpeg', 'tar'].map(tool => [tool, spawnSync(tool, ['-version'], { stdio: 'ignore' }).error?.code !== 'ENOENT']));
-    print({ formatVersion: VERSION, node: process.version, tools, dependencies: 'LangGraph + SQLite loaded',
+    const renderer=await verifyRenderer();
+    print({ formatVersion: VERSION, node: process.version, tools, renderer:renderer.manifest.renderer, dependencies: 'LangGraph + SQLite loaded',
       requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY'], optionalKeys:['REPLICATE_API_TOKEN','ELEVENLABS_API_KEY'], credentialsRead: false, productionStageLimit: 'final film; video blocked until reviewer qualification and human authorization; real production proof not performed' });
     if (Object.values(tools).some(v => !v)) process.exitCode = 1; return;
   }
@@ -84,12 +86,17 @@ async function main() {
       const result=await workflow.respond('project',{taskId:status.pending.taskId,action:'qualified',actor:'runtime',content:report});
       print(presentation(result));return;
     }
+    if(command==='preview'){
+      const p=status.project;if(!locked(p,'editPlan')||!['film','complete'].includes(p.step))throw new Error('Preview requires the approved edit and current film stage.');
+      assertAllowed(p,'film');await verifyFiles(p.artifacts.filter(a=>a.valid));const manifest=assemblyManifest(p);if(current(p,'film')&&current(p,'film').content.manifestDigest!==digest(manifest))throw new Error('STALE_FILM: renderer or assets changed; reopen film review before preview.');
+      const prepared=await prepareComposition(manifest,join(runDir,'assembly',digest(manifest)));const {url}=await servePreview(prepared);print({url,manifestDigest:digest(manifest),approvesNothing:true,providerCalls:0});return;
+    }
     if(command==='render'){
       const content=await renderFilm(status.project,runDir);print(presentation(await workflow.respond('project',{taskId:status.pending.taskId,actor:'runtime',action:'rendered',content})));return;
     }
     if(command==='finalize'){
       const p=status.project,film=current(p,'film');if(p.step!=='complete'||!locked(p,'film'))throw new Error('FINALIZATION_BLOCKED: final film must pass agent and human review first.');
-      assertAllowed(p,'film');await verifyFiles(p.artifacts.filter(a=>a.valid));
+      assertAllowed(p,'film');await verifyRenderer();await verifyFiles(p.artifacts.filter(a=>a.valid));
       if(film.content.manifestDigest!==digest(assemblyManifest(p))||film.content.editPlanDigest!==current(p,'editPlan').digest)throw new Error('STALE_FILM: current assets differ from approved film.');
       const inspection=await inspectFilm(film.content.files[0]);assertFilmInspection(inspection);
       const result={formatVersion:VERSION,projectId:p.id,film:film.content.files[0],artifactId:film.id,artifactDigest:film.digest,approvedBy:film.approvedBy,review:film.review,inspection,manifest:assemblyManifest(p),provenance:film.content.provenance,published:false};
@@ -156,7 +163,7 @@ async function main() {
         await runtimeEvent('provider-error',{message:diagnostic});throw new Error(`${diagnostic}\n${remediation(job.plan.provider,secretsPath)}`);
       }return;
     }
-    throw new Error('Use check, schema, init, status, work, respond, import, measure, validate, impact, generate, collect, visual-tasks, qualify-visual, render or finalize. See SKILL.md.');
+    throw new Error('Use check, schema, init, status, work, respond, import, measure, validate, impact, generate, collect, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
   } finally { workflow.close(); await release(); }
 }
 main().catch(e => { process.stderr.write(`${e.message}\n`); process.exitCode = 1; });

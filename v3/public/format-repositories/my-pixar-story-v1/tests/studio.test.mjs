@@ -4,8 +4,10 @@ import { mkdtemp,rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { current,taskFor,assertAllowed,revisionImpact,openWorkflow } from '../runtime/workflow.mjs';
-import { assemblyManifest,assertFilmInspection } from '../runtime/studio.mjs';
-import { assemblyArgs } from '../runtime/assemble.mjs';
+import { assemblyManifest,assertFilmInspection,validateStudioContent } from '../runtime/studio.mjs';
+import {digest} from '../runtime/contracts.mjs';
+import {rendererIdentity} from '../runtime/remotion.mjs';
+import { audioMixArgs } from '../runtime/assemble.mjs';
 import { requireVisualQualification } from '../evaluation/visual-qualification.mjs';
 import { author } from './background-helpers.mjs';
 import { send,approved,reviewed,produce,captureEvents,inputs } from './helpers.mjs';
@@ -53,10 +55,10 @@ test('sound stages review imports, require provenance, and preserve unrelated as
  const changed=send(p,'changes',{artifactId:current(p,'music').id,artifactDigest:current(p,'music').digest,message:'Use a different licensed score.'});assert.equal(changed.step,'music');assert.equal(changed.gate,'author');
 });
 test('assembly preserves four natural-rate stems, trims clips, ducks piano and records all assets',()=>{
- const p=renderReady(),m=assemblyManifest(p),args=assemblyArgs(m,'/isolated/film.mp4'),f=args[args.indexOf('-filter_complex')+1];
+ const p=renderReady(),m=assemblyManifest(p),args=audioMixArgs(m,'/isolated/film.mp4'),f=args[args.indexOf('-filter_complex')+1];
  assert.equal(m.clips.length,12);assert.deepEqual(m.narration.map(a=>a.durationSeconds),[12,12,12,12]);
  for(const delay of [0,15000,30000,45000])assert.ok(f.includes(`adelay=${delay}|${delay}`));assert.ok(f.includes('sidechaincompress'));assert.ok(f.includes('loudnorm=I=-16'));
- assert.doesNotMatch(f,/atempo|rubberband/);assert.ok(f.includes('trim=start=0:duration=5'));assertFilmInspection({...inspection,freezeSeconds:8});
+ assert.doesNotMatch(f,/atempo|rubberband/);assert.doesNotMatch(f,/concat=|\[video\]|fps=|scale=/);assertFilmInspection({...inspection,freezeSeconds:8});
  for(const bad of [{durationSeconds:59},{integratedLufs:-5},{truePeakDb:0},{hasAudio:false},{blackSeconds:5}])assert.throws(()=>assertFilmInspection({...inspection,...bad}),/FINAL_TECHNICAL_GATE/);
 });
 test('final film needs full audiovisual review and human approval; malformed render cannot advance',()=>{
@@ -89,4 +91,14 @@ test('an imported sound defect returns to import author, never the generated-sou
 test('human film feedback reopens its editor; narration-source repair pauses for broad dependency impact',()=>{
  let p=approved(reviewed(rendered()));const film=current(p,'film');p=send(p,'changes',{artifactId:film.id,artifactDigest:film.digest,message:'Lower the piano in this final film.'});assert.equal(p.step,'editPlan');assert.equal(p.gate,'author');assert.equal(current(p,'film'),undefined);
  p=rendered();const narration=current(p,'narration');p=reviewed(p,'rejected',{repairArtifactId:narration.id});assert.equal(p.step,'film');assert.equal(p.gate,'escalate');assert.ok(current(p,'video:shop-1-wide-2'));assert.ok(taskFor(p).feedback.some(f=>f.message.includes('downstream')));p=send(p,'resolve',{message:'ISOLATED confirm source narration repair and its dependency impact.'});assert.equal(p.step,'narration');assert.equal(p.gate,'produce');assert.ok(current(p,'script'));assert.ok(current(p,'clone'));
+});
+
+test('film approval binds concrete renderer inventory; older renderer manifests cannot advance',()=>{
+ const p=renderReady(),manifest=assemblyManifest(p),film=current(rendered(),'film').content;
+ assert.equal(manifest.rendererDigest,digest(rendererIdentity()));
+ validateStudioContent(p,film);
+ const prior={...manifest,rendererDigest:'0'.repeat(64)};
+ assert.throws(()=>validateStudioContent(p,{...film,manifestDigest:digest(prior)}),/exact current assets/);
+ const legacy={...manifest};delete legacy.rendererDigest;
+ assert.throws(()=>validateStudioContent(p,{...film,manifestDigest:digest(legacy)}),/exact current assets/);
 });

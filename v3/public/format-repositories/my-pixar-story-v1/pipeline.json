@@ -25,7 +25,7 @@
     "clip motion plan \u2192 review/human",
     "per clip: exact frame-bound video prompt \u2192 review/human \u2192 exact human spending approval \u2192 Seedance I2V \u2192 qualified full-video review \u2192 human; bounded technical repair",
     "instrumental piano/effect plan \u2192 review/human \u2192 generate or import each sound \u2192 actual listening review/human",
-    "edit plan \u2192 review/human \u2192 official FFmpeg assembly \u2192 qualified full audiovisual review \u2192 human \u2192 private finalize"
+    "edit plan \u2192 review/human \u2192 official shared Remotion composition + FFmpeg audio mix \u2192 qualified full audiovisual review \u2192 human \u2192 private finalize"
   ],
   "reviewLoop": "rejection with localized criterion/evidence/repair returns to current author/producer; two successive rejections or missing perception escalate",
   "hardGates": [

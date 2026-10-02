@@ -24,6 +24,7 @@ const RemotionVideoAsset: RenderVideoComponent = ({
   clipEndSeconds,
   clipStartSeconds = 0,
   clipTimeSeconds: _clipTimeSeconds,
+  sourceOffsetSeconds = 0,
   onTimeUpdate: _onTimeUpdate,
   src,
   ...props
@@ -37,6 +38,7 @@ const RemotionVideoAsset: RenderVideoComponent = ({
       <OffthreadVideo
         {...props}
         src={resolveRenderAssetSrc(src)}
+        trimBefore={Math.round(sourceOffsetSeconds * fps)}
       />
     </Sequence>
   );

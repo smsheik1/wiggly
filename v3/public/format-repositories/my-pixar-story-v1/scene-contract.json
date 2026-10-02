@@ -27,7 +27,15 @@
   ],
   "audio": "four natural-speed narration stems, reviewed as a set; unused time remains a pause rather than accelerated speech",
   "target": "60-second 16:9 theatrical 3D animated memoir, own voice, acoustic piano",
-  "renderer": "runtime/assemble.mjs official local film assembler; no Wiggly frontend renderer introduced",
+  "renderer": "One shared RemotionAdScene \u2192 AdRenderSurface \u2192 memoir-film composition for local Player preview and export; FFmpeg audio mixing and inspection only",
   "clipTiming": "variable short clips cover each approved shot exactly; four 15-second beats remain fixed; no speed changes",
-  "output": "60s 1920x1080 30fps H.264/AAC; film review/human approval and private finalized.json"
+  "output": "60s 1920x1080 30fps H.264/AAC; film review/human approval and private finalized.json",
+  "composition": {
+    "durationFrames": 1800,
+    "fps": 30,
+    "width": 1920,
+    "height": 1080,
+    "clipTiming": "integer startFrame/durationFrames; sourceOffsetSeconds on 30fps grid; speed unchanged",
+    "audio": "one mixed approved track shared by preview/export"
+  }
 }

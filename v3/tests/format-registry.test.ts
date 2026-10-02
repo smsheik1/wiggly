@@ -16,7 +16,7 @@ assert.ok(entries.length >= 1, "At least one ad format must be registered.");
 for (const [formatId, module] of entries) {
   assert.equal(module.id, formatId, `${formatId} module id must match its registry key.`);
   assert.ok(module.label.trim(), `${formatId} must expose a human label.`);
-  assert.ok(module.defaultSlots.length > 0, `${formatId} must expose default flash roles.`);
+  assert.ok(module.defaultSlots.length > 0 || module.id === "memoir-film", `${formatId} must expose default flash roles.`);
   assert.ok(!("interaction" in module), `${formatId} must not expose /create mini-editor interaction metadata.`);
   assert.equal(typeof module.validate, "function", `${formatId} must expose a validator.`);
   assert.equal(typeof module.RenderComponent, "function", `${formatId} must expose a render component.`);

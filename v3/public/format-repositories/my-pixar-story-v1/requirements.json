@@ -39,5 +39,13 @@
     "actual perceptual-worker qualification and labeled corpus",
     "real end-to-end film quality proof (excluded)",
     "app presentation/integration"
-  ]
+  ],
+  "renderer": {
+    "composition": "RemotionAdScene \u2192 AdRenderSurface \u2192 memoir-film",
+    "packaged": "compiled Remotion bundle + hash inventory",
+    "browser": "Chrome Headless Shell (Remotion setup) or MEMOIR_BROWSER_EXECUTABLE",
+    "license": "Remotion license requirements apply: https://www.remotion.dev/license",
+    "audio": "FFmpeg natural-rate mixing; ffprobe/FFmpeg technical inspection",
+    "preview": "localhost Remotion Player; exact shared scene and audio; no approvals changed"
+  }
 }

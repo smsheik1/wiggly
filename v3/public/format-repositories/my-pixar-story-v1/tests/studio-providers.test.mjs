@@ -9,7 +9,7 @@ import { current } from '../runtime/workflow.mjs';
 import { digest } from '../runtime/contracts.mjs';
 import { importMedia } from '../runtime/media.mjs';
 import { executeJob,requestDescriptor } from '../runtime/providers.mjs';
-import { assemblyArgs,inspectFilm } from '../runtime/assemble.mjs';
+import { audioMixArgs,inspectFilm } from '../runtime/assemble.mjs';
 import { videoReady,videosLocked,soundPlan } from './studio-helpers.mjs';
 import { approved,reviewed } from './helpers.mjs';
 import { author } from './background-helpers.mjs';
@@ -42,8 +42,8 @@ test('technical film inspection reads actual video/audio and reports an intentio
  const f=await fixture();try{const measured=await inspectFilm(f.video);assert.equal(measured.durationSeconds,2);assert.equal(measured.fps,30);assert.equal(measured.hasAudio,true);assert.ok(Number.isFinite(measured.integratedLufs));assert.ok(measured.freezeSeconds>=1);assert.equal(measured.anatomy,undefined);}finally{await rm(f.dir,{recursive:true});}
 });
 
-test('official assembly filter graph executes on a two-second synthetic component fixture (not a story proof)',async()=>{
- const f=await fixture();try{const m={clips:Array.from({length:4},(_,i)=>({id:`c${i}`,durationSeconds:.5,file:f.video})),narration:Array(4).fill(f.audio),music:f.audio,effects:[],edit:{clips:Array.from({length:4},(_,i)=>({clipId:`c${i}`,sourceOffsetSeconds:0})),narrationGainDb:0,musicGainDb:-18,duckMusic:true,effectGainDb:0,musicFadeInSeconds:.1,musicFadeOutSeconds:.1}};const out=join(f.dir,'component.mp4'),args=assemblyArgs(m,out);args[args.indexOf('-t')+1]='2';execFileSync('ffmpeg',args,{stdio:'pipe'});const output=await importMedia(out,f.dir);assert.equal(output.durationSeconds,2);assert.equal(output.width,1920);assert.equal(output.height,1080);assert.equal(output.fps,30);assert.equal(output.hasAudio,true);}finally{await rm(f.dir,{recursive:true});}
+test('official audio mix executes on a two-second synthetic component fixture (not a story proof)',async()=>{
+ const f=await fixture();try{const m={clips:Array.from({length:4},(_,i)=>({id:`c${i}`,durationSeconds:.5,file:f.video})),narration:Array(4).fill(f.audio),music:f.audio,effects:[],edit:{clips:Array.from({length:4},(_,i)=>({clipId:`c${i}`,sourceOffsetSeconds:0})),narrationGainDb:0,musicGainDb:-18,duckMusic:true,effectGainDb:0,musicFadeInSeconds:.1,musicFadeOutSeconds:.1}};const out=join(f.dir,'component.wav'),args=audioMixArgs(m,out);args[args.indexOf('-t')+1]='2';execFileSync('ffmpeg',args,{stdio:'pipe'});const output=await importMedia(out,f.dir);assert.equal(output.durationSeconds,2);assert.equal(output.width,undefined);assert.ok(output.bytes>0);}finally{await rm(f.dir,{recursive:true});}
 });
 
 test('video duration uses moving-video stream, never a longer accompanying audio track',async()=>{

@@ -99,7 +99,8 @@
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.1.14",
     "zod": "4.3.6",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.14",
+    "@remotion/player": "^4.0.473"
   },
   "devDependencies": {
     "@remotion/cli": "^4.0.473",
