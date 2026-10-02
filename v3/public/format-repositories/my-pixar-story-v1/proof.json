@@ -158,6 +158,15 @@
         "exact task-bound image pixels/hash; tamper stops before new turn"
       ],
       "codeFingerprint": "f7e3d1269c6f775b63c34d637a36874439ae609a8fa9bfdc82730488f22e437b"
+    },
+    "audioCapabilityProbe": {
+      "date": "2026-10-02",
+      "model": "gpt-5.6-sol",
+      "input": "native localAudio with local synthetic speech; expected words omitted from worker instruction",
+      "observedResponse": "Audio perception is unavailable.",
+      "status": "No verified audio listening capability from this connection; stopped rather than fabricating perception",
+      "productionQualification": false,
+      "providerMediaCalls": 0
     }
   }
 }
