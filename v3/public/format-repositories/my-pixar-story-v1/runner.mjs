@@ -13,9 +13,10 @@ import { renderFilm, inspectFilm } from './runtime/assemble.mjs';
 import {prepareComposition, servePreview, verifyRenderer} from './runtime/remotion.mjs';
 import { assemblyManifest, assertFilmInspection } from './runtime/studio.mjs';
 import {presentDeliverable} from './runtime/presentation.mjs';
-import {Crew,crewRoles,runCrewTask} from './runtime/crew.mjs';
+import {Crew,crewRoles,runCrewTask,prepareCrewTask} from './runtime/crew.mjs';
 import {CodexHost,DEFAULT_WORKER_MODEL,driveCrew} from './runtime/codex-host.mjs';
 import {createGeminiReviewTools,GEMINI_REVIEW_PROFILE} from './runtime/gemini-review.mjs';
+import {createCartesiaTranscriptionTool,CARTESIA_STT_PROFILE} from './runtime/cartesia-stt.mjs';
 import {AudioCase,audioTask,qualifyAudio,requireAudioQualification} from './evaluation/audio-qualification.mjs';
 import { VisualCase, visualTask, qualifyVisual, requireVisualQualification } from './evaluation/visual-qualification.mjs';
 const root = dirname(fileURLToPath(import.meta.url));
@@ -86,8 +87,9 @@ async function main() {
     const status = await workflow.status('project');
     if(['crew-start','crew-refresh','drive-codex','work-codex'].includes(command)){
       const reviewCalls=Number(option('review-calls','0'));
-      const perceptionTools=createGeminiReviewTools({secretsPath,receiptDirectory:join(runDir,'gemini-reviews'),maxCalls:reviewCalls});
-      const host=new CodexHost({cwd:join(runDir,'host-workspace'),perceptionTools,perceptionProfile:GEMINI_REVIEW_PROFILE,onProgress:({worker,item})=>process.stderr.write(`${worker}: ${item}\n`)});
+      const transcriptionCalls=Number(option('transcription-calls','0'));
+      const perceptionTools={...createGeminiReviewTools({secretsPath,receiptDirectory:join(runDir,'gemini-reviews'),maxCalls:reviewCalls}),...createCartesiaTranscriptionTool({secretsPath,receiptDirectory:join(runDir,'cartesia-transcriptions'),maxCalls:transcriptionCalls})};
+      const host=new CodexHost({cwd:join(runDir,'host-workspace'),perceptionTools,perceptionProfile:{media:GEMINI_REVIEW_PROFILE,transcription:CARTESIA_STT_PROFILE},onProgress:({worker,item})=>process.stderr.write(`${worker}: ${item}\n`)});
       try{
         if(['crew-start','crew-refresh'].includes(command)){
           const message=option('message'),model=option('model',DEFAULT_WORKER_MODEL);
@@ -155,7 +157,7 @@ async function main() {
     if (command === 'work') {
       if (!['author', 'owner-review', 'review', 'produce'].includes(status.pending.gate)) { print(presentation(status)); return; }
       const modulePath = args[0];
-      const task = status.pending.gate === 'review' ? { ...status.pending, evaluatorEvidence: await (await import('./runtime/evaluators.mjs')).artifactEvidence(status.project), reviewerRubric: await readFile(join(root, 'evaluation', 'reviewer.md'), 'utf8') } : status.pending;
+      const task = modulePath ? status.pending : await prepareCrewTask(status.project,status.pending);
       if (!modulePath) { print({ task, responseSchema: z.toJSONSchema(Event), contentSchema: Content[status.pending.step] ? z.toJSONSchema(Content[status.pending.step]) : null,
         instruction: 'The operating host agent must perform this task, write an event JSON, then call respond. A trusted host integration exporting runTask(task, {worker, callTool}) may automate it after configure-crew; supply actual perception tools and inherit the current host model. The format broker checks every tool call; the host must restrict any ambient tools separately.' }); return; }
       const worker = await import(pathToFileURL(resolve(modulePath)).href);

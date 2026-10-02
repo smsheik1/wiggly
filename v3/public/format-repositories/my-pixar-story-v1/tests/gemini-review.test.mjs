@@ -93,6 +93,14 @@ test('concurrent perception calls cannot race past the explicit inference cap',a
  }finally{await rm(f.dir,{recursive:true});}
 });
 
+test('identical concurrent Gemini requests share a result without consuming the next legitimate allowance',async()=>{
+ const f=await fixture();let calls=0;
+ try{const tools=createGeminiReviewTools({...f.options,maxCalls:2,fetcher:async()=>{calls++;await new Promise(resolve=>setTimeout(resolve,20));return f.response();}});
+  const [first,duplicate]=await Promise.all([tools.listenAudio(f),tools.listenAudio(f)]);assert.deepEqual(first,duplicate);assert.equal(calls,1);
+  await tools.listenAudio({...f,task:{...f.task,taskId:'next-legitimate-task'}});assert.equal(calls,2);
+ }finally{await rm(f.dir,{recursive:true});}
+});
+
 test('Gemini readiness is one authenticated metadata GET for the selected model, never inference',async()=>{
  const f=await fixture();let count=0;
  try{const report=await checkProvider('gemini',f.secretsPath,async(url,options)=>{count++;assert.equal(options.method,'GET');assert.equal(options.body,undefined);assert.equal(options.headers['x-goog-api-key'],'ISOLATED_SECRET');assert.ok(url.endsWith('/models/gemini-3.8-flash'));return new Response(JSON.stringify({name:'models/gemini-3.8-flash'}));});assert.equal(count,1);assert.equal(report.generationReady,false);assert.equal(report.projectStateMutated,false);}finally{await rm(f.dir,{recursive:true});}

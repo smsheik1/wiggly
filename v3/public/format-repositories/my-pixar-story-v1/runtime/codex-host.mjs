@@ -59,7 +59,7 @@ export class CodexHost {
  async initialize(){await mkdir(this.cwd,{recursive:true});await this.call('initialize',{clientInfo:{name:'wiggly_memoir',title:'Wiggly memoir studio',version:'2.0.0'},capabilities:{experimentalApi:true}});this.send({method:'initialized',params:{}});}
  async profile(){
   const version=execFileSync('codex',['--version'],{encoding:'utf8'}).trim();
-  return `${version}:${digest({sources:await Promise.all(['codex-host.mjs','crew.mjs','media.mjs','contracts.mjs','gemini-review.mjs','providers.mjs'].map(name=>readFile(new URL(name,import.meta.url),'utf8'))),perception:this.perceptionProfile,disabled,tool})}`;
+  return `${version}:${digest({sources:await Promise.all(['codex-host.mjs','crew.mjs','media.mjs','contracts.mjs','gemini-review.mjs','cartesia-stt.mjs','providers.mjs','evaluators.mjs','../evaluation/reviewer.md'].map(name=>readFile(new URL(name,import.meta.url),'utf8'))),perception:this.perceptionProfile,disabled,tool})}`;
  }
  async startCrew(model=DEFAULT_WORKER_MODEL){
   const capabilityVersion=await this.profile(),path=join(this.cwd,'crew-startup.json');

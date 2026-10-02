@@ -26,7 +26,7 @@ function contextFor(task){
 export function createGeminiReviewTools({secretsPath,receiptDirectory,maxCalls=0,fetcher=fetch,wait=ms=>new Promise(r=>setTimeout(r,ms))}={}){
  if(!secretsPath||!receiptDirectory)throw new Error('Gemini review needs the canonical secrets path and durable receipt directory.');
  if(!Number.isInteger(maxCalls)||maxCalls<0||maxCalls>32)throw new Error('Use a bounded --review-calls between 0 and 32.');
- let submitted=0;
+ let submitted=0;const inFlight=new Map();
  const request=async(url,options,key)=>{
   const response=await fetcher(assertGoogleUrl(url),{...options,headers:{...options.headers,'x-goog-api-key':key},redirect:'error',signal:AbortSignal.timeout(180000)});
   if(!response.ok)throw new Error(`Gemini HTTP ${response.status}: ${(await response.text()).replaceAll(key,'[redacted]').slice(0,600)}`);
@@ -67,6 +67,8 @@ export function createGeminiReviewTools({secretsPath,receiptDirectory,maxCalls=0
   for(const ref of refs)await verifyFiles(ref);
   const descriptor={tool,file: file.sha256,seconds:file.durationSeconds,worker:worker.workerId,taskId:task.taskId,profile:GEMINI_REVIEW_PROFILE,context,references:refs.map(f=>f.sha256),...(tool==='watchVideo'?{sourceFps:file.fps,samplingFps}:{})};
   const requestDigest=digest(descriptor),dir=join(receiptDirectory,requestDigest);await mkdir(dir,{recursive:true});
+  if(inFlight.has(requestDigest))return inFlight.get(requestDigest);
+  const run=async()=>{
   const finish=async response=>{
    // Stateless store:false replies may omit an interaction ID; the local exact
    // request/response digest is the durable receipt. Never invent a provider ID.
@@ -106,7 +108,10 @@ export function createGeminiReviewTools({secretsPath,receiptDirectory,maxCalls=0
    const response=await (await request(base+'/v1beta/interactions',{method:'POST',headers:{'Content-Type':'application/json'},body:serialized},key)).json();
    await atomicJson(join(dir,'response.json'),{requestDigest,responseDigest:digest(response),response});
    return await finish(response);
-  }catch(error){const message=key?error.message.replaceAll(key,'[redacted]'):error.message;throw Object.assign(new Error(`${message}\n${remediation('gemini',secretsPath)}`),{stopDispatch:true});}
+  }catch(error){const message=error.code==='EEXIST'?`GEMINI_REVIEW_UNCERTAIN: inspect ${dir}; another process owns this request; no duplicate submitted.`:key?error.message.replaceAll(key,'[redacted]'):error.message;throw Object.assign(new Error(`${message}\n${remediation('gemini',secretsPath)}`),{stopDispatch:true});}
+  };
+  const pending=run();inFlight.set(requestDigest,pending);
+  try{return await pending;}finally{inFlight.delete(requestDigest);}
  };
  return {listenAudio:input=>inspect('listenAudio',input),watchVideo:input=>inspect('watchVideo',input)};
 }

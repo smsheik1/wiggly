@@ -223,7 +223,6 @@
     "productionQualified": false,
     "remaining": [
       "real defect qualification at the selected 4 FPS profile",
-      "independent STT",
       "calibrated speaker similarity",
       "genuine human-labelled reviewer qualification"
     ],
@@ -274,6 +273,83 @@
       "aiVideoGenerationCalls": 0,
       "savedProjectStateMutated": false,
       "independentSttOrSpeakerMeasurement": false
+    }
+  },
+  "cartesiaTranscription": {
+    "date": "2026-10-02",
+    "model": "ink-whisper",
+    "apiVersion": "2026-08-14",
+    "implemented": [
+      "independent batch ASR with actual audio and locked voice-sample language; no script hint",
+      "role/hash scoped local Codex dispatch tool",
+      "separate explicit --transcription-calls cap, default0",
+      "durable started/response/result receipts; completed output recovers offline, unknown request never repeated",
+      "STT provider evidence retained through broker",
+      "source/profile-bound explicit crew refresh; old workers not silently rebound"
+    ],
+    "focusedTestsPassed": 32,
+    "sourceTestsPassed": 113,
+    "sourceCheckAndSmoke": "PASS",
+    "newTranscriptionPostAttempts": 1,
+    "liveTransport": "PASS: actual Cartesia returned a transcript and word timestamps for the existing synthetic audio fixture",
+    "liveAccuracy": "NOT QUALIFIED: output substitutes umbrella stands for umbrellas dance in the known synthetic source phrase",
+    "expectedSyntheticText": "Purple umbrellas dance beside the silver mailbox.",
+    "actualSyntheticTranscript": "Purple umbrella stands beside the silver mailbox.",
+    "requestDigest": "0b68b5b78de6458d66d7859a22e6670cbd8fc87baeeeb3438de1e3efc445827c",
+    "productionQualified": false,
+    "humanLabelsFabricated": false,
+    "savedProjectStateMutated": true,
+    "aiVideoGenerationCalls": 0,
+    "remaining": [
+      "transcription accuracy qualification and false-rejection handling on genuine labelled audio",
+      "calibrated speaker-comparison tool",
+      "genuine human-labelled audio/visual holdout qualification",
+      "missing music-provider configuration and generation readiness; real end-to-end film proof excluded"
+    ],
+    "connectionRepairs": [
+      "identical concurrent transcription/perception requests share an in-flight result without consuming another allowance; other tasks remain bounded",
+      "canonical reviewer rubric and current advisory evidence supplied through one shared review-task preparation path for automatic/manual dispatch",
+      "reviewer rubric treats uncorroborated ASR mismatch as inconclusive; preserves locked text/audio and prohibits paid regeneration based only on ambiguous transcription"
+    ],
+    "savedRunVerification": {
+      "run": "connected grandmother script fixture",
+      "gate": "human",
+      "sequence": 6,
+      "jobs": 0,
+      "crewRefreshed": false
+    },
+    "freshArchiveTestsPassed": 113,
+    "freshArchiveCheckAndSmoke": "PASS: npm ci, check, parent/grandparent smoke; zero dependency advisories",
+    "independentAudit": "PASS: duplicate-call allowance, cross-process uncertain stop, no script hint, canonical policy/current evidence binding, review permissions, inconclusive escalation without jobs/state mutation",
+    "auditedCodeArchiveSha256": "021717de573a67e2eecdbc8450cfa2070069ac76def77f7681b3ce761782b4d6",
+    "auditScope": "audited runtime/test sources unchanged; README/proof metadata finalized afterward",
+    "auditEnvironmentFailure": "First fresh full test attempt encountered ENOSPC; auditor removed only its prior temporary extraction, affected22 tests and complete113 rerun passed. Regeneratable old audit node_modules subsequently removed; real workspaces/runs untouched.",
+    "simplificationReview": "Direct adapter, existing broker/receipt helpers and one shared review preparation; no new framework/dependency/renderer.",
+    "stateMutationScope": "explicit crew-profile refresh only: same15 workers/models, sequence6\u21927 plus one audit event; every input/artifact/job/allowance/gate and prior audit entry unchanged",
+    "liveTranscriptionProbeStateMutated": false,
+    "connectedRecovery": {
+      "workersVerified": 15,
+      "workerIdsAndModelsPreserved": true,
+      "inputsArtifactsJobsAllowancesAndGatePreserved": true,
+      "auditHistoryAppended": 1,
+      "previousSequence": 6,
+      "sequence": 7,
+      "gate": "human",
+      "completedTasks": 0,
+      "stop": "graph-gate",
+      "mediaGenerationJobs": 0,
+      "geminiInferenceCalls": 0,
+      "cartesiaTranscriptionCalls": 0,
+      "humanDeliverableApprovalGranted": false,
+      "capabilityVersion": "codex-cli 0.153.0:da48513959ebe48f5d25949bd284ddcbb0ab8ace151939564b23054638f375ce",
+      "unchangedProjectContentDigest": "dc925c762fcc27873bddab47206f47e6a7c5d24a43cfe4380c10c1167bf69142"
+    },
+    "musicProviderRecheck": {
+      "provider": "elevenlabs",
+      "configured": false,
+      "checkedAt": "2026-10-02T19:06:26.515Z",
+      "networkCalls": 0,
+      "missingNamedKey": "ELEVENLABS_API_KEY"
     }
   }
 }

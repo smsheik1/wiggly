@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {readFile} from 'node:fs/promises';
 import {text,File} from './contracts.mjs';
 import {verifyFiles,measureAudio,probe} from './media.mjs';
+import {artifactEvidence} from './evaluators.mjs';
 // These are format capabilities, not arbitrary filesystem/network/shell access.
 export const crewRoles={
  'script-writer':{name:'Leo',tools:['readAsset']},
@@ -57,16 +58,20 @@ export function crewTools(task,worker,adapters={},record=()=>{}){
   if(['listenAudio','transcribe'].includes(name)&&(!file.durationSeconds||(file.width&&!(await probe(file.path)).hasAudio)))throw new Error('Expected an audible file.');
   if(!adapters[name])throw new Error(`CAPABILITY_UNAVAILABLE: host must connect actual ${name}; file access/metadata are insufficient.`);
   const result=await adapters[name]({file,worker,task});
-  if(name==='transcribe')return z.object({transcript:text,method:text}).parse(result);
+  if(name==='transcribe')return z.object({transcript:text,method:text}).passthrough().parse(result);
   if(name==='viewImage')return z.object({perception:z.literal('direct-image')}).passthrough().parse(result);
   return z.object({perception:z.literal(name==='watchVideo'?'direct-video':'direct-audio'),seconds:z.number().positive()}).passthrough().parse(result);
  };
  return async(name,parameters={})=>{const value=await execute(name,parameters);record({tool:name,sha256:parameters.sha256,referenceSha256:parameters.referenceSha256,seconds:value.seconds,...(value.provider?{provider:value.provider,modelVersion:value.modelVersion,requestDigest:value.requestDigest,receiptPath:value.receiptPath,samplingFps:value.samplingFps}: {})},value);return value;};
 }
+export async function prepareCrewTask(p,task){
+ return task.gate==='review'?{...task,evaluatorEvidence:await artifactEvidence(p),reviewerRubric:await readFile(new URL('../evaluation/reviewer.md',import.meta.url),'utf8')}:task;
+}
 export async function runCrewTask(p,task,host){
  const worker=assignedWorker(p);if(!worker)throw new Error('CREW_NOT_CONFIGURED: bind real host workers first.');
  if(!['author','owner-review','review','produce'].includes(task.gate))throw new Error('Crew cannot operate a human/runtime gate.');
  if(typeof host.runTask!=='function')throw new Error('Host adapter must export runTask(task, {worker, callTool}).');
+ task=await prepareCrewTask(p,task);
  const receipts=[],outputs=new Map();
  const event=await host.runTask({...task,worker,allowedTools:crewRoles[worker.role].tools},{worker,callTool:crewTools(task,worker,host.tools,(r,value)=>{receipts.push(r);outputs.set(`${r.tool}:${r.sha256}`,value);})});
  try{

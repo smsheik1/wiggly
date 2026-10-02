@@ -36,7 +36,7 @@
       "commands": "crew-start, crew-refresh, work-codex, drive-codex",
       "cost": "Worker turns consume the signed-in account limits; no separate model API key required for ChatGPT login",
       "implemented": "Durable role threads and partial startup receipts, scoped native image delivery, explicit model/profile/requalification, durable dispatch results, bounded dispatch",
-      "missing": "independent STT, calibrated speaker similarity and real reviewer qualification",
+      "missing": "calibrated speaker similarity and real reviewer qualification",
       "modalityLimitationSource": "https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations",
       "mediaReview": {
         "model": "gemini-3.8-flash",
@@ -47,6 +47,17 @@
         "calls": "explicit --review-calls 0\u201332 per invocation, default 0; no automatic fallback/retry",
         "profile": "static min(source FPS,4) video (operator-selected), high resolution; original audio/separate mono 48kHz PCM from video",
         "qualification": "not production-qualified; profile changes require explicit crew refresh and held-out qualification"
+      },
+      "transcription": {
+        "model": "ink-whisper",
+        "api": "POST https://api.cartesia.ai/stt",
+        "apiVersion": "2026-08-14",
+        "key": "CARTESIA_API_KEY from canonical --secrets",
+        "calls": "explicit --transcription-calls 0\u201332 per invocation, default 0",
+        "scriptHints": false,
+        "language": "locked voice sample ISO language",
+        "receipts": "exact task/hash/worker/language/profile; completed results recover offline; unknown outcomes stop without retry",
+        "qualification": "not production-qualified; independent of Gemini listening and speaker measurement"
       }
     }
   },
