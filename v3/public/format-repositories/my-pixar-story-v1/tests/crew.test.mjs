@@ -17,7 +17,7 @@ test('persisted crew bindings enforce role authority; worker cannot impersonate 
  assert.throws(()=>send(p,'artifact',{workerId:'host-audio-reviewer',content:script}),/PERMISSION_DENIED/);
  p=send(p,'artifact',{workerId:worker.workerId,content:script});
  assert.equal(taskFor(p).crewWorker.name,'Sage');
- assert.throws(()=>send(p,'configure-crew',{actor:'human',message:'Change deployed models.',crew}),/explicitly once/);
+ assert.throws(()=>send(p,'configure-crew',{actor:'human',message:'Change deployed models.',crew}),/already configured/);
  const task=taskFor(bind(initialProject('x',inputs))),base=bind(initialProject('x',inputs));
  await assert.rejects(runCrewTask(base,task,{runTask:async()=>event(base,'approve',{workerId:worker.workerId,message:'fake human approval'})}),/PERMISSION_DENIED/);
  const result=await runCrewTask(base,task,{runTask:async(_task,tools)=>{await assert.rejects(tools.callTool('generateVideo',{}),/TOOL_PERMISSION_DENIED/);return event(base,'artifact',{workerId:worker.workerId,content:script});}});assert.equal(applyEvent(base,result).gate,'review');
@@ -75,4 +75,17 @@ test('audition measurements bind actual tool outputs; a writer cannot substitute
   const host={tools:{listenAudio:async()=>({perception:'direct-audio',seconds:file.durationSeconds}),transcribe:async()=>({transcript:'Words were skipped',method:'ISOLATED STT'}),speakerSimilarity:async()=>({score:0.1,method:'ISOLATED embedding',calibrationNotes:'ISOLATED protocol test'})},runTask:async(_task,{worker,callTool})=>{for(const tool of ['listenAudio','measureAudio','transcribe','speakerSimilarity'])await callTool(tool,{sha256:file.sha256,referenceSha256:sample.sha256});return event(p,'review',{workerId:worker.workerId,artifactId:a.id,artifactDigest:a.digest,review:{decision:'approved',perception:'direct-audio',modelVersion:worker.modelVersion,capabilityVersion:worker.capabilityVersion,coverage:{artifactSha256:file.sha256,audioFiles:[{sha256:file.sha256,seconds:file.durationSeconds}]},checks:task.criteria.map(criterion=>({criterion,status:'pass',evidence:'ISOLATED improper writer assumption',location:'whole fixture'})),measurements:{transcripts:[script.beats[0].narration],speakerSimilarity:0.99}}});}};
   const result=await runCrewTask(p,task,host);assert.deepEqual(result.review.measurements.transcripts,['Words were skipped']);assert.equal(result.review.measurements.speakerSimilarity,0.1);assert.throws(()=>applyEvent(p,result),/differs from the locked script/);
  }finally{await rm(dir,{recursive:true});}
+});
+
+test('explicit reviewer profile upgrades reopen qualification and its descendants, preserving facts and source assets',()=>{
+ const p=bind(audioProject());
+ const replacement={workers:crew.workers.map(w=>w.role==='audio-reviewer'?{...w,capabilityVersion:'upgraded-real-tools'}:w)};
+ assert.throws(()=>send(p,'configure-crew',{actor:'agent',message:'Not the operator',crew:replacement}),/human authority/);
+ const changed=send(p,'configure-crew',{actor:'human',message:'ISOLATED upgrade real tool profile',crew:replacement});
+ assert.equal(changed.step,'audioReviewerQualification');assert.equal(changed.gate,'author');assert.equal(current(changed,'narration'),undefined);assert.equal(current(changed,'audioReviewerQualification'),undefined);
+ assert.deepEqual(current(changed,'script'),current(p,'script'));assert.deepEqual(current(changed,'voiceSample'),current(p,'voiceSample'));assert.deepEqual(current(changed,'clone'),current(p,'clone'));
+ const busy=structuredClone(p);busy.jobs[0].status='uncertain';assert.throws(()=>send(busy,'configure-crew',{actor:'human',message:'ISOLATED',crew:replacement}),/reconciled jobs/);
+ const visual=bind(rendered()),newVisual={workers:crew.workers.map(w=>w.role==='visual-reviewer'?{...w,modelVersion:'new-real-model'}:w)};
+ const reopened=send(visual,'configure-crew',{actor:'human',message:'ISOLATED visual upgrade',crew:newVisual});
+ assert.equal(reopened.step,'reviewerQualification');assert.equal(current(reopened,'videoPlan'),undefined);assert.ok(current(reopened,'narration'));assert.deepEqual(reopened.artifacts.filter(a=>a.valid&&a.kind==='keyframe'),visual.artifacts.filter(a=>a.valid&&a.kind==='keyframe'));
 });

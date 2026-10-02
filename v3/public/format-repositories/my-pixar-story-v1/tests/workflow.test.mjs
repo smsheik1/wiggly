@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { initialProject, current, applyEvent, taskFor, revisionImpact, assertAllowed, openWorkflow, audioLocked } from '../runtime/workflow.mjs';
+import { initialProject, characterRecipeSha256, current, applyEvent, taskFor, revisionImpact, assertAllowed, openWorkflow, audioLocked } from '../runtime/workflow.mjs';
 import { digest } from '../runtime/contracts.mjs';
 import { inputs, script, file, event, send, authored, reviewed, approved, produce, audioProject } from './helpers.mjs';
 
@@ -88,7 +88,8 @@ test('each required character gets three candidates + selected-image sheet; all 
     assert.equal(p.characterId, id);
     p = produce(p, { files: [1, 2, 3].map(i => ({ path: `/isolated-test/image-${i}.png`, sha256: file(i).sha256, bytes: 1024, width: 100, height: 100 })), prompt: 'Design character.' });
     p = approved(reviewed(p), { selection: 1 });
-    const prompt = { prompt: `Selected-image sheet of ${id}, four turnaround poses and eight expressions.`, recipeSha256: file().sha256, referenceSha256: file(2).sha256, turnaround: ['front', 'three-quarter', 'profile', 'back'], expressions: ['neutral', 'happy', 'delighted', 'sad', 'surprised', 'confused', 'angry', 'talking'] };
+    const prompt = { prompt: `Selected-image sheet of ${id}, four turnaround poses and eight expressions.`, recipeSha256: characterRecipeSha256, referenceSha256: file(2).sha256, turnaround: ['front', 'three-quarter', 'profile', 'back'], expressions: ['neutral', 'happy', 'delighted', 'sad', 'surprised', 'confused', 'angry', 'talking'] };
+    assert.throws(() => send(p, 'artifact', { workerId: 'sheet-writer', content: { ...prompt, recipeSha256:'wrong' } }), /recipe hash/);
     assert.throws(() => send(p, 'artifact', { workerId: 'sheet-writer', content: { ...prompt, referenceSha256: 'wrong' } }), /selected character/);
     p = send(p, 'artifact', { workerId: 'sheet-writer', content: prompt }); p = reviewed(p); assert.equal(p.step, 'sheet');
     p = approved(reviewed(produce(p, { files: [{ path: '/isolated-test/sheet.png', sha256: file(5).sha256, bytes: 1024, width: 100, height: 100 }], prompt: prompt.prompt })));

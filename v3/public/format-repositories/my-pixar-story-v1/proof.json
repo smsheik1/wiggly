@@ -114,5 +114,50 @@
       "actual hearing/video/STT/calibrated speaker-tool connections and human-labelled qualification corpus",
       "real end-to-end production proof explicitly excluded"
     ]
+  },
+  "codexHostConnection": {
+    "date": "2026-10-02",
+    "status": "Implemented real supported Codex app-server connection; no production perceptual qualification",
+    "selectedModel": "gpt-5.6-sol (explicit human choice)",
+    "host": "codex-cli 0.153.0; actual ChatGPT login",
+    "workers": "15 separate durable role threads; actual IDs/model/capability recorded in SQLite",
+    "liveProof": "Packaged example grandmother: actual Leo authors script, independent actual Sage reviews; fresh app-server process resumes provisioned threads; graph pauses for human script approval at sequence 3; zero media jobs",
+    "guardrails": "No requested-model fallback; native shell/apps/plugins/nested agents/browser/image generation disabled; hash-scoped dynamic tools; bounded author/review dispatch stops at human/production/qualification/escalation",
+    "failureAndFix": "Live proof discovered thread/start alone had no durable rollout; initialize each role with a READY turn before binding; resume regression added",
+    "sourceTestsPassed": 94,
+    "mediaProviderCalls": 0,
+    "productionCredentialsRead": false,
+    "actualAIVideoGenerations": 0,
+    "remaining": [
+      "actual listening/full-video/STT/calibrated speaker comparison connections",
+      "real human-labelled reviewer qualification",
+      "provider live readiness",
+      "chat delivery rehearsal beyond text approval",
+      "real end-to-end film explicitly excluded"
+    ],
+    "imageProbe": "Actual GPT-5.6 Sol worker identified red left/blue right synthetic pixels through native image input; transport proof only, no production qualification",
+    "auditRepairs": [
+      "durable dispatch results reused after a checkpoint failure; uncertain dispatch never repeated",
+      "partial crew startup recorded; completed role threads retained",
+      "explicit native-worker profile refresh invalidates changed reviewer qualification descendants",
+      "core character-sheet recipe hash enforced for every entry path",
+      "native image input used after actual dynamic-tool image probe returned unavailable",
+      "known finished invalid JSON/role/action/perception/core results retain rejection evidence and explicit bounded repair; unknown executions never repeat"
+    ],
+    "provenanceLimit": "Dispatch receipt records task and actual worker. Native turn IDs are not durably recorded; uncertain execution requires inspecting saved native thread progress, never automatic replay.",
+    "freshPackageAudit": {
+      "verdict": "PASS for supported host connection/recovery scope; not production qualification",
+      "model": "gpt-5.6-sol independent final auditor",
+      "testsPassed": 94,
+      "focusedPassed": 16,
+      "checks": [
+        "fresh npm ci/check/smoke",
+        "known finished wrong-action and malformed JSON: rejected evidence, explicit repair, exact prior output retained",
+        "unknown timeout: one dispatch, no repair retry",
+        "three finished attempt ceiling",
+        "exact task-bound image pixels/hash; tamper stops before new turn"
+      ],
+      "codeFingerprint": "f7e3d1269c6f775b63c34d637a36874439ae609a8fa9bfdc82730488f22e437b"
+    }
   }
 }

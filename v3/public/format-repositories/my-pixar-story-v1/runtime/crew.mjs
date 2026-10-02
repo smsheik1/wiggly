@@ -69,6 +69,7 @@ export async function runCrewTask(p,task,host){
  if(typeof host.runTask!=='function')throw new Error('Host adapter must export runTask(task, {worker, callTool}).');
  const receipts=[],outputs=new Map();
  const event=await host.runTask({...task,worker,allowedTools:crewRoles[worker.role].tools},{worker,callTool:crewTools(task,worker,host.tools,(r,value)=>{receipts.push(r);outputs.set(`${r.tool}:${r.sha256}`,value);})});
+ try{
  const expected=task.gate==='review'?'review':task.gate==='owner-review'?'owner-review':task.gate==='produce'?'plan':'artifact';
  if(event.taskId!==task.taskId||event.actor!==task.actor||event.action!==expected)throw new Error('CREW_PERMISSION_DENIED: worker may only submit its assigned deliverable; no human approvals, state writes or provider calls.');
  assertCrewEvent(p,event);
@@ -82,4 +83,5 @@ export async function runCrewTask(p,task,host){
   event.review.toolEvidence=receipts;
  }
  return event;
+ }catch(error){throw Object.assign(error,{knownFinished:true,finishedResult:event});}
 }

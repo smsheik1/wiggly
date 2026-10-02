@@ -37,3 +37,7 @@ The current chat host supplies the workers and inherited model; no required Gemi
 Actual hearing, STT, calibrated speaker comparison, visual tools and real labelled qualification corpora remain host requirements. Automated adapters must successfully call their scoped perception/measurement tools before a media verdict; the runtime records that evidence. Host adapters are privileged code and native chat workers may have ambient tools: the format broker is not an operating-system sandbox, and manual native-host reviews still rely on truthful, qualified perception declarations. No production reviewer has been qualified by these mechanics tests.
 
 Old checkpoints require an explicit human audio-review upgrade; script/sample/clone survive while audition/narration and dependent work reopen, and single-review film locks cannot finalize.
+
+## Built-in local Codex workers
+
+`crew-start --model gpt-5.6-sol --message "<actual human authorization>" --run /absolute/run` provisions durable role threads and binds them to SQLite. `drive-codex --max-tasks 8 --run /absolute/run` resumes actual workers through the supported app-server interface and stops at approval, qualification and production boundaries. No media generation is submitted by this dispatcher. The operator chose GPT-5.6 Sol; unavailable models are not silently substituted. See SKILL.md for setup, scope and version checks. Listening/video/STT/speaker-tool connections and real reviewer qualification remain pending.

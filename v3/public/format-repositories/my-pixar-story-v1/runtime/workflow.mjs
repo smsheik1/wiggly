@@ -14,7 +14,7 @@ import { VERSION, Inputs, Project, Content, Review, Event, Plans, criteria, dige
 import { keyFor, current, locked, audioLocked, assertAllowed, backgroundSteps, imageSteps, authorSteps } from './gates.mjs';
 export { keyFor, current, locked, audioLocked, assertAllowed } from './gates.mjs';
 const characterRecipe=readFileSync(new URL('../character-sheet-recipe.md',import.meta.url),'utf8');
-const characterRecipeSha256=createHash('sha256').update(characterRecipe).digest('hex');
+export const characterRecipeSha256=createHash('sha256').update(characterRecipe).digest('hex');
 export const backgroundRecipe = readFileSync(new URL('../background-prompter.md', import.meta.url), 'utf8');
 export const backgroundRecipeSha256 = createHash('sha256').update(backgroundRecipe).digest('hex');
 const location = p => current(p, 'backgrounds')?.content.locations.find(l => l.id === p.locationId);
@@ -114,6 +114,7 @@ function addArtifact(p, content, author) {
   if (imageSteps.includes(p.step) && parsed.files.some(f => !f.width || !f.height || f.durationSeconds)) throw new Error('Character generations must contain measured still images.');
   if (p.step === 'sheetPrompt') {
     const candidate = current(p, `candidates:${p.characterId}`);
+    if(parsed.recipeSha256!==characterRecipeSha256)throw new Error('Sheet prompt must bind the packaged character sheet recipe hash.');
     if (parsed.referenceSha256 !== candidate.content.files[candidate.selection].sha256) throw new Error('Sheet prompt must bind the actual selected character image.');
   }
   if (p.step === 'sheet' && parsed.prompt !== current(p, `sheetPrompt:${p.characterId}`).content.prompt) throw new Error('Sheet must use the reviewed prompt exactly.');
@@ -195,7 +196,15 @@ export function applyEvent(project, raw) {
   if (e.taskId !== taskFor(p).taskId) throw new Error('STALE_TASK: read current status before responding.');
   if(p.crew)Crew.parse(p.crew);
   assertCrewEvent(p,e);
-  if(e.action==='configure-crew'){requiredActor(e,'human');if(p.crew||p.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status))||!e.message)throw new Error('Configure crew explicitly once, with reconciled jobs; never change existing bindings silently.');p.crew=Crew.parse(e.crew);
+  if(e.action==='configure-crew'){requiredActor(e,'human');if(p.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status))||!e.message)throw new Error('Configure crew explicitly with reconciled jobs; never change existing bindings silently.');
+    const crew=Crew.parse(e.crew);if(p.crew&&digest(p.crew)===digest(crew))throw new Error('Crew is already configured with these bindings.');
+    const changed=role=>p.crew&&digest(p.crew.workers.find(w=>w.role===role))!==digest(crew.workers.find(w=>w.role===role));
+    const audioChanged=changed('audio-reviewer'),visualChanged=changed('visual-reviewer');
+    const audio=current(p,'audioReviewerQualification'),visual=current(p,'reviewerQualification');
+    if(visualChanged&&visual)invalidate(p,visual.id);
+    if(audioChanged&&audio){invalidate(p,audio.id);p.step='audioReviewerQualification';p.gate='author';}
+    else if(visualChanged&&visual){p.step='reviewerQualification';p.gate='author';}
+    p.crew=crew;
   }else if(e.action==='start-audio-review'){requiredActor(e,'human');if(locked(p,'audioReviewerQualification')||!current(p,'clone')||p.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status))||!e.message)throw new Error('Explicit audio-review upgrade requires an existing clone, no qualified audio lock and reconciled jobs.');for(const a of p.artifacts.filter(a=>a.valid&&['audition','narration'].includes(a.kind)))invalidate(p,a.id);p.step='audioReviewerQualification';p.gate='author';
   }else if(e.action==='audio-qualified'){requiredActor(e,'runtime');if(p.step!=='audioReviewerQualification'||p.gate!=='author')throw new Error('Audio qualification requires its current task.');const report=Content.audioReviewerQualification.parse(e.content),worker=p.crew?.workers.find(w=>w.role==='audio-reviewer');if(worker&&(worker.workerId!==report.workerId||worker.modelVersion!==report.modelVersion||worker.capabilityVersion!==report.capabilityVersion))throw new Error('Audio qualification must match assigned Ava model/tool profile.');addArtifact(p,report,'verified-local-audio-evaluator');
   }else if (e.action === 'qualified') {

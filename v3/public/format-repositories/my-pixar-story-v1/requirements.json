@@ -28,7 +28,15 @@
     "compute": "current chat host model/subagents by default; optional externally configured models, no required Gemini or new model API key",
     "audioQualification": "separate genuinely human-labelled held-out audio, full listening, STT and speaker comparison; model/tool profile bound to Ava",
     "permissions": "runtime-enforced format broker and submission allowlists; ambient host shell/filesystem/tools require host enforcement",
-    "finalFilm": "qualified distinct Vera visual and Ava audio reviews, then human approval"
+    "finalFilm": "qualified distinct Vera visual and Ava audio reviews, then human approval",
+    "localCodex": {
+      "model": "gpt-5.6-sol (explicit operator choice)",
+      "runtime": "Installed signed-in Codex CLI; documented experimental app-server dynamic tools (verified with 0.153.0)",
+      "commands": "crew-start, crew-refresh, work-codex, drive-codex",
+      "cost": "Worker turns consume the signed-in account limits; no separate model API key required for ChatGPT login",
+      "implemented": "Durable role threads and partial startup receipts, scoped native image delivery, explicit model/profile/requalification, durable dispatch results, bounded dispatch",
+      "missing": "Full listening/video, independent STT, calibrated speaker similarity and real reviewer qualification"
+    }
   },
   "storage": "per-run embedded SQLite checkpoints and immutable local assets/receipts; retain directory as a unit",
   "approval": "real human deliverable approvals; exact paid-request authorization or explicit bounded operation allowance",

@@ -13,6 +13,7 @@ import { renderFilm, inspectFilm } from './runtime/assemble.mjs';
 import {prepareComposition, servePreview, verifyRenderer} from './runtime/remotion.mjs';
 import { assemblyManifest, assertFilmInspection } from './runtime/studio.mjs';
 import {Crew,crewRoles,runCrewTask} from './runtime/crew.mjs';
+import {CodexHost,DEFAULT_WORKER_MODEL,driveCrew} from './runtime/codex-host.mjs';
 import {AudioCase,audioTask,qualifyAudio,requireAudioQualification} from './evaluation/audio-qualification.mjs';
 import { VisualCase, visualTask, qualifyVisual, requireVisualQualification } from './evaluation/visual-qualification.mjs';
 const root = dirname(fileURLToPath(import.meta.url));
@@ -80,6 +81,24 @@ async function main() {
     }
     if (command === 'import') { print(await importMedia(args[0], runDir)); return; }
     const status = await workflow.status('project');
+    if(['crew-start','crew-refresh','drive-codex','work-codex'].includes(command)){
+      const host=new CodexHost({cwd:join(runDir,'host-workspace'),onProgress:({worker,item})=>process.stderr.write(`${worker}: ${item}\n`)});
+      try{
+        if(['crew-start','crew-refresh'].includes(command)){
+          const message=option('message'),model=option('model',DEFAULT_WORKER_MODEL);
+          if(!message||command==='crew-start'&&status.project.crew||command==='crew-refresh'&&!status.project.crew)throw new Error('crew-start requires an unconfigured run; crew-refresh requires existing bindings. Supply --message with the actual human instruction.');
+          if(status.project.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status)))throw new Error('Reconcile outstanding jobs before changing crew.');
+          await host.initialize();const crew=command==='crew-refresh'?await host.refreshCrew(status.project.crew):await host.startCrew(model);
+          print(presentation(await workflow.respond('project',{taskId:status.pending.taskId,actor:'human',action:'configure-crew',message,crew})));return;
+        }
+        if(!status.project.crew)throw new Error('CREW_NOT_CONFIGURED: use crew-start before local Codex dispatch.');
+        const maxTasks=command==='work-codex'?1:Number(option('max-tasks','8')),repair=option('repair-invalid','false');
+        if(!['true','false'].includes(repair))throw new Error('--repair-invalid needs true or false.');
+        await host.initialize();
+        const result=await driveCrew(workflow,'project',host,{maxTasks,repairInvalid:repair==='true',receiptDirectory:join(runDir,'host-dispatch'),verifySubmission,onProgress:({step,gate})=>process.stderr.write(`${step}: ${gate}\n`)});
+        print({completed:result.completed,stop:result.stop,...presentation(result.status)});return;
+      }finally{host.close();}
+    }
     if(['qualify-audio','qualify-visual','generate','collect','render','preview','finalize'].includes(command)&&!status.project.crew)throw new Error('CREW_NOT_CONFIGURED: bind actual host workers using configure-crew; old approvals never supply capabilities.');
     if(command==='qualify-audio'){
       const dataset=await json(option('dataset')),predictions=await json(option('predictions')),worker=option('worker'),model=option('model'),capability=option('capability');
@@ -177,7 +196,7 @@ async function main() {
         await runtimeEvent('provider-error',{message:diagnostic});throw new Error(`${diagnostic}\n${remediation(job.plan.provider,secretsPath)}`);
       }return;
     }
-    throw new Error('Use check, schema, init, status, work, respond, import, measure, validate, impact, generate, collect, crew-template, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
+    throw new Error('Use check, schema, init, status, work, respond, import, measure, validate, impact, generate, collect, crew-template, crew-start, crew-refresh, work-codex, drive-codex, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
   } finally { workflow.close(); await release(); }
 }
 main().catch(e => { process.stderr.write(`${e.message}\n`); process.exitCode = 1; });
