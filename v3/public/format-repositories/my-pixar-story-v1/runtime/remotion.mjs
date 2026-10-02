@@ -7,6 +7,7 @@ import {createServer} from 'node:http';
 import {createReadStream,readFileSync} from 'node:fs';
 import {stat} from 'node:fs/promises';
 import {selectComposition, renderMedia} from '@remotion/renderer';
+import {VERSION as REMOTION_VERSION} from 'remotion';
 import {digest} from './contracts.mjs';
 import {verifyFiles} from './media.mjs';
 import {audioMixArgs} from './mix.mjs';
@@ -20,7 +21,7 @@ export function compositionScene(manifest,sources,audioUrl){
 export const rendererIdentity=()=>JSON.parse(readFileSync(join(kit,'build','remotion','renderer-manifest.json'),'utf8'));
 export async function verifyRenderer(){
  const root=join(kit,'build','remotion'),manifest=JSON.parse(await readFile(join(root,'renderer-manifest.json'),'utf8'));
- if(manifest.remotionVersion!=='4.0.473'||!['bundle.js','preview.js','index.html'].every(name=>manifest.files?.some(f=>f.path===name)))throw new Error('Incomplete or incompatible official renderer inventory.');
+ if(manifest.remotionVersion!==REMOTION_VERSION||!['bundle.js','preview.js','index.html'].every(name=>manifest.files?.some(f=>f.path===name)))throw new Error('Incomplete or incompatible official renderer inventory.');
  for(const file of manifest.files){if(!file.path||file.path.includes('..')||file.path.startsWith('/'))throw new Error('Invalid renderer inventory.');const {createHash}=await import('node:crypto');if(createHash('sha256').update(await readFile(join(root,file.path))).digest('hex')!==file.sha256)throw new Error('Packaged renderer changed; rebuild/reinstall the official package.');}
  return {root,manifest};
 }

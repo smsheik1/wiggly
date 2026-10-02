@@ -7,11 +7,12 @@ import { z } from 'zod';
 import { VERSION, Content, Event, Review, Plans, Inputs, digest } from './runtime/contracts.mjs';
 import { openWorkflow, revisionImpact } from './runtime/workflow.mjs';
 import { importMedia, verifyFiles, measureAudio } from './runtime/media.mjs';
-import { executeJob, loadKey, remediation } from './runtime/providers.mjs';
+import { executeJob, loadKey, remediation, checkProvider } from './runtime/providers.mjs';
 import { current, locked, assertAllowed } from './runtime/gates.mjs';
 import { renderFilm, inspectFilm } from './runtime/assemble.mjs';
 import {prepareComposition, servePreview, verifyRenderer} from './runtime/remotion.mjs';
 import { assemblyManifest, assertFilmInspection } from './runtime/studio.mjs';
+import {presentDeliverable} from './runtime/presentation.mjs';
 import {Crew,crewRoles,runCrewTask} from './runtime/crew.mjs';
 import {CodexHost,DEFAULT_WORKER_MODEL,driveCrew} from './runtime/codex-host.mjs';
 import {AudioCase,audioTask,qualifyAudio,requireAudioQualification} from './evaluation/audio-qualification.mjs';
@@ -48,6 +49,7 @@ async function verifySubmission(status,event){
   if(['artifact','plan','approve','authorize','owner-review'].includes(event.action)||event.action==='review'&&event.review?.decision!=='inconclusive')await verifyFiles(status.project.artifacts.filter(a=>a.valid));
 }
 async function main() {
+  if(command==='check-provider'){const provider=option('provider');if(args.length)throw new Error('Unknown provider check arguments.');print(await checkProvider(provider,secretsPath));return;}
   if(command==='crew-template'){print({workers:Object.entries(crewRoles).map(([role,definition])=>({role,name:definition.name,workerId:`bind-host-${role}`,modelVersion:'inherit-host-model',capabilityVersion:'bind-actual-tools-v1',execution:'host'})),instruction:'Use your current host model and actual independent worker IDs; replace template model/capability values with the actual deployed versions before configuration. No external model is required.'});return;}
   if(command==='audio-tasks'){const cases=z.array(AudioCase).parse(await json(option('dataset'))),split=option('split','holdout');if(!['calibration','holdout'].includes(split))throw new Error('Invalid audio split.');print(cases.filter(c=>c.split===split).map(audioTask));return;}
   if(command==='visual-tasks'){const cases=z.array(VisualCase).parse(await json(option('dataset'))),split=option('split','holdout');if(!['calibration','holdout'].includes(split))throw new Error('Invalid visual split.');print(cases.filter(c=>c.split===split).map(visualTask));return;}
@@ -134,6 +136,7 @@ async function main() {
       const result={formatVersion:VERSION,projectId:p.id,film:film.content.files[0],artifactId:film.id,artifactDigest:film.digest,approvedBy:film.approvedBy,review:film.review,inspection,manifest:assemblyManifest(p),provenance:film.content.provenance,published:false};
       const path=join(runDir,'finalized.json');await writeFile(path,JSON.stringify(result,null,2)+'\n',{mode:0o600});print({path,film:result.film.path,published:false});return;
     }
+    if(command==='present'){print(await presentDeliverable(status));return;}
     if (command === 'status' || command === 'inspect') { print({...presentation(status),...(command==='inspect'&&current(status.project,'film')?{filmMeasurements:await inspectFilm(current(status.project,'film').content.files[0])}:{})}); return; }
     if (command === 'impact') { print(revisionImpact(status.project, args[0])); return; }
     if (command === 'validate') { for (const a of status.project.artifacts.filter(a => a.valid)) await verifyFiles(a.content); print({ valid: true, pending: status.pending.step, sequence: status.project.sequence }); return; }
@@ -196,7 +199,7 @@ async function main() {
         await runtimeEvent('provider-error',{message:diagnostic});throw new Error(`${diagnostic}\n${remediation(job.plan.provider,secretsPath)}`);
       }return;
     }
-    throw new Error('Use check, schema, init, status, work, respond, import, measure, validate, impact, generate, collect, crew-template, crew-start, crew-refresh, work-codex, drive-codex, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
+    throw new Error('Use check, check-provider, schema, init, status, present, work, respond, import, measure, validate, impact, generate, collect, crew-template, crew-start, crew-refresh, work-codex, drive-codex, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
   } finally { workflow.close(); await release(); }
 }
 main().catch(e => { process.stderr.write(`${e.message}\n`); process.exitCode = 1; });

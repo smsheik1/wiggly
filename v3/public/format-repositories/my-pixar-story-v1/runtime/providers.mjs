@@ -45,6 +45,22 @@ export async function loadKey(provider, secretsPath) {
   const value = match[1].trim().replace(/^(['"])(.*)\1$/, '$2');
   if (!value) throw new Error(`Empty ${name}.`); return value;
 }
+// Metadata-only checks cannot establish paid generation entitlement or output quality.
+export async function checkProvider(provider,secretsPath,fetcher=fetch){
+ const definitions={cartesia:{urls:['https://api.cartesia.ai/voices?limit=1'],docs:'https://docs.cartesia.ai/api-reference/voices/list'},'meta-muse':{urls:['https://api.meta.ai/v1/models/muse-image-1.0'],docs:'https://dev.meta.ai/docs/api-reference/models/retrieve-model'},replicate:{urls:['https://api.replicate.com/v1/account','https://api.replicate.com/v1/models/bytedance/seedance-2.0'],docs:'https://replicate.com/docs/reference/http'},elevenlabs:{urls:['https://api.elevenlabs.io/v1/user/subscription'],docs:'https://elevenlabs.io/docs/api-reference/user/subscription/get'}};
+ const definition=definitions[provider];if(!definition)throw new Error('Use cartesia, meta-muse, replicate or elevenlabs.');
+ let apiKey;
+ try{
+  apiKey=await loadKey(provider,secretsPath);const bodies=[];
+  for(const url of definition.urls){
+   const response=await fetcher(url,{method:'GET',headers:provider==='elevenlabs'?{'xi-api-key':apiKey}:{Authorization:`Bearer ${apiKey}`,...(provider==='cartesia'?{'Cartesia-Version':'2026-08-14'}:{})},redirect:'error',signal:AbortSignal.timeout(15000)});
+   if(!response.ok){const body=await response.text();throw new Error(`GET ${url}: HTTP ${response.status}: ${body.replaceAll(apiKey,'[redacted]').slice(0,400)}`);}
+   bodies.push(await response.json());
+  }
+  if(provider==='cartesia'&&!Array.isArray(bodies[0].data)||provider==='meta-muse'&&bodies[0].id!=='muse-image-1.0'||provider==='replicate'&&(!bodies[0].type||bodies[1].owner!=='bytedance'||bodies[1].name!=='seedance-2.0')||provider==='elevenlabs'&&typeof bodies[0].status!=='string')throw new Error('Provider metadata response does not match its documented contract.');
+  return {provider,checkedAt:new Date().toISOString(),status:'metadata-verified',endpoints:definition.urls,documentation:definition.docs,authenticatedRead:true,...(provider==='elevenlabs'?{subscriptionStatus:bodies[0].status}:{}),generationReady:false,unverified:['paid generation entitlement and funds','account-specific price and spend estimate','actual generation/output quality'],mediaGenerationCalls:0,projectStateMutated:false};
+ }catch(error){const message=apiKey?error.message.replaceAll(apiKey,'[redacted]'):error.message;throw new Error(`${message}\n${remediation(provider,secretsPath)}`);}
+}
 // Each subrequest has a durable started marker and result. Unknown outcomes are never retried.
 export async function executeJob(p, job, runDir, apiKey, fetcher = fetch, collectOnly = false, onJobId) {
   const recorded = p.jobs.find(j => j.id === job.id && j.digest === job.digest);
