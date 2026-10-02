@@ -26,7 +26,7 @@
     "speaker similarity"
   ],
   "proofScope": "isolated contract/HTTP/media-measurement tests, no real provider quality proof",
-  "finalization": "current asset hashes/dependencies, 60s/1080p/30fps/audio, measured -18\u2026-14 LUFS and true peak \u2264-1dB, no long black regions, full qualified audiovisual review then human; freeze detection advisory",
+  "finalization": "current asset and renderer hashes, technical gates, qualified Vera full-file visual pass and independent qualified Ava full-file audio pass, then human; freeze advisory",
   "evaluationFoundation": {
     "dataset": "evaluation/dataset.json",
     "cases": 22,
@@ -44,5 +44,6 @@
   "visualQualification": "minimum 2 good + 2 broken heldout examples per image/video \u00d7 anatomy/identity/continuity; zero errors; actual verified files; trusted operator labels; no current judge is qualified",
   "video": "entire-file direct-video coverage bound to qualified worker/model and current hash; localized rejection repair; no guarantee all defects detected",
   "sound": "actual direct listening for piano/no vocals/fit, measured duration, provenance/usage rights",
-  "assembly": "original narration at 0/15/30/45, no atempo, approved trims/ducking/fades, one FFmpeg path"
+  "assembly": "Shared Remotion composition; FFmpeg audio mix, original narration at 0/15/30/45, no atempo, approved trims/ducking/fades",
+  "audioQualification": "separate actual held-out human-labelled audio; integrity/transcript/natural-rate/voice-match/mix/safety each minimum two usable and two broken, zero errors; model/tool profile bound; no production Ava currently qualified"
 }

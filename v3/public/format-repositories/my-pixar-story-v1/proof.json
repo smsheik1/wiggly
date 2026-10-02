@@ -87,5 +87,32 @@
     "simplificationReview": "Lean already. Ship. Reuses AdRenderSurface and RemotionAdScene; portable compiled bundle, one scoped localhost Player server, FFmpeg limited to audio mix and inspection; no generic worker framework.",
     "productionCredentialsRead": false,
     "actualAIVideoGenerations": 0
+  },
+  "crewInfrastructure": {
+    "status": "implemented scoped format host protocol; actual crew/perception qualification not provisioned",
+    "defaultCompute": "current chat host and inherited model; no required Gemini/model API",
+    "sourceTestsPassed": 85,
+    "freshArchiveFullTestsPassed": 84,
+    "paidProviderCalls": 0,
+    "externalModelCalls": 0,
+    "productionCredentialsRead": false,
+    "actualAIVideoGenerations": 0,
+    "independentSoundQualification": "implemented human-labelled held-out audio evaluator/report gate; real corpus/tools unprovided",
+    "finalFilmReview": "qualified Vera full visual pass then independent qualified Ava full audio pass before human approval",
+    "permissions": "runtime-enforced format tool scope and worker/event/model/tool-profile bindings; privileged trusted host adapters and ambient host tools are outside the OS sandbox scope",
+    "simplificationReview": "Lean already. Ship. Extends existing events/qualification/worker protocol; no new dependency, model provider, generic agent framework or renderer.",
+    "blindPackageProof": "fresh extraction install/check/smoke and 84 tests passed; four independent failures fixed/reproduced: audio/visual evidence dispatch, shot reference access, owner model/tool binding, unavailable audio rejection; bare/partial perception verdicts and omitted film audio pass block; final updated extraction 7/7 crew tests and independent output-substitution probe passed; actual tool STT/score/reference/method/silence/rate retained and skipped words reject approval",
+    "observedFailuresAndFixes": [
+      "profile-bound visual evidence incorrectly routed to audio verifier: distinguish audio report qualified flag",
+      "shot planner could not open supplied approved master: include availableLocations in scope",
+      "owner review omitted model/tool check: bind both review kinds",
+      "unavailable audio rejection reopened paid production: require direct hearing for every non-inconclusive audio verdict",
+      "model-authored STT/score could differ from tool results: derive narration measurements from successful scoped outputs"
+    ],
+    "remaining": [
+      "real host-worker provisioning and native tool restriction",
+      "actual hearing/video/STT/calibrated speaker-tool connections and human-labelled qualification corpus",
+      "real end-to-end production proof explicitly excluded"
+    ]
   }
 }

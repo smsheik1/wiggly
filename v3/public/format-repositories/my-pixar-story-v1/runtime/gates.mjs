@@ -1,15 +1,16 @@
 export const backgroundSteps = ['backgroundBrief', 'backgroundPrompt', 'backgroundCandidates', 'backgroundAngleBrief', 'backgroundAnglePrompt', 'backgroundAngle'];
 export const imageSteps = ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe'];
-export const authorSteps = ['script', 'roster', 'sheetPrompt', 'backgrounds', 'backgroundBrief', 'backgroundPrompt', 'backgroundAngleBrief', 'backgroundAnglePrompt', 'shots', 'keyframePrompt', 'reviewerQualification', 'videoPlan', 'videoPrompt', 'soundPlan', 'editPlan'];
+export const authorSteps = ['audioReviewerQualification','script', 'roster', 'sheetPrompt', 'backgrounds', 'backgroundBrief', 'backgroundPrompt', 'backgroundAngleBrief', 'backgroundAnglePrompt', 'shots', 'keyframePrompt', 'reviewerQualification', 'videoPlan', 'videoPrompt', 'soundPlan', 'editPlan'];
 export const keyFor = p => ['videoPrompt','video'].includes(p.step) ? `${p.step}:${p.clipId}` : p.step === 'effect' ? `effect:${p.effectId}` : ['keyframePrompt', 'keyframe'].includes(p.step) ? `${p.step}:${p.shotId}` : backgroundSteps.includes(p.step) ? `${p.step}:${p.locationId}${p.step.startsWith('backgroundAngle') ? ':' + p.angleId : ''}` : ['candidates', 'sheetPrompt', 'sheet'].includes(p.step) ? `${p.step}:${p.characterId}` : p.step;
 export const current = (p, key = keyFor(p)) => p.artifacts.findLast(a => a.key === key && a.valid);
-export const locked = (p, key) => { const a = current(p, key); return !!(a?.approvedBy && a.review?.decision === 'approved'); };
-export const audioLocked = p => ['script', 'audition', 'narration'].every(key => locked(p, key)) && !!current(p, 'clone');
+export const locked = (p, key) => { const a = current(p, key); return !!(a?.approvedBy && a.review?.decision === 'approved' && (a.kind!=='film'||a.visualReview?.decision==='approved'&&a.audioReview?.decision==='approved'&&a.visualReviewedBy!==a.audioReviewedBy)); };
+const matchesWorker=(p,role,q)=>{const w=p.crew?.workers.find(w=>w.role===role);return !w||w.workerId===q?.workerId&&w.modelVersion===q?.modelVersion&&w.capabilityVersion===q?.capabilityVersion;};
+export const audioLocked = p => matchesWorker(p,'audio-reviewer',current(p,'audioReviewerQualification')?.content) && ['script', 'audioReviewerQualification', 'audition', 'narration'].every(key => locked(p, key)) && !!current(p, 'clone');
 export function assertAllowed(p, kind) {
   if (['reviewerQualification','videoPlan','videoPrompt','video','soundPlan','music','effect','editPlan','film'].includes(kind)) {
     if (!audioLocked(p)) throw new Error('AUDIO_LOCK_REQUIRED');
     if (!locked(p,'shots') || !current(p,'shots').content.shots.every(s=>locked(p,`keyframe:${s.id}`))) throw new Error('KEYFRAME_LOCK_REQUIRED: all current keyframes need agent and human approval.');
-    if (kind !== 'reviewerQualification' && !locked(p,'reviewerQualification')) throw new Error('VISUAL_REVIEWER_NOT_QUALIFIED');
+    if (kind !== 'reviewerQualification' && (!locked(p,'reviewerQualification')||!matchesWorker(p,'visual-reviewer',current(p,'reviewerQualification')?.content))) throw new Error('VISUAL_REVIEWER_NOT_QUALIFIED');
     if (['videoPrompt','video'].includes(kind) && !locked(p,'videoPlan')) throw new Error('VIDEO_PLAN_LOCK_REQUIRED');
     if (kind === 'video' && !locked(p,`videoPrompt:${p.clipId}`)) throw new Error('VIDEO_PROMPT_LOCK_REQUIRED');
     if (['music','effect','editPlan','film'].includes(kind) && !locked(p,'soundPlan')) throw new Error('SOUND_PLAN_LOCK_REQUIRED');

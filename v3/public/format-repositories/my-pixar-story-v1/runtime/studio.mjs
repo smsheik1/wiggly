@@ -35,7 +35,7 @@ export function studioDependencies(p){
  case 'video':return ['videoPlan','reviewerQualification',`videoPrompt:${p.clipId}`,`keyframe:${clipFor(p).shotId}`];
  case 'soundPlan':return ['script','narration','videoPlan'];
  case 'music':case 'effect':return ['soundPlan'];
- case 'editPlan':case 'film':case 'complete':return ['shots','videoPlan','narration','soundPlan','music',...current(p,'soundPlan').content.effects.map(e=>`effect:${e.id}`),...current(p,'videoPlan').content.clips.map(c=>`video:${c.id}`),...(p.step!=='editPlan'?['editPlan']:[])];
+ case 'editPlan':case 'film':case 'complete':return ['audioReviewerQualification','shots','videoPlan','narration','soundPlan','music',...current(p,'soundPlan').content.effects.map(e=>`effect:${e.id}`),...current(p,'videoPlan').content.clips.map(c=>`video:${c.id}`),...(p.step!=='editPlan'?['editPlan']:[])];
  }
 }
 export function studioNext(p){

@@ -12,6 +12,8 @@ import { current, locked, assertAllowed } from './runtime/gates.mjs';
 import { renderFilm, inspectFilm } from './runtime/assemble.mjs';
 import {prepareComposition, servePreview, verifyRenderer} from './runtime/remotion.mjs';
 import { assemblyManifest, assertFilmInspection } from './runtime/studio.mjs';
+import {Crew,crewRoles,runCrewTask} from './runtime/crew.mjs';
+import {AudioCase,audioTask,qualifyAudio,requireAudioQualification} from './evaluation/audio-qualification.mjs';
 import { VisualCase, visualTask, qualifyVisual, requireVisualQualification } from './evaluation/visual-qualification.mjs';
 const root = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2); const command = args.shift();
@@ -45,6 +47,8 @@ async function verifySubmission(status,event){
   if(['artifact','plan','approve','authorize','owner-review'].includes(event.action)||event.action==='review'&&event.review?.decision!=='inconclusive')await verifyFiles(status.project.artifacts.filter(a=>a.valid));
 }
 async function main() {
+  if(command==='crew-template'){print({workers:Object.entries(crewRoles).map(([role,definition])=>({role,name:definition.name,workerId:`bind-host-${role}`,modelVersion:'inherit-host-model',capabilityVersion:'bind-actual-tools-v1',execution:'host'})),instruction:'Use your current host model and actual independent worker IDs; replace template model/capability values with the actual deployed versions before configuration. No external model is required.'});return;}
+  if(command==='audio-tasks'){const cases=z.array(AudioCase).parse(await json(option('dataset'))),split=option('split','holdout');if(!['calibration','holdout'].includes(split))throw new Error('Invalid audio split.');print(cases.filter(c=>c.split===split).map(audioTask));return;}
   if(command==='visual-tasks'){const cases=z.array(VisualCase).parse(await json(option('dataset'))),split=option('split','holdout');if(!['calibration','holdout'].includes(split))throw new Error('Invalid visual split.');print(cases.filter(c=>c.split===split).map(visualTask));return;}
   if (command === 'eval' || command === 'eval-tasks' || command === 'eval-export') {
     const { validateDataset, selectCases, taskForCase, runEvaluation, langsmithExamples } = await import('./evaluation/harness.mjs');
@@ -66,7 +70,7 @@ async function main() {
     if (Object.values(tools).some(v => !v)) process.exitCode = 1; return;
   }
   if (command === 'schema') {
-    const name = args[0]; const schema = name === 'event' ? Event : name === 'review' ? Review : name === 'plan' ? Plans : name === 'inputs' ? Inputs : Content[name];
+    const name = args[0]; const schema = name === 'crew' ? Crew : name === 'event' ? Event : name === 'review' ? Review : name === 'plan' ? Plans : name === 'inputs' ? Inputs : Content[name];
     if (!schema) throw new Error('schema needs event/review/plan/inputs or a supported artifact kind.'); print(z.toJSONSchema(schema)); return;
   }
   const release = await lock(); const workflow = openWorkflow(join(runDir, 'checkpoints.sqlite'));
@@ -76,11 +80,20 @@ async function main() {
     }
     if (command === 'import') { print(await importMedia(args[0], runDir)); return; }
     const status = await workflow.status('project');
+    if(['qualify-audio','qualify-visual','generate','collect','render','preview','finalize'].includes(command)&&!status.project.crew)throw new Error('CREW_NOT_CONFIGURED: bind actual host workers using configure-crew; old approvals never supply capabilities.');
+    if(command==='qualify-audio'){
+      const dataset=await json(option('dataset')),predictions=await json(option('predictions')),worker=option('worker'),model=option('model'),capability=option('capability');
+      if(!worker||!model||!capability||args.length)throw new Error('Specify --dataset, --predictions, --worker, --model and --capability.');
+      const computed=await qualifyAudio(dataset,predictions,worker,model,capability);print(computed);requireAudioQualification(computed);
+      const path=join(runDir,'evaluation','audio-'+digest({dataset:computed.datasetDigest,predictions:computed.predictionDigest,worker,model,capability}));await mkdir(path,{recursive:true});const report={...computed,evidenceDirectory:path};
+      for(const [name,value]of Object.entries({dataset,predictions,report}))await writeFile(join(path,`${name}.json`),JSON.stringify(value,null,2)+'\n',{mode:0o600});
+      await verifyFiles(report);print(presentation(await workflow.respond('project',{taskId:status.pending.taskId,action:'audio-qualified',actor:'runtime',content:report})));return;
+    }
     if(command==='qualify-visual'){
-      const dataset=await json(option('dataset')),predictions=await json(option('predictions')),worker=option('worker'),model=option('model');
-      if(!worker||!model||args.length)throw new Error('Specify --dataset, --predictions, --worker and --model.');
-      const computed=await qualifyVisual(dataset,predictions,worker,model);print(computed);requireVisualQualification(computed,'image');requireVisualQualification(computed,'video');
-      const path=join(runDir,'evaluation',digest({dataset:computed.datasetDigest,predictions:computed.predictionDigest,worker,model}));await mkdir(path,{recursive:true});const report={...computed,evidenceDirectory:path};
+      const dataset=await json(option('dataset')),predictions=await json(option('predictions')),worker=option('worker'),model=option('model'),capability=option('capability');
+      if(!worker||!model||!capability||args.length)throw new Error('Specify --dataset, --predictions, --worker, --model and --capability.');
+      const computed=await qualifyVisual(dataset,predictions,worker,model,capability);print(computed);requireVisualQualification(computed,'image');requireVisualQualification(computed,'video');
+      const path=join(runDir,'evaluation',digest({dataset:computed.datasetDigest,predictions:computed.predictionDigest,worker,model,capability}));await mkdir(path,{recursive:true});const report={...computed,evidenceDirectory:path};
       for(const [name,value] of Object.entries({dataset,predictions,report}))await writeFile(join(path,`${name}.json`),JSON.stringify(value,null,2)+'\n',{mode:0o600});
       await verifyFiles(report);
       const result=await workflow.respond('project',{taskId:status.pending.taskId,action:'qualified',actor:'runtime',content:report});
@@ -110,6 +123,7 @@ async function main() {
       const event = await json(args[0]);
       if (event.actor === 'runtime') throw new Error('Runtime events are reserved for the provider collector.');
       if (status.pending.step === 'sheetPrompt' && event.action === 'artifact') { const recipe = (await import('./runtime/media.mjs')).sha(await readFile(join(root, 'character-sheet-recipe.md'))); if (event.content?.recipeSha256 !== recipe) throw new Error('Sheet prompt must use the packaged recipe hash; run recipe.'); }
+      if(!status.project.crew&&['agent','reviewer'].includes(event.actor)&&event.action!=='note')throw new Error('CREW_NOT_CONFIGURED: run crew-template, bind actual host IDs/model/tools and submit human configure-crew.');
       await verifySubmission(status,event);
       print(presentation(await workflow.respond('project', event))); return;
     }
@@ -118,11 +132,11 @@ async function main() {
       const modulePath = args[0];
       const task = status.pending.gate === 'review' ? { ...status.pending, evaluatorEvidence: await (await import('./runtime/evaluators.mjs')).artifactEvidence(status.project), reviewerRubric: await readFile(join(root, 'evaluation', 'reviewer.md'), 'utf8') } : status.pending;
       if (!modulePath) { print({ task, responseSchema: z.toJSONSchema(Event), contentSchema: Content[status.pending.step] ? z.toJSONSchema(Content[status.pending.step]) : null,
-        instruction: 'The operating host agent must perform this task, write an event JSON, then call respond. An explicitly configured module exporting runTask(task) may automate that exchange.' }); return; }
+        instruction: 'The operating host agent must perform this task, write an event JSON, then call respond. A trusted host integration exporting runTask(task, {worker, callTool}) may automate it after configure-crew; supply actual perception tools and inherit the current host model. The format broker checks every tool call; the host must restrict any ambient tools separately.' }); return; }
       const worker = await import(pathToFileURL(resolve(modulePath)).href);
       if (typeof worker.runTask !== 'function') throw new Error('Worker module must export runTask(task).');
-      const event = await worker.runTask(task);
-      if (event.actor !== status.pending.actor || !['artifact', 'owner-review', 'review', 'plan'].includes(event.action)) throw new Error('Worker may only author, review or plan; it cannot approve for the user or call providers.');
+      const event = await runCrewTask(status.project,task,worker);
+      if (event.actor !== status.pending.actor || !['artifact', 'owner-review', 'review', 'plan'].includes(event.action)) throw new Error('Worker may only author, review or plan; it cannot approve for the user or call providers through the format tools.');
       if (status.pending.step === 'sheetPrompt' && event.action === 'artifact') { const recipe = (await import('./runtime/media.mjs')).sha(await readFile(join(root, 'character-sheet-recipe.md'))); if (event.content?.recipeSha256 !== recipe) throw new Error('Sheet prompt must use the packaged recipe hash; run recipe.'); }
       await verifySubmission(status,event);
       print(presentation(await workflow.respond('project', event))); return;
@@ -163,7 +177,7 @@ async function main() {
         await runtimeEvent('provider-error',{message:diagnostic});throw new Error(`${diagnostic}\n${remediation(job.plan.provider,secretsPath)}`);
       }return;
     }
-    throw new Error('Use check, schema, init, status, work, respond, import, measure, validate, impact, generate, collect, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
+    throw new Error('Use check, schema, init, status, work, respond, import, measure, validate, impact, generate, collect, crew-template, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
   } finally { workflow.close(); await release(); }
 }
 main().catch(e => { process.stderr.write(`${e.message}\n`); process.exitCode = 1; });

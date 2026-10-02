@@ -3,6 +3,8 @@ import { createHash } from 'node:crypto';
 import { extname } from 'node:path';
 import { Annotation, Command, START, StateGraph, interrupt } from '@langchain/langgraph';
 import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
+import {Crew,roleFor,assignedWorker,assertCrewEvent} from './crew.mjs';
+import {requireAudioQualification} from '../evaluation/audio-qualification.mjs';
 import { studioSteps, studioDependencies, studioNext, validateStudioContent, videoBinding, effectFor } from './studio.mjs';
 import { requireVisualQualification } from '../evaluation/visual-qualification.mjs';
 import { shotFor, shotReferences, referenceBindings, planningReferences, validateShots, validateKeyframePrompt } from './shots.mjs';
@@ -11,6 +13,8 @@ import { VERSION, Inputs, Project, Content, Review, Event, Plans, criteria, dige
 
 import { keyFor, current, locked, audioLocked, assertAllowed, backgroundSteps, imageSteps, authorSteps } from './gates.mjs';
 export { keyFor, current, locked, audioLocked, assertAllowed } from './gates.mjs';
+const characterRecipe=readFileSync(new URL('../character-sheet-recipe.md',import.meta.url),'utf8');
+const characterRecipeSha256=createHash('sha256').update(characterRecipe).digest('hex');
 export const backgroundRecipe = readFileSync(new URL('../background-prompter.md', import.meta.url), 'utf8');
 export const backgroundRecipeSha256 = createHash('sha256').update(backgroundRecipe).digest('hex');
 const location = p => current(p, 'backgrounds')?.content.locations.find(l => l.id === p.locationId);
@@ -43,8 +47,8 @@ export function revisionImpact(p, id) {
 }
 export function dependencies(p) {
   const keys = studioDependencies(p) ?? {
-    script: [], voiceSample: [], clone: ['voiceSample'], audition: ['clone', 'script'],
-    narration: ['script', 'clone', 'audition'], roster: ['script'],
+    script: [], voiceSample: [], clone: ['voiceSample'], audioReviewerQualification: [], audition: ['clone', 'script','audioReviewerQualification'],
+    narration: ['script', 'clone', 'audition','audioReviewerQualification'], roster: ['script'],
     candidates: ['roster'], sheetPrompt: [`candidates:${p.characterId}`],
     sheet: [`candidates:${p.characterId}`, `sheetPrompt:${p.characterId}`], backgrounds: ['script', 'narration', 'roster', ...(current(p, 'roster')?.content.characters ?? []).map(c => `sheet:${c.id}`)],
     backgroundBrief: ['backgrounds'], backgroundPrompt: [`backgroundBrief:${p.locationId}`],
@@ -60,7 +64,7 @@ export function dependencies(p) {
 function next(p) {
   p.reviewDisagreements = 0;
   if(studioNext(p)){const reusable=locked(p,keyFor(p));if(p.step!=='complete'&&reusable)next(p);return;}
-  const steps = ['script', 'voiceSample', 'clone', 'audition', 'narration', 'roster'];
+  const steps = ['script', 'voiceSample', 'clone', 'audioReviewerQualification', 'audition', 'narration', 'roster'];
   const i = steps.indexOf(p.step);
   if (i >= 0 && i < steps.length - 1) p.step = steps[i + 1];
   else if (p.step === 'roster') { p.characterId = current(p, 'roster').content.characters[0].id; p.step = 'candidates'; }
@@ -135,6 +139,7 @@ function addArtifact(p, content, author) {
   if (p.step === 'shots') validateShots(p, parsed);
   if (p.step === 'keyframePrompt') validateKeyframePrompt(p, parsed);
   if (p.step === 'keyframe' && (parsed.prompt !== current(p, `keyframePrompt:${p.shotId}`).content.prompt || parsed.files.some(f => Math.abs(f.width / f.height - 16 / 9) > 0.03 || f.width < 1280 || f.height < 720))) throw new Error('Keyframe must use the approved prompt and measured 16:9 production image (at least 1280×720).');
+  if(p.step==='audioReviewerQualification')requireAudioQualification(parsed);
   if(studioSteps.includes(p.step))validateStudioContent(p,parsed);
   const a = { id: `${key}@${version}`, key, kind: p.step, version, digest: digest(parsed), content: parsed,
     dependencies: dependencies(p), valid: true, authoredBy: author };
@@ -153,17 +158,20 @@ export function taskFor(p) {
     ...(['videoPlan','film'].includes(p.step)?{visualReferences:current(p,'shots').content.shots.map(shot=>({shot,keyframe:current(p,`keyframe:${shot.id}`),references:shotReferences(p,shot)}))}:{}),
     ...(p.step === 'shots' ? { availableLocations: planningReferences(p) } : {}),
     ...(['keyframePrompt', 'keyframe'].includes(p.step) ? { references: shotReferences(p), referenceBindings: referenceBindings(p), shotDigest: digest(shotFor(p)) } : {}),
+    crewWorker:assignedWorker(p)??null, formatRole:roleFor(p),
+    voiceReference:roleFor(p)==='audio-reviewer'?current(p,'voiceSample')??null:null,
     role: p.gate === 'review' ? 'independent-reviewer' : p.gate==='author'&&p.step==='videoPlan'?'motion-director':p.gate==='author'&&p.step==='videoPrompt'?'video-prompt-engineer':p.gate==='author'&&p.step==='soundPlan'?'sound-designer':p.gate==='author'&&p.step==='editPlan'?'film-editor': p.gate === 'author' && p.step === 'shots' ? 'shot-planner' : p.gate === 'author' && p.step === 'keyframePrompt' ? 'composition-writer' : p.gate === 'owner-review' || ['backgrounds', 'backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'background-product-owner' : isPrompt(p) && p.gate === 'author' ? 'pixar-prompter' : 'orchestrator',
     immediateScenes: sceneLocation?.scenes.filter(s => shot ? s.id === shot.sceneId : !p.angleId || sceneLocation.angles.find(a => a.id === p.angleId)?.sceneIds.includes(s.id)) ?? [],
     approvedScript: current(p, 'script') ?? null, inputPriority: ['immediateScenes', 'approvedScript', 'inputs.answers'],
+    ...(p.step==='sheetPrompt'?{recipe:{content:characterRecipe,sha256:characterRecipeSha256}}:{}),
     ...(isPrompt(p) ? { recipe: { content: backgroundRecipe, sha256: backgroundRecipeSha256 }, ownerWorkerId: current(p, briefKey(p))?.authoredBy } : {}),
     ...(p.step==='videoPrompt'||p.step==='video'?{videoBinding:videoBinding(p)}:{}),
     ...(p.step==='music'?{soundDirection:current(p,'soundPlan').content.music}:p.step==='effect'?{soundDirection:effectFor(p)}:{}),
     actor: p.gate === 'review' ? 'reviewer' : ['human', 'authorize', 'escalate'].includes(p.gate) ? 'human' : 'agent',
     artifact: a ?? null, job: job ?? null, inputs: p.inputs,
     dependencies: dependencies(p).map(id => p.artifacts.find(a => a.id === id)),
-    feedback: p.feedback.filter(f => f.key === keyFor(p)), criteria: criteria[p.step] ?? [],
-    instruction: p.gate === 'pending' ? p.step === 'shots' ? 'Older checkpoint paused at shots; explicit human start-shots opens shot planning without resetting state.' : p.step === 'backgrounds' ? 'Older checkpoint paused at backgrounds; explicit human start-backgrounds opens the new workflow without resetting state.' : 'Current workflow is complete only after final-film agent and human approval. Older video-pending checkpoints require start-studio; never reset saved state.' : p.gate === 'owner-review' ? 'The original background owner checks the complete technical prompt against the approved plain-language brief. Evidence and specific repairs are mandatory.' : p.gate === 'review' ? 'Inspect the actual current artifact. Every rejection needs localized evidence and a repair. Do not reject for taste. Missing direct perception is inconclusive. Use a different worker from the author.' : p.step==='film'&&p.gate==='produce'?'Run the official render command locally; assembly does not authorize or submit media generations.':p.gate === 'produce' ? 'Prepare an exact generation plan and estimate; do not submit a paid call before its authorization. Use approved references and the selected clone.' : p.gate === 'collect' ? 'Collect or reconcile this same request. Never resubmit because polling or a process ended.' : ['backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'Write ordinary human direction as the background product owner, not a technical image prompt. Immediate scene first, approved script second, questionnaire supporting only. Separate known facts from proposed furnishings; ask about missing meaningful facts. Preserve the selected master for each angle.' : p.step === 'shots' ? 'Plan shots for the approved immediate scenes. Cover exactly four 15-second beats without gaps/overlaps. Bind scene, cast/age variants and approved background angle. These are still keyframes; shot duration does not authorize any video generation.' : p.step === 'keyframePrompt' ? 'Write the full composition prompt using the actual setting and character reference images in supplied order. Setting controls geography; sheets control identity/age/wardrobe. Stage correct hands, contacts, props, proportions, camera and emotional acting. Single full-frame 16:9 production image, never a collage or storyboard crop. Bind shotDigest and referenceBindings. Repair only evidenced defects.' : p.step==='reviewerQualification'?'Run visual-tasks and qualify-visual using genuinely human-labelled held-out media and independent worker predictions. No self-certification or synthetic production labels.':p.step==='videoPlan'?'Plan concise physical action and one camera move per clip. Four 15-second story beats remain fixed; use short clips where appropriate, cover every shot without gaps or time stretching. Model supports up to 15 seconds; 5–6 seconds is a conservative starting point, not a guaranteed anatomical fix.':p.step==='videoPrompt'?'Use the approved clip direction and exact approved keyframe. Describe observable camera, action, physical contacts and atmosphere concisely. Negative limb constraints cannot guarantee anatomy. repairOnly is true only for a localized reviewer-evidenced technical repair, never a new creative direction.':p.step==='soundPlan'?'Direct an instrumental acoustic piano score and only story-serving effects. Specify generate/import provenance and usage rights. Record an explicit reason if no effects are needed.':p.step==='editPlan'?'Bind every approved clip in order, trim without changing speed, preserve four natural-rate narration stems at 0/15/30/45s, describe remaining silence per beat, and set score ducking/fades.': 'Operate the current deliverable only. Use the packaged contracts and review rubric.',
+    feedback: p.feedback.filter(f => f.key === keyFor(p)), criteria: p.step==='film'&&p.gate==='review'?filmCriteria(p):criteria[p.step] ?? [],
+    instruction: p.gate === 'pending' ? p.step === 'shots' ? 'Older checkpoint paused at shots; explicit human start-shots opens shot planning without resetting state.' : p.step === 'backgrounds' ? 'Older checkpoint paused at backgrounds; explicit human start-backgrounds opens the new workflow without resetting state.' : 'Current workflow is complete only after final-film agent and human approval. Older video-pending checkpoints require start-studio; never reset saved state.' : p.gate === 'owner-review' ? 'The original background owner checks the complete technical prompt against the approved plain-language brief. Evidence and specific repairs are mandatory.' : p.gate === 'review' ? 'Inspect the actual current artifact. Every rejection needs localized evidence and a repair. Do not reject for taste. Missing direct perception is inconclusive. Use a different worker from the author.' : p.step==='film'&&p.gate==='produce'?'Run the official render command locally; assembly does not authorize or submit media generations.':p.gate === 'produce' ? 'Prepare an exact generation plan and estimate; do not submit a paid call before its authorization. Use approved references and the selected clone.' : p.gate === 'collect' ? 'Collect or reconcile this same request. Never resubmit because polling or a process ended.' : ['backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'Write ordinary human direction as the background product owner, not a technical image prompt. Immediate scene first, approved script second, questionnaire supporting only. Separate known facts from proposed furnishings; ask about missing meaningful facts. Preserve the selected master for each angle.' : p.step === 'shots' ? 'Plan shots for the approved immediate scenes. Cover exactly four 15-second beats without gaps/overlaps. Bind scene, cast/age variants and approved background angle. These are still keyframes; shot duration does not authorize any video generation.' : p.step === 'keyframePrompt' ? 'Write the full composition prompt using the actual setting and character reference images in supplied order. Setting controls geography; sheets control identity/age/wardrobe. Stage correct hands, contacts, props, proportions, camera and emotional acting. Single full-frame 16:9 production image, never a collage or storyboard crop. Bind shotDigest and referenceBindings. Repair only evidenced defects.' : p.step==='audioReviewerQualification'?'Run audio-tasks and qualify-audio with human-labelled held-out audio and actual listening, STT and speaker tools; no self-certification.':p.step==='reviewerQualification'?'Run visual-tasks and qualify-visual using genuinely human-labelled held-out media and independent worker predictions. No self-certification or synthetic production labels.':p.step==='videoPlan'?'Plan concise physical action and one camera move per clip. Four 15-second story beats remain fixed; use short clips where appropriate, cover every shot without gaps or time stretching. Model supports up to 15 seconds; 5–6 seconds is a conservative starting point, not a guaranteed anatomical fix.':p.step==='videoPrompt'?'Use the approved clip direction and exact approved keyframe. Describe observable camera, action, physical contacts and atmosphere concisely. Negative limb constraints cannot guarantee anatomy. repairOnly is true only for a localized reviewer-evidenced technical repair, never a new creative direction.':p.step==='soundPlan'?'Direct an instrumental acoustic piano score and only story-serving effects. Specify generate/import provenance and usage rights. Record an explicit reason if no effects are needed.':p.step==='editPlan'?'Bind every approved clip in order, trim without changing speed, preserve four natural-rate narration stems at 0/15/30/45s, describe remaining silence per beat, and set score ducking/fades.': 'Operate the current deliverable only. Use the packaged contracts and review rubric.',
   };
 }
 function repairVisual(p, message) {
@@ -177,13 +185,21 @@ function reopen(p,a,message){
     p.gate = authorSteps.includes(a.kind) || (a.kind==='music'&&current(p,'soundPlan').content.music.mode==='import') || (a.kind==='effect'&&effectFor(p).mode==='import') ? 'author' : a.kind === 'voiceSample' ? 'human' : 'produce';
     p.feedback.push({ key: a.key, message: message }); p.reviewDisagreements = 0;
 }
+export const filmVisualCriteria=['technical','story','visual-continuity','motion','safety','provenance'];
+export const filmAudioCriteria=['narration','mix','safety','provenance'];
+const filmCriteria=p=>current(p)?.visualReview?.decision==='approved'?filmAudioCriteria:filmVisualCriteria;
 const requiredActor = (e, actor) => { if (e.actor !== actor) throw new Error(`${e.action} requires ${actor} authority.`); };
 export function applyEvent(project, raw) {
   const p = structuredClone(Project.parse(project));
   const e = Event.parse(raw);
   if (e.taskId !== taskFor(p).taskId) throw new Error('STALE_TASK: read current status before responding.');
-  if (e.action === 'qualified') {
-    requiredActor(e,'runtime');if(p.step!=='reviewerQualification'||p.gate!=='author')throw new Error('Qualification requires current qualification task.');addArtifact(p,e.content,'verified-local-evaluator');
+  if(p.crew)Crew.parse(p.crew);
+  assertCrewEvent(p,e);
+  if(e.action==='configure-crew'){requiredActor(e,'human');if(p.crew||p.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status))||!e.message)throw new Error('Configure crew explicitly once, with reconciled jobs; never change existing bindings silently.');p.crew=Crew.parse(e.crew);
+  }else if(e.action==='start-audio-review'){requiredActor(e,'human');if(locked(p,'audioReviewerQualification')||!current(p,'clone')||p.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status))||!e.message)throw new Error('Explicit audio-review upgrade requires an existing clone, no qualified audio lock and reconciled jobs.');for(const a of p.artifacts.filter(a=>a.valid&&['audition','narration'].includes(a.kind)))invalidate(p,a.id);p.step='audioReviewerQualification';p.gate='author';
+  }else if(e.action==='audio-qualified'){requiredActor(e,'runtime');if(p.step!=='audioReviewerQualification'||p.gate!=='author')throw new Error('Audio qualification requires its current task.');const report=Content.audioReviewerQualification.parse(e.content),worker=p.crew?.workers.find(w=>w.role==='audio-reviewer');if(worker&&(worker.workerId!==report.workerId||worker.modelVersion!==report.modelVersion||worker.capabilityVersion!==report.capabilityVersion))throw new Error('Audio qualification must match assigned Ava model/tool profile.');addArtifact(p,report,'verified-local-audio-evaluator');
+  }else if (e.action === 'qualified') {
+    requiredActor(e,'runtime');if(p.step!=='reviewerQualification'||p.gate!=='author')throw new Error('Qualification requires current qualification task.');const worker=p.crew?.workers.find(w=>w.role==='visual-reviewer');if(worker&&(worker.workerId!==e.content?.workerId||worker.modelVersion!==e.content?.modelVersion||worker.capabilityVersion!==e.content?.capabilityVersion))throw new Error('Visual qualification must match assigned Vera model.');addArtifact(p,e.content,'verified-local-evaluator');
   } else if (e.action === 'note') {
     if (!e.message) throw new Error('Note needs text.');
   } else if (['changes', 'reject'].includes(e.action)) {
@@ -194,6 +210,7 @@ export function applyEvent(project, raw) {
     a = revisionRoot(p, a);
     reopen(p,a,e.message);
   } else if (e.action === 'artifact') {
+    if(p.step==='audioReviewerQualification')throw new Error('Use qualify-audio; a worker cannot self-certify audio expertise.');
     if(p.step==='reviewerQualification')throw new Error('Use qualify-visual to compute a report from actual held-out files; a worker cannot self-certify.');
     if (!(p.gate === 'author' || (p.step === 'voiceSample' && p.gate === 'human')) || !Content[p.step]) throw new Error('Artifact submission is not allowed here.');
     requiredActor(e, p.step === 'voiceSample' ? 'human' : 'agent');
@@ -216,15 +233,18 @@ export function applyEvent(project, raw) {
     if (p.gate !== (ownerReview ? 'owner-review' : 'review') || !a || e.artifactId !== a.id || e.artifactDigest !== a.digest || !e.workerId || e.workerId === a.authoredBy) throw new Error('Review must bind the current artifact and use a distinct reviewer worker.');
     if (isPrompt(p) && (ownerReview ? e.workerId !== current(p, briefKey(p)).authoredBy : e.workerId === current(p, briefKey(p)).authoredBy || a.ownerReview?.decision !== 'approved')) throw new Error('Prompt requires the original owner check followed by a distinct independent reviewer.');
     const r = Review.parse(e.review);
+    const required=p.step==='film'?filmCriteria(p):criteria[p.step];
     const names = r.checks.map(c => c.criterion);
-    if (names.length !== criteria[p.step].length || new Set(names).size !== names.length || criteria[p.step].some(c => !names.includes(c))) throw new Error('Every required criterion needs exactly one evidenced finding.');
-    const perception = ['audition', 'narration'].includes(p.step) ? 'direct-audio' : imageSteps.includes(p.step) ? 'direct-image' : p.step==='video'?'direct-video':p.step==='film'?'direct-audiovisual':['music','effect'].includes(p.step)?'direct-audio':'direct-text';
+    if (names.length !== required.length || new Set(names).size !== names.length || required.some(c => !names.includes(c))) throw new Error('Every required criterion needs exactly one evidenced finding.');
+    const perception = ['audition', 'narration'].includes(p.step) ? 'direct-audio' : imageSteps.includes(p.step) ? 'direct-image' : p.step==='video'?'direct-video':p.step==='film'?(a.visualReview?.decision==='approved'?'direct-audio':'direct-video'):['music','effect'].includes(p.step)?'direct-audio':'direct-text';
     if (r.decision === 'approved' && (r.perception !== perception || r.checks.some(c => c.status !== 'pass'))) throw new Error('Cannot approve missing perception or failing/inconclusive checks.');
     if (r.decision === 'rejected' && !r.checks.some(c => c.status === 'fail' && c.repair.trim())) throw new Error('Rejection requires a failed criterion and a specific repair.');
     if (r.checks.some(c => c.status === 'fail' && !c.repair.trim())) throw new Error('Every failure requires a specific repair.');
     const filmRepair = p.step==='film'&&r.decision==='rejected' ? (r.repairArtifactId ? p.artifacts.find(a=>a.id===r.repairArtifactId&&a.valid) : current(p,'editPlan')) : null;
     if(p.step==='film'&&r.decision==='rejected'&&r.repairTarget!=='script'&&(!filmRepair||!['editPlan','video','music','effect','keyframe','narration'].includes(filmRepair.kind)||!revisionImpact(p,filmRepair.id).affected.includes(a.id)))throw new Error('Final-film repair must target a current component used by this film.');
-    if(r.decision!=='inconclusive'&&['video','film'].includes(p.step)){const q=current(p,'reviewerQualification').content;requireVisualQualification(q,'video');if(r.perception!==perception||e.workerId!==q.workerId||r.modelVersion!==q.modelVersion||r.coverage?.artifactSha256!==a.content.files[0].sha256||r.coverage.videoSeconds+1/30<a.content.files[0].durationSeconds||(p.step==='film'&&(!r.coverage.audioSeconds||r.coverage.audioSeconds+1/30<a.content.files[0].durationSeconds)))throw new Error('Qualified reviewer must directly inspect the entire current video/audio and bind its hash/model.');}
+    const filmAudio=p.step==='film'&&a.visualReview?.decision==='approved';
+    if(r.decision!=='inconclusive'&&(p.step==='video'||p.step==='film'&&!filmAudio)){const q=current(p,'reviewerQualification').content;requireVisualQualification(q,'video');if(r.perception!==perception||e.workerId!==q.workerId||r.modelVersion!==q.modelVersion||(q.capabilityVersion&&r.capabilityVersion!==q.capabilityVersion)||r.coverage?.artifactSha256!==a.content.files[0].sha256||(!r.coverage.videoSeconds||r.coverage.videoSeconds+1/30<a.content.files[0].durationSeconds))throw new Error('Qualified reviewer must directly inspect the entire current video/audio and bind its hash/model.');}
+    if(r.decision!=='inconclusive'&&(['audition','narration','music','effect'].includes(p.step)||filmAudio)){const q=current(p,'audioReviewerQualification')?.content;requireAudioQualification(q);if(r.perception!==perception||!locked(p,'audioReviewerQualification')||e.workerId!==q.workerId||r.modelVersion!==q.modelVersion||r.capabilityVersion!==q.capabilityVersion||e.workerId===a.visualReviewedBy)throw new Error('Qualified independent audio reviewer must bind its model and tool profile.');const coverage=r.coverage?.audioFiles;if(!coverage||coverage.length!==a.content.files.length||a.content.files.some((f,i)=>coverage[i].sha256!==f.sha256||coverage[i].seconds+.02<f.durationSeconds))throw new Error('Audio reviewer must hear every entire current file and bind its hash.');}
     if (r.decision === 'approved' && ['audition', 'narration'].includes(p.step)) {
       if (a.content.files.some(f => f.durationSeconds > 15)) throw new Error('Overlong narration cannot be approved; return the affected text to the writer, never accelerate it.');
       const m = r.measurements;
@@ -232,6 +252,7 @@ export function applyEvent(project, raw) {
       const words = s => s.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu)?.join(' ') ?? '';
       if (m.transcripts.some((t, i) => words(t) !== words(current(p, 'script').content.beats[i].narration))) throw new Error('Speech-to-text differs from the locked script.');
     }
+    if(p.step==='film'){if(filmAudio){a.audioReview=structuredClone(r);a.audioReviewedBy=e.workerId;}else{a.visualReview=r;a.visualReviewedBy=e.workerId;if(r.decision==='approved'){p.sequence++;p.history.push({sequence:p.sequence,action:'review',actor:e.actor,message:'Visual film review passed; awaiting independent audio review.',at:new Date().toISOString()});return Project.parse(p);}}if(filmAudio&&r.decision==='approved'){r.perception='direct-audiovisual';r.checks=criteria.film.map(c=>r.checks.find(x=>x.criterion===c)??a.visualReview.checks.find(x=>x.criterion===c));}}
     if (ownerReview) a.ownerReview = r;
     if (ownerReview && r.decision === 'approved') p.gate = 'review';
     else {
@@ -256,6 +277,7 @@ export function applyEvent(project, raw) {
   } else if (e.action === 'approve') {
     requiredActor(e, 'human');
     const a = current(p);
+    if(p.step==='film'&&(!a?.visualReview||!a?.audioReview||a.visualReviewedBy===a.audioReviewedBy))throw new Error('Film requires separate visual and audio reviewer passes.');
     if (p.gate !== 'human' || !a || a.review?.decision !== 'approved' || e.artifactId !== a.id || e.artifactDigest !== a.digest || !e.message) throw new Error('Human approval needs the exact current agent-passing artifact and original user message.');
     if (['candidates', 'backgroundCandidates'].includes(p.step)) { if (![0, 1, 2].includes(e.selection)) throw new Error('Choose one of the three candidate indexes: 0, 1, 2.'); a.selection = e.selection; }
     a.approvedBy = { message: e.message, at: new Date().toISOString() }; next(p);

@@ -6,7 +6,7 @@ A portable, agent-operated Wiggly Format for turning a loved one's memories into
 
 Read **SKILL.md** to operate it. Install with `npm ci`; run `npm run check`, `npm test` and `npm run smoke`. No Wiggly application checkout or cloud database is required. The package uses embedded SQLite for LangGraph checkpoints and direct hosted-provider APIs. No ComfyUI, local AI models, Antigravity dependency or additional chat-agent framework.
 
-The operating host agent writes and reviews artifacts. LangGraph controls saved state, approval pauses and legal transitions. `work` exposes the next structured task; an explicitly configured worker module can automate one task. This package does not silently choose an outside writing/review model or launch guessed host CLI commands.
+The operating host agent writes and reviews artifacts. LangGraph controls saved state, approval pauses and legal transitions. `work` exposes the next structured task; a configured host adapter can automate one task through the scoped format tool broker. Workers inherit the active chat host’s model by default; Gemini and separately billed model APIs are optional host choices, not dependencies. This package does not launch guessed host CLI commands.
 
 Cartesia is the default voice-clone/TTS path; Muse uses actual reference images for three candidates and the selected character's standardized sheet. No stock voice or text-only identity fallback. The current provider adapters are documentation-checked and tested with isolated HTTP mocks; no real clone, narration or image generation was performed for this implementation.
 
@@ -29,3 +29,11 @@ Qualification tests use explicitly isolated synthetic fixtures to test mechanics
 `node runner.mjs preview --run /absolute/run` prepares the approved edit and serves a private localhost Remotion Player. Leave that process running while reviewing the composition. `render` uses the same scene payload and `RemotionAdScene → AdRenderSurface → memoir-film` path. Preview never changes approvals or invokes media providers. The downloadable archive ships the compiled renderer with a checked inventory; no application checkout is needed to operate it. Maintainers building from the Wiggly source checkout run `npm run build:renderer` before `pack:kit`. Browser setup may download Chrome Headless Shell; alternatively set `MEMOIR_BROWSER_EXECUTABLE` to a supported installed Chrome executable.
 
 This adds the reusable format module and local composition preview, not a new /create page or a full editing UI. The existing approval state remains authoritative. Old FFmpeg-film manifests cannot be finalized under the new renderer contract without reopening the approved edit and reviewing the new render.
+
+## Named host crew and two-channel review
+
+The current chat host supplies the workers and inherited model; no required Gemini or new model API connection. The format’s role-scoped tool broker and persisted worker bindings prevent a specialist from submitting another role’s deliverable or approving for the human. Ava handles separately qualified audio review, Vera handles separately qualified visual review, and the finished film needs both passes before human approval. See **SKILL.md → Host crew configuration and authority** for the actual configuration, adapter and qualification commands.
+
+Actual hearing, STT, calibrated speaker comparison, visual tools and real labelled qualification corpora remain host requirements. Automated adapters must successfully call their scoped perception/measurement tools before a media verdict; the runtime records that evidence. Host adapters are privileged code and native chat workers may have ambient tools: the format broker is not an operating-system sandbox, and manual native-host reviews still rely on truthful, qualified perception declarations. No production reviewer has been qualified by these mechanics tests.
+
+Old checkpoints require an explicit human audio-review upgrade; script/sample/clone survive while audition/narration and dependent work reopen, and single-review film locks cannot finalize.

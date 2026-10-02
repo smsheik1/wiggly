@@ -24,3 +24,7 @@ test('qualification evidence remains available to review and changed labels/pred
  const newPath=join(dir,'calibration-target.png');execFileSync('ffmpeg',['-v','error','-f','lavfi','-i','color=c=black:s=32x18','-frames:v','1',newPath]);const newMedia=await importMedia(newPath,dir);const leakage=[...cases,{...cases[0],id:'reference-leak',group:'different-group',split:'calibration',media:newMedia,references:[cases[0].media]}];await assert.rejects(qualifyVisual(leakage,[],'isolated-worker','test-only'),/leakage/);
  }finally{await rm(dir,{recursive:true});}
 });
+
+test('visual evidence with a bound tool profile remains visual and detects profile changes',async()=>{
+ const {dir,cases}=await casesFixture();try{const rows=predictions(cases).map(p=>({...p,capabilityVersion:'ISOLATED-vision-tools'})),computed=await qualifyVisual(cases,rows,'isolated-worker','test-only','ISOLATED-vision-tools'),report={...computed,evidenceDirectory:dir};await writeFile(join(dir,'dataset.json'),JSON.stringify(cases));await writeFile(join(dir,'predictions.json'),JSON.stringify(rows));await verifyFiles(report);await assert.rejects(qualifyVisual(cases,rows,'isolated-worker','test-only','changed-tools'),/mismatched/);}finally{await rm(dir,{recursive:true});}
+});

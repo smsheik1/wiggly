@@ -63,8 +63,8 @@ test('assembly preserves four natural-rate stems, trims clips, ducks piano and r
 });
 test('final film needs full audiovisual review and human approval; malformed render cannot advance',()=>{
  const p=rendered();assert.equal(p.step,'film');assert.equal(p.gate,'review');
- assert.throws(()=>reviewed(p,'approved',{perception:'direct-video'}),/missing perception/);
- assert.throws(()=>reviewed(p,'approved',{coverage:{artifactSha256:current(p).content.files[0].sha256,videoSeconds:60}}),/entire/);
+ assert.throws(()=>send(p,'review',{workerId:'reviewer',artifactId:current(p).id,artifactDigest:current(p).digest,review:{decision:'approved',perception:'direct-audio',checks:taskFor(p).criteria.map(criterion=>({criterion,status:'pass',evidence:'ISOLATED unsupported channel',location:'whole fixture'}))}}),/missing perception/);
+ assert.throws(()=>reviewed(p,'approved',{coverage:{artifactSha256:current(p).content.files[0].sha256,videoSeconds:1}}),/entire/);
  const complete=approved(reviewed(p));assert.equal(complete.step,'complete');
  const root=current(complete,'video:home-0-wide-0');assert.ok(revisionImpact(complete,root.id).affected.includes(current(complete,'film').id));
 });

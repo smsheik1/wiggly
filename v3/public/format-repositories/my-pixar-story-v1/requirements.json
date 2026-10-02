@@ -14,7 +14,7 @@
     "elevenlabs": "ELEVENLABS_API_KEY (optional generated music/effects)"
   },
   "hostAgent": {
-    "author": "active host agent or explicitly configured runTask module",
+    "author": "actual bound host worker or trusted runTask(task,{worker,callTool}) host integration",
     "reviewer": "independent worker with actual text/image/audio perception, STT and speaker-similarity tools",
     "missingCapability": "inconclusive; never fabricate review",
     "backgroundOwner": "plain-language scene direction and outcome check; distinct from technical prompter",
@@ -24,7 +24,11 @@
     "videoEngineer": "observable frame-bound motion; separate independent qualified full-video reviewer",
     "soundDesigner": "instrumental piano and relevant effects with rights/provenance",
     "filmEditor": "approved trim/mix plan, natural-rate narration; one official local assembler",
-    "visualQualification": "actual human-labelled held-out image/video anatomy, identity and continuity examples, actual independent worker predictions"
+    "visualQualification": "actual human-labelled held-out image/video anatomy, identity and continuity examples, actual independent worker predictions",
+    "compute": "current chat host model/subagents by default; optional externally configured models, no required Gemini or new model API key",
+    "audioQualification": "separate genuinely human-labelled held-out audio, full listening, STT and speaker comparison; model/tool profile bound to Ava",
+    "permissions": "runtime-enforced format broker and submission allowlists; ambient host shell/filesystem/tools require host enforcement",
+    "finalFilm": "qualified distinct Vera visual and Ava audio reviews, then human approval"
   },
   "storage": "per-run embedded SQLite checkpoints and immutable local assets/receipts; retain directory as a unit",
   "approval": "real human deliverable approvals; exact paid-request authorization or explicit bounded operation allowance",
