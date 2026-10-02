@@ -93,7 +93,7 @@ test('each required character gets three candidates + selected-image sheet; all 
     p = send(p, 'artifact', { workerId: 'sheet-writer', content: prompt }); p = reviewed(p); assert.equal(p.step, 'sheet');
     p = approved(reviewed(produce(p, { files: [{ path: '/isolated-test/sheet.png', sha256: file(5).sha256, bytes: 1024, width: 100, height: 100 }], prompt: prompt.prompt })));
   }
-  assert.equal(p.step, 'backgrounds'); assert.equal(p.gate, 'pending'); assert.throws(() => assertAllowed(p, 'video'), /PRODUCTION_NOT_SPECIFIED/);
+  assert.equal(p.step, 'backgrounds'); assert.equal(p.gate, 'author'); assert.throws(() => assertAllowed(p, 'video'), /PRODUCTION_NOT_SPECIFIED/);
 });
 
 test('bounded preauthorization is explicit and exhaustion returns to the human', () => {

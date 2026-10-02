@@ -102,3 +102,23 @@ test('calling the adapter directly cannot bypass the graph submission/authorizat
   const p = audioProject(); const plan = { provider: 'meta-muse', operation: 'candidates', estimatedCostUsd: 0.03, parameters: {} };
   await assert.rejects(executeJob(p, { id: 'invented', plan, request: {}, digest: 'invented', dependencies: [] }, '/unused', 'unused', () => { throw new Error('Must not reach network'); }), /UNAUTHORIZED_PROVIDER_CALL/);
 });
+
+
+test('background generation omits references; angle edit sends selected master bytes and cannot replay a completed request', async () => {
+  const {readyForMaster,masterLocked,author,brief,prompt,ownerChecked} = await import('./background-helpers.mjs');
+  const {send,approved,reviewed} = await import('./helpers.mjs');
+  const {current} = await import('../runtime/workflow.mjs');
+  const {dir,image} = await fixture();
+  try {
+    const bytes=await readFile(image.path);let calls=0;
+    let p=readyForMaster();const masterPlan={provider:'meta-muse',operation:p.step,estimatedCostUsd:.03,parameters:{prompt:current(p,'backgroundPrompt:home').content.prompt}};
+    const master=bind(p,{id:'background-master',plan:masterPlan,request:requestDescriptor(p,masterPlan)});master.request.output_format='png';bind(p,master);
+    const result=await executeJob(p,master,dir,'isolated',async(url,opts)=>{calls++;assert.equal(url,'https://api.meta.ai/v1/images/generations');const body=JSON.parse(opts.body);assert.equal(body.n,3);assert.equal(body.images,undefined);assert.equal(body.size,'1536x864');return Response.json({data:Array(3).fill({b64_json:bytes.toString('base64')})});});assert.equal(result.files.length,3);
+    p=masterLocked();p.artifacts.find(a=>a.key==='backgroundCandidates:home').content.files[1]=image;
+    p=approved(reviewed(author(p,brief(p))));p=approved(reviewed(ownerChecked(author(p,prompt(p),'pixar-prompter'))));
+    const plan={provider:'meta-muse',operation:p.step,estimatedCostUsd:.01,parameters:{prompt:current(p,'backgroundAnglePrompt:home:reverse').content.prompt}};
+    const j=bind(p,{id:'background-angle',plan,request:requestDescriptor(p,plan)});j.request.output_format='png';bind(p,j);
+    const edited=await executeJob(p,j,dir,'isolated',async(url,opts)=>{calls++;assert.equal(url,'https://api.meta.ai/v1/images/edits');const body=JSON.parse(opts.body);assert.equal(body.n,1);assert.deepEqual(body.images,[{image_url:`data:image/png;base64,${bytes.toString('base64')}`}]);return Response.json({data:[{b64_json:bytes.toString('base64')}]});});assert.equal(edited.files.length,1);
+    await executeJob(p,j,dir,'',()=>{throw new Error('Forbidden replay')},true);assert.equal(calls,2);
+  }finally{await rm(dir,{recursive:true});}
+});

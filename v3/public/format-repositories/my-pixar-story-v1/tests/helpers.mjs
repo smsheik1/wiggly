@@ -12,11 +12,13 @@ export const script = {
   commonSenseChecks: [{ category: 'age', finding: 'Alex appears as a child and adult.', resolution: 'User must provide reference photos for both ages before character generation.' }],
 };
 export const file = (n = 0, durationSeconds = 12) => ({ path: `/isolated-test/asset-${n}.wav`, sha256: String(n).padStart(64, '0'), bytes: 1024, durationSeconds });
-export function event(p, action, extra = {}) { return { taskId: taskFor(p).taskId, action, actor: ['approve', 'changes', 'reject', 'resolve', 'authorize', 'allowance', 'reconcile'].includes(action) ? 'human' : action === 'review' ? 'reviewer' : ['begin', 'job-id', 'receipt', 'provider-error'].includes(action) ? 'runtime' : 'agent', ...extra }; }
+let capture = null;
+export function captureEvents(fn) { capture = []; try { const project = fn(); return { project, events: capture }; } finally { capture = null; } }
+export function event(p, action, extra = {}) { const value = { taskId: taskFor(p).taskId, action, actor: ['approve', 'changes', 'reject', 'resolve', 'authorize', 'allowance', 'reconcile'].includes(action) ? 'human' : action === 'review' ? 'reviewer' : ['begin', 'job-id', 'receipt', 'provider-error'].includes(action) ? 'runtime' : 'agent', ...extra }; if (capture) capture.push(structuredClone(value)); return value; }
 export const send = (p, action, extra) => applyEvent(p, event(p, action, extra));
 export const authored = p => send(p, 'artifact', { workerId: 'writer', content: script });
 export function reviewed(p, decision = 'approved', extra = {}) {
-  const a = current(p); const perception = ['audition', 'narration'].includes(p.step) ? 'direct-audio' : ['candidates', 'sheet'].includes(p.step) ? 'direct-image' : 'direct-text';
+  const a = current(p); const perception = ['audition', 'narration'].includes(p.step) ? 'direct-audio' : ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle'].includes(p.step) ? 'direct-image' : 'direct-text';
   const measurements = ['audition', 'narration'].includes(p.step) ? { transcripts: p.step === 'audition' ? [script.beats[0].narration] : script.beats.map(b => b.narration), speechToTextMethod: 'ISOLATED TEST STT',
     referenceSha256: file().sha256, speakerSimilarity: 0.9, speakerSimilarityMethod: 'ISOLATED TEST embedding model', speakingRateWpm: Array(p.step === 'audition' ? 1 : 4).fill(80),
     silenceSeconds: Array(p.step === 'audition' ? 1 : 4).fill(0), measurementNotes: 'ISOLATED TEST ONLY: no audio-quality claim.' } : undefined;
@@ -26,7 +28,7 @@ export function reviewed(p, decision = 'approved', extra = {}) {
 }
 export function approved(p, extra = {}) { const a = current(p); return send(p, 'approve', { artifactId: a.id, artifactDigest: a.digest, message: 'ISOLATED TEST human approval', ...extra }); }
 export function produce(p, result, extra = {}) {
-  p = send(p, 'plan', { plan: { provider: ['candidates', 'sheet'].includes(p.step) ? 'meta-muse' : 'cartesia', operation: p.step, estimatedCostUsd: 0.05, parameters: ['candidates', 'sheet'].includes(p.step) ? { prompt: p.step === 'sheet' ? current(p, `sheetPrompt:${p.characterId}`).content.prompt : result.prompt } : {} } });
+  p = send(p, 'plan', { plan: { provider: ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle'].includes(p.step) ? 'meta-muse' : 'cartesia', operation: p.step, estimatedCostUsd: 0.05, parameters: ['candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle'].includes(p.step) ? { prompt: p.step === 'sheet' ? current(p, `sheetPrompt:${p.characterId}`).content.prompt : result.prompt } : {} } });
   if (p.gate === 'authorize') { const job = p.jobs.at(-1); p = send(p, 'authorize', { jobId: job.id, artifactDigest: job.digest, message: 'ISOLATED TEST request authorization' }); }
   const job = p.jobs.at(-1); p = send(p, 'begin', { jobId: job.id, artifactDigest: job.digest });
   return send(p, 'receipt', { jobId: job.id, artifactDigest: job.digest, result, ...extra });

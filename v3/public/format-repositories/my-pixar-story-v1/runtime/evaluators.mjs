@@ -1,3 +1,4 @@
+import { keyFor } from './gates.mjs';
 import { readFile, realpath } from 'node:fs/promises';
 import { resolve, relative, sep } from 'node:path';
 import { Content, Review, digest, criteria } from './contracts.mjs';
@@ -77,7 +78,7 @@ export async function evaluateTask(task, { mediaRoot } = {}) {
 
 // Advisory evidence for the existing reviewer task, never a workflow transition or approval.
 export async function artifactEvidence(project) {
-  const key = ['candidates', 'sheetPrompt', 'sheet'].includes(project.step) ? `${project.step}:${project.characterId}` : project.step;
+  const key = keyFor(project);
   const artifact = project.artifacts.findLast(a => a.key === key && a.valid);
   if (!artifact) throw new Error('No current artifact to evaluate.');
   let checks, measurements = null;

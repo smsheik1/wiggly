@@ -47,18 +47,18 @@ async function main() {
     else print(result);
     return;
   }
-  if (command === 'recipe') { const content = await readFile(join(root, 'character-sheet-recipe.md'), 'utf8'); print({ path: join(root, 'character-sheet-recipe.md'), sha256: (await import('./runtime/media.mjs')).sha(Buffer.from(content)), content }); return; }
+  if (command === 'recipe' || command === 'background-recipe') { const content = await readFile(join(root, command === 'background-recipe' ? 'background-prompter.md' : 'character-sheet-recipe.md'), 'utf8'); print({ path: join(root, command === 'background-recipe' ? 'background-prompter.md' : 'character-sheet-recipe.md'), sha256: (await import('./runtime/media.mjs')).sha(Buffer.from(content)), content }); return; }
   if (command === 'check') {
     const tools = Object.fromEntries(['ffprobe', 'ffmpeg', 'tar'].map(tool => [tool, spawnSync(tool, ['-version'], { stdio: 'ignore' }).error?.code !== 'ENOENT']));
     print({ formatVersion: VERSION, node: process.version, tools, dependencies: 'LangGraph + SQLite loaded',
-      requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY'], credentialsRead: false, productionStageLimit: 'character sheets; backgrounds/video not specified' });
+      requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY'], credentialsRead: false, productionStageLimit: 'backgrounds and required angles; shots/video not specified' });
     if (Object.values(tools).some(v => !v)) process.exitCode = 1; return;
   }
   if (command === 'schema') {
     const name = args[0]; const schema = name === 'event' ? Event : name === 'review' ? Review : name === 'plan' ? Plans : name === 'inputs' ? Inputs : Content[name];
     if (!schema) throw new Error('schema needs event/review/plan/inputs or a supported artifact kind.'); print(z.toJSONSchema(schema)); return;
   }
-  if (command === 'finalize' || command === 'render') throw new Error('PRODUCTION_NOT_SPECIFIED: this checkpoint implements orchestration through character sheets. No film can be rendered/finalized yet.');
+  if (command === 'finalize' || command === 'render') throw new Error('PRODUCTION_NOT_SPECIFIED: this checkpoint implements orchestration through approved backgrounds and required angles. No film can be rendered/finalized yet.');
   const release = await lock(); const workflow = openWorkflow(join(runDir, 'checkpoints.sqlite'));
   try {
     if (command === 'init') {
@@ -78,7 +78,7 @@ async function main() {
       print(presentation(await workflow.respond('project', event))); return;
     }
     if (command === 'work') {
-      if (!['author', 'review', 'produce'].includes(status.pending.gate)) { print(presentation(status)); return; }
+      if (!['author', 'owner-review', 'review', 'produce'].includes(status.pending.gate)) { print(presentation(status)); return; }
       const modulePath = args[0];
       const task = status.pending.gate === 'review' ? { ...status.pending, evaluatorEvidence: await (await import('./runtime/evaluators.mjs')).artifactEvidence(status.project), reviewerRubric: await readFile(join(root, 'evaluation', 'reviewer.md'), 'utf8') } : status.pending;
       if (!modulePath) { print({ task, responseSchema: z.toJSONSchema(Event), contentSchema: Content[status.pending.step] ? z.toJSONSchema(Content[status.pending.step]) : null,
@@ -86,7 +86,7 @@ async function main() {
       const worker = await import(pathToFileURL(resolve(modulePath)).href);
       if (typeof worker.runTask !== 'function') throw new Error('Worker module must export runTask(task).');
       const event = await worker.runTask(task);
-      if (event.actor !== status.pending.actor || !['artifact', 'review', 'plan'].includes(event.action)) throw new Error('Worker may only author, review or plan; it cannot approve for the user or call providers.');
+      if (event.actor !== status.pending.actor || !['artifact', 'owner-review', 'review', 'plan'].includes(event.action)) throw new Error('Worker may only author, review or plan; it cannot approve for the user or call providers.');
       if (status.pending.step === 'sheetPrompt' && event.action === 'artifact') { const recipe = (await import('./runtime/media.mjs')).sha(await readFile(join(root, 'character-sheet-recipe.md'))); if (event.content?.recipeSha256 !== recipe) throw new Error('Sheet prompt must use the packaged recipe hash; run recipe.'); }
       await verifyFiles(event.content); await verifyFiles(status.pending.dependencies); await verifyFiles(status.pending.artifact?.content);
       print(presentation(await workflow.respond('project', event))); return;

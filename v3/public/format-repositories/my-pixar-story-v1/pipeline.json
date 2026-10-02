@@ -1,1 +1,31 @@
-{"version":"2.0.0","controller":"LangGraph","state":"SQLite project checkpoint","stages":["existing questionnaire (5 answer groups)","four-beat script author → independent reviewer → human","storyteller sample + consent","Cartesia private clone","clone audition measured/listened/reviewed → human","four narration stems measured/listened/reviewed → human audio lock","complete character/age roster → reviewer → human","per character: 3 reference-conditioned Muse candidates → reviewer → human selection","per character: selected image + scoped Markdown recipe → host-authored sheet prompt → reviewer","per character: reference-conditioned sheet → reviewer → human","backgrounds: pending design"],"reviewLoop":"rejection with localized criterion/evidence/repair returns to current author/producer; two successive rejections or missing perception escalate","hardGates":["audio lock before images/video","all required sheets before backgrounds","current version/digest and dependencies","no duplicate uncertain request","no film finalization at this checkpoint"]}
+{
+  "version": "2.0.0",
+  "controller": "LangGraph",
+  "state": "SQLite project checkpoint",
+  "stages": [
+    "existing questionnaire (5 answer groups)",
+    "four-beat script author \u2192 independent reviewer \u2192 human",
+    "storyteller sample + consent",
+    "Cartesia private clone",
+    "clone audition measured/listened/reviewed \u2192 human",
+    "four narration stems measured/listened/reviewed \u2192 human audio lock",
+    "complete character/age roster \u2192 reviewer \u2192 human",
+    "per character: 3 reference-conditioned Muse candidates \u2192 reviewer \u2192 human selection",
+    "per character: selected image + scoped Markdown recipe \u2192 host-authored sheet prompt \u2192 reviewer",
+    "per character: reference-conditioned sheet \u2192 reviewer \u2192 human",
+    "background scene/location/angle registry \u2192 reviewer \u2192 human",
+    "per location: plain-language owner brief \u2192 reviewer \u2192 human",
+    "separate Pixar Markdown prompter \u2192 original owner check \u2192 independent reviewer \u2192 human prompt approval",
+    "3 empty-background Muse candidates \u2192 image reviewer \u2192 human master selection",
+    "per required angle: owner brief \u2192 review/human \u2192 separate prompter \u2192 owner/reviewer/human \u2192 selected master reference edit \u2192 image reviewer/human",
+    "shots/video/music/assembly: pending design"
+  ],
+  "reviewLoop": "rejection with localized criterion/evidence/repair returns to current author/producer; two successive rejections or missing perception escalate",
+  "hardGates": [
+    "audio lock before images/video",
+    "all required sheets before backgrounds",
+    "current version/digest and dependencies",
+    "no duplicate uncertain request",
+    "no film finalization at this checkpoint"
+  ]
+}

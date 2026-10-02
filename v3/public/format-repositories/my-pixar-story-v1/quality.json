@@ -21,7 +21,7 @@
     "speaker similarity"
   ],
   "proofScope": "isolated contract/HTTP/media-measurement tests, no real provider quality proof",
-  "finalization": "blocked until background/video/music/assembly design and validation are implemented",
+  "finalization": "blocked until shots/video/music/assembly design and validation are implemented",
   "evaluationFoundation": {
     "dataset": "evaluation/dataset.json",
     "cases": 22,
@@ -33,5 +33,6 @@
     "knownAnatomyDefect": "inconclusive/missed by local rules; actual model inspection pending",
     "productionRouting": "advisory evidence only; existing review/human gates retained",
     "langsmith": "optional local examples export; no upload or tracing enabled"
-  }
+  },
+  "backgrounds": "scene-first direction, known/proposed facts, staging space, empty environments, style, continuity, separate review/human lock for each required angle"
 }

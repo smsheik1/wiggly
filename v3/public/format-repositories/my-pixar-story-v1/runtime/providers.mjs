@@ -12,11 +12,18 @@ export function requestDescriptor(p, plan) {
     model_id: plan.parameters.model ?? 'sonic-3.6-2026-08-27', voice: artifact(p, 'clone').content.voiceId, language: sample.language,
     transcripts: artifact(p, 'script').content.beats.slice(0, plan.operation === 'audition' ? 1 : 4).map(b => b.narration),
     output_format: { container: 'wav', encoding: 'pcm_s16le', sample_rate: 44100 }, generation_config: { speed: 1, volume: 1 } };
-  const selected = artifact(p, `candidates:${p.characterId}`);
-  const images = plan.operation === 'sheet' ? [selected.content.files[selected.selection]] : artifact(p, 'roster').content.characters.find(c => c.id === p.characterId).references;
-  const n = plan.operation === 'sheet' ? 1 : 3;
+  let images, n;
+  if (plan.operation === 'backgroundCandidates') { images = artifact(p, `backgroundBrief:${p.locationId}`).content.references; n = 3; }
+  else if (plan.operation === 'backgroundAngle') {
+    const master = artifact(p, `backgroundCandidates:${p.locationId}`);
+    images = [master.content.files[master.selection]]; n = 1;
+  } else {
+    const selected = artifact(p, `candidates:${p.characterId}`);
+    images = plan.operation === 'sheet' ? [selected.content.files[selected.selection]] : artifact(p, 'roster').content.characters.find(c => c.id === p.characterId).references;
+    n = plan.operation === 'sheet' ? 1 : 3;
+  }
   if (plan.estimatedCostUsd < n * 0.01) throw new Error('Muse estimate must account for every requested image ($0.01 each).');
-  return { endpoint: 'https://api.meta.ai/v1/images/edits', model: 'muse-image-1.0', prompt: plan.parameters.prompt, images, n, size: '16:9', response_format: 'b64_json', output_format: 'webp',
+  return { endpoint: `https://api.meta.ai/v1/images/${images.length ? 'edits' : 'generations'}`, model: 'muse-image-1.0', prompt: plan.parameters.prompt, images, n, size: '1536x864', response_format: 'b64_json', output_format: 'webp',
     tool_enablement: { enable_web_search: false, enable_image_search: false, enable_shell: false } };
 }
 export async function atomicJson(path, value) { const temp = `${path}.tmp`; await writeFile(temp, JSON.stringify(value, null, 2), { mode: 0o600 }); await rename(temp, path); }
@@ -70,7 +77,7 @@ export async function executeJob(p, job, runDir, apiKey, fetcher = fetch, collec
   } else {
     const images = await Promise.all(request.images.map(async f => ({ image_url: `data:image/${extname(f.path).slice(1).replace('jpg', 'jpeg')};base64,${(await readFile(f.path)).toString('base64')}` })));
     const { endpoint, images: _refs, ...body } = request;
-    const response = await post(0, JSON.stringify({ ...body, images }), { 'Content-Type': 'application/json' });
+    const response = await post(0, JSON.stringify({ ...body, ...(images.length ? { images } : {}) }), { 'Content-Type': 'application/json' });
     if (!Array.isArray(response.data) || response.data.length !== request.n || response.data.some(d => !d.b64_json)) throw new Error('Muse must return the exact requested image count as base64; no remote-image fallback.');
     const files = [];
     for (const [i, data] of response.data.entries()) { const path = join(dir, `${i}.${request.output_format}`); await writeFile(path, Buffer.from(data.b64_json, 'base64'), { mode: 0o600 }); files.push(await importMedia(path, runDir)); }

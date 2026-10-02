@@ -22,7 +22,16 @@ const Script = z.object({
 });
 const Character = z.object({ id: text.regex(/^[a-z][a-z0-9-]*$/), name: text, ageVariant: text,
   important: z.literal(true), references: z.array(File).min(1), notes: text });
+const slug = text.regex(/^[a-z][a-z0-9-]*$/);
+const Scene = z.object({ id: slug, beat: z.number().int().min(1).max(4), description: text, action: text, characterIds: z.array(slug), sourceAnswers: z.array(z.enum(Object.keys(Inputs.shape.answers.shape))) });
+const Brief = z.object({ direction: text, sceneIds: z.array(slug).min(1), knownDetails: z.array(text), proposedDetails: z.array(text), continuityNotes: text, references: z.array(File).default([]) });
+const BackgroundPrompt = z.object({ prompt: text, recipeSha256: text, briefDigest: text, changeSummary: text });
 export const Content = {
+  backgrounds: z.object({ locations: z.array(z.object({ id: slug, name: text, scenes: z.array(Scene).min(1), angles: z.array(z.object({ id: slug, sceneIds: z.array(slug).min(1), direction: text })) })).min(1) }),
+  backgroundBrief: Brief, backgroundAngleBrief: Brief,
+  backgroundPrompt: BackgroundPrompt, backgroundAnglePrompt: BackgroundPrompt,
+  backgroundCandidates: z.object({ files: z.array(File).length(3), prompt: text }),
+  backgroundAngle: z.object({ files: z.array(File).length(1), prompt: text }),
   script: Script,
   voiceSample: z.object({ files: z.array(File).length(1), consent: z.literal(true), language: text }),
   clone: z.object({ voiceId: text, provider: z.literal('cartesia'), receiptId: text }),
@@ -36,6 +45,13 @@ export const Content = {
   sheet: z.object({ files: z.array(File).length(1), prompt: text }),
 };
 export const criteria = {
+  backgrounds: ['scene-coverage', 'locations', 'angles', 'common-sense'],
+  backgroundBrief: ['scene-fit', 'facts', 'spatial-action', 'continuity'],
+  backgroundAngleBrief: ['scene-fit', 'facts', 'spatial-action', 'continuity'],
+  backgroundPrompt: ['brief-fit', 'style', 'spatial-action', 'continuity'],
+  backgroundAnglePrompt: ['brief-fit', 'style', 'spatial-action', 'continuity'],
+  backgroundCandidates: ['scene-fit', 'style', 'empty-environment', 'spatial-action', 'continuity'],
+  backgroundAngle: ['scene-fit', 'style', 'empty-environment', 'spatial-action', 'continuity'],
   script: ['facts', 'relationship', 'clarity', 'emotional-purpose', 'timing', 'common-sense'],
   audition: ['integrity', 'voice-match', 'delivery', 'safety'],
   narration: ['integrity', 'transcript', 'duration', 'natural-rate', 'voice-match', 'delivery', 'safety'],
@@ -56,9 +72,9 @@ export const Review = z.object({
     silenceSeconds: z.array(z.number().nonnegative()).optional(), measurementNotes: text.optional(),
   }).optional(),
 });
-export const Plans = z.object({ provider: z.enum(['cartesia', 'meta-muse']), operation: z.enum(['clone', 'audition', 'narration', 'candidates', 'sheet']),
+export const Plans = z.object({ provider: z.enum(['cartesia', 'meta-muse']), operation: z.enum(['clone', 'audition', 'narration', 'candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle']),
   estimatedCostUsd: z.number().nonnegative(), parameters: z.object({ model: text.optional(), prompt: text.optional(), cartesiaVersion: text.optional() }).strict() }).strict();
-export const Event = z.object({ taskId: text, action: z.enum(['artifact', 'review', 'approve', 'changes', 'reject', 'note', 'resolve', 'plan', 'authorize', 'begin', 'job-id', 'receipt', 'provider-error', 'reconcile', 'allowance']),
+export const Event = z.object({ taskId: text, action: z.enum(['artifact', 'owner-review', 'start-backgrounds', 'review', 'approve', 'changes', 'reject', 'note', 'resolve', 'plan', 'authorize', 'begin', 'job-id', 'receipt', 'provider-error', 'reconcile', 'allowance']),
   actor: z.enum(['agent', 'reviewer', 'human', 'runtime']), workerId: text.optional(),
   artifactId: text.optional(), artifactDigest: text.optional(), message: text.optional(), selection: z.number().int().optional(),
   content: z.unknown().optional(), review: Review.optional(), plan: Plans.optional(), jobId: text.optional(),
@@ -66,12 +82,12 @@ export const Event = z.object({ taskId: text, action: z.enum(['artifact', 'revie
 }).strict();
 export const Project = z.object({
   formatVersion: z.literal(VERSION), schemaVersion: z.literal(2), id: text,
-  inputs: Inputs, step: z.enum(['script', 'voiceSample', 'clone', 'audition', 'narration', 'roster', 'candidates', 'sheetPrompt', 'sheet', 'backgrounds']),
-  gate: z.enum(['author', 'review', 'human', 'produce', 'authorize', 'collect', 'escalate', 'pending']),
-  characterId: z.string().nullable(), sequence: z.number().int().nonnegative(),
+  inputs: Inputs, step: z.enum(['script', 'voiceSample', 'clone', 'audition', 'narration', 'roster', 'candidates', 'sheetPrompt', 'sheet', 'backgrounds', 'backgroundBrief', 'backgroundPrompt', 'backgroundCandidates', 'backgroundAngleBrief', 'backgroundAnglePrompt', 'backgroundAngle', 'shots']),
+  gate: z.enum(['author', 'owner-review', 'review', 'human', 'produce', 'authorize', 'collect', 'escalate', 'pending']),
+  characterId: z.string().nullable(), locationId: z.string().nullable().default(null), angleId: z.string().nullable().default(null), sequence: z.number().int().nonnegative(),
   artifacts: z.array(z.object({ id: text, key: text, kind: text, version: z.number().int().positive(), digest: text,
     content: z.unknown(), dependencies: z.array(text), valid: z.boolean(), authoredBy: text,
-    review: Review.optional(), approvedBy: z.object({ message: text, at: text }).optional(), selection: z.number().int().optional(),
+    ownerReview: Review.optional(), review: Review.optional(), approvedBy: z.object({ message: text, at: text }).optional(), selection: z.number().int().optional(),
   })),
   jobs: z.array(z.object({ id: text, key: text, plan: Plans, request: z.record(z.string(), z.unknown()), allowanceId: text.optional(), digest: text, dependencies: z.array(text),
     status: z.enum(['planned', 'authorized', 'submitting', 'submitted', 'ready', 'failed', 'uncertain']),
