@@ -435,18 +435,26 @@
   "studioInstructions": {
     "date": "2026-10-03",
     "scope": "runtime-loaded named skills, separate reviewer rubrics, one config, versioned SQLite instruction bundle, validated handoffs and friendly producer communication; offline mechanics only",
-    "sourceTestsPassed": 160,
+    "sourceTestsPassed": 161,
     "namedSkills": 14,
     "roleBindings": 15,
     "humanAuthority": "actual crew bindings, project budget and approvals remain in SQLite; no template edit grants spend",
     "legacy": "missing instruction snapshot remains compatibility path; pristine-only explicit upgrade; active bundle changes require a new project",
     "perception": "existing actual-image, Gemini 4 FPS media review and independent STT unchanged; no qualification claim",
     "skillValidation": "14 skills pass skill-creator quick_validate",
-    "blindPackageAudit": "pending fresh independent audit",
+    "blindPackageAudit": "PASS: fresh npm ci/check/smoke and 161/161 serial tests; final-byte recheck recorded in Wiggly docs/proofs. Earlier disk exhaustion resolved by removing task-owned dependencies and using installed browser.",
     "paidProviderCalls": 0,
     "productionCredentialsRead": false,
     "savedProductionRunsChanged": false,
     "aiVideoGenerations": 0,
-    "productionFilmQualityProven": false
+    "productionFilmQualityProven": false,
+    "scopedHandoffs": "Background tasks include current location and actual approved character sheets; video tasks include locked four-stem narration; missing/replaced context rejected before dispatch.",
+    "sourceLogs": [
+      "/tmp/memoir-studio-full-tests.log",
+      "/tmp/memoir-studio-check.log",
+      "/tmp/memoir-studio-smoke.log"
+    ],
+    "auditedArchiveBeforeFinalMetadata": "5b336a8578e7f11b5dbe722bd28f11c16bbbede97318710c0563e6f64cbe3658",
+    "simplificationReview": "ponytail-review: Lean already. Ship. Removed duplicated skill body from worker packets and restricted producer communication to host delivery; no new dependency, renderer or state store."
   }
 }

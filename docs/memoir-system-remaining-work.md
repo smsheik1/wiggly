@@ -63,7 +63,7 @@ Current seed dataset: 22 cases, no human-confirmed qualification labels. Synthet
 - [x] Exact instruction/config/rubric/recipe/voice snapshot in new project SQLite; template edits do not change active runs. Historical path preserved; pristine-only explicit upgrade; no active approval migration.
 - [x] Current task/input version checks and verified handoff checklist stop missing, stale or substituted context before dispatch.
 - [x] Friendly producer file loaded into status/work/presentation, with a brief derived stage/next-decision update and no extra model call.
-- [x] Source check/smoke, 160 tests and 14 skill validations pass. Fresh package audit/final-byte evidence: `proofs/memoir-studio-instructions-release.json`.
+- [x] Source check/smoke, 161 tests and 14 skill validations pass. Fresh package npm ci/check/smoke and independent 161-test suite pass; final-byte evidence: `proofs/memoir-studio-instructions-release.json`.
 
 ## Deferred refinements and extras
 

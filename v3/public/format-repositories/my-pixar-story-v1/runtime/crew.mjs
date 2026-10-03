@@ -31,7 +31,7 @@ function filesIn(value,out=new Map()){
  if(value.path&&value.sha256&&value.bytes){const f=File.parse(value);out.set(f.sha256,f);return out;}
  for(const v of Object.values(value))filesIn(v,out);return out;
 }
-export function taskAssets(task){return filesIn({artifact:task.artifact,dependencies:task.dependencies,visualReferences:task.visualReferences,references:task.references,availableLocations:task.availableLocations,videoBinding:task.videoBinding,sample:task.voiceReference,intake:task.intakeConfirmation});}
+export function taskAssets(task){return filesIn({artifact:task.artifact,dependencies:task.dependencies,visualReferences:task.visualReferences,references:task.references,availableLocations:task.availableLocations,videoBinding:task.videoBinding,sample:task.voiceReference,intake:task.intakeConfirmation,characters:task.characterReferences,narration:task.narration});}
 export function crewTools(task,worker,adapters={},record=()=>{}){
  const allowed=(task.allowedTools??maximumTools[worker.role]??[]).filter(t=>maximumTools[worker.role]?.includes(t)),assets=taskAssets(task);
  const get=async hash=>{const file=assets.get(hash);if(!file)throw new Error('ASSET_SCOPE_DENIED: use a hash from this current task.');await verifyFiles(file);return file;};
@@ -56,12 +56,15 @@ export async function prepareCrewTask(p,task){
  const expected=taskFor(p);
  if(task.taskId!==expected.taskId||task.step!==p.step||task.gate!==p.gate)throw new Error('STALE_TASK: read current status before dispatch.');
  // No worker can receive replaced, omitted, stale or invented project context.
- const fields=['projectId','artifact','dependencies','approvedScript','lockedAnswers','inputs','sourceInputs','questionnaire','castEntry','recipe','references','referenceBindings','availableLocations','shotIntentions','immediateScenes','shot','videoBinding','visualReferences','voiceReference','intakeConfirmation','feedback','criteria','formatRole','crewWorker','skill','allowedTools','studioConfig','studioSha256','instruction'];
+ const fields=['locationEntry','characterReferences','narration','projectId','artifact','dependencies','approvedScript','lockedAnswers','inputs','sourceInputs','questionnaire','castEntry','recipe','references','referenceBindings','availableLocations','shotIntentions','immediateScenes','shot','videoBinding','visualReferences','voiceReference','intakeConfirmation','feedback','criteria','formatRole','crewWorker','skill','allowedTools','studioConfig','studioSha256','instruction'];
  for(const field of fields)if(digest(task[field]??null)!==digest(expected[field]??null))throw new Error(`TASK_INPUT_MISMATCH: ${field} is missing, changed or stale; read the current task packet.`);
  if(['author','produce'].includes(p.gate))assertAllowed(p,p.step);
  for(const a of expected.dependencies??[])if(!a.valid||(!a.approvedBy&&a.kind!=='clone')||current(p,a.key)?.id!==a.id)throw new Error(`TASK_INPUT_NOT_LOCKED: ${a.key}`);
  if(['review','owner-review'].includes(task.gate)&&(!task.artifact||current(p,keyFor(p))?.id!==task.artifact.id))throw new Error('TASK_INPUT_MISSING: exact current artifact required for review.');
  const inputChecklist=[{input:'current task and role',source:'SQLite',status:'verified'},...expected.dependencies.map(a=>({input:a.key,artifactId:a.id,artifactDigest:a.digest,source:'SQLite locked artifact',status:'verified'})),...(task.artifact?[{input:'current deliverable',artifactId:task.artifact.id,artifactDigest:task.artifact.digest,source:'SQLite draft (not human approval)',status:'verified'}]:[])];
+ for(const ref of expected.characterReferences??[])if(!current(p,`sheet:${ref.characterId}`)?.approvedBy)throw new Error(`TASK_INPUT_NOT_LOCKED: sheet:${ref.characterId}`);
+ if(expected.narration&&!current(p,'narration')?.approvedBy)throw new Error('TASK_INPUT_NOT_LOCKED: narration');
+ inputChecklist.push(...(expected.characterReferences??[]).map(ref=>({input:`sheet:${ref.characterId}`,artifactId:ref.artifactId,sha256:ref.file.sha256,source:'SQLite approved reference',status:'verified'})),...(expected.narration?[{input:'narration',artifactId:expected.narration.id,artifactDigest:expected.narration.digest,source:'SQLite locked narration',status:'verified'}]:[]));
  const {communication,...workPacket}=expected;
  const canonical={...workPacket,inputChecklist,...(task.repairFeedback?{repairFeedback:task.repairFeedback}:{})};
  if(task.gate!=='review')return canonical;

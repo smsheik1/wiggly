@@ -7,9 +7,11 @@ import {pathToFileURL} from 'node:url';
 import {loadStudio,StudioConfig,studioFor,recipeFor} from '../runtime/instructions.mjs';
 import {Project,digest} from '../runtime/contracts.mjs';
 import {initialProject,openWorkflow,taskFor,current} from '../runtime/workflow.mjs';
-import {prepareCrewTask,runCrewTask,crewRoles,crewTools} from '../runtime/crew.mjs';
+import {prepareCrewTask,runCrewTask,crewRoles,crewTools,taskAssets} from '../runtime/crew.mjs';
 import {requestDescriptor} from '../runtime/providers.mjs';
 import {producerUpdate} from '../runtime/presentation.mjs';
+import {backgroundProject,registry,author} from './background-helpers.mjs';
+import {videoReady} from './studio-helpers.mjs';
 import {inputs,script,event,send,authored,reviewed,approved,audioProject} from './helpers.mjs';
 const crew={workers:Object.entries(crewRoles).map(([role,{name}])=>({workerId:`isolated-${role}`,name,role,modelVersion:'ISOLATED-host',capabilityVersion:'ISOLATED-tools',execution:'host'}))};
 const bind=p=>send(p,'configure-crew',{actor:'human',message:'ISOLATED local fixture binding',crew});
@@ -72,4 +74,11 @@ test('Cartesia defaults are project-pinned and plan overrides cannot silently ch
  const p=audioProject(),plan={operation:'audition',parameters:{},estimatedCostUsd:.05};const req=requestDescriptor(p,plan);assert.equal(req.model_id,p.studio.config.generation.voice.model);assert.equal(req.cartesiaVersion,p.studio.config.generation.voice.apiVersion);assert.equal(req.generation_config.speed,1);
  assert.throws(()=>requestDescriptor(p,{...plan,parameters:{model:'unknown-model'}}),/BINDING_CHANGED/);
  const old=structuredClone(p);delete old.studio;assert.equal(requestDescriptor(old,plan).model_id,'sonic-3.6-2026-08-27');
+});
+
+test('background workers get actual approved cast sheets and video workers get locked narration as verified scoped inputs',async()=>{
+ const p=approved(reviewed(author(backgroundProject(),registry))),task=await prepareCrewTask(p,taskFor(p)),ref=task.characterReferences[0];
+ assert.equal(task.locationEntry.id,p.locationId);assert.equal(ref.characterId,'alex');assert.equal(ref.artifactId,current(p,'sheet:alex').id);assert.ok(taskAssets(task).has(ref.file.sha256));assert.ok(task.inputChecklist.some(i=>i.input==='sheet:alex'));
+ await assert.rejects(prepareCrewTask(p,{...taskFor(p),characterReferences:[]}),/TASK_INPUT_MISMATCH/);
+ const video=videoReady(),videoTask=await prepareCrewTask(video,taskFor(video));assert.equal(videoTask.narration.id,current(video,'narration').id);assert.equal(videoTask.narration.content.files.length,4);assert.ok(videoTask.inputChecklist.some(i=>i.input==='narration'));assert.ok(taskAssets(videoTask).has(videoTask.narration.content.files[0].sha256));
 });

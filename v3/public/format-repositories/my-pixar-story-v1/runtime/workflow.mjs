@@ -205,6 +205,8 @@ export function taskFor(p) {
     lifecycle:p.lifecycle,budget:spendSummary(p),
     productionProfile:p.productionProfile,repairNotices:repairNotices(p),workflowRevision:p.workflowRevision, step: p.step, gate: p.gate, clipId:p.clipId,effectId:p.effectId, characterId: p.characterId, locationId: p.locationId, angleId: p.angleId, shotId: p.shotId,
     shot,
+    ...(backgroundSteps.includes(p.step)?{locationEntry:sceneLocation,characterReferences:(current(p,'roster')?.content.characters??[]).filter(c=>sceneLocation?.scenes.some(scene=>scene.characterIds.includes(c.id))).map(c=>{const sheet=current(p,`sheet:${c.id}`);return {characterId:c.id,name:c.name,ageVariant:c.ageVariant,artifactId:sheet.id,file:sheet.content.files[0]};})}:{}),
+    ...(['videoPlan','videoPrompt','video'].includes(p.step)?{narration:current(p,'narration')}:{}),
     ...(['videoPlan','film'].includes(p.step)?{visualReferences:current(p,'shots').content.shots.map(shot=>({shot,keyframe:current(p,`keyframe:${shot.id}`),references:shotReferences(p,shot)}))}:{}),
     shotIntentions:current(p,'shotIntentions')??null,
     ...(p.step === 'shots' ? { availableLocations: planningReferences(p) } : {}),

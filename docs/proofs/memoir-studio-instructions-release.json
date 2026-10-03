@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-03",
+  "branch": "codex/memoir-studio-instructions",
+  "baselineCommit": "14bb7f1e",
+  "initialImplementationCheckpoint": "351d062e",
+  "scope": "runtime-loaded named crew skills, independent rubrics, validated scoped inputs, one config and project-pinned instruction snapshot, friendly producer voice; offline mechanics only",
+  "namedSkills": 14,
+  "roleBindings": 15,
+  "source": {
+    "testsPassed": 161,
+    "check": "PASS",
+    "smoke": "PASS parent + grandparent",
+    "skillValidation": "PASS all 14 skill-creator validations",
+    "logs": [
+      "/tmp/memoir-studio-full-tests.log",
+      "/tmp/memoir-studio-check.log",
+      "/tmp/memoir-studio-smoke.log"
+    ]
+  },
+  "package": {
+    "archive": "v3/public/format-repositories/my-pixar-story-v1/my-pixar-story-v2.0.0.tgz",
+    "sha256": "5a7536528f426b5cef89fd997dce41330876289c62f63d64d35adf34f167076e",
+    "auditedImplementationSha256": "5b336a8578e7f11b5dbe722bd28f11c16bbbede97318710c0563e6f64cbe3658",
+    "cleanInstall": "PASS",
+    "check": "PASS",
+    "smoke": "PASS",
+    "fullTestsPassed": 161,
+    "finalByteFocusedTestsPassed": 8,
+    "finalByteComparison": "Only proof.json differs from independently full-tested archive; all runtime/skills/config/README/dependencies/tests byte-identical.",
+    "blindAuditReport": "docs/proofs/memoir-studio-instructions-package-audit.md",
+    "earlierResourceFailure": "ENOSPC from task-owned temporary installations; removed those directories and used installed browser for serial full package test; final suite passed."
+  },
+  "primarySync": {
+    "root": "/Users/shaz/Projects/wiggly",
+    "baselineCompared": true,
+    "backup": "/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/memoir-studio-primary-backup-20261003-cxw23szg",
+    "filesSyncedBeforeFinalMetadata": 38,
+    "unrelatedEditsPreserved": true,
+    "check": "PASS",
+    "smoke": "PASS",
+    "focusedTestsPassed": 8,
+    "logs": [
+      "/tmp/memoir-studio-primary-check.log",
+      "/tmp/memoir-studio-primary-smoke.log",
+      "/tmp/memoir-studio-primary-tests.log"
+    ]
+  },
+  "simplificationReview": "ponytail-review: Lean already. Ship. Duplicated instruction body removed, communication scoped to producer; no new dependency, renderer, state store or worker framework.",
+  "paidProviderCalls": 0,
+  "productionCredentialsRead": false,
+  "savedProductionRunsChanged": false,
+  "aiVideoGenerations": 0,
+  "realEndToEndFilmProofPerformed": false,
+  "productionQualityProven": false,
+  "qualifiedReviewerCertified": false
+}
