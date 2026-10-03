@@ -28,5 +28,6 @@ export async function presentDeliverable(status){
 export function producerUpdate(status){
  const {project,pending}=status;
  const decisions={author:'The assigned author is preparing this deliverable.',review:'The independent reviewer checks this version next.','owner-review':'Beau checks the prompt against the approved scene brief.',human:'Review this version, then approve, request a detail change, redo or abandon.',produce:project.step==='film'?'The approved edit is ready for the official local render.':'An exact provider plan and estimate are needed next.',authorize:'Approve this exact request and its spend before generation.',collect:'Collect the recorded request; do not submit it again.',escalate:'Your decision is needed on the recorded issue before work continues.',pending:project.step==='complete'?'The final approved film is ready.':'This saved workflow is paused; follow its explicit resume instruction.'};
- return {stage:pending.step,gate:pending.gate,nextDecision:decisions[pending.gate],message:`Current stage: ${pending.step}. ${decisions[pending.gate]}`};
+ const nextDecision=project.debug?.enabled&&project.debug.paused?'Debug paused. Inspect this step’s output and evidence, then choose the next action.':decisions[pending.gate];
+ return {stage:pending.step,gate:pending.gate,nextDecision,message:`Current stage: ${pending.step}. ${nextDecision}`};
 }

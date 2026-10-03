@@ -1,5 +1,6 @@
 import {loadStudio,studioFor,limitsFor,recipeFor,workerInstructions,communicationFor} from './instructions.mjs';
 import {legacyInstruction} from './legacy-instructions.mjs';
+import {assertDebugReady} from './debug.mjs';
 import {spendSummary,requireBudget} from './budget.mjs';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -260,6 +261,23 @@ export function applyEvent(project, raw) {
   }
   if(p.crew)Crew.parse(p.crew);
   assertCrewEvent(p,e);
+  if(['configure-debug','debug-next','debug-stop'].includes(e.action)){
+    requiredActor(e,e.action==='debug-stop'?'runtime':'human');if(!e.message)throw new Error('Debug control needs the human instruction or runtime diagnostic.');
+    if(e.action==='configure-debug'){
+      if(e.debugEnabled===undefined)throw new Error('Specify debugEnabled.');
+      p.debug={enabled:e.debugEnabled,paused:e.debugEnabled};
+    }else if(e.action==='debug-next'){
+      if(!p.debug?.enabled||!p.debug.paused)throw new Error('DEBUG_NOT_PAUSED: enable debug mode and inspect a paused step first.');
+      p.debug.paused=false;
+    }else{
+      if(!p.debug?.enabled)throw new Error('DEBUG_DISABLED');
+      p.debug.paused=true;
+    }
+    // Operator controls do not change creative task IDs or invalidate recoverable receipts.
+    p.history.push({sequence:p.sequence,action:e.action,actor:e.actor,message:e.message,at:new Date().toISOString()});
+    return Project.parse(p);
+  }
+  if(['artifact','owner-review','review','plan','begin','rendered','qualified','audio-qualified'].includes(e.action))assertDebugReady(p);
   if(e.action==='reserve-compute'){
     requiredActor(e,'runtime');if(!e.reservation)throw new Error('Compute reservation required.');
     p.budget??={maxCostUsd:0,reservations:[]};const existing=p.budget.reservations.find(r=>r.id===e.reservation.id);
@@ -352,7 +370,7 @@ export function applyEvent(project, raw) {
       const words = s => s.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu)?.join(' ') ?? '';
       if (m.transcripts.some((t, i) => words(t) !== words(current(p, 'script').content.beats[i].narration))) throw new Error('Speech-to-text differs from the locked script.');
     }
-    if(p.step==='film'){if(filmAudio){a.audioReview=structuredClone(r);a.audioReviewedBy=e.workerId;}else{a.visualReview=r;a.visualReviewedBy=e.workerId;if(reviewPassed(r)){p.sequence++;p.history.push({sequence:p.sequence,action:'review',actor:e.actor,message:'Visual film review passed; awaiting independent audio review.',at:new Date().toISOString()});return Project.parse(p);}}if(filmAudio&&reviewPassed(r)){r.perception='direct-audiovisual';r.checks=criteria.film.map(c=>r.checks.find(x=>x.criterion===c)??a.visualReview.checks.find(x=>x.criterion===c));}}
+    if(p.step==='film'){if(filmAudio){a.audioReview=structuredClone(r);a.audioReviewedBy=e.workerId;}else{a.visualReview=r;a.visualReviewedBy=e.workerId;if(reviewPassed(r)){if(p.debug?.enabled)p.debug.paused=true;p.sequence++;p.history.push({sequence:p.sequence,action:'review',actor:e.actor,message:'Visual film review passed; awaiting independent audio review.',at:new Date().toISOString()});return Project.parse(p);}}if(filmAudio&&reviewPassed(r)){r.perception='direct-audiovisual';r.checks=criteria.film.map(c=>r.checks.find(x=>x.criterion===c)??a.visualReview.checks.find(x=>x.criterion===c));}}
     if (ownerReview) a.ownerReview = r;
     if (ownerReview && r.decision === 'approved') p.gate = 'review';
     else {
@@ -448,6 +466,7 @@ export function applyEvent(project, raw) {
     if (e.action === 'receipt') { if ([...imageSteps,'video','music','effect'].includes(p.step) && e.result?.prompt !== j.request.prompt) throw new Error('Receipt prompt differs from authorized request.'); if (['audition', 'narration'].includes(p.step) && e.result?.voiceId !== j.request.voice) throw new Error('Receipt voice differs from authorized request.'); if (!['submitting', 'submitted', 'uncertain'].includes(j.status)) throw new Error('No submitted job to collect.'); addArtifact(p, e.result, 'provider-runtime'); j.status = 'ready'; j.result = e.result; }
     if (e.action === 'provider-error') { if (!e.message) throw new Error('Provider error needs diagnostics.'); j.status = 'uncertain'; p.gate = 'escalate'; }
   } else throw new Error('Unsupported action.');
+  if(p.debug?.enabled&&!['begin','job-id'].includes(e.action))p.debug.paused=true;
   p.sequence++;
   p.history.push({ sequence: p.sequence, action: e.action, actor: e.actor, message: e.message ?? '', at: new Date().toISOString() });
   return Project.parse(p);

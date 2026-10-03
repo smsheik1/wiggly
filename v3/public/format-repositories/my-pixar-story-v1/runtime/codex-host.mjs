@@ -130,6 +130,7 @@ export async function driveCrew(workflow,thread,host,{maxTasks,receiptDirectory,
  let completed=0;
  while(completed<maxTasks){
   const status=await workflow.status(thread),task=status.pending;
+  if(status.project.debug?.enabled&&status.project.debug.paused)return {completed,stop:'debug-pause',status};
   // Provider execution stays in the authorized runner; this loop never generates media.
   if(!['author','owner-review','review'].includes(task.gate)||['audioReviewerQualification','reviewerQualification'].includes(task.step))return {completed,stop:'graph-gate',status};
   onProgress({step:task.step,gate:task.gate});
@@ -152,8 +153,9 @@ export async function driveCrew(workflow,thread,host,{maxTasks,receiptDirectory,
     event=await runCrewTask(status.project,{...task,...(receipt?.status==='rejected'?{repairFeedback:{error:receipt.error,previousEvent:receipt.event,instruction:'Repair this evidenced validation error. Preserve current source facts and return the current gate Event.'}}:{})},host);
     applyEvent(status.project,event);
    }catch(error){
-    if(!event&&!error.knownFinished)throw error;
+    if(!event&&!error.knownFinished){if(status.project.debug?.enabled)await workflow.respond(thread,{taskId:task.taskId,actor:'runtime',action:'debug-stop',message:error.message});throw error;}
     await saveJson(path,{...started,status:'rejected',event:event??error.finishedResult,error:error.message});
+    if(status.project.debug?.enabled)await workflow.respond(thread,{taskId:task.taskId,actor:'runtime',action:'debug-stop',message:error.message});
     throw new Error(`CODEX_RESULT_REJECTED: known finished worker result violates the contract: ${error.message}. Inspect ${path}; use --repair-invalid true for a bounded repair.`);
    }
    await saveJson(path,{...started,status:'completed',event});
@@ -161,5 +163,6 @@ export async function driveCrew(workflow,thread,host,{maxTasks,receiptDirectory,
   await verifySubmission(status,event);const updated=await workflow.respond(thread,event);completed++;
   if(event.action==='review'&&event.review?.decision==='rejected'){const notice=updated.pending.repairNotices.find(n=>n.artifactId===event.artifactId);if(notice)onProgress({type:'repair-notice',notice});}
  }
- return {completed,stop:'task-limit',status:await workflow.status(thread)};
+ const status=await workflow.status(thread);
+ return {completed,stop:status.project.debug?.enabled&&status.project.debug.paused?'debug-pause':'task-limit',status};
 }

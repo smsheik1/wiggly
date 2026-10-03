@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {assertDebugReady} from './debug.mjs';
 import {readFile} from 'node:fs/promises';
 import {text,File,digest} from './contracts.mjs';
 import {loadStudio,studioFor,maximumTools} from './instructions.mjs';
@@ -72,6 +73,7 @@ export async function prepareCrewTask(p,task){
  return {...canonical,supervisionInstruction:supervised(p)?'Your review is unqualified advisory evidence. Use provisional only with direct perception and no known failures; mark unavailable calibrated voice-match inconclusive, never invent a score. Human must confirm actual media before lock. Missing listening/viewing stays inconclusive.':'Qualified review required.',evaluatorEvidence:await artifactEvidence(p),reviewerRubric:studio?studio.documents[path].content:await readFile(new URL('../evaluation/reviewer.md',import.meta.url),'utf8'),reviewerRubricSource:path?{path,sha256:studio.documents[path].sha256}:null};
 }
 export async function runCrewTask(p,task,host){
+ assertDebugReady(p);
  const worker=assignedWorker(p);if(!worker)throw new Error('CREW_NOT_CONFIGURED: bind real host workers first.');
  if(!['author','owner-review','review','produce'].includes(task.gate))throw new Error('Crew cannot operate a human/runtime gate.');
  if(typeof host.runTask!=='function')throw new Error('Host adapter must export runTask(task, {worker, callTool}).');

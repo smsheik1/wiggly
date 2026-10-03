@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import {assertDebugReady} from './debug.mjs';
 import { promisify } from 'node:util';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -19,6 +20,7 @@ export async function inspectFilm(file){
  const measured={...metadata,integratedLufs:Number(loud.input_i),truePeakDb:Number(loud.input_tp),blackSeconds,freezeSeconds};if(!Number.isFinite(measured.integratedLufs)||!Number.isFinite(measured.truePeakDb))throw new Error('Silent/unmeasurable film audio.');return measured;
 }
 export async function renderFilm(p,runDir){
+ assertDebugReady(p);
  assertAllowed(p,'film');if(p.step!=='film'||p.gate!=='produce')throw new Error('Render requires current locked edit plan.');const manifest=assemblyManifest(p);await verifyFiles(manifest);
  const dir=join(runDir,'assembly',digest(manifest));await mkdir(dir,{recursive:true});const out=join(dir,'film.mp4');let updates=Promise.resolve();
  const progress=value=>{updates=updates.then(async()=>{const data={...value,manifestDigest:digest(manifest)};await writeFile(join(dir,'progress.json'),JSON.stringify(data,null,2));await writeFile(join(dir,'progress.html'),`<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="2"><title>Memoir render</title></head><body><h2>Memoir assembly</h2><progress max="60" value="${value.seconds??0}"></progress><p>${value.status}: ${(value.seconds??0).toFixed(1)} / 60 seconds</p></body></html>`);});};progress({status:'rendering',seconds:0});

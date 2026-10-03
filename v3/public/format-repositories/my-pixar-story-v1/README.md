@@ -40,6 +40,10 @@ Actual hearing, independent STT and visual tools are connected for the shipped C
 
 Old checkpoints require an explicit human audio-review upgrade; script/sample/clone survive while audition/narration and dependent work reopen, and single-review film locks cannot finalize.
 
+## Joint operator debugging
+
+Opt-in debug mode puts the human and current chat above the orchestrator. A saved SQLite pause plus human one-step continuation exposes actual inputs, outputs, findings and receipts, including rejected/malformed work. New worker/provider/render work is blocked while paused; submitted results can be collected safely. Continue grants no approval or spend. See **SKILL.md → Operator debug mode** for commands, bundle boundaries and compatible root-fix recovery. Real production debugging remains unperformed.
+
 ## Built-in local Codex workers
 
 `crew-start --model gpt-5.6-sol --message "<actual human authorization>" --run /absolute/run` provisions durable role threads and binds them to SQLite. `drive-codex --max-tasks 8 --run /absolute/run` resumes actual workers through the supported app-server interface and stops at approval, qualification and production boundaries. No media generation is submitted by this dispatcher. The operator chose GPT-5.6 Sol; unavailable models are not silently substituted. See SKILL.md for setup, scope and version checks. Gemini listening/video observations and independent Cartesia batch STT are connected; calibrated speaker comparison and real reviewer qualification remain pending.

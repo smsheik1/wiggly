@@ -8,6 +8,8 @@ Last updated: October 3, 2026. Owner: Shaz + implementing agent.
 
 ## Core implementation
 
+- [x] **Joint operator debug mode:** Opt-in SQLite pause, genuine human one-step continuation, operator-only rejected/raw output and receipt inspection, error stops with stable task IDs, guarded worker/provider/render side effects, safe submitted-job collection, unchanged approvals/budgets/profile pinning. Free isolated protocol and CLI tests; real production rehearsal remains outstanding.
+
 - [x] **Narration-first:** Four 15-second beats and natural-rate storyteller narration; narration lock before any generated image/video. Compatibility APIs remain. Tests: `workflow`, `supervised-v1`.
 - [x] **Supervised review:** Actual direct listening/viewing, independent transcription, duration/silence/rate evidence; no fabricated speaker score. Human confirms every media criterion against actual media/reference. Qualified mode remains stricter. Tests: `supervised-v1`, `crew`, `gemini-review`, `cartesia-stt`.
 - [x] **Human responses:** Approve, detail change, redo current deliverable, abandon whole project. Redo preserves source facts/history/jobs/budget; abandon blocks production and retains exact human reconciliation. Phase 1: commit `6d0b4885`.

@@ -30,6 +30,27 @@ Replace the example with the user's existing five answer groups. They are source
 
 A configured host bridge may export `async runTask(task)` in a module. `node runner.mjs work /absolute/host-worker.mjs --run /absolute/new-run` runs ONE author/review/plan task and validates its response. It cannot approve for the user. No harness autodetection or fallback occurs. This is a trusted local operator protocol, not a multi-user authorization service; user actions must reflect an actual user message.
 
+## Operator debug mode
+
+The human and current chat supervise one level above the orchestrator. The runtime still owns SQLite state, worker routing, locks and spend. Use a separate development run. Mode is opt-in and persists across restarts; existing projects are unchanged until explicitly enabled.
+
+```sh
+node runner.mjs debug on --message "<actual human instruction>" --run /absolute/debug-run
+node runner.mjs debug-inspect --run /absolute/debug-run
+node runner.mjs debug-next --message "<actual human instruction to continue one step>" --run /absolute/debug-run
+node runner.mjs drive-codex --run /absolute/debug-run
+```
+
+Debug begins paused. Inspect exact task inputs/dependencies, latest actual artifact (including rejection), findings, provider request/job and worker receipt paths. `currentDispatch` exposes malformed current-task results. Show a concise stage/result/next-decision update and the actual text/images/audio/video using the host's supported media display. Label these operator observations; ordinary approval-ready presentation remains guarded. Do not infer hearing or motion perception from metadata/screenshots.
+
+One human `debug-next` permits one next workflow boundary. Even batch dispatch stops after one worker result. Author, owner and independent reviewer outputs, provider plans/results and local renders pause again. Human decisions also pause before subsequent work. A generation step retains its existing bundle unit: three candidate images or four narration stems may contain multiple HTTP subrequests. Role initialization is setup, not a story output. The chat must wait for genuine human continuation rather than repeatedly issuing debug-next itself.
+
+**Continue approves nothing.** Consent, narration lock, artifact approvals, video authorization, budgets and call caps remain separate. Enabling debug grants no paid call permission. Paused runs refuse worker execution, new provider submissions and film rendering. Already-submitted jobs may be collected while paused, without a new request. API/worker errors stop with evidence. Unknown outcomes never repeat; reconcile the original request/turn. Known malformed finished results preserve their task ID; actual human continuation plus `--repair-invalid true` allows one bounded repair.
+
+Root correction loop: observed failure → evidence and reusable cause → fix responsible adapter/runtime/skill/rubric → regression check → record commit/proof → resume only if compatible. Never edit checkpoint rows, receipts or approved bytes. Content revisions use existing changes/redo/impact events. Skill snapshots remain pinned: after work starts, changed instructions require a new test project. Host/tool changes require explicit crew refresh; existing reviewer-binding rules may require a new project after approved media. Debug introduces no migration shortcut.
+
+`debug off --message "<actual human instruction>" --run /absolute/debug-run` restores ordinary bounded dispatch with existing gates. This is trusted local operator control, not multi-user authentication or an additional supervisory model service.
+
 Authoring event example (replace the content with your authored script; use fresh IDs):
 
 ```json

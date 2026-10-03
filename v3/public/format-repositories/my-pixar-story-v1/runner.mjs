@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {loadStudio,studioFor,limitsFor,communicationFor} from './runtime/instructions.mjs';
+import {assertDebugReady,debugSnapshot} from './runtime/debug.mjs';
 import { readFile, mkdir, writeFile, unlink } from 'node:fs/promises';
 import { resolve, join, dirname } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
@@ -43,7 +44,7 @@ function presentation(status) {
   const { project, pending } = status;
   // A failed candidate never becomes the ordinary user-facing deliverable.
   const visible = ['approved','provisional'].includes(pending.artifact?.review?.decision) || pending.gate === 'review' || pending.gate === 'author';
-  return {producer:producerUpdate(status), formatVersion: VERSION, checkpointId: status.checkpointId, sequence: project.sequence, communication:communicationFor(project),pending: { ...pending, artifact: visible ? pending.artifact : null },
+  return {producer:producerUpdate(status),debug:project.debug??{enabled:false,paused:false}, formatVersion: VERSION, checkpointId: status.checkpointId, sequence: project.sequence, communication:communicationFor(project),pending: { ...pending, artifact: visible ? pending.artifact : null },
     validArtifacts: project.artifacts.filter(a => a.valid).map(a => ({ id: a.id, digest: a.digest, kind: a.kind, approved: !!a.approvedBy })),
     jobs: project.jobs.map(j => ({ id: j.id, status: j.status, digest: j.digest, providerJobId: j.providerJobId })), allowances: project.allowances };
 }
@@ -87,6 +88,16 @@ async function main() {
     }
     if (command === 'import') { print(await importMedia(args[0], runDir)); return; }
     const status = await workflow.status('project');
+    if(command==='debug'){
+      const mode=args.shift(),message=option('message');
+      if(!['on','off'].includes(mode)||!message||args.length)throw new Error('Use debug on|off --message "<actual human instruction>" --run /absolute/run.');
+      print(presentation(await workflow.respond('project',{taskId:status.pending.taskId,actor:'human',action:'configure-debug',debugEnabled:mode==='on',message})));return;
+    }
+    if(command==='debug-next'){
+      const message=option('message');if(!message||args.length)throw new Error('debug-next needs --message with the actual human instruction to continue one step.');
+      print(presentation(await workflow.respond('project',{taskId:status.pending.taskId,actor:'human',action:'debug-next',message})));return;
+    }
+    if(command==='debug-inspect'){if(args.length)throw new Error('Unknown debug-inspect arguments.');print(await debugSnapshot(status,runDir));return;}
     if(['crew-start','crew-refresh','drive-codex','work-codex'].includes(command)){
       const reviewCalls=Number(option('review-calls','0'));
       const transcriptionCalls=Number(option('transcription-calls','0'));
@@ -113,6 +124,7 @@ async function main() {
     }
     if(['qualify-audio','qualify-visual','generate','collect','render','preview','finalize'].includes(command)&&!status.project.crew)throw new Error('CREW_NOT_CONFIGURED: bind actual host workers using configure-crew; old approvals never supply capabilities.');
     if(command==='qualify-audio'){
+      assertDebugReady(status.project);
       const dataset=await json(option('dataset')),predictions=await json(option('predictions')),worker=option('worker'),model=option('model'),capability=option('capability');
       if(!worker||!model||!capability||args.length)throw new Error('Specify --dataset, --predictions, --worker, --model and --capability.');
       const computed=await qualifyAudio(dataset,predictions,worker,model,capability);print(computed);requireAudioQualification(computed);
@@ -121,6 +133,7 @@ async function main() {
       await verifyFiles(report);print(presentation(await workflow.respond('project',{taskId:status.pending.taskId,action:'audio-qualified',actor:'runtime',content:report})));return;
     }
     if(command==='qualify-visual'){
+      assertDebugReady(status.project);
       const dataset=await json(option('dataset')),predictions=await json(option('predictions')),worker=option('worker'),model=option('model'),capability=option('capability');
       if(!worker||!model||!capability||args.length)throw new Error('Specify --dataset, --predictions, --worker, --model and --capability.');
       const computed=await qualifyVisual(dataset,predictions,worker,model,capability);print(computed);requireVisualQualification(computed,'image');requireVisualQualification(computed,'video');
@@ -174,6 +187,7 @@ async function main() {
     if (command === 'generate' || command === 'collect') {
       const { project, pending } = status; const job = pending.job;
       if (pending.gate !== 'collect' || !job) throw new Error('Only a current authorized generation request can be executed/collected.');
+      if(command==='generate')assertDebugReady(project);
       await verifyFiles(project.artifacts.filter(a=>a.valid));
       const runtimeEvent = async (action,extra={})=>{
         const latest=await workflow.status('project');return workflow.respond('project',{taskId:latest.pending.taskId,actor:'runtime',jobId:job.id,artifactDigest:job.digest,action,...extra});
@@ -207,7 +221,11 @@ async function main() {
         await runtimeEvent('provider-error',{message:diagnostic});throw new Error(`${diagnostic}\n${remediation(job.plan.provider,secretsPath)}`);
       }return;
     }
-    throw new Error('Use check, check-provider, schema, init, status, present, work, respond, import, measure, validate, impact, generate, collect, crew-template, crew-start, crew-refresh, work-codex, drive-codex, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
+    throw new Error('Use check, check-provider, schema, init, status, present, work, respond, import, measure, validate, impact, generate, collect, crew-template, crew-start, crew-refresh, work-codex, drive-codex, debug, debug-next, debug-inspect, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
+  } catch(error){
+    const latest=await workflow.status('project').catch(()=>null);
+    if(latest?.project.debug?.enabled&&!latest.project.debug.paused)await workflow.respond('project',{taskId:latest.pending.taskId,actor:'runtime',action:'debug-stop',message:'Command stopped: '+error.message});
+    throw error;
   } finally { workflow.close(); await release(); }
 }
 main().catch(e => { process.stderr.write(`${e.message}\n`); process.exitCode = 1; });

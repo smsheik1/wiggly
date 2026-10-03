@@ -1,4 +1,5 @@
 import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
+import {assertDebugReady} from './debug.mjs';
 import { join, extname, resolve } from 'node:path';
 import {legacyGeneration,studioFor} from './instructions.mjs';
 import { videoBinding, effectFor } from './studio.mjs';
@@ -70,6 +71,7 @@ export async function checkProvider(provider,secretsPath,fetcher=fetch){
 }
 // Each subrequest has a durable started marker and result. Unknown outcomes are never retried.
 export async function executeJob(p, job, runDir, apiKey, fetcher = fetch, collectOnly = false, onJobId) {
+  if(!collectOnly)assertDebugReady(p);
   const recorded = p.jobs.find(j => j.id === job.id && j.digest === job.digest);
   if (p.gate !== 'collect' || p.step !== job.plan.operation || !recorded?.authorization || !['submitting', 'submitted', 'uncertain'].includes(recorded.status) || recorded.key !== keyFor(p) || digest({ plan: job.plan, request: job.request, dependencies: job.dependencies }) !== recorded.digest || job.dependencies.some(id => !p.artifacts.some(a => a.id === id && a.valid))) throw new Error('UNAUTHORIZED_PROVIDER_CALL: use the current recorded request after the runner checkpoints submission.');
   assertAllowed(p, p.step);
