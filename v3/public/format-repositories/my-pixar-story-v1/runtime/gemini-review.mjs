@@ -1,3 +1,4 @@
+import {loadStudio} from './instructions.mjs';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {join,extname} from 'node:path';
 import {execFile} from 'node:child_process';
@@ -9,7 +10,8 @@ import {taskAssets} from './crew.mjs';
 import {loadKey,remediation,atomicJson} from './providers.mjs';
 
 const exec=promisify(execFile),base='https://generativelanguage.googleapis.com';
-export const GEMINI_REVIEW_MODEL='gemini-3.8-flash';
+const reviewConfig=loadStudio().config.generation.mediaReview;
+export const GEMINI_REVIEW_MODEL=reviewConfig.model;
 // Operator-selected 4 FPS review profile, below the observed 24 FPS provider
 // ceiling. Never claim that sampled coverage inspects every source frame.
 export const GEMINI_REVIEW_PROFILE={model:GEMINI_REVIEW_MODEL,api:'v1beta/interactions',video:'static at min(measured source FPS,4), high resolution',audio:'original audio; video audio extracted to mono 48kHz PCM',thinking:'high',maxOutputTokens:8192};
@@ -60,7 +62,7 @@ export function createGeminiReviewTools({secretsPath,receiptDirectory,maxCalls=0
  const inspect=async(tool,{file,worker,task})=>{
   if(!task?.taskId||!worker?.workerId)throw new Error('Gemini perception requires a current bound crew task.');
   if(tool==='watchVideo'&&(!file.width||!file.durationSeconds||!(file.fps>0&&file.fps<=60)))throw new Error('Gemini video review requires a measured source FPS ≤60.');
-  const samplingFps=tool==='watchVideo'?Math.min(file.fps,4):undefined;
+  const samplingFps=tool==='watchVideo'?Math.min(file.fps,reviewConfig.samplingFps):undefined;
   await verifyFiles(file);
   const context=tool==='watchVideo'?contextFor(task):{step:task.step,criteria:task.criteria};
   const refs=tool==='watchVideo'?[...taskAssets(task).values()].filter(f=>f.width&&!f.durationSeconds):[];

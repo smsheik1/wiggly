@@ -71,7 +71,7 @@
   },
   "remotionInfrastructure": {
     "status": "implemented; isolated component/browser verification, production proof excluded",
-    "renderer": "RemotionAdScene → AdRenderSurface → memoir-film",
+    "renderer": "RemotionAdScene \u2192 AdRenderSurface \u2192 memoir-film",
     "audio": "FFmpeg mix only; ffprobe/FFmpeg inspection",
     "freeTests": 76,
     "componentProof": "Two-second synthetic render checks source trim, exact cut, 1080p/30fps/audio; no story film or AI generation",
@@ -189,7 +189,7 @@
     },
     "freshPackageAudit": "PASS: fresh npm ci/check/smoke,97 tests,zero dependency advisories,independent mocked fixed-GET and reviewed-only delivery probes; no production qualification",
     "simplificationReview": "Lean already. Ship. No additional dependencies,renderer or general framework.",
-    "browserProof": "Actual IAB synthetic blue→green Player playback/pause,60s timeline,no horizontal overflow or console errors; no perceptual qualification",
+    "browserProof": "Actual IAB synthetic blue\u2192green Player playback/pause,60s timeline,no horizontal overflow or console errors; no perceptual qualification",
     "observedFailureAndFix": "Pinned Remotion4.0.473 dependency tree had high advisories; align kit Remotion4.0.532, rebuild official renderer, derive manifest/runtime version from installed remotion VERSION; version-alignment regression and fresh audit pass"
   },
   "providerMetadataChecks": {
@@ -228,7 +228,7 @@
     ],
     "savedProjectStateMutated": false,
     "liveAudioTransport": "PASS: correctly heard the hidden synthetic phrase; response recovered locally without a duplicate request after unnecessary interaction-ID check was fixed",
-    "liveVideoTransport": "PASS: exact Gemini 3.8 Flash at 4 FPS correctly reported blue from 0–1s and green from 1–2s on the two-second local synthetic clip. Earlier 30 FPS HTTP400 preserved; no AI video generated.",
+    "liveVideoTransport": "PASS: exact Gemini 3.8 Flash at 4 FPS correctly reported blue from 0\u20131s and green from 1\u20132s on the two-second local synthetic clip. Earlier 30 FPS HTTP400 preserved; no AI video generated.",
     "observedFailuresAndFixes": [
       "store:false completed response may omit ID; retain request/response digests and recover finished output offline",
       "Provider rejects fps>24; declare min(source FPS,24), expose both source/sampling and bind qualification profile",
@@ -325,7 +325,7 @@
     "auditScope": "audited runtime/test sources unchanged; README/proof metadata finalized afterward",
     "auditEnvironmentFailure": "First fresh full test attempt encountered ENOSPC; auditor removed only its prior temporary extraction, affected22 tests and complete113 rerun passed. Regeneratable old audit node_modules subsequently removed; real workspaces/runs untouched.",
     "simplificationReview": "Direct adapter, existing broker/receipt helpers and one shared review preparation; no new framework/dependency/renderer.",
-    "stateMutationScope": "explicit crew-profile refresh only: same15 workers/models, sequence6→7 plus one audit event; every input/artifact/job/allowance/gate and prior audit entry unchanged",
+    "stateMutationScope": "explicit crew-profile refresh only: same15 workers/models, sequence6\u21927 plus one audit event; every input/artifact/job/allowance/gate and prior audit entry unchanged",
     "liveTranscriptionProbeStateMutated": false,
     "connectedRecovery": {
       "workersVerified": 15,
@@ -415,7 +415,7 @@
     "legacyProfile": "missing saved field loads legacy-seedance-hd; no run migration",
     "sourceRaster": "864x496 documented Mini 480p 16:9; existing export canvas scales source, no native HD-detail claim",
     "videoApproval": "fresh exact human authorization for every new Mini video request and repair",
-    "repairOwnership": "independent reviewer notes → orchestrator reports/routes → prompt author repair → runtime generation → independent review → human; image allowances bounded",
+    "repairOwnership": "independent reviewer notes \u2192 orchestrator reports/routes \u2192 prompt author repair \u2192 runtime generation \u2192 independent review \u2192 human; image allowances bounded",
     "sound": "explicit reviewed narration-only decision skips omitted music; requested effects retain locks; separate Vera/Ava full final reviews remain",
     "sqliteRehearsal": "both score/import and narration-only complete isolated protocols reopened after every event",
     "sourceLogs": [
@@ -431,5 +431,22 @@
     "productionFilmQualityProven": false,
     "simplificationReview": "ponytail-review: Lean already. Ship. Existing profile/schema/stages/reviews/broker/mix extended; no new dependency, framework, state store or renderer.",
     "auditedArchiveBeforeFinalMetadata": "8d051679b6dbb672401b059a39d74e06799c5c139de0cedaab917cfa05674eff"
+  },
+  "studioInstructions": {
+    "date": "2026-10-03",
+    "scope": "runtime-loaded named skills, separate reviewer rubrics, one config, versioned SQLite instruction bundle, validated handoffs and friendly producer communication; offline mechanics only",
+    "sourceTestsPassed": 160,
+    "namedSkills": 14,
+    "roleBindings": 15,
+    "humanAuthority": "actual crew bindings, project budget and approvals remain in SQLite; no template edit grants spend",
+    "legacy": "missing instruction snapshot remains compatibility path; pristine-only explicit upgrade; active bundle changes require a new project",
+    "perception": "existing actual-image, Gemini 4 FPS media review and independent STT unchanged; no qualification claim",
+    "skillValidation": "14 skills pass skill-creator quick_validate",
+    "blindPackageAudit": "pending fresh independent audit",
+    "paidProviderCalls": 0,
+    "productionCredentialsRead": false,
+    "savedProductionRunsChanged": false,
+    "aiVideoGenerations": 0,
+    "productionFilmQualityProven": false
   }
 }

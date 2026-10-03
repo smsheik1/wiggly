@@ -1,5 +1,6 @@
 import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { join, extname, resolve } from 'node:path';
+import {legacyGeneration,studioFor} from './instructions.mjs';
 import { videoBinding, effectFor } from './studio.mjs';
 import { executeVideo } from './video-provider.mjs';
 import { shotReferences } from './shots.mjs';
@@ -8,13 +9,15 @@ import { assertAllowed, keyFor, miniProduction } from './gates.mjs';
 import { importMedia, verifyFiles, narrationWindow } from './media.mjs';
 const artifact = (p, key) => p.artifacts.findLast(a => a.key === key && a.valid);
 export function requestDescriptor(p, plan) {
-  if(plan.operation==='video'){if(plan.parameters.model)throw new Error('Video model is fixed by the project productionProfile; unsupported override.');const b=videoBinding(p),model=miniProduction(p)?'seedance-2.0-mini':'seedance-2.0',resolution=miniProduction(p)?'480p':'1080p';if(!(plan.estimatedCostUsd>0))throw new Error('Video needs an operator-verified positive cost estimate.');return {prompt:plan.parameters.prompt,endpoint:`https://api.replicate.com/v1/models/bytedance/${model}/predictions`,frame:b.frame.content.files[0],input:{prompt:plan.parameters.prompt,duration:b.clip.generationSeconds,resolution,aspect_ratio:'16:9',generate_audio:false}};}
-  if(['music','effect'].includes(plan.operation)){if(plan.parameters.model)throw new Error('Sound adapters use their documented fixed models.');if(!(plan.estimatedCostUsd>0))throw new Error('Sound generation needs a verified positive cost estimate.');const target=plan.operation==='music'?artifact(p,'soundPlan').content.music:effectFor(p);if(target.mode!=='generate')throw new Error('Imported sound cannot invoke a provider.');return {prompt:plan.parameters.prompt,endpoint:`https://api.elevenlabs.io/v1/${plan.operation==='music'?'music':'sound-generation'}?output_format=mp3_44100_128`,body:plan.operation==='music'?{prompt:target.prompt,music_length_ms:60000,model_id:'music_v2_5',force_instrumental:true}:{text:target.prompt,duration_seconds:target.durationSeconds,model_id:'eleven_text_to_sound_v2',loop:false},provenance:target.provenance};}
+  const generation=studioFor(p)?.config.generation??legacyGeneration;
+  if(p.studio&&['clone','audition','narration'].includes(plan.operation)&&(plan.parameters.model&&plan.parameters.model!==generation.voice.model||plan.parameters.cartesiaVersion&&plan.parameters.cartesiaVersion!==generation.voice.apiVersion))throw new Error('STUDIO_BINDING_CHANGED: use the pinned Cartesia model/API version.');
+  if(plan.operation==='video'){if(plan.parameters.model)throw new Error('Video model is fixed by the project productionProfile; unsupported override.');const b=videoBinding(p),model=miniProduction(p)?generation.video.model:'seedance-2.0',resolution=miniProduction(p)?generation.video.resolution:'1080p';if(!(plan.estimatedCostUsd>0))throw new Error('Video needs an operator-verified positive cost estimate.');return {prompt:plan.parameters.prompt,endpoint:`https://api.replicate.com/v1/models/bytedance/${model}/predictions`,frame:b.frame.content.files[0],input:{prompt:plan.parameters.prompt,duration:b.clip.generationSeconds,resolution,aspect_ratio:'16:9',generate_audio:false}};}
+  if(['music','effect'].includes(plan.operation)){if(plan.parameters.model)throw new Error('Sound adapters use their documented fixed models.');if(!(plan.estimatedCostUsd>0))throw new Error('Sound generation needs a verified positive cost estimate.');const target=plan.operation==='music'?artifact(p,'soundPlan').content.music:effectFor(p);if(target.mode!=='generate')throw new Error('Imported sound cannot invoke a provider.');return {prompt:plan.parameters.prompt,endpoint:`https://api.elevenlabs.io/v1/${plan.operation==='music'?'music':'sound-generation'}?output_format=mp3_44100_128`,body:plan.operation==='music'?{prompt:target.prompt,music_length_ms:60000,model_id:generation.music.model,force_instrumental:true}:{text:target.prompt,duration_seconds:target.durationSeconds,model_id:generation.effect.model,loop:false},provenance:target.provenance};}
   const sample = artifact(p, 'voiceSample')?.content;
-  if (plan.operation === 'clone') return { endpoint: 'https://api.cartesia.ai/voices/clone', cartesiaVersion: plan.parameters.cartesiaVersion ?? '2026-08-14',
+  if (plan.operation === 'clone') return { endpoint: 'https://api.cartesia.ai/voices/clone', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
     clip: sample.files[0], language: sample.language, name: `${(artifact(p,'answers')?.content.inputs??p.inputs).subject.preferredName} — ${p.id}`, access: 'private' };
-  if (['audition', 'narration'].includes(plan.operation)) return { endpoint: 'https://api.cartesia.ai/tts/bytes', cartesiaVersion: plan.parameters.cartesiaVersion ?? '2026-08-14',
-    model_id: plan.parameters.model ?? 'sonic-3.6-2026-08-27', voice: artifact(p, 'clone').content.voiceId, language: sample.language,
+  if (['audition', 'narration'].includes(plan.operation)) return { endpoint: 'https://api.cartesia.ai/tts/bytes', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
+    model_id: plan.parameters.model ?? generation.voice.model, voice: artifact(p, 'clone').content.voiceId, language: sample.language,
     transcripts: artifact(p, 'script').content.beats.slice(0, plan.operation === 'audition' ? 1 : 4).map(b => b.narration),
     ...(plan.operation==='narration'&&p.workflowRevision===3?{beatWindowSeconds:15}:{}),
     output_format: { container: 'wav', encoding: 'pcm_s16le', sample_rate: 44100 }, generation_config: { speed: 1, volume: 1 } };
@@ -29,8 +32,8 @@ export function requestDescriptor(p, plan) {
     images = plan.operation === 'sheet' ? [selected.content.files[selected.selection]] : artifact(p, 'roster').content.characters.find(c => c.id === p.characterId).references;
     n = plan.operation === 'sheet' ? 1 : 3;
   }
-  if (plan.estimatedCostUsd < n * 0.01) throw new Error('Muse estimate must account for every requested image ($0.01 each).');
-  return { endpoint: `https://api.meta.ai/v1/images/${images.length ? 'edits' : 'generations'}`, model: 'muse-image-1.0', prompt: plan.parameters.prompt, images, n, size: '1536x864', response_format: 'b64_json', output_format: 'webp',
+  if (plan.estimatedCostUsd < n * generation.image.estimatedUnitCostUsd) throw new Error('Muse estimate must account for every requested image ($0.01 each).');
+  return { endpoint: `https://api.meta.ai/v1/images/${images.length ? 'edits' : 'generations'}`, model: generation.image.model, prompt: plan.parameters.prompt, images, n, size: '1536x864', response_format: 'b64_json', output_format: 'webp',
     tool_enablement: { enable_web_search: false, enable_image_search: false, enable_shell: false } };
 }
 export async function atomicJson(path, value) { const temp = `${path}.tmp`; await writeFile(temp, JSON.stringify(value, null, 2), { mode: 0o600 }); await rename(temp, path); }

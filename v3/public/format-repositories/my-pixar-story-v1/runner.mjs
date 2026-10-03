@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {loadStudio,studioFor,limitsFor,communicationFor} from './runtime/instructions.mjs';
 import { readFile, mkdir, writeFile, unlink } from 'node:fs/promises';
 import { resolve, join, dirname } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
@@ -12,9 +13,9 @@ import { current, locked, assertAllowed } from './runtime/gates.mjs';
 import { renderFilm, inspectFilm } from './runtime/assemble.mjs';
 import {prepareComposition, servePreview, verifyRenderer} from './runtime/remotion.mjs';
 import { assemblyManifest, assertFilmInspection } from './runtime/studio.mjs';
-import {presentDeliverable} from './runtime/presentation.mjs';
+import {presentDeliverable,producerUpdate} from './runtime/presentation.mjs';
 import {Crew,crewRoles,runCrewTask,prepareCrewTask} from './runtime/crew.mjs';
-import {CodexHost,DEFAULT_WORKER_MODEL,driveCrew} from './runtime/codex-host.mjs';
+import {CodexHost,driveCrew} from './runtime/codex-host.mjs';
 import {createGeminiReviewTools,GEMINI_REVIEW_PROFILE} from './runtime/gemini-review.mjs';
 import {createCartesiaTranscriptionTool,CARTESIA_STT_PROFILE} from './runtime/cartesia-stt.mjs';
 import {AudioCase,audioTask,qualifyAudio,requireAudioQualification} from './evaluation/audio-qualification.mjs';
@@ -42,7 +43,7 @@ function presentation(status) {
   const { project, pending } = status;
   // A failed candidate never becomes the ordinary user-facing deliverable.
   const visible = ['approved','provisional'].includes(pending.artifact?.review?.decision) || pending.gate === 'review' || pending.gate === 'author';
-  return { formatVersion: VERSION, checkpointId: status.checkpointId, sequence: project.sequence, pending: { ...pending, artifact: visible ? pending.artifact : null },
+  return {producer:producerUpdate(status), formatVersion: VERSION, checkpointId: status.checkpointId, sequence: project.sequence, communication:communicationFor(project),pending: { ...pending, artifact: visible ? pending.artifact : null },
     validArtifacts: project.artifacts.filter(a => a.valid).map(a => ({ id: a.id, digest: a.digest, kind: a.kind, approved: !!a.approvedBy })),
     jobs: project.jobs.map(j => ({ id: j.id, status: j.status, digest: j.digest, providerJobId: j.providerJobId })), allowances: project.allowances };
 }
@@ -70,7 +71,8 @@ async function main() {
   if (command === 'check') {
     const tools = Object.fromEntries(['ffprobe', 'ffmpeg', 'tar'].map(tool => [tool, spawnSync(tool, ['-version'], { stdio: 'ignore' }).error?.code !== 'ENOENT']));
     const renderer=await verifyRenderer();
-    print({ formatVersion: VERSION, node: process.version, tools, renderer:renderer.manifest.renderer, dependencies: 'LangGraph + SQLite loaded',
+    const studio=loadStudio();
+    print({studioVersion:studio.config.version,studioSha256:studio.sha256,instructionFiles:Object.keys(studio.documents),formatVersion: VERSION, node: process.version, tools, renderer:renderer.manifest.renderer, dependencies: 'LangGraph + SQLite loaded',
       requiredKeys: ['CARTESIA_API_KEY', 'META_API_KEY', 'REPLICATE_API_TOKEN (video stage)'], conditionalKeys:['GEMINI_API_KEY (shipped Codex media review)'], optionalKeys:['ELEVENLABS_API_KEY (generated music/effects; imports need no key)'], credentialsRead: false, productionStageLimit: 'supervised v1 through private finalization; every media lock needs human review and every video request needs exact human authorization; qualified policy remains available; real production proof not performed' });
     if (Object.values(tools).some(v => !v)) process.exitCode = 1; return;
   }
@@ -95,17 +97,17 @@ async function main() {
       const host=new CodexHost({cwd:join(runDir,'host-workspace'),perceptionTools,perceptionProfile:{media:GEMINI_REVIEW_PROFILE,transcription:CARTESIA_STT_PROFILE},onProgress:({worker,item})=>process.stderr.write(`${worker}: ${item}\n`)});
       try{
         if(['crew-start','crew-refresh'].includes(command)){
-          const message=option('message'),model=option('model',DEFAULT_WORKER_MODEL);
+          const message=option('message'),model=option('model');
           if(!message||command==='crew-start'&&status.project.crew||command==='crew-refresh'&&!status.project.crew)throw new Error('crew-start requires an unconfigured run; crew-refresh requires existing bindings. Supply --message with the actual human instruction.');
           if(status.project.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status)))throw new Error('Reconcile outstanding jobs before changing crew.');
-          await host.initialize();const crew=command==='crew-refresh'?await host.refreshCrew(status.project.crew):await host.startCrew(model);
+          await host.initialize();const crew=command==='crew-refresh'?await host.refreshCrew(status.project.crew):await host.startCrew(model,studioFor(status.project)?.config??loadStudio().config);
           print(presentation(await workflow.respond('project',{taskId:status.pending.taskId,actor:'human',action:'configure-crew',message,crew})));return;
         }
         if(!status.project.crew)throw new Error('CREW_NOT_CONFIGURED: use crew-start before local Codex dispatch.');
-        const maxTasks=command==='work-codex'?1:Number(option('max-tasks','8')),repair=option('repair-invalid','false');
+        const maxTasks=command==='work-codex'?1:Number(option('max-tasks',String(limitsFor(status.project).crewTasksPerDispatch))),repair=option('repair-invalid','false');
         if(!['true','false'].includes(repair))throw new Error('--repair-invalid needs true or false.');
         await host.initialize();
-        const result=await driveCrew(workflow,'project',host,{maxTasks,repairInvalid:repair==='true',receiptDirectory:join(runDir,'host-dispatch'),verifySubmission,onProgress:progress=>process.stderr.write(progress.type==='repair-notice'?`DEFECT FOUND: ${JSON.stringify(progress.notice)}\n`:`${progress.step}: ${progress.gate}\n`)});
+        const result=await driveCrew(workflow,'project',host,{maxTasks,repairInvalid:repair==='true',receiptDirectory:join(runDir,'host-dispatch'),verifySubmission,onProgress:progress=>process.stderr.write(progress.type==='repair-notice'?`DEFECT FOUND: ${progress.notice.key??progress.notice.artifactId}. ${progress.notice.findings?.map(f=>f.evidence).join(' ')??'See the localized repair notice in status.'} Repair routed through the current task.\n`:`${progress.step}: ${progress.gate}\n`)});
         print({completed:result.completed,stop:result.stop,...presentation(result.status)});return;
       }finally{host.close();}
     }
@@ -152,7 +154,6 @@ async function main() {
     if (command === 'respond') {
       const event = await json(args[0]);
       if (event.actor === 'runtime') throw new Error('Runtime events are reserved for the provider collector.');
-      if (status.pending.step === 'sheetPrompt' && event.action === 'artifact') { const recipe = (await import('./runtime/media.mjs')).sha(await readFile(join(root, 'character-sheet-recipe.md'))); if (event.content?.recipeSha256 !== recipe) throw new Error('Sheet prompt must use the packaged recipe hash; run recipe.'); }
       if(!status.project.crew&&['agent','reviewer'].includes(event.actor)&&event.action!=='note')throw new Error('CREW_NOT_CONFIGURED: run crew-template, bind actual host IDs/model/tools and submit human configure-crew.');
       await verifySubmission(status,event);
       print(presentation(await workflow.respond('project', event))); return;
@@ -161,13 +162,12 @@ async function main() {
       if (!['author', 'owner-review', 'review', 'produce'].includes(status.pending.gate)) { print(presentation(status)); return; }
       const modulePath = args[0];
       const task = modulePath ? status.pending : await prepareCrewTask(status.project,status.pending);
-      if (!modulePath) { print({ task, responseSchema: z.toJSONSchema(Event), contentSchema: Content[status.pending.step] ? z.toJSONSchema(Content[status.pending.step]) : null,
+      if (!modulePath) { print({communication:communicationFor(status.project), task, responseSchema: z.toJSONSchema(Event), contentSchema: Content[status.pending.step] ? z.toJSONSchema(Content[status.pending.step]) : null,
         instruction: 'The operating host agent must perform this task, write an event JSON, then call respond. A trusted host integration exporting runTask(task, {worker, callTool}) may automate it after configure-crew; supply actual perception tools and inherit the current host model. The format broker checks every tool call; the host must restrict any ambient tools separately.' }); return; }
       const worker = await import(pathToFileURL(resolve(modulePath)).href);
       if (typeof worker.runTask !== 'function') throw new Error('Worker module must export runTask(task).');
       const event = await runCrewTask(status.project,task,worker);
       if (event.actor !== status.pending.actor || !['artifact', 'owner-review', 'review', 'plan'].includes(event.action)) throw new Error('Worker may only author, review or plan; it cannot approve for the user or call providers through the format tools.');
-      if (status.pending.step === 'sheetPrompt' && event.action === 'artifact') { const recipe = (await import('./runtime/media.mjs')).sha(await readFile(join(root, 'character-sheet-recipe.md'))); if (event.content?.recipeSha256 !== recipe) throw new Error('Sheet prompt must use the packaged recipe hash; run recipe.'); }
       await verifySubmission(status,event);
       print(presentation(await workflow.respond('project', event))); return;
     }

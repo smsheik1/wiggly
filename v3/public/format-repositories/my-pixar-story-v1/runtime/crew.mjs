@@ -1,27 +1,14 @@
 import {z} from 'zod';
 import {readFile} from 'node:fs/promises';
-import {text,File} from './contracts.mjs';
+import {text,File,digest} from './contracts.mjs';
+import {loadStudio,studioFor,maximumTools} from './instructions.mjs';
+import {taskFor} from './workflow.mjs';
+import {assertAllowed,keyFor,current} from './gates.mjs';
 import {verifyFiles,measureAudio,probe} from './media.mjs';
 import {supervised,reviewPassed} from './gates.mjs';
 import {artifactEvidence} from './evaluators.mjs';
 // These are format capabilities, not arbitrary filesystem/network/shell access.
-export const crewRoles={
- 'script-writer':{name:'Leo',tools:['readAsset']},
- 'text-reviewer':{name:'Sage',tools:['readAsset','viewImage']},
- 'cast-designer':{name:'Cleo',tools:['readAsset','viewImage']},
- 'sheet-prompter':{name:'Pia',tools:['readAsset','viewImage']},
- 'background-product-owner':{name:'Beau',tools:['readAsset','viewImage']},
- 'pixar-prompter':{name:'Pia',tools:['readAsset','viewImage']},
- 'shot-planner':{name:'Sam',tools:['readAsset','viewImage']},
- 'composition-writer':{name:'Cam',tools:['readAsset','viewImage']},
- 'motion-director':{name:'Mo',tools:['readAsset','viewImage']},
- 'video-prompt-engineer':{name:'Vin',tools:['readAsset','viewImage']},
- 'sound-designer':{name:'Finn',tools:['readAsset','listenAudio','measureAudio']},
- 'film-editor':{name:'Eli',tools:['readAsset','viewImage','watchVideo','listenAudio','measureAudio']},
- 'audio-reviewer':{name:'Ava',tools:['readAsset','listenAudio','measureAudio','transcribe','speakerSimilarity']},
- 'visual-reviewer':{name:'Vera',tools:['readAsset','viewImage','watchVideo']},
- 'generation-planner':{name:'Max',tools:['readAsset','viewImage']},
-};
+export const crewRoles=loadStudio().config.agents;
 export const Crew=z.object({workers:z.array(z.object({workerId:text,name:text,role:z.enum(Object.keys(crewRoles)),modelVersion:text,capabilityVersion:text,execution:z.literal('host')})).min(1)}).strict().superRefine((crew,ctx)=>{
  if(new Set(crew.workers.map(w=>w.role)).size!==crew.workers.length||new Set(crew.workers.map(w=>w.workerId)).size!==crew.workers.length)ctx.addIssue({code:'custom',message:'Each role needs one distinct host worker; IDs cannot impersonate another role.'});
  if(Object.keys(crewRoles).some(role=>!crew.workers.some(w=>w.role===role)))ctx.addIssue({code:'custom',message:'Assign every format role; missing workers cannot silently fall back.'});
@@ -46,7 +33,7 @@ function filesIn(value,out=new Map()){
 }
 export function taskAssets(task){return filesIn({artifact:task.artifact,dependencies:task.dependencies,visualReferences:task.visualReferences,references:task.references,availableLocations:task.availableLocations,videoBinding:task.videoBinding,sample:task.voiceReference,intake:task.intakeConfirmation});}
 export function crewTools(task,worker,adapters={},record=()=>{}){
- const allowed=crewRoles[worker.role]?.tools??[],assets=taskAssets(task);
+ const allowed=(task.allowedTools??maximumTools[worker.role]??[]).filter(t=>maximumTools[worker.role]?.includes(t)),assets=taskAssets(task);
  const get=async hash=>{const file=assets.get(hash);if(!file)throw new Error('ASSET_SCOPE_DENIED: use a hash from this current task.');await verifyFiles(file);return file;};
  const execute=async(name,parameters={})=>{
   if(!allowed.includes(name))throw new Error(`TOOL_PERMISSION_DENIED: ${worker.name} cannot call ${name}.`);
@@ -66,7 +53,20 @@ export function crewTools(task,worker,adapters={},record=()=>{}){
  return async(name,parameters={})=>{const value=await execute(name,parameters);record({tool:name,sha256:parameters.sha256,referenceSha256:parameters.referenceSha256,seconds:value.seconds,...(value.provider?{provider:value.provider,modelVersion:value.modelVersion,requestDigest:value.requestDigest,receiptPath:value.receiptPath,samplingFps:value.samplingFps}: {})},value);return value;};
 }
 export async function prepareCrewTask(p,task){
- return task.gate==='review'?{...task,...(task.step==='answers'?{reviewResponsibility:'Questionnaire Reviewer: compare existing questions/answers with the source, check usable facts, relationships, ages, locations and unresolved findings. Do not grade storytelling or invent facts. Evidenced clarification only.'}:{}),supervisionInstruction:supervised(p)?'Your review is unqualified advisory evidence. Use provisional only with direct perception and no known failures; mark unavailable calibrated voice-match inconclusive, never invent a score. Human must confirm actual media before lock. Missing listening/viewing stays inconclusive.':'Qualified review required.',evaluatorEvidence:await artifactEvidence(p),reviewerRubric:await readFile(new URL('../evaluation/reviewer.md',import.meta.url),'utf8')}:task;
+ const expected=taskFor(p);
+ if(task.taskId!==expected.taskId||task.step!==p.step||task.gate!==p.gate)throw new Error('STALE_TASK: read current status before dispatch.');
+ // No worker can receive replaced, omitted, stale or invented project context.
+ const fields=['projectId','artifact','dependencies','approvedScript','lockedAnswers','inputs','sourceInputs','questionnaire','castEntry','recipe','references','referenceBindings','availableLocations','shotIntentions','immediateScenes','shot','videoBinding','visualReferences','voiceReference','intakeConfirmation','feedback','criteria','formatRole','crewWorker','skill','allowedTools','studioConfig','studioSha256','instruction'];
+ for(const field of fields)if(digest(task[field]??null)!==digest(expected[field]??null))throw new Error(`TASK_INPUT_MISMATCH: ${field} is missing, changed or stale; read the current task packet.`);
+ if(['author','produce'].includes(p.gate))assertAllowed(p,p.step);
+ for(const a of expected.dependencies??[])if(!a.valid||(!a.approvedBy&&a.kind!=='clone')||current(p,a.key)?.id!==a.id)throw new Error(`TASK_INPUT_NOT_LOCKED: ${a.key}`);
+ if(['review','owner-review'].includes(task.gate)&&(!task.artifact||current(p,keyFor(p))?.id!==task.artifact.id))throw new Error('TASK_INPUT_MISSING: exact current artifact required for review.');
+ const inputChecklist=[{input:'current task and role',source:'SQLite',status:'verified'},...expected.dependencies.map(a=>({input:a.key,artifactId:a.id,artifactDigest:a.digest,source:'SQLite locked artifact',status:'verified'})),...(task.artifact?[{input:'current deliverable',artifactId:task.artifact.id,artifactDigest:task.artifact.digest,source:'SQLite draft (not human approval)',status:'verified'}]:[])];
+ const {communication,...workPacket}=expected;
+ const canonical={...workPacket,inputChecklist,...(task.repairFeedback?{repairFeedback:task.repairFeedback}:{})};
+ if(task.gate!=='review')return canonical;
+ const studio=studioFor(p),path=studio?.config.reviewers[expected.formatRole];
+ return {...canonical,supervisionInstruction:supervised(p)?'Your review is unqualified advisory evidence. Use provisional only with direct perception and no known failures; mark unavailable calibrated voice-match inconclusive, never invent a score. Human must confirm actual media before lock. Missing listening/viewing stays inconclusive.':'Qualified review required.',evaluatorEvidence:await artifactEvidence(p),reviewerRubric:studio?studio.documents[path].content:await readFile(new URL('../evaluation/reviewer.md',import.meta.url),'utf8'),reviewerRubricSource:path?{path,sha256:studio.documents[path].sha256}:null};
 }
 export async function runCrewTask(p,task,host){
  const worker=assignedWorker(p);if(!worker)throw new Error('CREW_NOT_CONFIGURED: bind real host workers first.');
@@ -74,7 +74,7 @@ export async function runCrewTask(p,task,host){
  if(typeof host.runTask!=='function')throw new Error('Host adapter must export runTask(task, {worker, callTool}).');
  task=await prepareCrewTask(p,task);
  const receipts=[],outputs=new Map();
- const event=await host.runTask({...task,worker,allowedTools:crewRoles[worker.role].tools},{worker,callTool:crewTools(task,worker,host.tools,(r,value)=>{receipts.push(r);outputs.set(`${r.tool}:${r.sha256}`,value);})});
+ const event=await host.runTask({...task,worker,allowedTools:task.allowedTools??crewRoles[worker.role].tools},{worker,callTool:crewTools(task,worker,host.tools,(r,value)=>{receipts.push(r);outputs.set(`${r.tool}:${r.sha256}`,value);})});
  try{
  const expected=task.gate==='review'?'review':task.gate==='owner-review'?'owner-review':task.gate==='produce'?'plan':'artifact';
  if(event.taskId!==task.taskId||event.actor!==task.actor||event.action!==expected)throw new Error('CREW_PERMISSION_DENIED: worker may only submit its assigned deliverable; no human approvals, state writes or provider calls.');

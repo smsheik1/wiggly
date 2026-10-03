@@ -1,3 +1,4 @@
+import {loadStudio,limitsFor} from './instructions.mjs';
 import {spawn,execFileSync} from 'node:child_process';
 import {createInterface} from 'node:readline';
 import {readFile,mkdir,writeFile,rename} from 'node:fs/promises';
@@ -7,7 +8,7 @@ import {Content,Event,digest} from './contracts.mjs';
 import {applyEvent} from './workflow.mjs';
 import {crewRoles,runCrewTask,taskAssets} from './crew.mjs';
 
-export const DEFAULT_WORKER_MODEL='gpt-5.6-sol';
+export const DEFAULT_WORKER_MODEL=loadStudio().config.agents['script-writer'].model;
 // Explicit host profile: no model fallback, native shell, apps or nested worker dispatch.
 const disabled=['shell_tool','unified_exec','apps','plugins','multi_agent','code_mode','code_mode_host','browser_use','computer_use','view_image','image_generation','in_app_browser'];
 const tool={type:'function',name:'wiggly_tool',description:'Call an allowed format tool on a hash from the current task. Never read another path or submit a generation.',inputSchema:{type:'object',properties:{name:{type:'string'},sha256:{type:'string'},referenceSha256:{type:['string','null']}},required:['name','sha256','referenceSha256'],additionalProperties:false}};
@@ -59,14 +60,16 @@ export class CodexHost {
  async initialize(){await mkdir(this.cwd,{recursive:true});await this.call('initialize',{clientInfo:{name:'wiggly_memoir',title:'Wiggly memoir studio',version:'2.0.0'},capabilities:{experimentalApi:true}});this.send({method:'initialized',params:{}});}
  async profile(){
   const version=execFileSync('codex',['--version'],{encoding:'utf8'}).trim();
-  return `${version}:${digest({sources:await Promise.all(['codex-host.mjs','crew.mjs','media.mjs','contracts.mjs','gemini-review.mjs','cartesia-stt.mjs','providers.mjs','evaluators.mjs','../evaluation/reviewer.md'].map(name=>readFile(new URL(name,import.meta.url),'utf8'))),perception:this.perceptionProfile,disabled,tool})}`;
+  return `${version}:${digest({sources:await Promise.all(['codex-host.mjs','crew.mjs','media.mjs','contracts.mjs','gemini-review.mjs','cartesia-stt.mjs','providers.mjs','evaluators.mjs','instructions.mjs'].map(name=>readFile(new URL(name,import.meta.url),'utf8'))),perception:this.perceptionProfile,disabled,tool})}`;
  }
- async startCrew(model=DEFAULT_WORKER_MODEL){
+ async startCrew(model,config=loadStudio().config){
   const capabilityVersion=await this.profile(),path=join(this.cwd,'crew-startup.json');
-  const draft=await readJson(path)??{model,capabilityVersion,workers:[],pending:null};
-  if(draft.model!==model||draft.capabilityVersion!==capabilityVersion)throw new Error('CODEX_STARTUP_PROFILE_CHANGED: reconcile the recorded partial crew before changing model/tools.');
+  const models=Object.fromEntries(Object.entries(config.agents).map(([role,a])=>[role,model??a.model]));
+  const draft=await readJson(path)??{models,capabilityVersion,workers:[],pending:null};
+  if(digest(draft.models??Object.fromEntries(Object.keys(crewRoles).map(r=>[r,draft.model])))!==digest(models)||draft.capabilityVersion!==capabilityVersion)throw new Error('CODEX_STARTUP_PROFILE_CHANGED: reconcile the recorded partial crew before changing model/tools.');
   if(draft.pending)throw new Error(`CODEX_STARTUP_UNCERTAIN: inspect ${path} and saved worker ${draft.pending.workerId??draft.pending.role}; initialization will not be repeated automatically.`);
-  for(const [role,{name}] of Object.entries(crewRoles)){
+  for(const [role,{name}] of Object.entries(config.agents)){
+   const model=models[role];
    if(draft.workers.some(w=>w.role===role))continue;
    draft.pending={role};await saveJson(path,draft);
    let result;
@@ -99,7 +102,7 @@ export class CodexHost {
   const contentSchema=Content[task.step]?z.toJSONSchema(Content[task.step]):null;
   const input=JSON.stringify({instruction:'Complete ONLY this current task. Source facts are in the supplied task. Do not invent facts, approval, tool evidence or perception. For a review, inspect every required criterion and return evidence and repairs, using your exact modelVersion/capabilityVersion. Missing capabilities mean inconclusive. Return eventJson containing the serialized Event object. Do not emit other text.',task:{...task,worker},contentSchema,eventSchema:z.toJSONSchema(Event)});
   const media=[];
-  if(crewRoles[worker.role].tools.includes('viewImage'))for(const file of taskAssets(task).values())if(file.width&&!file.durationSeconds){const viewed=await callTool('viewImage',{sha256:file.sha256});media.push({type:'text',text:`Reference image sha256: ${file.sha256}`},{type:'image',url:viewed.imageUrl});}
+  if((task.allowedTools??crewRoles[worker.role].tools).includes('viewImage'))for(const file of taskAssets(task).values())if(file.width&&!file.durationSeconds){const viewed=await callTool('viewImage',{sha256:file.sha256});media.push({type:'text',text:`Reference image sha256: ${file.sha256}`},{type:'image',url:viewed.imageUrl});}
   const output=await this.turn(worker,[{type:'text',text:input},...media],callTool,{type:'object',properties:{eventJson:{type:'string'}},required:['eventJson'],additionalProperties:false});
   try{return Event.parse(JSON.parse(JSON.parse(output).eventJson));}catch(error){throw Object.assign(new Error(`INVALID_WORKER_EVENT: ${error.message}`),{knownFinished:true,finishedResult:output});}
  }
@@ -119,7 +122,8 @@ export class CodexHost {
  close(){this.fail(new Error('CODEX_HOST_CLOSED'));this.child.stdin.end();this.child.kill();this.lines.close();}
 }
 
-export async function driveCrew(workflow,thread,host,{maxTasks=8,receiptDirectory,repairInvalid=false,verifySubmission=async()=>{},onProgress=()=>{}}={}){
+export async function driveCrew(workflow,thread,host,{maxTasks,receiptDirectory,repairInvalid=false,verifySubmission=async()=>{},onProgress=()=>{}}={}){
+ maxTasks??=limitsFor((await workflow.status(thread)).project).crewTasksPerDispatch;
  if(!Number.isInteger(maxTasks)||maxTasks<1||maxTasks>32)throw new Error('Use a bounded maxTasks between 1 and 32.');
  if(!receiptDirectory)throw new Error('DISPATCH_RECEIPTS_REQUIRED: provide the run’s durable dispatch directory.');
  await mkdir(receiptDirectory,{recursive:true});
@@ -135,7 +139,7 @@ export async function driveCrew(workflow,thread,host,{maxTasks=8,receiptDirector
   const attempt=(receipt?.attempt??0)+(receipt?.status==='rejected'?1:0)||1;
   if(receipt?.status==='rejected'){
    if(!repairInvalid)throw new Error(`CODEX_RESULT_REJECTED: ${receipt.error}; inspect ${path}; --repair-invalid true explicitly requests a bounded repair of the known finished result.`);
-   if(attempt>3)throw new Error('CODEX_REPAIR_LIMIT: three finished attempts exhausted; reconcile the deliverable with the operator.');
+   if(attempt>limitsFor(status.project).finishedWorkerAttempts)throw new Error('CODEX_REPAIR_LIMIT: configured finished-attempt limit exhausted; reconcile the deliverable with the operator.');
    const archive=path+`.rejected-${receipt.attempt}.json`,prior=await readJson(archive);
    if(prior&&digest(prior)!==digest(receipt))throw new Error('DISPATCH_RECEIPT_CONFLICT');
    if(!prior)await writeFile(archive,JSON.stringify(receipt)+'\n',{flag:'wx',mode:0o600});

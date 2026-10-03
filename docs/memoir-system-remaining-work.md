@@ -56,6 +56,15 @@ Current seed dataset: 22 cases, no human-confirmed qualification labels. Synthet
 - [x] Explicit reviewed narration-only sound decision removes the mandatory score/import step for new Mini projects. Optional effects still lock; actual local mixing and both final review channels remain required.
 - [x] Fresh package npm ci/check/smoke and 153-test audit passed with independent profile/legacy/omission probes; final-byte and primary-sync evidence recorded in `proofs/memoir-mini-core-release.json`.
 
+## October 3 crew instruction organization
+
+- [x] Runtime-loaded skill for each named crew member; independent text/audio/visual rubrics; scoped shared recipes.
+- [x] One validated studio config separates role models, generation services, retry/default dispatch limits and $0 initial budget. Actual human-approved model bindings/budgets remain per-project.
+- [x] Exact instruction/config/rubric/recipe/voice snapshot in new project SQLite; template edits do not change active runs. Historical path preserved; pristine-only explicit upgrade; no active approval migration.
+- [x] Current task/input version checks and verified handoff checklist stop missing, stale or substituted context before dispatch.
+- [x] Friendly producer file loaded into status/work/presentation, with a brief derived stage/next-decision update and no extra model call.
+- [x] Source check/smoke, 160 tests and 14 skill validations pass. Fresh package audit/final-byte evidence: `proofs/memoir-studio-instructions-release.json`.
+
 ## Deferred refinements and extras
 
 - [ ] **Per-beat narration repair/approval:** V1 keeps four stems as one deliverable. Narration changes conservatively reopen dependent visuals. More precise beat/shot invalidation needs its own implementation/proof.

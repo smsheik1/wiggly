@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { createHash } from 'node:crypto';
+import {StudioSnapshot} from './instructions.mjs';
 
 export const VERSION = '2.0.0';
 export const text = z.string().trim().min(1);
@@ -115,7 +116,7 @@ export const Review = z.object({
 });
 export const Plans = z.object({ provider: z.enum(['cartesia', 'meta-muse', 'replicate', 'elevenlabs']), operation: z.enum(['clone', 'audition', 'narration', 'candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe', 'video', 'music', 'effect']),
   estimatedCostUsd: z.number().nonnegative(), parameters: z.object({ model: text.optional(), prompt: text.optional(), cartesiaVersion: text.optional() }).strict() }).strict();
-export const Event = z.object({ taskId: text, action: z.enum(['configure-crew', 'configure-review','set-budget','reserve-compute', 'start-audio-review', 'audio-qualified', 'artifact', 'owner-review', 'start-backgrounds', 'start-shots', 'start-studio', 'qualified', 'rendered', 'review', 'approve', 'changes', 'redo', 'abandon', 'reject', 'note', 'resolve', 'plan', 'authorize', 'begin', 'job-id', 'receipt', 'provider-error', 'reconcile', 'allowance']),
+export const Event = z.object({ taskId: text, action: z.enum(['upgrade-studio','configure-crew', 'configure-review','set-budget','reserve-compute', 'start-audio-review', 'audio-qualified', 'artifact', 'owner-review', 'start-backgrounds', 'start-shots', 'start-studio', 'qualified', 'rendered', 'review', 'approve', 'changes', 'redo', 'abandon', 'reject', 'note', 'resolve', 'plan', 'authorize', 'begin', 'job-id', 'receipt', 'provider-error', 'reconcile', 'allowance']),
   budgetLimitUsd:z.number().nonnegative().optional(), reservation:z.object({id:text,provider:z.enum(['gemini','cartesia-stt']),estimatedCostUsd:z.number().positive()}).strict().optional(),
   actor: z.enum(['agent', 'reviewer', 'human', 'runtime']), workerId: text.optional(),
   intakeConfirmation:IntakeConfirmation.optional(), impactDigest:text.optional(), artifactId: text.optional(), artifactDigest: text.optional(), message: text.optional(), selection: z.number().int().optional(),
@@ -124,6 +125,7 @@ export const Event = z.object({ taskId: text, action: z.enum(['configure-crew', 
 }).strict();
 export const Project = z.object({
   formatVersion: z.literal(VERSION), schemaVersion: z.literal(2), id: text,
+  studio:StudioSnapshot.optional(),
   workflowRevision:z.number().int().min(2).max(3).default(2),
   productionProfile:z.enum(['legacy-seedance-hd','seedance-mini-480p']).default('legacy-seedance-hd'),
   budget:z.object({maxCostUsd:z.number().nonnegative(),reservations:z.array(z.object({id:text,provider:z.enum(['gemini','cartesia-stt']),estimatedCostUsd:z.number().positive()}))}).optional(), lifecycle:z.enum(['active','abandoned']).default('active'), reviewMode:z.enum(['supervised','qualified']).default('qualified'), crew:z.unknown().optional(), inputs: Inputs, step: z.enum(['answers', 'characterPrompt', 'script', 'voiceSample', 'clone', 'audioReviewerQualification', 'audition', 'narration', 'roster', 'candidates', 'sheetPrompt', 'sheet', 'backgrounds', 'backgroundBrief', 'backgroundPrompt', 'backgroundCandidates', 'backgroundAngleBrief', 'backgroundAnglePrompt', 'backgroundAngle', 'shotIntentions', 'shots', 'keyframePrompt', 'keyframe', 'video', 'reviewerQualification', 'videoPlan', 'videoPrompt', 'soundPlan', 'music', 'effect', 'editPlan', 'film', 'complete']),
