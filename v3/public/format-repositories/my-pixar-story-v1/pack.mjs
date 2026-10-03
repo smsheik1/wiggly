@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {verifyRenderer} from './runtime/remotion.mjs';
 await verifyRenderer();
-execFileSync(process.execPath,['--test','tests/supervised-regression.test.mjs','tests/refined-flow.test.mjs'],{cwd:dirname(fileURLToPath(import.meta.url)),stdio:'inherit'});
+execFileSync(process.execPath,['--test','tests/supervised-regression.test.mjs','tests/refined-flow.test.mjs','tests/mini-core-flow.test.mjs'],{cwd:dirname(fileURLToPath(import.meta.url)),stdio:'inherit'});
 const root = dirname(fileURLToPath(import.meta.url));
 const files = ['build/remotion', 'build-renderer.mjs', 'AGENTS.md', 'SKILL.md', 'README.md', 'format.json', 'pipeline.json', 'quality.json', 'requirements.json', 'scene-contract.json',
   'questionnaire.json', 'character-prompter.md', 'character-sheet-recipe.md', 'background-prompter.md', 'proof.json', 'package.json', 'package-lock.json', 'runner.mjs', 'kit-smoke.mjs', 'pack.mjs', 'runtime', 'evaluation', 'examples', 'tests'];

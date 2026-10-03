@@ -4,6 +4,7 @@ export const authorSteps = ['answers','characterPrompt','audioReviewerQualificat
 export const keyFor = p => ['videoPrompt','video'].includes(p.step) ? `${p.step}:${p.clipId}` : p.step === 'effect' ? `effect:${p.effectId}` : ['keyframePrompt', 'keyframe'].includes(p.step) ? `${p.step}:${p.shotId}` : backgroundSteps.includes(p.step) ? `${p.step}:${p.locationId}${p.step.startsWith('backgroundAngle') ? ':' + p.angleId : ''}` : ['characterPrompt','candidates', 'sheetPrompt', 'sheet'].includes(p.step) ? `${p.step}:${p.characterId}` : p.step;
 export const current = (p, key = keyFor(p)) => p.artifacts.findLast(a => a.key === key && a.valid);
 export const supervised = p => p.reviewMode === 'supervised';
+export const miniProduction = p => p.productionProfile === 'seedance-mini-480p';
 export const refinedWorkflow = p => p.workflowRevision === 3;
 export const reviewPassed = r => ['approved','provisional'].includes(r?.decision);
 export const locked = (p, key) => { const a = current(p, key); return !!(a?.approvedBy && reviewPassed(a.review) && (!supervised(p) || !a.content.files || a.humanReview?.decision === 'approved') && (a.kind!=='film'||reviewPassed(a.visualReview)&&reviewPassed(a.audioReview)&&a.visualReviewedBy!==a.audioReviewedBy)); };
@@ -22,7 +23,7 @@ export function assertAllowed(p, kind) {
     if (kind === 'video' && !locked(p,`videoPrompt:${p.clipId}`)) throw new Error('VIDEO_PROMPT_LOCK_REQUIRED');
     if (['music','effect','editPlan','film'].includes(kind) && !locked(p,'soundPlan')) throw new Error('SOUND_PLAN_LOCK_REQUIRED');
     if (['soundPlan','editPlan','film'].includes(kind) && !current(p,'videoPlan').content.clips.every(c=>locked(p,`video:${c.id}`))) throw new Error('VIDEO_LOCK_REQUIRED');
-    if (kind === 'film' && (!locked(p,'editPlan') || !locked(p,'music') || !current(p,'soundPlan').content.effects.every(e=>locked(p,`effect:${e.id}`)))) throw new Error('EDIT_SOUND_LOCK_REQUIRED');
+    if (kind === 'film' && (!locked(p,'editPlan') || current(p,'soundPlan').content.music && !locked(p,'music') || !current(p,'soundPlan').content.effects.every(e=>locked(p,`effect:${e.id}`)))) throw new Error('EDIT_SOUND_LOCK_REQUIRED');
     return;
   }
   if ([...imageSteps, 'characterPrompt', ...backgroundSteps, 'backgrounds', 'shotIntentions', 'shots', 'keyframePrompt', 'keyframe', 'background', 'video'].includes(kind) && !audioLocked(p)) throw new Error('NARRATION_LOCK_REQUIRED (AUDIO_LOCK_REQUIRED compatibility): current script, clone audition and all four narration beats need agent and human approval.');

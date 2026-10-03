@@ -154,7 +154,8 @@ export async function driveCrew(workflow,thread,host,{maxTasks=8,receiptDirector
    }
    await saveJson(path,{...started,status:'completed',event});
   }else event=Event.parse(event);
-  await verifySubmission(status,event);await workflow.respond(thread,event);completed++;
+  await verifySubmission(status,event);const updated=await workflow.respond(thread,event);completed++;
+  if(event.action==='review'&&event.review?.decision==='rejected'){const notice=updated.pending.repairNotices.find(n=>n.artifactId===event.artifactId);if(notice)onProgress({type:'repair-notice',notice});}
  }
  return {completed,stop:'task-limit',status:await workflow.status(thread)};
 }

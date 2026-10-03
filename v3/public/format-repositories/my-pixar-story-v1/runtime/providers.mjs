@@ -4,11 +4,11 @@ import { videoBinding, effectFor } from './studio.mjs';
 import { executeVideo } from './video-provider.mjs';
 import { shotReferences } from './shots.mjs';
 import { digest } from './contracts.mjs';
-import { assertAllowed, keyFor } from './gates.mjs';
+import { assertAllowed, keyFor, miniProduction } from './gates.mjs';
 import { importMedia, verifyFiles, narrationWindow } from './media.mjs';
 const artifact = (p, key) => p.artifacts.findLast(a => a.key === key && a.valid);
 export function requestDescriptor(p, plan) {
-  if(plan.operation==='video'){if(plan.parameters.model)throw new Error('Video adapter uses Seedance 2.0; unsupported model override.');const b=videoBinding(p);if(!(plan.estimatedCostUsd>0))throw new Error('Video needs an operator-verified positive cost estimate.');return {prompt:plan.parameters.prompt,endpoint:'https://api.replicate.com/v1/models/bytedance/seedance-2.0/predictions',frame:b.frame.content.files[0],input:{prompt:plan.parameters.prompt,duration:b.clip.generationSeconds,resolution:'1080p',aspect_ratio:'16:9',generate_audio:false}};}
+  if(plan.operation==='video'){if(plan.parameters.model)throw new Error('Video model is fixed by the project productionProfile; unsupported override.');const b=videoBinding(p),model=miniProduction(p)?'seedance-2.0-mini':'seedance-2.0',resolution=miniProduction(p)?'480p':'1080p';if(!(plan.estimatedCostUsd>0))throw new Error('Video needs an operator-verified positive cost estimate.');return {prompt:plan.parameters.prompt,endpoint:`https://api.replicate.com/v1/models/bytedance/${model}/predictions`,frame:b.frame.content.files[0],input:{prompt:plan.parameters.prompt,duration:b.clip.generationSeconds,resolution,aspect_ratio:'16:9',generate_audio:false}};}
   if(['music','effect'].includes(plan.operation)){if(plan.parameters.model)throw new Error('Sound adapters use their documented fixed models.');if(!(plan.estimatedCostUsd>0))throw new Error('Sound generation needs a verified positive cost estimate.');const target=plan.operation==='music'?artifact(p,'soundPlan').content.music:effectFor(p);if(target.mode!=='generate')throw new Error('Imported sound cannot invoke a provider.');return {prompt:plan.parameters.prompt,endpoint:`https://api.elevenlabs.io/v1/${plan.operation==='music'?'music':'sound-generation'}?output_format=mp3_44100_128`,body:plan.operation==='music'?{prompt:target.prompt,music_length_ms:60000,model_id:'music_v2_5',force_instrumental:true}:{text:target.prompt,duration_seconds:target.durationSeconds,model_id:'eleven_text_to_sound_v2',loop:false},provenance:target.provenance};}
   const sample = artifact(p, 'voiceSample')?.content;
   if (plan.operation === 'clone') return { endpoint: 'https://api.cartesia.ai/voices/clone', cartesiaVersion: plan.parameters.cartesiaVersion ?? '2026-08-14',
@@ -49,7 +49,7 @@ export async function loadKey(provider, secretsPath) {
 }
 // Metadata-only checks cannot establish paid generation entitlement or output quality.
 export async function checkProvider(provider,secretsPath,fetcher=fetch){
- const definitions={cartesia:{urls:['https://api.cartesia.ai/voices?limit=1'],docs:'https://docs.cartesia.ai/api-reference/voices/list'},'meta-muse':{urls:['https://api.meta.ai/v1/models/muse-image-1.0'],docs:'https://dev.meta.ai/docs/api-reference/models/retrieve-model'},replicate:{urls:['https://api.replicate.com/v1/account','https://api.replicate.com/v1/models/bytedance/seedance-2.0'],docs:'https://replicate.com/docs/reference/http'},elevenlabs:{urls:['https://api.elevenlabs.io/v1/user/subscription'],docs:'https://elevenlabs.io/docs/api-reference/user/subscription/get'}};
+ const definitions={cartesia:{urls:['https://api.cartesia.ai/voices?limit=1'],docs:'https://docs.cartesia.ai/api-reference/voices/list'},'meta-muse':{urls:['https://api.meta.ai/v1/models/muse-image-1.0'],docs:'https://dev.meta.ai/docs/api-reference/models/retrieve-model'},replicate:{urls:['https://api.replicate.com/v1/account','https://api.replicate.com/v1/models/bytedance/seedance-2.0-mini'],docs:'https://replicate.com/docs/reference/http'},elevenlabs:{urls:['https://api.elevenlabs.io/v1/user/subscription'],docs:'https://elevenlabs.io/docs/api-reference/user/subscription/get'}};
  definitions.gemini={urls:['https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash'],docs:'https://ai.google.dev/api/models#method:-models.get'};
  const definition=definitions[provider];if(!definition)throw new Error('Use cartesia, meta-muse, replicate, elevenlabs or gemini.');
  let apiKey;
@@ -60,7 +60,7 @@ export async function checkProvider(provider,secretsPath,fetcher=fetch){
    if(!response.ok){const body=await response.text();throw new Error(`GET ${url}: HTTP ${response.status}: ${body.replaceAll(apiKey,'[redacted]').slice(0,400)}`);}
    bodies.push(await response.json());
   }
-  if(provider==='cartesia'&&!Array.isArray(bodies[0].data)||provider==='meta-muse'&&bodies[0].id!=='muse-image-1.0'||provider==='replicate'&&(!bodies[0].type||bodies[1].owner!=='bytedance'||bodies[1].name!=='seedance-2.0')||provider==='elevenlabs'&&typeof bodies[0].status!=='string')throw new Error('Provider metadata response does not match its documented contract.');
+  if(provider==='cartesia'&&!Array.isArray(bodies[0].data)||provider==='meta-muse'&&bodies[0].id!=='muse-image-1.0'||provider==='replicate'&&(!bodies[0].type||bodies[1].owner!=='bytedance'||bodies[1].name!=='seedance-2.0-mini')||provider==='elevenlabs'&&typeof bodies[0].status!=='string')throw new Error('Provider metadata response does not match its documented contract.');
   if(provider==='gemini'&&bodies[0].name!=='models/gemini-3.8-flash')throw new Error('Gemini metadata must identify the exact selected model.');
   return {provider,checkedAt:new Date().toISOString(),status:'metadata-verified',endpoints:definition.urls,documentation:definition.docs,authenticatedRead:true,...(provider==='elevenlabs'?{subscriptionStatus:bodies[0].status}:{}),generationReady:false,unverified:['paid generation entitlement and funds','account-specific price and spend estimate','actual generation/output quality'],mediaGenerationCalls:0,projectStateMutated:false};
  }catch(error){const message=apiKey?error.message.replaceAll(apiKey,'[redacted]'):error.message;throw new Error(`${message}\n${remediation(provider,secretsPath)}`);}

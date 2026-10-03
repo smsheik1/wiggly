@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-03",
+  "branch": "codex/memoir-mini-core-flow",
+  "scope": "fixed new Seedance 2.0 Mini 480p profile, reviewed scene-keyframe prerequisite, reported author-owned visual repair, fresh video authorization, optional narration-only completion",
+  "formatVersion": "2.0.0",
+  "workflowRevision": 3,
+  "newProductionProfile": "seedance-mini-480p",
+  "legacyState": "missing saved productionProfile retains legacy-seedance-hd; no silent migration",
+  "archive": "v3/public/format-repositories/my-pixar-story-v1/my-pixar-story-v2.0.0.tgz",
+  "archiveSha256": "f4aa36173a67a79e3440fefc098d7e68144eb812f4d2b76b9d262f68f72f9c4d",
+  "preCloseoutAuditedArchiveSha256": "8d051679b6dbb672401b059a39d74e06799c5c139de0cedaab917cfa05674eff",
+  "sourceTestsPassed": 153,
+  "freshPackageTestsPassed": 153,
+  "finalByteFocusedTestsPassed": 9,
+  "sourceCheckSmokePassed": true,
+  "freshPackageCleanInstallCheckSmokePassed": true,
+  "finalByteCheckSmokePassed": true,
+  "packageAudit": "memoir-mini-core-package-audit.md",
+  "independentProbes": "fresh Mini profile, missing-field legacy profile, required omission reasons; bounded author repair/video approval and narration-only full restart rehearsal",
+  "sourceLogs": [
+    "/tmp/memoir-mini-full-tests.log",
+    "/tmp/memoir-mini-check.log",
+    "/tmp/memoir-mini-smoke.log",
+    "/tmp/memoir-mini-final-pack.log"
+  ],
+  "primarySync": {
+    "files": 28,
+    "baselineCompared": true,
+    "backup": "/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/memoir-mini-primary-backup-20261003-3_1zo_z6",
+    "unrelatedFilesPreserved": true,
+    "checkSmokePassed": true,
+    "focusedTestsPassed": 9,
+    "logs": [
+      "/tmp/memoir-mini-primary-check.log",
+      "/tmp/memoir-mini-primary-smoke.log",
+      "/tmp/memoir-mini-primary-tests.log"
+    ]
+  },
+  "noRealProvidersOrMedia": true,
+  "credentialsRead": false,
+  "existingProductionRunsChanged": false,
+  "aiVideoGenerations": 0,
+  "realHumanLabelsOrApprovalsCreated": false,
+  "productionFilmQualityProven": false,
+  "renderer": "unchanged shared RemotionAdScene → AdRenderSurface → memoir-film; 480p sources scale to existing export canvas, no native-HD-detail claim",
+  "simplificationReview": "ponytail-review: Lean already. Ship. Existing profiles/schemas/stages/reviews/broker/mix extended; no new dependency, framework, renderer or state store."
+}

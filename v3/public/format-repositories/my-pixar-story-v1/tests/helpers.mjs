@@ -41,7 +41,7 @@ export function produce(p, result, extra = {}) {
   return send(p, 'receipt', { jobId: job.id, artifactDigest: job.digest, result, ...extra });
 }
 export function audioProject() {
-  let p = approved(reviewed(authored(initialProject('isolated', inputs,{reviewMode:'qualified'}))));
+  let p = approved(reviewed(authored(initialProject('isolated', inputs,{reviewMode:'qualified',productionProfile:'legacy-seedance-hd'}))));
   p = send(p, 'artifact', { actor: 'human', workerId: 'human', content: { files: [file()], consent: true, language: 'en' } });
   p = produce(p, { provider: 'cartesia', voiceId: 'private-clone-test', receiptId: 'job-1' });
   p = qualifyTestAudio(p);

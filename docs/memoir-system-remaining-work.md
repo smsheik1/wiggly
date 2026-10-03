@@ -1,6 +1,6 @@
 # Memoir studio — remaining work
 
-Last updated: October 2, 2026. Owner: Shaz + implementing agent.
+Last updated: October 3, 2026. Owner: Shaz + implementing agent.
 
 [The living spec](memoir-system-living-spec.md) is the design authority; this checklist records implementation and evidence. The operator explicitly authorized **human-supervised v1** while deferring formal reviewer qualification. That supersedes the old requirement to stop all development for human-labelled media. It does not certify reviewers or authorize paid media, AI video or a real production film test.
 
@@ -47,10 +47,19 @@ Current seed dataset: 22 cases, no human-confirmed qualification labels. Synthet
 - [ ] Once authorized, inspect actual clips and finished 60-second film for story, likeness, voice, anatomy, spatial/temporal continuity and sound; use the one official Remotion renderer and private finalization.
 - [ ] Validate real interruption/uncertain-provider recovery and confirmed localized revisions without duplicate spend. Offline tests establish mechanics only.
 
+## October 3 core-flow refinement
+
+- [x] New projects use fixed Seedance 2.0 Mini/480p silent I2V, actual approved keyframe bytes and documented source dimensions; missing saved profile preserves legacy policy. Shared final export scales source footage; no native HD-detail claim.
+- [x] All reviewed/human-approved scene keyframes remain required before video.
+- [x] Reviewer reports observed defects → orchestrator exposes repair notices → prompt author repairs → runtime generates → independent review/human. New sheet/background/angle repair paths preserve still-valid selections/briefs. Stable attempt scopes survive prompt changes.
+- [x] Every new Mini video request/repair requires fresh exact human authorization; image allowances remain explicit/bounded.
+- [x] Explicit reviewed narration-only sound decision removes the mandatory score/import step for new Mini projects. Optional effects still lock; actual local mixing and both final review channels remain required.
+- [x] Fresh package npm ci/check/smoke and 153-test audit passed with independent profile/legacy/omission probes; final-byte and primary-sync evidence recorded in `proofs/memoir-mini-core-release.json`.
+
 ## Deferred refinements and extras
 
 - [ ] **Per-beat narration repair/approval:** V1 keeps four stems as one deliverable. Narration changes conservatively reopen dependent visuals. More precise beat/shot invalidation needs its own implementation/proof.
-- [ ] **Piano/music:** Research deferred. Licensed measured imports and explicit generated sound paths exist; missing optional music key is not a development blocker. No live score-quality proof or silent track choice.
+- [ ] **Piano/music:** Research deferred. Licensed measured imports and explicit generated sound paths exist; new Mini narration-only completion requires no music asset/key; optional score still requires reviewed provenance and actual listening. No live score-quality proof or silent track choice.
 - [ ] **Additional hosts/OSes:** Verify Windows/Linux/other worker integrations before claiming support; current native release evidence is macOS Codex.
 - [ ] **Relocation/delete automation:** Explicit local/remote media and provider-clone deletion, portable asset-path rewriting and retention timers are not shipped. Current private run-folder boundary is documented.
 - [ ] **Background bank:** Curate rights-cleared ordinary places only if useful; no bank ships or overrides known storyteller details.

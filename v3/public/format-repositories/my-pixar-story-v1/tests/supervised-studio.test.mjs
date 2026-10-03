@@ -7,16 +7,10 @@ import {tmpdir} from 'node:os';
 import {current,taskFor,openWorkflow,revisionImpact} from '../runtime/workflow.mjs';
 import {digest} from '../runtime/contracts.mjs';
 import {assemblyManifest} from '../runtime/studio.mjs';
-import {confirmed,supervisedBackgrounds} from './supervised-helpers.mjs';
+import {confirmed,supervisedVideoReady} from './supervised-helpers.mjs';
 import {author,image} from './background-helpers.mjs';
-import {shotPlan,composition,generated} from './shot-helpers.mjs';
-import {videoPlan,videoPrompt,videoResult,soundPlan,editPlan,inspection} from './studio-helpers.mjs';
+import {videoPrompt,videoResult,soundPlan,editPlan,inspection} from './studio-helpers.mjs';
 import {send,approved,reviewed,file,inputs,captureEvents} from './helpers.mjs';
-export function supervisedVideoReady(){
- let p=approved(reviewed(author(supervisedBackgrounds(),shotPlan,'shot-planner')));
- while(p.step!=='videoPlan')p=confirmed(reviewed(generated(approved(reviewed(author(p,composition(p),'composition-writer'))))));
- return approved(reviewed(author(p,videoPlan(p),'motion-director')));
-}
 function complete(){
  let p=supervisedVideoReady();
  while(p.step!=='soundPlan'){

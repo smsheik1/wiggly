@@ -105,7 +105,7 @@ async function main() {
         const maxTasks=command==='work-codex'?1:Number(option('max-tasks','8')),repair=option('repair-invalid','false');
         if(!['true','false'].includes(repair))throw new Error('--repair-invalid needs true or false.');
         await host.initialize();
-        const result=await driveCrew(workflow,'project',host,{maxTasks,repairInvalid:repair==='true',receiptDirectory:join(runDir,'host-dispatch'),verifySubmission,onProgress:({step,gate})=>process.stderr.write(`${step}: ${gate}\n`)});
+        const result=await driveCrew(workflow,'project',host,{maxTasks,repairInvalid:repair==='true',receiptDirectory:join(runDir,'host-dispatch'),verifySubmission,onProgress:progress=>process.stderr.write(progress.type==='repair-notice'?`DEFECT FOUND: ${JSON.stringify(progress.notice)}\n`:`${progress.step}: ${progress.gate}\n`)});
         print({completed:result.completed,stop:result.stop,...presentation(result.status)});return;
       }finally{host.close();}
     }
