@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {mkdtemp,rm,readFile,writeFile,mkdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {openWorkflow,initialProject,applyEvent,taskFor} from '../runtime/workflow.mjs';
@@ -9,6 +9,7 @@ import {driveCrew} from '../runtime/codex-host.mjs';
 import {debugSnapshot} from '../runtime/debug.mjs';
 import {executeJob} from '../runtime/providers.mjs';
 import {renderFilm} from '../runtime/assemble.mjs';
+import {verifyFiles} from '../runtime/media.mjs';
 import {inputs,script,event,intakeFixture,authored,reviewed,approved,send,file} from './helpers.mjs';
 import {producerUpdate} from '../runtime/presentation.mjs';
 import {execFileSync} from 'node:child_process';
@@ -92,12 +93,35 @@ test('debug may collect a submitted job while paused, but cannot submit it again
  p=send(p,'artifact',{actor:'human',workerId:'human',content:{files:[file()],consent:true,language:'en'}});
  p=send(p,'plan',{plan:{provider:'cartesia',operation:'clone',estimatedCostUsd:.05,parameters:{}}});const job=p.jobs.at(-1);
  p=send(p,'authorize',{jobId:job.id,artifactDigest:job.digest,message:'ISOLATED exact authorization'});
- p=send(p,'begin',{jobId:job.id,artifactDigest:job.digest});p=applyEvent(p,control(p,'configure-debug',{debugEnabled:true}));
+ p=applyEvent(p,control(p,'configure-debug',{debugEnabled:true}));p=applyEvent(p,control(p,'debug-next'));
+ p=send(p,'begin',{jobId:job.id,artifactDigest:job.digest});assert.equal(p.debug.paused,false);
+ p=send(p,'job-id',{jobId:job.id,artifactDigest:job.digest,providerJobId:'isolated-submitted-job'});assert.equal(p.debug.paused,true);
  assert.throws(()=>send(p,'begin',{jobId:job.id,artifactDigest:job.digest}),/DEBUG_PAUSED/);
  const collected=send(p,'receipt',{jobId:job.id,artifactDigest:job.digest,result:{provider:'cartesia',voiceId:'isolated-clone',receiptId:job.id}});
  assert.equal(collected.jobs[0].status,'ready');assert.equal(collected.debug.paused,true);assert.equal(collected.artifacts.at(-1).kind,'clone');
  const ready=applyEvent(collected,control(collected,'debug-next'));
  assert.throws(()=>send(ready,'begin',{jobId:job.id,artifactDigest:job.digest}),/current authorized|ALREADY_SUBMITTED/);
+});
+
+test('file verification errors stay repairable, including old completed receipts',async()=>{
+ for(const cached of [false,true]){
+  const dir=await mkdtemp(join(tmpdir(),'memoir-debug-files-')),workflow=openWorkflow(join(dir,'state.sqlite'));let calls=0;
+  const missing={path:join(dir,'missing.json'),sha256:'a'.repeat(64),bytes:99};
+  const bad={...script,commonSenseChecks:[{category:'fact',finding:'ISOLATED bad optional reference',resolution:'ISOLATED reference',file:missing}]};
+  // Script strips unrecognized fields; use the event's optional content reference
+  // to test the actual submission verifier without manufacturing a bad schema.
+  const host={runTask:async(task,{worker})=>{calls++;return author(task,worker,calls===1?bad:script);}},options={maxTasks:8,receiptDirectory:join(dir,'host-dispatch'),verifySubmission:async(_status,e)=>verifyFiles(e.content)};
+  try{
+   let status=await workflow.init('run',inputs,{workflowRevision:2});status=await workflow.respond('run',control(status.project,'configure-crew',{crew}));status=await workflow.respond('run',control(status.project,'configure-debug',{debugEnabled:true}));status=await workflow.respond('run',control(status.project,'debug-next'));
+   const path=join(options.receiptDirectory,status.pending.taskId+'.json');
+   if(cached){await mkdir(options.receiptDirectory,{recursive:true});await writeFile(path,JSON.stringify({status:'completed',taskId:status.pending.taskId,workerDigest:(await import('../runtime/contracts.mjs')).digest(status.pending.crewWorker),attempt:1,event:author(status.pending,status.pending.crewWorker,bad)}));calls=1;}
+   await assert.rejects(driveCrew(workflow,'run',host,options),/RESULT_REJECTED.*ENOENT/);
+   const receipt=JSON.parse(await readFile(path,'utf8'));assert.equal(receipt.status,'rejected');assert.equal(calls,1);
+   status=await workflow.status('run');assert.equal(status.project.debug.paused,true);assert.equal(status.project.artifacts.length,0);
+   await workflow.respond('run',control(status.project,'debug-next'));
+   const repaired=await driveCrew(workflow,'run',host,{...options,repairInvalid:true});assert.equal(repaired.completed,1);assert.equal(calls,2);assert.equal(repaired.status.project.debug.paused,true);
+  }finally{workflow.close();await rm(dir,{recursive:true});}
+ }
 });
 
 test('unknown worker outcomes remain unrepeated even after explicit debug continue',async()=>{

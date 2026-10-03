@@ -146,21 +146,24 @@ export async function driveCrew(workflow,thread,host,{maxTasks,receiptDirectory,
    if(!prior)await writeFile(archive,JSON.stringify(receipt)+'\n',{flag:'wx',mode:0o600});
   }
   let event=receipt?.status==='completed'?receipt.event:null;
+  const started={status:'started',taskId:task.taskId,worker:task.crewWorker,workerDigest:digest(task.crewWorker),attempt};
   if(!event){
-   const started={status:'started',taskId:task.taskId,worker:task.crewWorker,workerDigest:digest(task.crewWorker),attempt};
    if(receipt)await saveJson(path,started);else await writeFile(path,JSON.stringify(started)+'\n',{flag:'wx',mode:0o600});
-   try{
-    event=await runCrewTask(status.project,{...task,...(receipt?.status==='rejected'?{repairFeedback:{error:receipt.error,previousEvent:receipt.event,instruction:'Repair this evidenced validation error. Preserve current source facts and return the current gate Event.'}}:{})},host);
-    applyEvent(status.project,event);
-   }catch(error){
-    if(!event&&!error.knownFinished){if(status.project.debug?.enabled)await workflow.respond(thread,{taskId:task.taskId,actor:'runtime',action:'debug-stop',message:error.message});throw error;}
-    await saveJson(path,{...started,status:'rejected',event:event??error.finishedResult,error:error.message});
-    if(status.project.debug?.enabled)await workflow.respond(thread,{taskId:task.taskId,actor:'runtime',action:'debug-stop',message:error.message});
-    throw new Error(`CODEX_RESULT_REJECTED: known finished worker result violates the contract: ${error.message}. Inspect ${path}; use --repair-invalid true for a bounded repair.`);
-   }
-   await saveJson(path,{...started,status:'completed',event});
-  }else event=Event.parse(event);
-  await verifySubmission(status,event);const updated=await workflow.respond(thread,event);completed++;
+  }
+  try{
+   event=event?Event.parse(event):await runCrewTask(status.project,{...task,...(receipt?.status==='rejected'?{repairFeedback:{error:receipt.error,previousEvent:receipt.event,instruction:'Repair this evidenced validation error. Preserve current source facts and return the current gate Event.'}}:{})},host);
+   applyEvent(status.project,event);
+   // Validate actual referenced files before declaring a finished response reusable.
+   // Recheck old completed receipts too; changed/missing bytes cannot trap repair.
+   await verifySubmission(status,event);
+  }catch(error){
+   if(!event&&!error.knownFinished){if(status.project.debug?.enabled)await workflow.respond(thread,{taskId:task.taskId,actor:'runtime',action:'debug-stop',message:error.message});throw error;}
+   await saveJson(path,{...started,status:'rejected',event:event??error.finishedResult,error:error.message});
+   if(status.project.debug?.enabled)await workflow.respond(thread,{taskId:task.taskId,actor:'runtime',action:'debug-stop',message:error.message});
+   throw new Error(`CODEX_RESULT_REJECTED: known finished worker result violates the contract: ${error.message}. Inspect ${path}; use --repair-invalid true for a bounded repair.`);
+  }
+  await saveJson(path,{...started,status:'completed',event});
+  const updated=await workflow.respond(thread,event);completed++;
   if(event.action==='review'&&event.review?.decision==='rejected'){const notice=updated.pending.repairNotices.find(n=>n.artifactId===event.artifactId);if(notice)onProgress({type:'repair-notice',notice});}
  }
  const status=await workflow.status(thread);
