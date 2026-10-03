@@ -456,5 +456,28 @@
     ],
     "auditedArchiveBeforeFinalMetadata": "5b336a8578e7f11b5dbe722bd28f11c16bbbede97318710c0563e6f64cbe3658",
     "simplificationReview": "ponytail-review: Lean already. Ship. Removed duplicated skill body from worker packets and restricted producer communication to host delivery; no new dependency, renderer or state store."
+  },
+  "operatorDebugMode": {
+    "implementedAt": "2026-10-03",
+    "status": "implemented and offline verified; real production rehearsal unperformed",
+    "implementationCommit": "f40f997f245a7b0e1b7a3b2e6ab18188230a41d5",
+    "state": "opt-in enabled/paused fields in existing SQLite project; human one-step continuation; task IDs preserved for recovery",
+    "operator": "human plus current host chat above existing orchestrator; no additional supervisory model service",
+    "boundaries": "author/owner/reviewer, provider plans/results, async submission IDs and local render outputs; existing generation bundle unit",
+    "guards": "no paused worker/new provider/render call; submitted-job collection allowed; approvals, narration-first and exact spend unchanged",
+    "rootFix": "verify actual referenced files before completed dispatch receipt; revalidate old completed receipts; failed finished outputs reject/pause and allow bounded evidenced repair",
+    "sourceTestsPassed": 170,
+    "debugTestsPassed": 9,
+    "freshPackageFocusedTestsPassed": 18,
+    "independentProbesPassed": 5,
+    "auditedCodeArchiveSha256": "3f7925f9656e62e0265f87bcd23c7658b25365117ecd7798160ef870d618ab04",
+    "freshPackageAudit": "PASS: clean extraction check and parent/grandparent smoke; 9 debug + 9 host tests and five independent recovery/authority/collection probes. Reused prior npm-ci dependencies after exact lockfile comparison.",
+    "instructionChanges": "pinned skill/profile compatibility rules unchanged; some changes require a new test project",
+    "paidProviderCalls": 0,
+    "actualWorkerModelDispatches": 0,
+    "credentialsRead": false,
+    "aiVideoGeneration": false,
+    "productionReviewerQualified": false,
+    "productionQualityProven": false
   }
 }

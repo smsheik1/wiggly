@@ -1,0 +1,33 @@
+{
+  "releasedAt": "2026-10-03",
+  "branch": "codex/memoir-debug-mode",
+  "implementationCommit": "f40f997f245a7b0e1b7a3b2e6ab18188230a41d5",
+  "scope": "operator-stepped debug mode and observed file-verification recovery fix; offline mechanics only",
+  "sourceTestsPassed": 170,
+  "debugTestsPassed": 9,
+  "freshPackageFocusedTestsPassed": 18,
+  "independentProbesPassed": 5,
+  "packagingTestsPassed": 43,
+  "auditedCodeArchiveSha256": "3f7925f9656e62e0265f87bcd23c7658b25365117ecd7798160ef870d618ab04",
+  "finalArchiveSha256": "7675f382ba8f60e5ed23080cdc2d8a6b695c515700da9f7a41ff4f39b7a45457",
+  "onlyPostAuditArchiveChange": [
+    "proof.json"
+  ],
+  "paidProviderCalls": 0,
+  "actualModelCalls": 0,
+  "credentialsRead": false,
+  "aiVideoGeneration": false,
+  "productionProof": false,
+  "auditReport": "docs/proofs/memoir-debug-mode-package-audit.md",
+  "primarySync": {
+    "files": 19,
+    "primaryCheckout": "/Users/shaz/Projects/wiggly",
+    "backup": "/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/memoir-debug-primary-backup-d_o52rvi",
+    "unrelatedFilesAndProductionStateChanged": false,
+    "verification": {
+      "check": "PASS",
+      "parentAndGrandparentSmoke": "PASS",
+      "focusedTestsPassed": 18
+    }
+  }
+}

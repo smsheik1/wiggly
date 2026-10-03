@@ -79,3 +79,10 @@ Current seed dataset: 22 cases, no human-confirmed qualification labels. Synthet
 - [ ] **Further autonomy:** Reduce human decisions only after actual reviewed runs demonstrate reliability. Parallel fan-out, ComfyUI and Dots are not prerequisites.
 
 Historical checkpoints in the living spec and proof.json retain their original dates, tests and limitations. The supervised-v1 section supersedes former qualification stops; it does not relabel those old proofs as production success.
+
+## Operator debug release
+
+- [x] Persistent debug pauses and genuine human one-step continuation; current operator can inspect each output above the orchestrator. Full source suite: 170/170, nine debug regression checks.
+- [x] Fresh-package audit: check/parent+grandparent smoke, 18 focused tests and five independent probes. The audit's missing-reference completion/recovery defect is fixed at the dispatcher and covered for old cached receipts too. Async job-ID submission pauses; safe collection preserves existing outcomes.
+- [x] Evidence: [debug release](proofs/memoir-debug-mode-release.json) and [package audit](proofs/memoir-debug-mode-package-audit.md). Final archive differs from the independently tested code archive only by proof metadata.
+- [ ] Real joint debugging rehearsal with consented media, account estimates and separate actual paid generation authorization. No real production project was started or changed.
