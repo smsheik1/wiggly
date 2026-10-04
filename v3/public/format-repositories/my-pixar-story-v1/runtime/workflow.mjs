@@ -263,6 +263,9 @@ export function applyEvent(project, raw) {
   }
   if(p.crew)Crew.parse(p.crew);
   assertCrewEvent(p,e);
+  const worker=['agent','reviewer'].includes(e.actor)?p.crew?.workers.find(w=>w.workerId===e.workerId):null;
+  const activity={step:p.step,...(worker?{worker:{workerId:worker.workerId,name:worker.name,role:worker.role}}:{}),
+    ...(e.artifactId?{artifactId:e.artifactId,artifactDigest:e.artifactDigest}:{}),...(e.jobId?{jobId:e.jobId}:{})};
   if(['configure-debug','debug-next','debug-stop'].includes(e.action)){
     requiredActor(e,e.action==='debug-stop'?'runtime':'human');if(!e.message)throw new Error('Debug control needs the human instruction or runtime diagnostic.');
     if(e.action==='configure-debug'){
@@ -279,7 +282,7 @@ export function applyEvent(project, raw) {
     p.history.push({sequence:p.sequence,action:e.action,actor:e.actor,message:e.message,at:new Date().toISOString()});
     return Project.parse(p);
   }
-  if(['artifact','owner-review','review','plan','begin','rendered','qualified','audio-qualified'].includes(e.action))assertDebugReady(p);
+  if(['artifact','owner-review','review','plan','begin','rendered','qualified','audio-qualified'].includes(e.action)&&!(e.action==='artifact'&&e.actor==='human'&&p.step==='voiceSample'&&p.gate==='human'))assertDebugReady(p);
   if(e.action==='reserve-compute'){
     requiredActor(e,'runtime');if(!e.reservation)throw new Error('Compute reservation required.');
     p.budget??={maxCostUsd:0,reservations:[]};const existing=p.budget.reservations.find(r=>r.id===e.reservation.id);
@@ -384,7 +387,7 @@ export function applyEvent(project, raw) {
       const words = s => s.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu)?.join(' ') ?? '';
       if (m.transcripts.some((t, i) => words(t) !== words(current(p, 'script').content.beats[i].narration))) throw new Error('Speech-to-text differs from the locked script.');
     }
-    if(p.step==='film'){if(filmAudio){a.audioReview=structuredClone(r);a.audioReviewedBy=e.workerId;}else{a.visualReview=r;a.visualReviewedBy=e.workerId;if(reviewPassed(r)){if(p.debug?.enabled)p.debug.paused=true;p.sequence++;p.history.push({sequence:p.sequence,action:'review',actor:e.actor,message:'Visual film review passed; awaiting independent audio review.',at:new Date().toISOString()});return Project.parse(p);}}if(filmAudio&&reviewPassed(r)){r.perception='direct-audiovisual';r.checks=criteria.film.map(c=>r.checks.find(x=>x.criterion===c)??a.visualReview.checks.find(x=>x.criterion===c));}}
+    if(p.step==='film'){if(filmAudio){a.audioReview=structuredClone(r);a.audioReviewedBy=e.workerId;}else{a.visualReview=r;a.visualReviewedBy=e.workerId;if(reviewPassed(r)){if(p.debug?.enabled)p.debug.paused=true;p.sequence++;p.history.push({sequence:p.sequence,action:'review',actor:e.actor,...activity,message:'Visual film review passed; awaiting independent audio review.',at:new Date().toISOString()});return Project.parse(p);}}if(filmAudio&&reviewPassed(r)){r.perception='direct-audiovisual';r.checks=criteria.film.map(c=>r.checks.find(x=>x.criterion===c)??a.visualReview.checks.find(x=>x.criterion===c));}}
     if (ownerReview) a.ownerReview = r;
     if (ownerReview && r.decision === 'approved') p.gate = 'review';
     else {
@@ -451,7 +454,10 @@ export function applyEvent(project, raw) {
   } else if (e.action === 'reconcile') {
     requiredActor(e, 'human'); const j = p.jobs.find(j => j.id === e.jobId);
     if (p.gate !== 'escalate' || !j || j.key !== keyFor(p) || j.status !== 'uncertain' || j.digest !== e.artifactDigest || !e.message) throw new Error('Reconciliation needs the exact uncertain job and explicit user direction.');
-    if (['confirmed-no-result','confirmed-unusable-result'].includes(e.result?.outcome)) { j.status = 'failed'; p.gate = 'produce'; } else p.gate = 'collect';
+    const outcome=e.result?.outcome??'collect-existing';
+    if(!['confirmed-no-result','confirmed-unusable-result','confirmed-completed','collect-existing'].includes(outcome))throw new Error('Reconciliation needs a confirmed outcome or direction to collect the existing request.');
+    j.reconciliation={outcome,message:e.message,at:new Date().toISOString()};
+    if (['confirmed-no-result','confirmed-unusable-result'].includes(outcome)) { j.status = 'failed'; p.gate = 'produce'; } else p.gate = 'collect';
   } else if (e.action === 'allowance') {
     requiredActor(e, 'human');
     if (!e.allowance || !e.message) throw new Error('Allowance requires explicit user limits and original message.');
@@ -493,7 +499,9 @@ export function applyEvent(project, raw) {
   } else throw new Error('Unsupported action.');
   if(p.debug?.enabled&&e.action!=='begin')p.debug.paused=true;
   p.sequence++;
-  p.history.push({ sequence: p.sequence, action: e.action, actor: e.actor, message: e.message ?? '', at: new Date().toISOString() });
+  if(['artifact','receipt','rendered'].includes(e.action)){const a=p.artifacts.at(-1);activity.artifactId=a.id;activity.artifactDigest=a.digest;}
+  if(e.action==='plan')activity.jobId=p.jobs.at(-1).id;
+  p.history.push({ sequence: p.sequence, action: e.action, actor: e.actor, ...activity, message: e.message ?? '', at: new Date().toISOString() });
   return Project.parse(p);
 }
 

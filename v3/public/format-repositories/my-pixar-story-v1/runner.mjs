@@ -44,7 +44,7 @@ function presentation(status) {
   const { project, pending } = status;
   // A failed candidate never becomes the ordinary user-facing deliverable.
   const visible = ['approved','provisional'].includes(pending.artifact?.review?.decision) || pending.gate === 'review' || pending.gate === 'author';
-  return {producer:producerUpdate(status),debug:project.debug??{enabled:false,paused:false}, formatVersion: VERSION, checkpointId: status.checkpointId, sequence: project.sequence, communication:communicationFor(project),pending: { ...pending, artifact: visible ? pending.artifact : null },
+  return {producer:producerUpdate(status,runDir),debug:project.debug??{enabled:false,paused:false}, formatVersion: VERSION, checkpointId: status.checkpointId, sequence: project.sequence, communication:communicationFor(project),pending: { ...pending, artifact: visible ? pending.artifact : null },
     validArtifacts: project.artifacts.filter(a => a.valid).map(a => ({ id: a.id, digest: a.digest, kind: a.kind, approved: !!a.approvedBy })),
     jobs: project.jobs.map(j => ({ id: j.id, status: j.status, digest: j.digest, providerJobId: j.providerJobId })), allowances: project.allowances };
 }
@@ -88,6 +88,14 @@ async function main() {
     }
     if (command === 'import') { print(await importMedia(args[0], runDir)); return; }
     const status = await workflow.status('project');
+    if(command==='input-folder'){
+      const show=args.includes('--open');if(show)args.splice(args.indexOf('--open'),1);
+      if(args.length||status.project.lifecycle==='abandoned'||status.pending.step!=='voiceSample'||status.pending.gate!=='human')throw new Error('INPUT_FOLDER_UNAVAILABLE: the current step must be waiting for your voice sample.');
+      const producer=producerUpdate(status,runDir),folder=producer.inputRequest.folder;
+      await mkdir(folder,{recursive:true,mode:0o700});
+      if(show){const result=spawnSync(process.platform==='darwin'?'open':process.platform==='win32'?'explorer.exe':'xdg-open',[folder],{encoding:'utf8'});if(result.error||result.status!==0)throw new Error(`INPUT_FOLDER_OPEN_FAILED: ${folder}: ${result.error?.message??result.stderr??result.status}`);}
+      print({producer,folder,opened:show,providerCalls:0,projectStateMutated:false});return;
+    }
     if(command==='debug'){
       const mode=args.shift(),message=option('message');
       if(!['on','off'].includes(mode)||!message||args.length)throw new Error('Use debug on|off --message "<actual human instruction>" --run /absolute/run.');
