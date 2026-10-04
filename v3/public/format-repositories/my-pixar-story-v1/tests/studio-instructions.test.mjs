@@ -15,6 +15,17 @@ import {videoReady} from './studio-helpers.mjs';
 import {inputs,script,event,send,authored,reviewed,approved,audioProject} from './helpers.mjs';
 const crew={workers:Object.entries(crewRoles).map(([role,{name}])=>({workerId:`isolated-${role}`,name,role,modelVersion:'ISOLATED-host',capabilityVersion:'ISOLATED-tools',execution:'host'}))};
 const bind=p=>send(p,'configure-crew',{actor:'human',message:'ISOLATED local fixture binding',crew});
+test('answers author receives exact immutable source binding and cannot substitute or omit it',async()=>{
+ const p=bind(initialProject('source-binding',inputs));const expected=taskFor(p);
+ assert.equal(expected.sourceInputDigest,digest(inputs));assert.notEqual(expected.sourceInputDigest,expected.taskId);assert.equal(expected.originalInputsRequired,true);
+ let calls=0,packet;const host={runTask:async t=>{calls++;packet=t;return event(p,'artifact',{workerId:t.worker.workerId,content:{inputs:t.sourceInputs,sourceInputDigest:t.sourceInputDigest,commonSenseChecks:[]}});}};
+ for(const change of [{sourceInputDigest:expected.taskId},{sourceInputDigest:undefined},{originalInputsRequired:false}])await assert.rejects(runCrewTask(p,{...expected,...change},host),/TASK_INPUT_MISMATCH/);
+ assert.equal(calls,0);
+ const e=await runCrewTask(p,expected,host);const stored=send(p,'artifact',{workerId:e.workerId,content:e.content});assert.deepEqual(current(stored).content.inputs,inputs);assert.equal(packet.sourceInputDigest,digest(inputs));assert.equal(stored.gate,'review');assert.equal(stored.jobs.length,0);
+ assert.throws(()=>send(p,'artifact',{workerId:e.workerId,content:{...e.content,inputs:{...inputs,answers:{...inputs.answers,scene1Childhood:{summary:'Normalized unconfirmed answer'}}}}}),/CLARIFICATION_REQUIRED/);
+ const changed=send(stored,'changes',{actor:'human',artifactId:current(stored).id,artifactDigest:current(stored).digest,message:'ISOLATED actual human clarification: change a memory detail.'});
+ assert.equal(taskFor(changed).sourceInputDigest,digest(inputs));assert.equal(taskFor(changed).originalInputsRequired,false);
+});
 async function editableStudio(){const dir=await mkdtemp(join(tmpdir(),'memoir-studio-template-'));const original=loadStudio();for(const [path,doc] of Object.entries(original.documents)){await mkdir(dirname(join(dir,path)),{recursive:true});await writeFile(join(dir,path),doc.content);}await writeFile(join(dir,'studio.json'),JSON.stringify(original.config));return {dir,url:pathToFileURL(dir+'/')};}
 
 test('each named skill, scoped recipe, separate review rubric and producer voice is loaded into the right task',async()=>{

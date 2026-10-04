@@ -479,5 +479,23 @@
     "aiVideoGeneration": false,
     "productionReviewerQualified": false,
     "productionQualityProven": false
+  },
+  "questionnaireSourceBinding": {
+    "date": "2026-10-03",
+    "scope": "first real answers-author handoff rejection; metadata/root correction; no successful real retry or film proof",
+    "failure": "Required source fingerprint absent from task; known finished author substituted taskId and normalized source inputs without recorded human clarification. Response rejected; no artifact accepted.",
+    "fix": "Canonical sourceInputDigest and originalInputsRequired validated before dispatch; exact fingerprint and raw-copy rule supplied in native content schema. Existing source/clarification guards unchanged.",
+    "sourceTestsPassed": 172,
+    "sourceCheck": "pass",
+    "freshPackageFocusedTestsPassed": 28,
+    "freshPackageCheckAndSmoke": "pass; parent/grandparent isolated examples; exact lockfile matched before reusing source node_modules",
+    "actualRun": "paused at answers author, zero accepted artifacts/jobs/locks; original input unchanged; explicit host-profile refresh preserves worker IDs/models",
+    "actualModelTurnsBeforeFix": 16,
+    "additionalWorkerTurnsForFix": 0,
+    "mediaProviderCalls": 0,
+    "credentialsRead": false,
+    "successfulRealRetryProven": false,
+    "productionQualityProven": false,
+    "simplificationReview": "Lean already. Ship; existing task/schema/guard machinery only."
   }
 }

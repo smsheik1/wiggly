@@ -58,6 +58,17 @@ test('model/profile changes and failed host turns stop without fallback or retry
  await rm(dir,{recursive:true});
 });
 
+test('native answers task sends the exact source fingerprint and raw-copy rule to the worker',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'memoir-native-answers-')),mock=fixture(),host=new CodexHost({cwd:dir,spawnProcess:mock.spawnProcess});host.profile=async()=> 'isolated-host-profile';
+ try{
+  await host.initialize();const crew=await host.startCrew(),p=send(initialProject('native-answers',inputs),'configure-crew',{actor:'human',message:'ISOLATED native source binding',crew}),task=taskFor(p);
+  await host.runTask(task,{worker:task.crewWorker,callTool:async()=>{throw new Error('No tools needed for answers.');}});
+  const payload=JSON.parse(mock.requests.findLast(r=>r.method==='turn/start').params.input[0].text);
+  assert.equal(payload.task.sourceInputDigest,task.sourceInputDigest);assert.deepEqual(payload.task.sourceInputs,inputs);
+  assert.equal(payload.contentSchema.properties.sourceInputDigest.const,task.sourceInputDigest);assert.match(payload.contentSchema.properties.inputs.description,/copy task.sourceInputs exactly/);
+ }finally{host.close();await rm(dir,{recursive:true});}
+});
+
 test('fatal external perception failures terminate the host turn before a worker can return a verdict',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'memoir-gemini-fatal-')),mock=fixture({respondTool:true,toolName:'listenAudio'}),host=new CodexHost({cwd:dir,spawnProcess:mock.spawnProcess});host.profile=async()=> 'isolated';
  try{await host.initialize();const crew=await host.startCrew(),worker=crew.workers.find(w=>w.role==='audio-reviewer');

@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-03",
+  "scope": "Questionnaire source-binding handoff correction after first real debug rejection; not completed film or successful actual retry",
+  "archiveSha256": "ccf0b0a2687badbaa5f36161c26a4de0207b406d55b966b785f4f0a17924f9f1",
+  "auditedCodeArchiveSha256": "a3746a0ebe03c2eea5ff368ed587bca796ee181711d8271a46178f92f616813d",
+  "source": {
+    "check": "pass",
+    "testsPassed": 172,
+    "testsLog": "/tmp/memoir-round1-source-binding-tests.log"
+  },
+  "package": {
+    "check": "pass",
+    "parentAndGrandparentSmoke": "pass",
+    "focusedTestsPassed": 28,
+    "dependencyInstall": "Reused source node_modules only after exact package-lock byte comparison; not a fresh npm ci",
+    "auditDirectory": "/tmp/wiggly-package-audit.0vI6jv",
+    "finalByteComparison": {
+      "filesCompared": 148,
+      "onlyChangedFile": "proof.json"
+    },
+    "officialPackTestsPassed": 44
+  },
+  "rootFix": "Supply and verify sourceInputDigest/originalInputsRequired; provide native schema exact fingerprint and raw-copy instructions. Do not weaken source/clarification guards.",
+  "realRehearsal": {
+    "nativeInitializationTurns": 15,
+    "failedAuthorTurns": 1,
+    "additionalWorkerTurnsForCorrection": 0,
+    "currentStage": "answers author",
+    "debugPaused": true,
+    "artifactsAccepted": 0,
+    "providerJobs": 0,
+    "inputUnchanged": true,
+    "sameCrewIdsAndModels": true,
+    "crewProfileExplicitlyRefreshed": true,
+    "successfulRealRetry": false
+  },
+  "paidMediaOrReviewCalls": 0,
+  "providerCredentialsRead": false,
+  "productionFilmQualityProven": false,
+  "simplificationReview": "Lean already. Ship. No new dependency, state store or renderer."
+}
