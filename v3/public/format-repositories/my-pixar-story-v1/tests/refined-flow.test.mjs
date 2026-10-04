@@ -16,7 +16,7 @@ const promptFor=p=>{const c=current(p,'roster').content.characters.find(c=>c.id=
 function promptReady(){let p=confirmed(supervisedAudio());return approved(reviewed(author(p,{characters:[{id:'alex',name:'Alex',ageVariant:'adult',important:true,references:[image(1)],notes:'ISOLATED'}]},'cast-owner')));}
 
 test('answers require source binding, independent questionnaire review and exact human lock before script; historical state stays revision 2',()=>{
- const p=initialProject('new',inputs);assert.equal(p.step,'answers');assert.equal(p.workflowRevision,3);
+ const p=initialProject('new',inputs,{workflowRevision:3});assert.equal(p.step,'answers');assert.equal(p.workflowRevision,3);
  assert.equal(taskFor(p).formatRole,'script-writer');assert.equal(taskFor(p).questionnaire.questions.length,5);assert.deepEqual(taskFor(p).sourceInputs,inputs);
  assert.throws(()=>assertAllowed(p,'script'),/ANSWERS_LOCK_REQUIRED/);
  assert.throws(()=>authored(p));
@@ -32,13 +32,13 @@ test('answers require source binding, independent questionnaire review and exact
 });
 
 test('answer clarification needs human feedback; confirmed rewinds invalidate downstream work and preserve independent clone',()=>{
- let p=initialProject('clarify',inputs);const changed=structuredClone(questionnaire(p));changed.inputs.subject.recipientName='Different recipient';
+ let p=initialProject('clarify',inputs,{workflowRevision:3});const changed=structuredClone(questionnaire(p));changed.inputs.subject.recipientName='Different recipient';
  assert.throws(()=>send(p,'artifact',{workerId:'intake',content:changed}),/ANSWER_CLARIFICATION_REQUIRED/);
  p=reviewed(send(p,'artifact',{workerId:'intake',content:questionnaire(p)}),'rejected');
  assert.throws(()=>send(p,'artifact',{workerId:'intake',content:changed}),/ANSWER_CLARIFICATION_REQUIRED/);
  const a=current(p);p=send(p,'changes',{artifactId:a.id,artifactDigest:a.digest,message:'ISOLATED actual human corrected the recipient name'});
  p=approved(reviewed(send(p,'artifact',{workerId:'intake',content:changed})));
- const switched=structuredClone(questionnaire(p));switched.inputs.subject.fullName='Different storyteller';let fresh=initialProject('identity',inputs);assert.throws(()=>send(fresh,'artifact',{workerId:'intake',content:switched}),/STORYTELLER_CHANGE_REQUIRES_NEW_PROJECT/);
+ const switched=structuredClone(questionnaire(p));switched.inputs.subject.fullName='Different storyteller';let fresh=initialProject('identity',inputs,{workflowRevision:3});assert.throws(()=>send(fresh,'artifact',{workerId:'intake',content:switched}),/STORYTELLER_CHANGE_REQUIRES_NEW_PROJECT/);
  assert.equal(taskFor(p).inputs.subject.recipientName,'Different recipient');assert.equal(p.inputs.subject.recipientName,inputs.subject.recipientName);
  const all=supervisedCharacters(),answer=current(all,'answers'),impact=revisionImpact(all,answer.id);
  for(const key of ['script','audition','narration','roster','characterPrompt:alex','candidates:alex','sheetPrompt:alex','sheet:alex'])assert.ok(impact.affected.includes(current(all,key).id),key);
@@ -49,9 +49,9 @@ test('answer clarification needs human feedback; confirmed rewinds invalidate do
 });
 
 test('script approval reuses confirmed intake but requires resolution for newly introduced findings and cannot swap locked age/photos',()=>{
- let p=reviewed(authored(answersLocked(initialProject('script',inputs))));let a=current(p);
+ let p=reviewed(authored(answersLocked(initialProject('script',inputs,{workflowRevision:3}))));let a=current(p);
  p=send(p,'approve',{artifactId:a.id,artifactDigest:a.digest,message:'ISOLATED approve exact script'});assert.equal(p.step,'voiceSample');
- let q=answersLocked(initialProject('new-finding',inputs));const extra={category:'action',finding:'Bicycle ride needs safe blocking',resolution:'Ask human'};
+ let q=answersLocked(initialProject('new-finding',inputs,{workflowRevision:3}));const extra={category:'action',finding:'Bicycle ride needs safe blocking',resolution:'Ask human'};
  q=reviewed(send(q,'artifact',{workerId:'writer',content:{...script,commonSenseChecks:[...script.commonSenseChecks,extra]}}));a=current(q);
  assert.throws(()=>send(q,'approve',{artifactId:a.id,artifactDigest:a.digest,message:'ISOLATED'}),/INTAKE_UNRESOLVED/);
  const intake=intakeFixture(q);const bad=structuredClone(intake);bad.characters[0].ageVariant='child';assert.throws(()=>approved(q,{intakeConfirmation:bad}),/ANSWERS_INVENTORY_LOCKED/);
@@ -90,7 +90,7 @@ test('Cartesia adapter keeps four originals, pads only after four natural-speed 
  const dir=await mkdtemp(join(tmpdir(),'memoir-window-provider-'));
  try{
   const path=join(dir,'tone.wav');execFileSync('ffmpeg',['-v','error','-f','lavfi','-i','sine=frequency=300:duration=1',path]);const bytes=await readFile(path);
-  const p=supervisedAudio();p.step='narration';p.gate='collect';const plan={provider:'cartesia',operation:'narration',estimatedCostUsd:.1,parameters:{}},request=requestDescriptor(p,plan),dependencies=[];
+  const p=supervisedAudio();p.workflowRevision=4;p.step='narration';p.gate='collect';const plan={provider:'cartesia',operation:'narration',estimatedCostUsd:.1,parameters:{}},request=requestDescriptor(p,plan),dependencies=[];assert.equal(request.beatWindowSeconds,15);
   const j={id:'isolated-window',key:'narration',plan,request,dependencies,digest:digest({plan,request,dependencies}),status:'submitting',authorization:{message:'ISOLATED HTTP mock',at:new Date().toISOString()}};p.jobs=[j];let calls=0;
   const result=await executeJob(p,j,dir,'ISOLATED',async(_url,options)=>{calls++;const body=JSON.parse(options.body);assert.equal(body.generation_config.speed,1);assert.equal(body.beatWindowSeconds,undefined);return new Response(bytes);});
   assert.equal(calls,4);assert.deepEqual(result.files.map(f=>f.durationSeconds),[15,15,15,15]);assert.deepEqual(result.sourceFiles.map(f=>f.durationSeconds),[1,1,1,1]);assert.deepEqual(result.tailSilenceSeconds,[14,14,14,14]);

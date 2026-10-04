@@ -32,7 +32,7 @@ function complete(){
 test('supervised studio reaches completion across every SQLite restart, without qualifying itself or authorizing video implicitly',async()=>{
  const {project,events}=captureEvents(complete),dir=await mkdtemp(join(tmpdir(),'memoir-supervised-studio-')),db=join(dir,'state.sqlite');let w=openWorkflow(db);
  try{
-  await w.init('invented-supervised',inputs);
+  await w.init('invented-supervised',inputs,{workflowRevision:3});
   for(const e of events){await w.respond('invented-supervised',e);w.close();w=openWorkflow(db);}
   const s=await w.status('invented-supervised');assert.equal(s.project.step,'complete');assert.equal(s.project.sequence,project.sequence);
   assert.equal(s.project.artifacts.some(a=>a.kind.includes('Qualification')),false);

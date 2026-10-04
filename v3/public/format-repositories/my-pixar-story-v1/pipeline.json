@@ -48,11 +48,12 @@
     "shot intentions before supervised backgrounds",
     "durable cumulative provider estimate ceiling before generation/review/STT",
     "current impact digest before rewinding human-locked dependencies",
-    "ANSWERS LOCK before script writing in revision 3",
-    "approved exact character design prompt before three Muse candidates in revision 3",
+    "ANSWERS LOCK before script writing in revision 3+",
+    "approved exact character design prompt before three Muse candidates in revision 3+",
     "natural speech retained; explicit silence-only 15.0s windows with source provenance"
   ],
   "defaultReviewPolicy": "supervised; legacy remains qualified",
-  "workflowRevision": "3 for new supervised runs; missing field and qualified initializer retain revision 2; no silent checkpoint migration",
-  "productionProfile": "all new projects seedance-mini-480p; missing saved field legacy-seedance-hd; no silent migration"
+  "workflowRevision": "4 for new supervised runs; historical revision 3 unchanged; missing field and qualified initializer retain revision 2; no silent checkpoint migration",
+  "productionProfile": "all new projects seedance-mini-480p; missing saved field legacy-seedance-hd; no silent migration",
+  "scriptLedCast": "Revision 4: answers lock confirms memories, script includes the writer-proposed cast, narration lock precedes roster reference/rights confirmation, then character design."
 }

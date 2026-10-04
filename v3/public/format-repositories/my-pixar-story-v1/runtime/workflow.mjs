@@ -30,8 +30,8 @@ const briefKey = p => `${p.step === 'backgroundAnglePrompt' ? 'backgroundAngleBr
 const promptKey = p => `${p.step === 'backgroundAngle' ? 'backgroundAnglePrompt' : 'backgroundPrompt'}:${p.locationId}${p.step === 'backgroundAngle' ? ':' + p.angleId : ''}`;
 const isPrompt = p => ['backgroundPrompt', 'backgroundAnglePrompt'].includes(p.step);
 export function initialProject(id, inputs, options = {}) {
-  const workflowRevision=options.workflowRevision ?? (options.reviewMode==='qualified'?2:3),studio=options.studio??loadStudio();
-  return Project.parse({ formatVersion: VERSION, schemaVersion: 2, studio, workflowRevision, productionProfile:options.productionProfile??studio.config.generation.video.profile, id, reviewMode:options.reviewMode ?? 'supervised', budget:{maxCostUsd:studio.config.limits.initialSpendCeilingUsd,reservations:[]}, inputs: Inputs.parse(inputs), step: workflowRevision===3?'answers':'script', gate: 'author', characterId: null,
+  const workflowRevision=options.workflowRevision ?? (options.reviewMode==='qualified'?2:4),studio=options.studio??loadStudio();
+  return Project.parse({ formatVersion: VERSION, schemaVersion: 2, studio, workflowRevision, productionProfile:options.productionProfile??studio.config.generation.video.profile, id, reviewMode:options.reviewMode ?? 'supervised', budget:{maxCostUsd:studio.config.limits.initialSpendCeilingUsd,reservations:[]}, inputs: Inputs.parse(inputs), step: workflowRevision>=3?'answers':'script', gate: 'author', characterId: null,
     sequence: 0, artifacts: [], jobs: [], history: [], allowances: [], feedback: [], reviewDisagreements: 0 });
 }
 function invalidate(p, id) {
@@ -58,7 +58,7 @@ export function revisionImpact(p, id) {
 export function dependencies(p) {
   const keys = studioDependencies(p) ?? {
     answers: [], script: refinedWorkflow(p)?['answers']:[], voiceSample: [], clone: ['voiceSample'], audioReviewerQualification: [], audition: ['clone', 'script','audioReviewerQualification'],
-    narration: ['script', 'clone', 'audition','audioReviewerQualification'], roster: ['script'],
+    narration: ['script', 'clone', 'audition','audioReviewerQualification'], roster: p.workflowRevision>=4?['script','narration']:['script'],
     characterPrompt:['roster','script'], candidates: refinedWorkflow(p)?['roster',`characterPrompt:${p.characterId}`]:['roster'], sheetPrompt: [`candidates:${p.characterId}`],
     shotIntentions:['script','narration','roster',...(current(p,'roster')?.content.characters??[]).map(c=>`sheet:${c.id}`)],
     sheet: [`candidates:${p.characterId}`, `sheetPrompt:${p.characterId}`], backgrounds: [...(supervised(p)?['shotIntentions']:[]),'script', 'narration', 'roster', ...(current(p, 'roster')?.content.characters ?? []).map(c => `sheet:${c.id}`)],
@@ -122,6 +122,7 @@ function addArtifact(p, content, author) {
     if(parsed.sourceInputDigest!==digest(p.inputs))throw new Error('ANSWER_SOURCE_MISMATCH: bind the immutable original questionnaire.');
     if(digest(parsed.inputs)!==digest(p.inputs)&&!p.feedback.some(f=>f.key==='answers'&&f.intent&&f.message))throw new Error('ANSWER_CLARIFICATION_REQUIRED: changed answers require recorded human feedback before independent review and human confirmation.');
   }
+  if(p.workflowRevision>=4&&p.step==='script'&&!parsed.proposedCast)throw new Error('SCRIPT_CAST_PROPOSAL_REQUIRED: the writer must propose the necessary on-screen people and age variants, with a story purpose.');
   if(p.step==='characterPrompt'){
     const cast=current(p,'roster').content.characters.find(c=>c.id===p.characterId);
     if(!locked(p,'roster')||parsed.characterDigest!==digest(cast)||digest(parsed.referenceHashes)!==digest(cast.references.map(f=>f.sha256))||parsed.recipeSha256!==recipeFor(p,'characterPrompt',{sha256:characterPromptRecipeSha256}).sha256)throw new Error('CHARACTER_PROMPT_BINDING_REQUIRED: bind the exact approved cast, ordered photos and packaged recipe.');
@@ -141,7 +142,7 @@ function addArtifact(p, content, author) {
   if (p.step === 'roster' && parsed.characters.some(c => c.references.some(f => !f.width || !f.height || f.durationSeconds))) throw new Error('Character references must be measured still images.');
   if(p.step==='roster'){
    if(!supervised(p)&&parsed.characters.some(c=>!c.references.length))throw new Error('Character photo references required in qualified mode.');
-   if(supervised(p)){
+   if(supervised(p)&&p.workflowRevision<4){
     const inventory=current(p,'script').intakeConfirmation.characters.filter(c=>c.likeness!=='omit');
     if(inventory.length!==parsed.characters.length||inventory.some(c=>!parsed.characters.some(x=>x.id===c.id&&x.name===c.name&&x.ageVariant===c.ageVariant&&digest(x.references)===digest(c.references))))throw new Error('INTAKE_ROSTER_MISMATCH: cast/age/reference inventory must match the human-confirmed script intake; revise the script to change it.');
     for(const c of parsed.characters){const i=inventory.find(i=>i.id===c.id);if(i.likeness==='interpreted'&&!c.notes.includes(i.decisionNotes))throw new Error('INTERPRETED_LIKENESS_REQUIRED: preserve the human-approved uncertainty/interpretation in character notes.');}
@@ -226,7 +227,7 @@ export function taskFor(p) {
     ...(p.step==='videoPrompt'||p.step==='video'?{videoBinding:videoBinding(p)}:{}),
     ...(p.step==='music'?{soundDirection:current(p,'soundPlan').content.music}:p.step==='effect'?{soundDirection:effectFor(p)}:{}),
     actor: p.gate === 'review' ? 'reviewer' : ['human', 'authorize', 'escalate'].includes(p.gate) ? 'human' : 'agent',
-    intakeConfirmation:current(p,'script')?.intakeConfirmation??current(p,'answers')?.intakeConfirmation??null, artifact: a ?? null, job: job ?? null, inputs: effectiveInputs(p),
+    proposedCast:current(p,'script')?.content.proposedCast??null, intakeConfirmation:current(p,'roster')?.intakeConfirmation??current(p,'script')?.intakeConfirmation??current(p,'answers')?.intakeConfirmation??null, artifact: a ?? null, job: job ?? null, inputs: effectiveInputs(p),
     dependencies: dependencies(p).map(id => p.artifacts.find(a => a.id === id)),
     feedback: p.feedback.filter(f => f.key === keyFor(p)), criteria: p.step==='film'&&p.gate==='review'?filmCriteria(p):criteria[p.step] ?? [],
     instruction: loaded && ['author','owner-review','review','produce'].includes(p.gate) ? `Follow the attached ${loaded.skill.path} for this ${p.step}/${p.gate} task and return only the assigned Event.` : legacyInstruction(p),
@@ -397,15 +398,26 @@ export function applyEvent(project, raw) {
     const a = current(p);
     if(p.step==='film'&&(!a?.visualReview||!a?.audioReview||a.visualReviewedBy===a.audioReviewedBy))throw new Error('Film requires separate visual and audio reviewer passes.');
     if (p.gate !== 'human' || !a || !reviewPassed(a.review) || e.artifactId !== a.id || e.artifactDigest !== a.digest || !e.message) throw new Error('Human approval needs the exact current agent-passing artifact and original user message.');
-    if(supervised(p)&&['answers','script'].includes(p.step)){
+    if(supervised(p)&&p.workflowRevision>=4&&['answers','script'].includes(p.step)){
+      const findings=a.content.commonSenseChecks.map(c=>digest({category:c.category,finding:c.finding}));
+      const resolutions=e.resolvedFindings??[];
+      if(new Set(resolutions.map(x=>x.findingDigest)).size!==resolutions.length||findings.some(h=>!resolutions.some(x=>x.findingDigest===h)))throw new Error('INTAKE_UNRESOLVED: resolve essential factual/story findings; source photos and casting decisions belong to roster approval.');
+      a.resolvedFindings=resolutions;
+    }
+    if(supervised(p)&&(p.workflowRevision<4&&['answers','script'].includes(p.step)||p.workflowRevision>=4&&p.step==='roster')){
       const confirmation=e.intakeConfirmation ?? (refinedWorkflow(p)&&p.step==='script'?current(p,'answers')?.intakeConfirmation:null);
-      if(!confirmation)throw new Error('INTAKE_CONFIRMATION_REQUIRED: confirm rights, voice consent, character/age/reference decisions and essential findings before script lock.');
+      if(!confirmation)throw new Error('INTAKE_CONFIRMATION_REQUIRED: confirm rights, voice consent, character/age/reference decisions and essential findings at this workflow’s confirmation gate.');
       const intake=IntakeConfirmation.parse(confirmation);
       if(new Set(intake.characters.map(c=>c.id)).size!==intake.characters.length||intake.characters.some(c=>c.likeness==='await-reference'||c.minor&&!c.guardianAuthority||c.likeness==='reference'&&!c.references.length||c.references.some(f=>!f.width||!f.height||f.durationSeconds)))throw new Error('INTAKE_UNRESOLVED: resolve missing age/photo rights/guardian authority and use measured still references.');
-      if(refinedWorkflow(p)&&p.step==='script'){const prior=current(p,'answers').intakeConfirmation;if(digest({voiceConsent:intake.voiceConsent,characters:intake.characters})!==digest({voiceConsent:prior.voiceConsent,characters:prior.characters}))throw new Error('ANSWERS_INVENTORY_LOCKED: revise the answers lock to change agreed people, ages, consent or source photos.');}
-      const findings=[...(refinedWorkflow(p)&&p.step==='script'?current(p,'answers').content.commonSenseChecks:[]),...a.content.commonSenseChecks].map(c=>digest({category:c.category,finding:c.finding}));
+      if(p.workflowRevision===3&&p.step==='script'){const prior=current(p,'answers').intakeConfirmation;if(digest({voiceConsent:intake.voiceConsent,characters:intake.characters})!==digest({voiceConsent:prior.voiceConsent,characters:prior.characters}))throw new Error('ANSWERS_INVENTORY_LOCKED: revise the answers lock to change agreed people, ages, consent or source photos.');}
+      const findings=[...(refinedWorkflow(p)&&p.step==='script'?current(p,'answers').content.commonSenseChecks:[]),...(a.content.commonSenseChecks??[])].map(c=>digest({category:c.category,finding:c.finding}));
       if(!refinedWorkflow(p)&&findings.length!==intake.resolvedFindings.length)throw new Error('INTAKE_UNRESOLVED: resolve exactly the current findings.');
       if(new Set(intake.resolvedFindings.map(c=>c.findingDigest)).size!==intake.resolvedFindings.length||findings.some(h=>!intake.resolvedFindings.some(c=>c.findingDigest===h)))throw new Error('INTAKE_UNRESOLVED: each actual common-sense finding needs an explicit human resolution.');
+      if(p.workflowRevision>=4){
+        const proposed=current(p,'script').content.proposedCast,inventory=intake.characters.filter(c=>c.likeness!=='omit');
+        if(intake.characters.length!==proposed.length||proposed.some(c=>!intake.characters.some(i=>i.id===c.id&&i.name===c.name&&i.ageVariant===c.ageVariant&&i.minor===c.minor)))throw new Error('SCRIPT_CAST_MISMATCH: reference decisions must cover the approved script cast; revise the script to change who appears.');
+        if(inventory.length!==a.content.characters.length||inventory.some(i=>!a.content.characters.some(c=>c.id===i.id&&c.name===i.name&&c.ageVariant===i.ageVariant&&digest(c.references)===digest(i.references)&&(i.likeness!=='interpreted'||c.notes.includes(i.decisionNotes)))))throw new Error('INTAKE_ROSTER_MISMATCH: roster must use the exact human-confirmed references and interpretation notes.');
+      }
       a.intakeConfirmation=intake;
     }
     if (['candidates', 'backgroundCandidates'].includes(p.step)) { if (![0, 1, 2].includes(e.selection)) throw new Error('Choose one of the three candidate indexes: 0, 1, 2.'); a.selection = e.selection; }

@@ -20,7 +20,7 @@ export function requestDescriptor(p, plan) {
   if (['audition', 'narration'].includes(plan.operation)) return { endpoint: 'https://api.cartesia.ai/tts/bytes', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
     model_id: plan.parameters.model ?? generation.voice.model, voice: artifact(p, 'clone').content.voiceId, language: sample.language,
     transcripts: artifact(p, 'script').content.beats.slice(0, plan.operation === 'audition' ? 1 : 4).map(b => b.narration),
-    ...(plan.operation==='narration'&&p.workflowRevision===3?{beatWindowSeconds:15}:{}),
+    ...(plan.operation==='narration'&&p.workflowRevision>=3?{beatWindowSeconds:15}:{}),
     output_format: { container: 'wav', encoding: 'pcm_s16le', sample_rate: 44100 }, generation_config: { speed: 1, volume: 1 } };
   let images, n;
   if (plan.operation === 'keyframe') { images = shotReferences(p).map(r => r.file); n = 1; }

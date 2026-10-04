@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-04",
+  "change": "Workflow revision 4: agent proposes cast with script; human confirms reference rights at roster after narration lock",
+  "archiveSha256": "c97bd187491ab81b09ea09508909f749e187a28b75abb0b9168533884e2371c2",
+  "packagedFilesMatchedSource": 149,
+  "checks": {
+    "fullRegression": {
+      "passed": 178,
+      "failed": 0
+    },
+    "packGuardrails": {
+      "passed": 50,
+      "failed": 0
+    },
+    "independentExtractedPackage": {
+      "check": "passed without credentials",
+      "smoke": [
+        "parent",
+        "grandparent"
+      ],
+      "focusedTests": 12,
+      "providerCalls": 0,
+      "cleanInstall": false,
+      "dependencyReuse": "package-lock matched node_modules symlink"
+    }
+  },
+  "auditFindingFixed": "Revision-4 narration request now retains revision-3+ natural-speed source provenance and silence-only 15s windows; actual mock adapter regression covers four calls and recovery. Roster requires narration lock and depends on it.",
+  "liveRehearsal": {
+    "nativeAuthorTurns": 1,
+    "worker": "Leo",
+    "model": "gpt-5.6-sol",
+    "stage": "answers/review",
+    "debugPaused": true,
+    "sourceInputsPreserved": true,
+    "essentialFindings": 0,
+    "nextWorker": "Sage",
+    "humanLocks": 0,
+    "generationJobs": 0,
+    "spendCeilingUsd": 0,
+    "oldRunPreserved": true
+  },
+  "limitations": [
+    "Not a completed real film or production-quality proof",
+    "Live script/cast proposal not yet generated or reviewed",
+    "Text/media reviewers remain supervised advisory reviewers",
+    "Old revision-2/3 runs are not silently migrated"
+  ],
+  "ponytailReview": "Lean already. Ship. No new dependencies, worker hierarchy or renderer."
+}

@@ -13,10 +13,14 @@ Organize the existing questionnaire into usable, grounded inputs. Bind sourceInp
 
 Questionnaire subprompts are optional invitations. Only missing facts needed to understand or stage the story should block intake. Optional anecdotes can stay unanswered: do not require silly trouble, a shocking teenage fact, an awkward romance incident or a single realization of love. A gradual realization is usable. Preserve the supplied wording; do not invent an answer to fill a prompt.
 
-Reserve commonSenseChecks for unresolved required production questions. For each finding, identify the specific story misunderstanding, unsupported claim or necessary visual dependency that would result without clarification. Use truthful omission, an unnamed relationship, the stated age difference or an unspecified location when sufficient. Do not demand names, pronouns, exact ages, places or technical detail merely because absent. Consent, required person/age/reference inventory and human approval remain mandatory at their existing gates.
+Reserve commonSenseChecks for unresolved required production questions. For each finding, identify the specific story misunderstanding, unsupported claim or necessary visual dependency that would result without clarification. Use truthful omission, an unnamed relationship, the stated age difference or an unspecified location when sufficient. Do not demand names, pronouns, exact ages, places or technical detail merely because absent. In workflow revision 4, ANSWERS LOCK confirms usable memories, not casting or photo completeness. Do not ask the user to design the cast. Rights and references are confirmed at roster approval; voice consent is required before cloning. Historical workflows retain their recorded gates.
 
 ## script
 
 Elevate the locked answers into excellent storytelling a child can understand. Preserve autobiographical facts and emotional meaning while improving phrasing and structure. Four natural-rate 15-second narration windows; never invent memories. Use lockedAnswers.inputs as source when present. Revisions use the exact rejected draft and evidenced feedback; stay on this deliverable.
 
 Use the task’s agreed criteria as quality standards. Reviewer verdicts are independent; follow evidenced repairs, preserve uncertainty and escalate missing facts instead of guessing.
+
+For workflow revision 4 scripts, include proposedCast: the minimum people and distinct age looks needed on screen, each with id, name, ageVariant, minor and storyPurpose. You own the proposal; derive it from the immediate story, not a question asking the user who should appear. Combine nearby ages when appearance can stay consistent. Propose off-screen treatment through the narration where appropriate without erasing meaningful relationships. Photos are not a prerequisite to writing. Human script approval confirms this proposal; source-photo/interpretation decisions happen at roster, after narration lock.
+
+For revision 4 commonSenseChecks, flag essential unresolved story facts with evidence. Do not turn a proposed cast or future missing photo into an intake/script blocker; request those reference decisions at roster.

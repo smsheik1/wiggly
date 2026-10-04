@@ -104,6 +104,7 @@ export class CodexHost {
    contentSchema.properties.sourceInputDigest.const=task.sourceInputDigest;
    contentSchema.properties.inputs.description='When task.originalInputsRequired is true, copy task.sourceInputs exactly, including all keys and original wording. Organize findings in commonSenseChecks; changes require recorded human clarification.';
   }
+  if(task.step==='script'&&task.workflowRevision>=4)contentSchema.required=[...(contentSchema.required??[]),'proposedCast'];
   const input=JSON.stringify({instruction:'Complete ONLY this current task. Source facts are in the supplied task. Do not invent facts, approval, tool evidence or perception. For a review, inspect every required criterion and return evidence and repairs, using your exact modelVersion/capabilityVersion. Missing capabilities mean inconclusive. Return eventJson containing the serialized Event object. Do not emit other text.',task:{...task,worker},contentSchema,eventSchema:z.toJSONSchema(Event)});
   const media=[];
   if((task.allowedTools??crewRoles[worker.role].tools).includes('viewImage'))for(const file of taskAssets(task).values())if(file.width&&!file.durationSeconds){const viewed=await callTool('viewImage',{sha256:file.sha256});media.push({type:'text',text:`Reference image sha256: ${file.sha256}`},{type:'image',url:viewed.imageUrl});}

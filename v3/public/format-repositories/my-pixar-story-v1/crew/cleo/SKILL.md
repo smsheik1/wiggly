@@ -16,3 +16,5 @@ Establish every important character and age variant from the locked script. Reco
 Use the supplied character recipe and actually view every castEntry.references photo. Locked script, cast entry and photos are primary; questionnaire is supporting. Write a concise full-body design prompt with concrete proportions, face, eyes, hair, skin, wardrobe, neutral pose, camera and empty studio background. Bind characterDigest, ordered referenceHashes and recipeSha256. Human prompt approval precedes three Muse candidates.
 
 Use the task’s agreed criteria as quality standards. Reviewer verdicts are independent; follow evidenced repairs, preserve uncertainty and escalate missing facts instead of guessing.
+
+In workflow revision 4, roster follows narration lock. Use approvedScript.content.proposedCast as the approved casting proposal. Prepare matching IDs/names/age variants and reference decisions for the human to confirm, never require the human to invent the cast. Ask only for required missing source photos or interpreted likeness decisions. Do not invent rights or guardian authority.

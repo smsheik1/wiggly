@@ -5,7 +5,7 @@ export const keyFor = p => ['videoPrompt','video'].includes(p.step) ? `${p.step}
 export const current = (p, key = keyFor(p)) => p.artifacts.findLast(a => a.key === key && a.valid);
 export const supervised = p => p.reviewMode === 'supervised';
 export const miniProduction = p => p.productionProfile === 'seedance-mini-480p';
-export const refinedWorkflow = p => p.workflowRevision === 3;
+export const refinedWorkflow = p => p.workflowRevision >= 3;
 export const reviewPassed = r => ['approved','provisional'].includes(r?.decision);
 export const locked = (p, key) => { const a = current(p, key); return !!(a?.approvedBy && reviewPassed(a.review) && (!supervised(p) || !a.content.files || a.humanReview?.decision === 'approved') && (a.kind!=='film'||reviewPassed(a.visualReview)&&reviewPassed(a.audioReview)&&a.visualReviewedBy!==a.audioReviewedBy)); };
 const matchesWorker=(p,role,q)=>{const w=p.crew?.workers.find(w=>w.role===role);return !w||w.workerId===q?.workerId&&w.modelVersion===q?.modelVersion&&w.capabilityVersion===q?.capabilityVersion;};
@@ -13,6 +13,7 @@ export const narrationLocked = p => (supervised(p) || matchesWorker(p,'audio-rev
 // Compatibility export for existing host integrations/checkpoints.
 export const audioLocked = narrationLocked;
 export function assertAllowed(p, kind) {
+  if(p.workflowRevision>=4&&kind==='roster'&&!audioLocked(p))throw new Error('NARRATION_LOCK_REQUIRED: establish cast references only after narration approval.');
   if(refinedWorkflow(p)&&kind==='script'&&!locked(p,'answers'))throw new Error('ANSWERS_LOCK_REQUIRED: questionnaire review and exact human confirmation must precede writing.');
   if(p.lifecycle==='abandoned')throw new Error('PROJECT_ABANDONED: new production is prohibited.');
   if (['reviewerQualification','videoPlan','videoPrompt','video','soundPlan','music','effect','editPlan','film'].includes(kind)) {

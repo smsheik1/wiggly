@@ -28,8 +28,8 @@ function narrationOnlyFilm(){let p=approved(reviewed(author(allVideos(),noSound,
 test('new projects bind Mini 480p; missing saved profile keeps legacy model and resolution',()=>{
  const p=videoReady(supervisedVideoReady()),plan={provider:'replicate',operation:'video',estimatedCostUsd:.5,parameters:{prompt:current(p)?.content?.prompt??current(p,`videoPrompt:${p.clipId}`).content.prompt}};
  const request=requestDescriptor(p,plan);assert.equal(request.endpoint,'https://api.replicate.com/v1/models/bytedance/seedance-2.0-mini/predictions');assert.equal(request.input.resolution,'480p');assert.equal(request.input.generate_audio,false);assert.equal(request.frame.sha256,taskFor(p).videoBinding.keyframeSha256);assert.equal(request.input.duration,5);
- assert.equal(initialProject('new',inputs).productionProfile,'seedance-mini-480p');
- const saved=structuredClone(initialProject('older',inputs));delete saved.productionProfile;const legacy=Project.parse(saved);assert.equal(legacy.productionProfile,'legacy-seedance-hd');
+ assert.equal(initialProject('new',inputs,{workflowRevision:3}).productionProfile,'seedance-mini-480p');
+ const saved=structuredClone(initialProject('older',inputs,{workflowRevision:3}));delete saved.productionProfile;const legacy=Project.parse(saved);assert.equal(legacy.productionProfile,'legacy-seedance-hd');
  const old=videoReady(),oldRequest=requestDescriptor(old,plan);assert.ok(oldRequest.endpoint.endsWith('/seedance-2.0/predictions'));assert.equal(oldRequest.input.resolution,'1080p');
  assert.throws(()=>validateVideoPlan(p,{...videoPlan(p),resolution:'1080p'}),/VIDEO_PROFILE_MISMATCH/);
  assert.throws(()=>validateVideoPlan(old,{...videoPlan(old),resolution:'480p'}),/VIDEO_PROFILE_MISMATCH/);
@@ -71,7 +71,7 @@ test('sheet and derived angle defects return to their prompt authors instead of 
 
 test('narration-only film retains separate Vera and Ava review gates and survives every SQLite restart',async()=>{
  const {project,events}=captureEvents(()=>confirmed(reviewed(narrationOnlyFilm()))),dir=await mkdtemp(join(tmpdir(),'memoir-mini-flow-'));let w=openWorkflow(join(dir,'state.sqlite'));
- try{await w.init('invented-supervised',inputs);for(const e of events){await w.respond('invented-supervised',e);w.close();w=openWorkflow(join(dir,'state.sqlite'));}const {project:p}=await w.status('invented-supervised');assert.equal(p.step,'complete');assert.equal(current(p,'film').digest,current(project,'film').digest);const manifest=assemblyManifest(p);assert.equal(manifest.music,null);assert.deepEqual(manifest.effects,[]);assert.ok(!p.jobs.some(j=>['music','effect'].includes(j.plan.operation)));assert.notEqual(current(p,'film').visualReviewedBy,current(p,'film').audioReviewedBy);assert.ok(p.jobs.filter(j=>j.plan.operation==='video').every(j=>j.authorization&&!j.allowanceId));}finally{w.close();await rm(dir,{recursive:true});}
+ try{await w.init('invented-supervised',inputs,{workflowRevision:3});for(const e of events){await w.respond('invented-supervised',e);w.close();w=openWorkflow(join(dir,'state.sqlite'));}const {project:p}=await w.status('invented-supervised');assert.equal(p.step,'complete');assert.equal(current(p,'film').digest,current(project,'film').digest);const manifest=assemblyManifest(p);assert.equal(manifest.music,null);assert.deepEqual(manifest.effects,[]);assert.ok(!p.jobs.some(j=>['music','effect'].includes(j.plan.operation)));assert.notEqual(current(p,'film').visualReviewedBy,current(p,'film').audioReviewedBy);assert.ok(p.jobs.filter(j=>j.plan.operation==='video').every(j=>j.authorization&&!j.allowanceId));}finally{w.close();await rm(dir,{recursive:true});}
  let p=narrationOnlyFilm();p=reviewed(p,'approved',{perception:'direct-video'});assert.equal(p.gate,'review');assert.equal(taskFor(p).formatRole,'audio-reviewer');assert.throws(()=>confirmed(p),/separate visual and audio|agent-passing/);p=reviewed(p);assert.equal(p.gate,'human');assert.equal(confirmed(p).step,'complete');
 });
 

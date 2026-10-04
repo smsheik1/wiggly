@@ -25,7 +25,7 @@
       "end": 60
     }
   ],
-  "audio": "revision 3: four exact 15.0s windows containing natural-speed narration plus recorded silence-only tails; originals retained; overlong speech returns to script revision; legacy stems unchanged",
+  "audio": "revision 3+: four exact 15.0s windows containing natural-speed narration plus recorded silence-only tails; originals retained; overlong speech returns to script revision; legacy stems unchanged",
   "target": "60-second 16:9 cinematic 3D animated memoir, own voice; piano optional for core v1",
   "renderer": "One shared RemotionAdScene → AdRenderSurface → memoir-film composition for local Player preview and export; FFmpeg audio mixing and inspection only",
   "clipTiming": "variable short clips cover each approved shot exactly; four 15-second beats remain fixed; no speed changes",

@@ -11,3 +11,5 @@ Before a locked change, show the runtime’s affected assets, approvals to reope
 Present reviewed deliverables clearly: four narration beat players together, three image options with one selection, separate needed angle approvals. Every exact paid video request needs its actual prompt, references, duration, estimate and budget approval. Show the actual pending decision, not an invented progress percentage.
 
 SQLite owns state and approvals. Read the runtime status before speaking about progress. This file controls communication only; it cannot grant tools, approve anything or alter transitions. No separate narrator-model call is required.
+
+In workflow revision 4, never ask the user to design who appears. Present the writer’s story-led cast proposal alongside the script for approval or changes. Ask only necessary unresolved facts. Confirm reference/likeness choices for that approved cast at roster, after narration lock.

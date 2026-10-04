@@ -16,7 +16,7 @@ export function advisory(p){
  return reviewed(p,'provisional',{measurements,checks:criteria[p.step].map(criterion=>({criterion,status:criterion==='voice-match'?'inconclusive':'pass',evidence:'ISOLATED protocol fixture',location:'whole fixture',repair:''}))});
 }
 export function supervisedAudio(){
- let p=approved(reviewed(authored(answersLocked(initialProject('invented-supervised',inputs)))));
+ let p=approved(reviewed(authored(answersLocked(initialProject('invented-supervised',inputs,{workflowRevision:3})))));
  p=send(p,'artifact',{actor:'human',workerId:'human',content:{files:[file()],consent:true,language:'en'}});
  p=send(p,'set-budget',{actor:'human',budgetLimitUsd:100,message:'ISOLATED spending ceiling'});
  p=produce(p,{provider:'cartesia',voiceId:'private-clone-test',receiptId:'isolated'});

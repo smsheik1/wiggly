@@ -90,3 +90,9 @@ Historical checkpoints in the living spec and proof.json retain their original d
 - [x] Real source-binding retry passed; Sage reviewed and rejected the answers packet. Repair routing worked. The review exposed unnecessary blocking questions about optional anecdotes.
 - [x] Agreed intake relevance rule supplied to Leo and Sage: only missing facts necessary for understanding/staging block. Optional prompts may remain unanswered; no invented facts or bypassed consent/reference/approval gates.
 - [ ] Verify the new intake rule with the next actual author/reviewer pair in a separate instruction-pinned rehearsal using the same raw answers. Preserve the original run and review; no silent snapshot migration.
+
+## 2026-10-04: script-led cast correction
+
+Workflow revision 4 supersedes earlier requirements to freeze cast/photos at ANSWERS LOCK. Intake confirms usable memories; Leo proposes the script and necessary on-screen cast together; Sage reviews both and the human approves them. After narration lock, Cleo collects only needed references and presents rights/guardian authority or interpreted/omitted likeness decisions at roster approval. The runtime binds that roster to the approved script proposal and exact references. Essential factual blockers, independent review, narration-first visuals and exact paid-video approval remain enforced. Revisions 2/3 retain their historical gates; active runs are never silently migrated.
+
+Root cause observed in Round 1: freezing the character inventory before writing prompted the operator to ask Shaz to design the cast. Automated regression checks cover both parent/grandparent inputs, missing cast proposals, essential factual blockers and later reference/rights enforcement. This is a runtime correction, not proof of creative quality or a real production film.
