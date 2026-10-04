@@ -118,8 +118,9 @@ export const Review = z.object({
 });
 export const Plans = z.object({ provider: z.enum(['cartesia', 'meta-muse', 'replicate', 'elevenlabs']), operation: z.enum(['clone', 'audition', 'narration', 'candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe', 'video', 'music', 'effect']),
   estimatedCostUsd: z.number().nonnegative(), parameters: z.object({ model: text.optional(), prompt: text.optional(), cartesiaVersion: text.optional() }).strict() }).strict();
-export const Event = z.object({ taskId: text, action: z.enum(['configure-debug','debug-next','debug-stop','upgrade-studio','configure-crew', 'configure-review','set-budget','reserve-compute', 'start-audio-review', 'audio-qualified', 'artifact', 'owner-review', 'start-backgrounds', 'start-shots', 'start-studio', 'qualified', 'rendered', 'review', 'approve', 'changes', 'redo', 'abandon', 'reject', 'note', 'resolve', 'plan', 'authorize', 'begin', 'job-id', 'receipt', 'provider-error', 'reconcile', 'allowance']),
-  debugEnabled:z.boolean().optional(),
+const CreativeDirection=z.object({scope:z.enum(['script','cast']),direction:text,sourceMessages:z.array(text).min(1)}).strict();
+export const Event = z.object({ taskId: text, action: z.enum(['configure-debug','debug-next','debug-stop','upgrade-studio','refresh-writing-instructions','configure-crew', 'configure-review','set-budget','reserve-compute', 'start-audio-review', 'audio-qualified', 'artifact', 'owner-review', 'start-backgrounds', 'start-shots', 'start-studio', 'qualified', 'rendered', 'review', 'approve', 'changes', 'redo', 'abandon', 'reject', 'note', 'resolve', 'plan', 'authorize', 'begin', 'job-id', 'receipt', 'provider-error', 'reconcile', 'allowance']),
+  creativeDirection:CreativeDirection.optional(), debugEnabled:z.boolean().optional(),
   budgetLimitUsd:z.number().nonnegative().optional(), reservation:z.object({id:text,provider:z.enum(['gemini','cartesia-stt']),estimatedCostUsd:z.number().positive()}).strict().optional(),
   actor: z.enum(['agent', 'reviewer', 'human', 'runtime']), workerId: text.optional(),
   resolvedFindings:z.array(z.object({findingDigest:text,resolution:text})).optional(), intakeConfirmation:IntakeConfirmation.optional(), impactDigest:text.optional(), artifactId: text.optional(), artifactDigest: text.optional(), message: text.optional(), selection: z.number().int().optional(),
@@ -145,5 +146,6 @@ export const Project = z.object({
   })),
   history: z.array(z.object({ sequence: z.number(), action: text, actor: text, message: z.string(), at: text })),
   allowances: z.array(z.object({ id: text, operations: z.array(Plans.shape.operation), maxRequests: z.number().int().positive(), maxCostUsd: z.number().nonnegative(), repairOf:z.string().optional(), message: text, at: text })),
+  creativeDirections:z.array(CreativeDirection.extend({message:text,at:text})).optional(),
   feedback: z.array(z.object({ key: text, message: text, intent:z.enum(['detail','redo']).optional() })), reviewDisagreements: z.number().int().nonnegative(),
 });

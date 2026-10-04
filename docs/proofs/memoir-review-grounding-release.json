@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-04",
+  "problem": [
+    "Reviewer rejected an ordinary smile expressing sourced excitement/pride",
+    "Reviewer missed shared late-teen design because agreed human direction was absent from its task"
+  ],
+  "changes": [
+    "Writer/rubric distinguish faithful expressive gestures from material inventions",
+    "Creative directions persist in SQLite with human source messages and are verified in every task packet",
+    "New creative requirements force review of an existing script before approval",
+    "Explicit restricted writing refresh preserves answers, draft, earlier evidence, retry counts and config/tool/spend boundaries"
+  ],
+  "archiveSha256": "1ceee0b40c0a470c22d9b619d5bb7d5d1a889daa69ccae23a1f4fcbf72160916",
+  "packagedFilesMatchedSource": 150,
+  "checks": {
+    "fullRegressionPassed": 183,
+    "fullRegressionFailed": 0,
+    "packGuardrailsPassed": 55,
+    "independentFinalPackage": {
+      "check": "passed without credentials",
+      "parentGrandparentSmoke": "passed",
+      "reviewGroundingTestsPassed": 5,
+      "cleanInstall": false,
+      "dependencyReuse": "package-lock matched node_modules symlink"
+    }
+  },
+  "auditDefectsFixed": [
+    "Creative direction previously left old passing script verdict usable; now forces review and blocks stale approval",
+    "Old new-project wording contradicted restricted refresh; now consistent at original instruction locations"
+  ],
+  "liveVerification": {
+    "nativeWorker": "Sage (Script Reviewer)",
+    "model": "gpt-5.6-sol",
+    "newWorkerTurns": 1,
+    "sameDraftDigest": "a360a1317344c2e0f5341dbdd93f580778a0a3379d279945f6862de07894e87d",
+    "facts": "pass: smile accepted as faithful expressive rendering",
+    "commonSense": "fail: separate age-17/19 designs conflict with recorded human direction",
+    "repair": "one shared late-teen look, factual narration ages unchanged, minor=true for use in a minor scene",
+    "state": "script/escalate, debug paused at two-review limit",
+    "answersLockPreserved": true,
+    "scriptLocked": false,
+    "generationJobs": 0,
+    "sourcePhotosAndConsentPreserved": true
+  },
+  "limitations": [
+    "One actual re-review is not general semantic qualification",
+    "No actual film/media production proof",
+    "Leo revision has not been run; reviewer retry limit awaits human direction"
+  ],
+  "ponytailReview": "Lean already. Ship. No new dependencies, renderer, worker hierarchy or duplicate state store."
+}

@@ -229,6 +229,7 @@ export function taskFor(p) {
     actor: p.gate === 'review' ? 'reviewer' : ['human', 'authorize', 'escalate'].includes(p.gate) ? 'human' : 'agent',
     proposedCast:current(p,'script')?.content.proposedCast??null, intakeConfirmation:current(p,'roster')?.intakeConfirmation??current(p,'script')?.intakeConfirmation??current(p,'answers')?.intakeConfirmation??null, artifact: a ?? null, job: job ?? null, inputs: effectiveInputs(p),
     dependencies: dependencies(p).map(id => p.artifacts.find(a => a.id === id)),
+    creativeDirections:p.creativeDirections??[],
     feedback: p.feedback.filter(f => f.key === keyFor(p)), criteria: p.step==='film'&&p.gate==='review'?filmCriteria(p):criteria[p.step] ?? [],
     instruction: loaded && ['author','owner-review','review','produce'].includes(p.gate) ? `Follow the attached ${loaded.skill.path} for this ${p.step}/${p.gate} task and return only the assigned Event.` : legacyInstruction(p),
   };
@@ -289,6 +290,12 @@ export function applyEvent(project, raw) {
   }else if(e.action==='upgrade-studio'){
     requiredActor(e,'human');if(!e.message||p.artifacts.length||p.jobs.length||p.crew)throw new Error('STUDIO_UPGRADE_LOCKED: upgrade only a pristine project before work/crew binding; use a separate new project for a different bundle after work begins. No approvals are migrated.');
     p.studio=loadStudio();
+  }else if(e.action==='refresh-writing-instructions'){
+    requiredActor(e,'human');
+    if(!e.message||p.step!=='script'||!p.studio||locked(p,'script')||p.jobs.length||p.artifacts.some(a=>a.approvedBy&&a.kind!=='answers'))throw new Error('WRITING_REFRESH_LOCKED: explicitly refresh only unapproved script work before media; approved answers and prior review evidence remain unchanged.');
+    const next=loadStudio(),allowed=['crew/leo/SKILL.md','evaluation/rubrics/text.md'];
+    if(digest(next.config)!==digest(p.studio.config)||Object.keys(next.documents).length!==Object.keys(p.studio.documents).length||Object.keys(next.documents).some(path=>!allowed.includes(path)&&digest(next.documents[path])!==digest(p.studio.documents[path])))throw new Error('WRITING_REFRESH_SCOPE: only writer skill and text rubric may change; tools, models, budgets, recipes and other instructions stay pinned.');
+    p.studio=next;p.gate=current(p)?'review':'author';if(p.debug?.enabled)p.debug.paused=true;
   }else if(e.action==='set-budget'){
     requiredActor(e,'human');if(e.budgetLimitUsd===undefined||!e.message||e.budgetLimitUsd+1e-9<spendSummary(p).totalReservedUsd)throw new Error('Budget needs explicit human limit covering existing reservations.');
     p.budget??={maxCostUsd:0,reservations:[]};p.budget.maxCostUsd=e.budgetLimitUsd;
@@ -317,6 +324,12 @@ export function applyEvent(project, raw) {
     requiredActor(e,'runtime');if(p.step!=='reviewerQualification'||p.gate!=='author')throw new Error('Qualification requires current qualification task.');const worker=p.crew?.workers.find(w=>w.role==='visual-reviewer');if(worker&&(worker.workerId!==e.content?.workerId||worker.modelVersion!==e.content?.modelVersion||worker.capabilityVersion!==e.content?.capabilityVersion))throw new Error('Visual qualification must match assigned Vera model.');addArtifact(p,e.content,'verified-local-evaluator');
   } else if (e.action === 'note') {
     if (!e.message) throw new Error('Note needs text.');
+    if(e.creativeDirection){
+      requiredActor(e,'human');
+      if(!['answers','script'].includes(p.step)||locked(p,'script')||p.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status)))throw new Error('CREATIVE_DIRECTION_REWIND_REQUIRED: new writing/cast direction belongs to an unapproved script; use impact-confirmed changes to reopen locked work first.');
+      p.creativeDirections??=[];p.creativeDirections.push({...e.creativeDirection,message:e.message,at:new Date().toISOString()});
+      if(p.step==='script'&&current(p)){p.gate='review';if(p.debug?.enabled)p.debug.paused=true;}
+    }
   } else if (['changes', 'redo', 'reject'].includes(e.action)) {
     requiredActor(e, 'human');
     if (p.jobs.some(j => ['submitting', 'submitted', 'uncertain'].includes(j.status))) throw new Error('Reconcile all outstanding requests before a revision.');
