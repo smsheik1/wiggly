@@ -28,6 +28,17 @@ test('answers author receives exact immutable source binding and cannot substitu
 });
 async function editableStudio(){const dir=await mkdtemp(join(tmpdir(),'memoir-studio-template-'));const original=loadStudio();for(const [path,doc] of Object.entries(original.documents)){await mkdir(dirname(join(dir,path)),{recursive:true});await writeFile(join(dir,path),doc.content);}await writeFile(join(dir,'studio.json'),JSON.stringify(original.config));return {dir,url:pathToFileURL(dir+'/')};}
 
+test('both intake roles receive the optional-prompt rule without removing required human confirmation',async()=>{
+ for(const name of ['parent','grandparent']){
+  const source=JSON.parse(await readFile(new URL(`../examples/${name}.json`,import.meta.url),'utf8')),p=bind(initialProject(`intake-relevance-${name}`,source));
+  const author=await prepareCrewTask(p,taskFor(p));assert.match(author.skill.content,/Only missing facts needed to understand or stage the story should block intake/);assert.match(author.skill.content,/Optional anecdotes can stay unanswered/);assert.match(author.skill.content,/Consent, required person\/age\/reference inventory and human approval remain mandatory/);
+  const draft=send(p,'artifact',{workerId:author.crewWorker.workerId,content:{inputs:source,sourceInputDigest:author.sourceInputDigest,commonSenseChecks:[]}}),review=await prepareCrewTask(draft,taskFor(draft));
+  assert.match(review.reviewerRubric,/Only missing facts needed to understand or stage the story should block intake/);assert.match(review.reviewerRubric,/reject an unnecessary blocking finding/);assert.match(review.reviewerRubric,/Consent, required person\/age\/reference inventory and human approval remain mandatory/);
+  const worker=review.crewWorker,passed=send(draft,'review',{workerId:worker.workerId,artifactId:review.artifact.id,artifactDigest:review.artifact.digest,review:{decision:'approved',perception:'direct-text',modelVersion:worker.modelVersion,capabilityVersion:worker.capabilityVersion,checks:review.criteria.map(criterion=>({criterion,status:'pass',location:'ISOLATED public example fixture',evidence:'ISOLATED protocol pass, not live semantic evaluation.',repair:''}))}});assert.equal(passed.gate,'human');assert.equal(passed.step,'answers');assert.equal(current(passed).approvedBy,undefined);
+  assert.throws(()=>send(passed,'approve',{actor:'human',artifactId:current(passed).id,artifactDigest:current(passed).digest,message:'ISOLATED approve without required confirmation.'}),/INTAKE_CONFIRMATION_REQUIRED/);
+ }
+});
+
 test('each named skill, scoped recipe, separate review rubric and producer voice is loaded into the right task',async()=>{
  const p=bind(initialProject('skills',inputs,{workflowRevision:2})),task=await prepareCrewTask(p,taskFor(p));
  assert.equal(task.skill.path,'crew/leo/SKILL.md');assert.match(task.skill.content,/Elevate the locked answers/);assert.equal(task.reviewerRubric,undefined);assert.equal(task.recipe,undefined);assert.equal(task.inputChecklist[0].status,'verified');assert.equal(task.communication,undefined);

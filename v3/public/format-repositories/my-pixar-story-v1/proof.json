@@ -497,5 +497,25 @@
     "successfulRealRetryProven": false,
     "productionQualityProven": false,
     "simplificationReview": "Lean already. Ship; existing task/schema/guard machinery only."
+  },
+  "intakeRelevance": {
+    "date": "2026-10-03",
+    "scope": "Actual Sage over-rejection diagnosis; pinned author/rubric correction and separate paused rehearsal; no new live judgment under revised policy",
+    "observedFailure": "Actual questionnaire reviewer treated missing optional silly-trouble, surprising-teenage and awkward-romance anecdotes as blocking completeness failures. Prior native source-binding retry succeeded.",
+    "agreedRule": "Only missing facts needed to understand or stage the story block intake; optional anecdotes can stay unanswered.",
+    "correction": "Leo skill and independent Sage text rubric require a concrete misunderstanding, unsupported claim or necessary visual dependency for a blocker; unnecessary commonSenseChecks receive removal repair. No facts invented.",
+    "gates": "Consent, required person/age/reference inventory and human approval unchanged; runtime/gate code unchanged.",
+    "sourceFocusedTestsPassed": 17,
+    "officialPackTestsPassed": 45,
+    "freshPackageFocusedTestsPassed": 26,
+    "freshPackageCheckAndSmoke": "pass; parent and grandparent public fixtures; source node_modules reused only after byte-identical package-lock comparison, not clean-install proof",
+    "auditedCodeArchiveSha256": "90df7d2099ddad377520f885d9649f769995c753f7210e26ef42e31f2c1b4538",
+    "versioning": "Original real run and rejection preserved. Separate checkpoint pins revised instructions, copies exact raw input bytes, reuses actual crew IDs/models; no artifact/approval/budget/job transferred.",
+    "newRehearsal": "answers author, debug paused, zero artifacts/jobs; actual model behavior not yet tested under revised rule",
+    "newWorkerModelTurns": 0,
+    "newProviderCalls": 0,
+    "credentialsRead": false,
+    "productionQualityProven": false,
+    "simplificationReview": "Lean already. Ship. Instructions and existing task/confirmation tests only; no runtime, dependency, renderer or state-store change."
   }
 }

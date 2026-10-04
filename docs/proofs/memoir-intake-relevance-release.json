@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-03",
+  "scope": "Intake relevance instructions after actual over-rejection; offline delivery/gate verification, not live semantic judgment",
+  "archiveSha256": "570f5a0878fa2d3d678a5c88af43583b9d03b502bc3e1393c6d8a9c7dd4a3e74",
+  "auditedCodeArchiveSha256": "90df7d2099ddad377520f885d9649f769995c753f7210e26ef42e31f2c1b4538",
+  "finalByteComparison": {
+    "filesIdentical": 147,
+    "excludedMetadata": "proof.json"
+  },
+  "source": {
+    "check": "pass",
+    "focusedTestsPassed": 17,
+    "officialPackTestsPassed": 45,
+    "logs": [
+      "/tmp/memoir-intake-relevance-tests.log",
+      "/tmp/memoir-intake-relevance-check.log",
+      "/tmp/memoir-intake-relevance-final-pack.log"
+    ]
+  },
+  "freshPackage": {
+    "check": "pass",
+    "parentAndGrandparentSmoke": "pass",
+    "focusedTestsPassed": 26,
+    "oldBundlePersistence": "pass",
+    "humanConsentReferenceApprovalGates": "unchanged and tested",
+    "dependencyInstall": "Exact lockfile matched; reused source node_modules, not clean-install proof",
+    "audit": "memoir-intake-relevance-package-audit.md"
+  },
+  "rule": "Only missing facts needed to understand or stage the story block intake; optional anecdotes can stay unanswered. Reject unnecessary commonSenseChecks with specific removal repairs.",
+  "runtimeGateCodeChanged": false,
+  "actualRehearsal": {
+    "originalRunAndReviewPreserved": true,
+    "separateNewInstructionSnapshot": true,
+    "rawInputBytesUnchanged": true,
+    "sameActualCrewIdsAndModels": true,
+    "newWorkerTurns": 0,
+    "step": "answers",
+    "gate": "author",
+    "debugPaused": true,
+    "artifacts": 0,
+    "jobs": 0,
+    "approvalsTransferred": false,
+    "budgetTransferred": false
+  },
+  "liveRevisedModelJudgmentProven": false,
+  "providerCallsForCorrection": 0,
+  "credentialsRead": false,
+  "productionFilmQualityProven": false,
+  "simplificationReview": "Lean already. Ship; no new dependency/runtime/state/renderer."
+}
