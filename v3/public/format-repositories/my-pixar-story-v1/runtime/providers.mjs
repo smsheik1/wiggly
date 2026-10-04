@@ -5,7 +5,7 @@ import {legacyGeneration,studioFor} from './instructions.mjs';
 import { videoBinding, effectFor } from './studio.mjs';
 import { executeVideo } from './video-provider.mjs';
 import { shotReferences } from './shots.mjs';
-import { digest } from './contracts.mjs';
+import { digest, VoiceLookup } from './contracts.mjs';
 import { assertAllowed, keyFor, miniProduction } from './gates.mjs';
 import { importMedia, verifyFiles, narrationWindow } from './media.mjs';
 const artifact = (p, key) => p.artifacts.findLast(a => a.key === key && a.valid);
@@ -15,6 +15,7 @@ export function requestDescriptor(p, plan) {
   if(plan.operation==='video'){if(plan.parameters.model)throw new Error('Video model is fixed by the project productionProfile; unsupported override.');const b=videoBinding(p),model=miniProduction(p)?generation.video.model:'seedance-2.0',resolution=miniProduction(p)?generation.video.resolution:'1080p';if(!(plan.estimatedCostUsd>0))throw new Error('Video needs an operator-verified positive cost estimate.');return {prompt:plan.parameters.prompt,endpoint:`https://api.replicate.com/v1/models/bytedance/${model}/predictions`,frame:b.frame.content.files[0],input:{prompt:plan.parameters.prompt,duration:b.clip.generationSeconds,resolution,aspect_ratio:'16:9',generate_audio:false}};}
   if(['music','effect'].includes(plan.operation)){if(plan.parameters.model)throw new Error('Sound adapters use their documented fixed models.');if(!(plan.estimatedCostUsd>0))throw new Error('Sound generation needs a verified positive cost estimate.');const target=plan.operation==='music'?artifact(p,'soundPlan').content.music:effectFor(p);if(target.mode!=='generate')throw new Error('Imported sound cannot invoke a provider.');return {prompt:plan.parameters.prompt,endpoint:`https://api.elevenlabs.io/v1/${plan.operation==='music'?'music':'sound-generation'}?output_format=mp3_44100_128`,body:plan.operation==='music'?{prompt:target.prompt,music_length_ms:60000,model_id:generation.music.model,force_instrumental:true}:{text:target.prompt,duration_seconds:target.durationSeconds,model_id:generation.effect.model,loop:false},provenance:target.provenance};}
   const sample = artifact(p, 'voiceSample')?.content;
+  if(plan.operation==='clone'&&p.voiceChoice)throw new Error('EXISTING_VOICE_SELECTED: do not create a replacement for the selected voice.');
   if (plan.operation === 'clone') return { endpoint: 'https://api.cartesia.ai/voices/clone', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
     clip: sample.files[0], language: sample.language, name: `${(artifact(p,'answers')?.content.inputs??p.inputs).subject.preferredName} — ${p.id}`, access: 'private' };
   if (['audition', 'narration'].includes(plan.operation)) return { endpoint: 'https://api.cartesia.ai/tts/bytes', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
@@ -50,6 +51,20 @@ export async function loadKey(provider, secretsPath) {
   if (!match) throw new Error(`Missing named ${name} in ${resolve(secretsPath)}.`);
   const value = match[1].trim().replace(/^(['"])(.*)\1$/, '$2');
   if (!value) throw new Error(`Empty ${name}.`); return value;
+}
+// An authenticated metadata lookup, never a clone/TTS request or quality approval.
+export async function lookupExistingVoice(p,secretsPath,fetcher=fetch){
+ const choice=p.voiceChoice;if(!choice)throw new Error('Select the actual human-provided Cartesia voice first.');
+ const apiVersion=(studioFor(p)?.config.generation??legacyGeneration).voice.apiVersion,endpoint=`https://api.cartesia.ai/voices/${choice.voiceId}`;
+ let key;
+ try{
+  key=await loadKey('cartesia',secretsPath);
+  const response=await fetcher(endpoint,{method:'GET',headers:{Authorization:`Bearer ${key}`,'Cartesia-Version':apiVersion},redirect:'error',signal:AbortSignal.timeout(15000)});
+  if(!response.ok)throw new Error(`Get Voice HTTP ${response.status}.`);
+  const v=await response.json();
+  if(v.id!==choice.voiceId||v.name!==choice.name||v.is_owner!==true||v.status!=='active')throw new Error('Selected voice ID/name must match an active voice owned by this account.');
+  return VoiceLookup.parse({voiceId:v.id,name:v.name,language:v.language,isOwner:v.is_owner,status:v.status,access:v.access,apiVersion,checkedAt:new Date().toISOString(),endpoint,httpStatus:200});
+ }catch(e){throw new Error(`${key?e.message.replaceAll(key,'[redacted]'):e.message}\n${remediation('cartesia',secretsPath)}`);}
 }
 // Metadata-only checks cannot establish paid generation entitlement or output quality.
 export async function checkProvider(provider,secretsPath,fetcher=fetch){

@@ -109,3 +109,6 @@ During unapproved script work before media, an explicitly authorized writing-ins
 - [x] Human voice-sample gate supplies recording instructions and its drop-folder path. Packaged input-folder prepares/opens that folder without changing the checkpoint, reading credentials or calling providers. Debug continuation no longer obscures a human decision/input.
 - [x] Actual Round 1 now has ANSWERS LOCK and SCRIPT LOCK including the shared late-teen cast. Leo authored and Sage reviewed the revised script; the human approved story/cast. This supersedes earlier historical checklist statements that no text lock existed.
 - [ ] Real voice-sample import, clone/audition, narration and later media rehearsal remain pending. No provider/media generation or media-quality certification follows from the reporting fix.
+## Existing own-voice reuse (2026-10-04)
+
+Implemented: human-selected existing Cartesia voice, authenticated read-only lookup, persisted metadata/provenance, guarded reuse after genuine sample submission, and unchanged audition/narration/human/spend gates. Default new-clone path remains available when no existing voice is selected. Remaining real validation: actual reference submission, authorized audition generation, Ava's direct listening/measurements, and human identity approval. A successful owned/active metadata lookup alone is not that validation.

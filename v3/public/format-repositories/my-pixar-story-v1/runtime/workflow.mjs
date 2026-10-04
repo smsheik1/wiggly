@@ -1,4 +1,4 @@
-import {loadStudio,studioFor,limitsFor,recipeFor,workerInstructions,communicationFor} from './instructions.mjs';
+import {loadStudio,studioFor,limitsFor,recipeFor,workerInstructions,communicationFor,legacyGeneration} from './instructions.mjs';
 import {legacyInstruction} from './legacy-instructions.mjs';
 import {assertDebugReady} from './debug.mjs';
 import {spendSummary,requireBudget} from './budget.mjs';
@@ -13,7 +13,7 @@ import { studioSteps, studioDependencies, studioNext, validateStudioContent, vid
 import { requireVisualQualification } from '../evaluation/visual-qualification.mjs';
 import { shotFor, shotReferences, referenceBindings, planningReferences, validateShots, validateLocationRegistry, validateKeyframePrompt } from './shots.mjs';
 import { requestDescriptor } from './providers.mjs';
-import { VERSION, Inputs, Project, Content, Review, Event, Plans, IntakeConfirmation, criteria, digest } from './contracts.mjs';
+import { VERSION, Inputs, Project, Content, Review, Event, Plans, IntakeConfirmation, VoiceChoiceInput, VoiceLookup, criteria, digest } from './contracts.mjs';
 
 import { keyFor, current, locked, audioLocked, assertAllowed, backgroundSteps, imageSteps, authorSteps, supervised, reviewPassed, refinedWorkflow, miniProduction } from './gates.mjs';
 export { keyFor, current, locked, audioLocked, assertAllowed } from './gates.mjs';
@@ -116,6 +116,10 @@ function addArtifact(p, content, author) {
   for (const a of p.artifacts.filter(a => a.key === key && a.valid)) invalidate(p, a.id);
   const version = p.artifacts.filter(a => a.key === key).length + 1;
   const parsed = Content[p.step].parse(content);
+  if(p.step==='clone'&&p.voiceChoice){
+    const choice=p.voiceChoice,expected={kind:'existing',lookup:choice.lookup,selectionMessage:choice.selectedBy.message,consentMessage:choice.consentMessage};
+    if(!choice.lookup||parsed.voiceId!==choice.voiceId||parsed.receiptId!==`voice-lookup:${digest(choice.lookup)}`||digest(parsed.origin??null)!==digest(expected))throw new Error('EXISTING_VOICE_MISMATCH: imported clone must bind the selected verified voice and lookup provenance.');
+  }else if(p.step==='clone'&&parsed.origin)throw new Error('EXISTING_VOICE_MISMATCH: no verified human voice selection.');
   if (p.step === 'voiceSample' && (parsed.files[0].bytes > 16 * 1024 * 1024 || !['.wav', '.mp3', '.flac', '.ogg'].includes(extname(parsed.files[0].path).toLowerCase()))) throw new Error('Cartesia sample must be WAV/MP3/FLAC/OGG under 16 MB. Convert it locally without changing tempo before submission.');
   if(p.step==='answers'){
     if(parsed.inputs.subject.fullName!==p.inputs.subject.fullName)throw new Error('STORYTELLER_CHANGE_REQUIRES_NEW_PROJECT: preserve the original storyteller identity; a different storyteller needs a fresh sample/clone and project.');
@@ -182,6 +186,14 @@ function addArtifact(p, content, author) {
   p.artifacts.push(a);
   if (p.step === 'voiceSample' || p.step === 'clone') next(p);
   else p.gate = isPrompt(p) ? 'owner-review' : 'review';
+  importExistingVoice(p);
+}
+function importExistingVoice(p){
+  if(p.step!=='clone'||!p.voiceChoice)return;
+  if(!p.voiceChoice.lookup){p.gate='escalate';return;}
+  if(!current(p,'voiceSample')?.content.consent)throw new Error('Existing voice still requires a genuine consented reference sample.');
+  const choice=p.voiceChoice;
+  addArtifact(p,{voiceId:choice.voiceId,provider:'cartesia',receiptId:`voice-lookup:${digest(choice.lookup)}`,origin:{kind:'existing',lookup:choice.lookup,selectionMessage:choice.selectedBy.message,consentMessage:choice.consentMessage}},'provider-runtime');
 }
 // Derived from persisted review history; no second notification or approval state.
 export function repairNotices(p){
@@ -214,7 +226,7 @@ export function taskFor(p) {
     ...(p.step === 'shots' ? { availableLocations: planningReferences(p) } : {}),
     ...(['keyframePrompt', 'keyframe'].includes(p.step) ? { references: shotReferences(p), referenceBindings: referenceBindings(p), shotDigest: digest(shotFor(p)) } : {}),
     crewWorker:assignedWorker(p)??null, formatRole:roleFor(p),
-    voiceReference:roleFor(p)==='audio-reviewer'?current(p,'voiceSample')??null:null,
+    voiceReference:roleFor(p)==='audio-reviewer'?current(p,'voiceSample')??null:null,voiceChoice:p.voiceChoice??null,
     role: p.gate === 'review' ? 'independent-reviewer' : p.gate==='author'&&p.step==='videoPlan'?'motion-director':p.gate==='author'&&p.step==='videoPrompt'?'video-prompt-engineer':p.gate==='author'&&p.step==='soundPlan'?'sound-designer':p.gate==='author'&&p.step==='editPlan'?'film-editor': p.gate === 'author' && ['shotIntentions','shots'].includes(p.step) ? 'shot-planner' : p.gate === 'author' && p.step === 'keyframePrompt' ? 'composition-writer' : p.gate === 'owner-review' || ['backgrounds', 'backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'background-product-owner' : isPrompt(p) && p.gate === 'author' ? 'pixar-prompter' : 'orchestrator',
     immediateScenes: sceneLocation?.scenes.filter(s => shot ? s.id === shot.sceneId : !p.angleId || sceneLocation.angles.find(a => a.id === p.angleId)?.sceneIds.includes(s.id)) ?? [],
     lockedAnswers:current(p,'answers')??null,
@@ -264,6 +276,7 @@ export function applyEvent(project, raw) {
   if(p.crew)Crew.parse(p.crew);
   assertCrewEvent(p,e);
   const worker=['agent','reviewer'].includes(e.actor)?p.crew?.workers.find(w=>w.workerId===e.workerId):null;
+  const submittedKey=keyFor(p);
   const activity={step:p.step,...(worker?{worker:{workerId:worker.workerId,name:worker.name,role:worker.role}}:{}),
     ...(e.artifactId?{artifactId:e.artifactId,artifactDigest:e.artifactDigest}:{}),...(e.jobId?{jobId:e.jobId}:{})};
   if(['configure-debug','debug-next','debug-stop'].includes(e.action)){
@@ -283,7 +296,19 @@ export function applyEvent(project, raw) {
     return Project.parse(p);
   }
   if(['artifact','owner-review','review','plan','begin','rendered','qualified','audio-qualified'].includes(e.action)&&!(e.action==='artifact'&&e.actor==='human'&&p.step==='voiceSample'&&p.gate==='human'))assertDebugReady(p);
-  if(e.action==='reserve-compute'){
+  if(['choose-voice','voice-verification-start','voice-verified'].includes(e.action)){
+    if(!locked(p,'script')||!['voiceSample','clone'].includes(p.step)||!(p.step==='voiceSample'&&p.gate==='human'||p.step==='clone'&&['produce','escalate'].includes(p.gate))||p.jobs.length||current(p,'clone'))throw new Error('EXISTING_VOICE_LOCKED: select an existing voice only after script approval and before any provider jobs or clone binding.');
+    if(e.action==='choose-voice'){
+      requiredActor(e,'human');if(!e.message)throw new Error('Voice selection needs the actual human instruction.');
+      p.voiceChoice={...VoiceChoiceInput.parse(e.content),selectedBy:{message:e.message,at:new Date().toISOString()}};
+    }else if(e.action==='voice-verification-start'){
+      requiredActor(e,'runtime');if(!p.voiceChoice)throw new Error('Select the actual human-provided voice first.');delete p.voiceChoice.lookup;
+    }else{
+      requiredActor(e,'runtime');const lookup=VoiceLookup.parse(e.content),choice=p.voiceChoice;
+      if(!choice||lookup.voiceId!==choice.voiceId||lookup.name!==choice.name||lookup.apiVersion!==(studioFor(p)?.config.generation??legacyGeneration).voice.apiVersion||lookup.endpoint!==`https://api.cartesia.ai/voices/${choice.voiceId}`)throw new Error('EXISTING_VOICE_MISMATCH: bind the selected ID/name and exact authenticated Cartesia lookup.');
+      p.voiceChoice.lookup=lookup;importExistingVoice(p);
+    }
+  }else if(e.action==='reserve-compute'){
     requiredActor(e,'runtime');if(!e.reservation)throw new Error('Compute reservation required.');
     p.budget??={maxCostUsd:0,reservations:[]};const existing=p.budget.reservations.find(r=>r.id===e.reservation.id);
     if(existing&&digest(existing)!==digest(e.reservation))throw new Error('BUDGET_RESERVATION_CHANGED');
@@ -465,6 +490,7 @@ export function applyEvent(project, raw) {
   } else if (e.action === 'plan') {
     requiredActor(e, 'agent');
     if (p.gate !== 'produce') throw new Error('Generation planning is not allowed here.');
+    if(p.step==='clone'&&p.voiceChoice)throw new Error('EXISTING_VOICE_SELECTED: verify and reuse the selected voice; never create a replacement clone.');
     assertAllowed(p, p.step);
     const plan = Plans.parse(e.plan);
     if (plan.operation !== p.step || plan.provider !== (imageSteps.includes(p.step)?'meta-muse':p.step==='video'?'replicate':['music','effect'].includes(p.step)?'elevenlabs':'cartesia')) throw new Error('Provider/operation does not match the current stage.');
@@ -499,7 +525,7 @@ export function applyEvent(project, raw) {
   } else throw new Error('Unsupported action.');
   if(p.debug?.enabled&&e.action!=='begin')p.debug.paused=true;
   p.sequence++;
-  if(['artifact','receipt','rendered'].includes(e.action)){const a=p.artifacts.at(-1);activity.artifactId=a.id;activity.artifactDigest=a.digest;}
+  if(['artifact','receipt','rendered'].includes(e.action)){const a=current(p,submittedKey);activity.artifactId=a.id;activity.artifactDigest=a.digest;}
   if(e.action==='plan')activity.jobId=p.jobs.at(-1).id;
   p.history.push({ sequence: p.sequence, action: e.action, actor: e.actor, ...activity, message: e.message ?? '', at: new Date().toISOString() });
   return Project.parse(p);

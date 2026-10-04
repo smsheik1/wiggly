@@ -1,0 +1,63 @@
+{
+  "recordedAt": "2026-10-04T23:39:06.111307+00:00",
+  "scope": "Existing account-owned Cartesia clone reuse with genuine-reference and normal audition gates",
+  "branch": "codex/memoir-existing-voice",
+  "sourceParent": "ca56647d",
+  "sourceTests": {
+    "passed": 204,
+    "failed": 0
+  },
+  "packagingGuardrails": {
+    "passed": 76,
+    "failed": 0
+  },
+  "blindFinalPackage": {
+    "check": "passed",
+    "parentAndGrandparentFreeSmoke": "passed",
+    "focusedTestsPassed": 21,
+    "findings": [
+      "Failed recheck retained prior verification",
+      "Automatic clone binding mislabeled human sample provenance"
+    ],
+    "resolution": "Both reproduced against final extraction and fixed; no remaining finding in scope",
+    "dependencyReuse": "exact package-lock comparison; not a clean install"
+  },
+  "artifact": {
+    "directory": "/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/memoir-existing-final-package-u52q5qpm",
+    "archiveSha256": "141f21bf836bd5b15e857505c0c0e89b0b4749537b4473bafc3a238cd833db0a",
+    "byteMatchedFiles": 152,
+    "dependencyReuse": "exact package-lock comparison; not a clean install"
+  },
+  "ponytailReview": "Lean already. Ship.",
+  "actualRehearsal": {
+    "beforeSequence": 15,
+    "afterSequence": 18,
+    "checkpointId": "1f1c04ca-a111-6610-801a-7490e5da27bd",
+    "step": "voiceSample",
+    "gate": "human",
+    "existingVoiceVerified": true,
+    "accountOwned": true,
+    "observedAccess": "public",
+    "providerJobs": 0,
+    "paidMediaGenerated": false,
+    "lockedArtifactDigests": {
+      "answers": "eae3de73a79bf406f90302e2a8b8a1fa542ab22a4fee40c636b22ab76df29ef2",
+      "script": "79ffdf7bbe2cf54116990b65e2dcb863a3796c009278e8efe572bccc0bfff9aa"
+    },
+    "debugPaused": true,
+    "voiceApproval": false,
+    "referenceImported": false,
+    "crewBindingsOrInstructionSnapshotChanged": false
+  },
+  "primarySync": {
+    "backup": "/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/memoir-existing-primary-backup-zx2rxtur",
+    "scopedFiles": 13,
+    "unrelatedChangesPreserved": true
+  },
+  "limitations": [
+    "Metadata ownership is not biometric identity, entitlement or production-quality proof",
+    "Genuine reference, authorized audition, actual measurements/listening and human approval remain",
+    "Source-pinned crew capability refresh remains an explicit prerequisite before future changed-tool dispatch",
+    "No clean-install or real production-film proof"
+  ]
+}

@@ -14,6 +14,8 @@ export const Inputs = z.object({
     'scene4Romance', 'scene5LegacyFinale'].map(key => [key, z.record(z.string(), text).refine(v => Object.keys(v).length > 0)]))),
 }).passthrough();
 export const File = z.object({ path: text, sha256: text.regex(/^[a-f0-9]{64}$/), bytes: z.number().int().positive(), durationSeconds: z.number().positive().optional(), width: z.number().int().positive().optional(), height: z.number().int().positive().optional(), fps: z.number().positive().optional(), hasAudio: z.boolean().optional() });
+export const VoiceChoiceInput=z.object({voiceId:z.uuid(),name:text,consentMessage:text}).strict();
+export const VoiceLookup=z.object({voiceId:z.uuid(),name:text,language:text,isOwner:z.literal(true),status:z.literal('active'),access:z.enum(['public','private']),apiVersion:text,checkedAt:z.iso.datetime(),endpoint:text,httpStatus:z.literal(200)}).strict();
 const CastProposal = z.array(z.object({id:text.regex(/^[a-z][a-z0-9-]*$/),name:text,ageVariant:text,minor:z.boolean(),storyPurpose:text})).min(1).refine(xs=>new Set(xs.map(c=>c.id)).size===xs.length, 'Unique proposed character IDs');
 const Script = z.object({
   proposedCast: CastProposal.optional(),
@@ -58,7 +60,8 @@ export const Content = {
   characterPrompt: z.object({prompt:text, characterDigest:text, referenceHashes:z.array(text), recipeSha256:text}),
   script: Script,
   voiceSample: z.object({ files: z.array(File).length(1), consent: z.literal(true), language: text }),
-  clone: z.object({ voiceId: text, provider: z.literal('cartesia'), receiptId: text }),
+  clone: z.object({ voiceId: text, provider: z.literal('cartesia'), receiptId: text,
+    origin:z.object({kind:z.literal('existing'),lookup:VoiceLookup,selectionMessage:text,consentMessage:text}).strict().optional() }),
   audition: z.object({ files: z.array(File).length(1), voiceId: text, transcript: text }),
   narration: z.object({ files: z.array(File).length(4), voiceId: text, transcripts: z.array(text).length(4), model: text, sourceFiles:z.array(File).length(4).optional(), tailSilenceSeconds:z.array(z.number().nonnegative()).length(4).optional() }),
   roster: z.object({ characters: z.array(Character).min(1).refine(xs => new Set(xs.map(c => c.id)).size === xs.length, 'Unique character IDs') }),
@@ -119,7 +122,7 @@ export const Review = z.object({
 export const Plans = z.object({ provider: z.enum(['cartesia', 'meta-muse', 'replicate', 'elevenlabs']), operation: z.enum(['clone', 'audition', 'narration', 'candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe', 'video', 'music', 'effect']),
   estimatedCostUsd: z.number().nonnegative(), parameters: z.object({ model: text.optional(), prompt: text.optional(), cartesiaVersion: text.optional() }).strict() }).strict();
 const CreativeDirection=z.object({scope:z.enum(['script','cast']),direction:text,sourceMessages:z.array(text).min(1)}).strict();
-export const Event = z.object({ taskId: text, action: z.enum(['configure-debug','debug-next','debug-stop','upgrade-studio','refresh-writing-instructions','configure-crew', 'configure-review','set-budget','reserve-compute', 'start-audio-review', 'audio-qualified', 'artifact', 'owner-review', 'start-backgrounds', 'start-shots', 'start-studio', 'qualified', 'rendered', 'review', 'approve', 'changes', 'redo', 'abandon', 'reject', 'note', 'resolve', 'plan', 'authorize', 'begin', 'job-id', 'receipt', 'provider-error', 'reconcile', 'allowance']),
+export const Event = z.object({ taskId: text, action: z.enum(['choose-voice','voice-verification-start','voice-verified','configure-debug','debug-next','debug-stop','upgrade-studio','refresh-writing-instructions','configure-crew', 'configure-review','set-budget','reserve-compute', 'start-audio-review', 'audio-qualified', 'artifact', 'owner-review', 'start-backgrounds', 'start-shots', 'start-studio', 'qualified', 'rendered', 'review', 'approve', 'changes', 'redo', 'abandon', 'reject', 'note', 'resolve', 'plan', 'authorize', 'begin', 'job-id', 'receipt', 'provider-error', 'reconcile', 'allowance']),
   creativeDirection:CreativeDirection.optional(), debugEnabled:z.boolean().optional(),
   budgetLimitUsd:z.number().nonnegative().optional(), reservation:z.object({id:text,provider:z.enum(['gemini','cartesia-stt']),estimatedCostUsd:z.number().positive()}).strict().optional(),
   actor: z.enum(['agent', 'reviewer', 'human', 'runtime']), workerId: text.optional(),
@@ -130,6 +133,7 @@ export const Event = z.object({ taskId: text, action: z.enum(['configure-debug',
 export const Project = z.object({
   formatVersion: z.literal(VERSION), schemaVersion: z.literal(2), id: text,
   studio:StudioSnapshot.optional(),
+  voiceChoice:VoiceChoiceInput.extend({selectedBy:z.object({message:text,at:text}),lookup:VoiceLookup.optional()}).optional(),
   debug:z.object({enabled:z.boolean(),paused:z.boolean()}).strict().optional(),
   workflowRevision:z.number().int().min(2).max(4).default(2),
   productionProfile:z.enum(['legacy-seedance-hd','seedance-mini-480p']).default('legacy-seedance-hd'),

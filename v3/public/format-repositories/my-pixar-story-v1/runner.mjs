@@ -6,10 +6,10 @@ import { resolve, join, dirname } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { z } from 'zod';
-import { VERSION, Content, Event, Review, Plans, Inputs, IntakeConfirmation, digest } from './runtime/contracts.mjs';
+import { VERSION, Content, Event, Review, Plans, Inputs, IntakeConfirmation, VoiceChoiceInput, digest } from './runtime/contracts.mjs';
 import { openWorkflow, revisionImpact } from './runtime/workflow.mjs';
 import { importMedia, verifyFiles, measureAudio } from './runtime/media.mjs';
-import { executeJob, loadKey, remediation, checkProvider } from './runtime/providers.mjs';
+import { executeJob, loadKey, remediation, checkProvider,lookupExistingVoice,atomicJson } from './runtime/providers.mjs';
 import { current, locked, assertAllowed } from './runtime/gates.mjs';
 import { renderFilm, inspectFilm } from './runtime/assemble.mjs';
 import {prepareComposition, servePreview, verifyRenderer} from './runtime/remotion.mjs';
@@ -88,6 +88,21 @@ async function main() {
     }
     if (command === 'import') { print(await importMedia(args[0], runDir)); return; }
     const status = await workflow.status('project');
+    if(['use-voice','verify-voice'].includes(command)){
+      let selected=status;
+      if(command==='use-voice'){
+        const voiceId=option('id'),name=option('name'),message=option('message'),consentMessage=option('consent-message');
+        const content=VoiceChoiceInput.parse({voiceId,name,consentMessage});if(!message||args.length)throw new Error('use-voice needs the exact human selection and own-voice consent messages.');
+        selected=await workflow.respond('project',{taskId:status.pending.taskId,actor:'human',action:'choose-voice',message,content});
+      }else if(args.length||!status.project.voiceChoice)throw new Error('verify-voice requires the current human-selected voice.');
+      const p=selected.project;
+      if(!locked(p,'script')||!['voiceSample','clone'].includes(p.step)||p.jobs.length||current(p,'clone'))throw new Error('EXISTING_VOICE_LOCKED: no lookup/rebinding after provider work or clone binding.');
+      selected=await workflow.respond('project',{taskId:selected.pending.taskId,actor:'runtime',action:'voice-verification-start'});
+      const content=await lookupExistingVoice(selected.project,secretsPath),receiptId=`voice-lookup:${digest(content)}`;
+      const directory=join(runDir,'voice-lookups');await mkdir(directory,{recursive:true,mode:0o700});const receiptPath=join(directory,digest(content)+'.json');await atomicJson(receiptPath,content);
+      const result=await workflow.respond('project',{taskId:selected.pending.taskId,actor:'runtime',action:'voice-verified',content});
+      print({...presentation(result),voiceLookup:{receiptId,receiptPath,method:'GET',generationPerformed:false}});return;
+    }
     if(command==='input-folder'){
       const show=args.includes('--open');if(show)args.splice(args.indexOf('--open'),1);
       if(args.length||status.project.lifecycle==='abandoned'||status.pending.step!=='voiceSample'||status.pending.gate!=='human')throw new Error('INPUT_FOLDER_UNAVAILABLE: the current step must be waiting for your voice sample.');
@@ -229,7 +244,7 @@ async function main() {
         await runtimeEvent('provider-error',{message:diagnostic});throw new Error(`${diagnostic}\n${remediation(job.plan.provider,secretsPath)}`);
       }return;
     }
-    throw new Error('Use check, check-provider, schema, init, status, present, work, respond, import, measure, validate, impact, generate, collect, crew-template, crew-start, crew-refresh, work-codex, drive-codex, debug, debug-next, debug-inspect, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
+    throw new Error('Use check, check-provider, schema, init, status, present, work, respond, use-voice, verify-voice, input-folder, import, measure, validate, impact, generate, collect, crew-template, crew-start, crew-refresh, work-codex, drive-codex, debug, debug-next, debug-inspect, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
   } catch(error){
     const latest=await workflow.status('project').catch(()=>null);
     if(latest?.project.debug?.enabled&&!latest.project.debug.paused)await workflow.respond('project',{taskId:latest.pending.taskId,actor:'runtime',action:'debug-stop',message:'Command stopped: '+error.message});
