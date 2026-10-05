@@ -228,6 +228,7 @@ export function taskFor(p) {
     ...(p.step === 'shots' ? { availableLocations: planningReferences(p) } : {}),
     ...(['keyframePrompt', 'keyframe'].includes(p.step) ? { references: shotReferences(p), referenceBindings: referenceBindings(p), shotDigest: digest(shotFor(p)) } : {}),
     crewWorker:assignedWorker(p)??null, formatRole:roleFor(p),
+    generationTexts:['audition','narration'].includes(p.step)?{scriptId:current(p,'script').id,scriptDigest:current(p,'script').digest,beats:current(p,'script').content.beats.slice(0,p.step==='audition'?1:4).map(b=>({beat:b.beat,text:b.narration}))}:null,
     voiceReference:roleFor(p)==='audio-reviewer'?current(p,'voiceSample')??null:null,voiceChoice:p.voiceChoice??null,voiceBasis:voiceBasis(p),
     role: p.gate === 'review' ? 'independent-reviewer' : p.gate==='author'&&p.step==='videoPlan'?'motion-director':p.gate==='author'&&p.step==='videoPrompt'?'video-prompt-engineer':p.gate==='author'&&p.step==='soundPlan'?'sound-designer':p.gate==='author'&&p.step==='editPlan'?'film-editor': p.gate === 'author' && ['shotIntentions','shots'].includes(p.step) ? 'shot-planner' : p.gate === 'author' && p.step === 'keyframePrompt' ? 'composition-writer' : p.gate === 'owner-review' || ['backgrounds', 'backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'background-product-owner' : isPrompt(p) && p.gate === 'author' ? 'pixar-prompter' : 'orchestrator',
     immediateScenes: sceneLocation?.scenes.filter(s => shot ? s.id === shot.sceneId : !p.angleId || sceneLocation.angles.find(a => a.id === p.angleId)?.sceneIds.includes(s.id)) ?? [],
@@ -245,7 +246,7 @@ export function taskFor(p) {
     dependencies: dependencies(p).map(id => p.artifacts.find(a => a.id === id)),
     creativeDirections:p.creativeDirections??[],
     feedback: p.feedback.filter(f => f.key === keyFor(p)), criteria: p.step==='film'&&p.gate==='review'?filmCriteria(p):criteria[p.step] ?? [],
-    instruction: loaded && ['author','owner-review','review','produce'].includes(p.gate) ? `Follow the attached ${loaded.skill.path} for this ${p.step}/${p.gate} task and return only the assigned Event.` : legacyInstruction(p),
+    instruction: p.gate==='produce'&&p.step!=='film' ? `Prepare the assigned generation plan from the canonical task inputs. For audition, generationTexts contains the FIRST locked story beat; no separate audition text or approval is needed. For narration it contains all four locked beats. Return plan only with a verified cost estimate. If required inputs or account pricing are unavailable, return planning-blocked with a specific message explaining the missing evidence and required resolution. Never invent prices, provider receipts, approvals or a new recording requirement for an existing clone. Follow the attached skill for the remaining procedure.` : loaded && ['author','owner-review','review','produce'].includes(p.gate) ? `Follow the attached ${loaded.skill.path} for this ${p.step}/${p.gate} task and return only the assigned Event.` : legacyInstruction(p),
   };
 }
 function repairVisual(p, message) {
@@ -297,7 +298,7 @@ export function applyEvent(project, raw) {
     p.history.push({sequence:p.sequence,action:e.action,actor:e.actor,message:e.message,at:new Date().toISOString()});
     return Project.parse(p);
   }
-  if(['artifact','owner-review','review','plan','begin','rendered','qualified','audio-qualified'].includes(e.action)&&!(e.action==='artifact'&&e.actor==='human'&&p.step==='voiceSample'&&p.gate==='human'))assertDebugReady(p);
+  if(['artifact','owner-review','review','plan','planning-blocked','begin','rendered','qualified','audio-qualified'].includes(e.action)&&!(e.action==='artifact'&&e.actor==='human'&&p.step==='voiceSample'&&p.gate==='human'))assertDebugReady(p);
   if(['reuse-voice','choose-voice','voice-verification-start','voice-verified'].includes(e.action)){
     if(!locked(p,'script')||!['voiceSample','clone'].includes(p.step)||!(p.step==='voiceSample'&&p.gate==='human'||p.step==='clone'&&['produce','escalate'].includes(p.gate))||p.jobs.length||current(p,'clone'))throw new Error('EXISTING_VOICE_LOCKED: select an existing voice only after script approval and before any provider jobs or clone binding.');
     if(e.action==='reuse-voice'){
@@ -487,10 +488,12 @@ export function applyEvent(project, raw) {
     requiredActor(e, 'human');
     if (p.jobs.some(j => j.key === keyFor(p) && j.status === 'uncertain')) throw new Error('UNCERTAIN_JOB: reconcile the existing request; do not resolve into a new generation.');
     if (p.gate !== 'escalate' || !e.message) throw new Error('Resolution needs explicit user direction at an escalation.');
-    p.feedback.push({ key: keyFor(p), message: e.message,...(p.step==='answers'?{intent:'detail'}:{}) }); p.reviewDisagreements = 0;
+    const planningBlocked=p.history.findLast(h=>['planning-blocked','review','provider-error'].includes(h.action));
+    const resumePlanning=planningBlocked?.action==='planning-blocked'&&planningBlocked.step===p.step;
+    p.feedback.push({ key: keyFor(p), message: e.message,...(p.step==='answers'?{intent:'detail'}:{}) }); if(!resumePlanning)p.reviewDisagreements = 0;
     p.gate = isPrompt(p) && current(p)?.ownerReview?.decision === 'inconclusive' ? 'owner-review' : current(p)?.review?.decision === 'inconclusive' ? 'review' : (authorSteps.includes(p.step)||p.step==='music'&&current(p,'soundPlan').content.music.mode==='import'||p.step==='effect'&&effectFor(p).mode==='import') ? 'author' : 'produce';
     if(p.step==='film'&&p.gate==='produce'){const target=current(p)?.review?.repairArtifactId;const a=target?p.artifacts.find(a=>a.id===target&&a.valid):current(p,'editPlan');reopen(p,revisionRoot(p,a),e.message);}
-    if ((['keyframe','video'].includes(p.step)||refinedWorkflow(p)&&p.step==='candidates'||miniProduction(p)&&imageSteps.includes(p.step)) && p.gate === 'produce') repairVisual(p, e.message);
+    if ((['keyframe','video'].includes(p.step)||refinedWorkflow(p)&&p.step==='candidates'||miniProduction(p)&&imageSteps.includes(p.step)) && p.gate === 'produce'&&!resumePlanning) repairVisual(p, e.message);
   } else if (e.action === 'reconcile') {
     requiredActor(e, 'human'); const j = p.jobs.find(j => j.id === e.jobId);
     if (p.gate !== 'escalate' || !j || j.key !== keyFor(p) || j.status !== 'uncertain' || j.digest !== e.artifactDigest || !e.message) throw new Error('Reconciliation needs the exact uncertain job and explicit user direction.');
@@ -502,6 +505,9 @@ export function applyEvent(project, raw) {
     requiredActor(e, 'human');
     if (!e.allowance || !e.message) throw new Error('Allowance requires explicit user limits and original message.');
     p.allowances.push({ ...e.allowance, id: `allowance-${p.allowances.length + 1}`, message: e.message, at: new Date().toISOString() });
+  } else if(e.action==='planning-blocked'){
+    requiredActor(e,'agent');if(p.gate!=='produce'||p.step==='film'||!e.message||e.plan)throw new Error('PLANNING_BLOCKER_SCOPE: only the assigned generation planner may report an evidenced missing prerequisite; no plan or media execution.');
+    p.gate='escalate';p.feedback.push({key:keyFor(p),message:e.message});
   } else if (e.action === 'plan') {
     requiredActor(e, 'agent');
     if (p.gate !== 'produce') throw new Error('Generation planning is not allowed here.');

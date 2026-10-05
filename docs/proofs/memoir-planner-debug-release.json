@@ -1,0 +1,70 @@
+{
+  "recordedAt": "2026-10-05T01:05:21.569980+00:00",
+  "branch": "codex/memoir-planner-dispatch",
+  "sourceParent": "e0f53280",
+  "scope": "Dispatch generation planning, bind locked audition text, safely report missing prerequisites and preserve visual locks on pricing resolution",
+  "observedFailures": [
+    "Native driver omitted produce and did not dispatch Max",
+    "Actual Max returned unsupported note for missing separate audition text and verified account pricing",
+    "Independent package audit found pricing resolution invalidated approved keyframe/video prompts"
+  ],
+  "corrections": [
+    "Driver dispatches planning only; provider generation and local film assembly remain separate",
+    "Canonical generationTexts binds audition to first locked beat and narration to all four",
+    "Assigned planner planning-blocked event escalates with evidence and no plan/job/spend",
+    "Pricing resolution retains approved visual prompts and retry counters; genuine defect resolution retains repair route"
+  ],
+  "sourceTests": {
+    "passed": 220,
+    "failed": 0
+  },
+  "packagingGuardrails": {
+    "passed": 102,
+    "failed": 0
+  },
+  "blindFinalPackage": {
+    "check": "passed",
+    "parentAndGrandparentSmoke": "passed",
+    "focusedTestsPassed": 42,
+    "previousResolutionRepro": "fixed for candidates/keyframes/videos",
+    "actualDefectRepairRouting": "preserved",
+    "remainingFindings": [],
+    "dependencyReuse": "exact-lock reuse; not clean install"
+  },
+  "artifact": {
+    "directory": "/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/memoir-planner-release-package-v__i478h",
+    "archiveSha256": "13263fe74f884a0cb14a23a9350f17d367757ab2687b29edbfc20d4cac05338f",
+    "byteMatchedFiles": 153,
+    "dependencyReuse": "exact lock-matched dependency reuse; not a clean install"
+  },
+  "ponytailReview": "Lean already. Ship.",
+  "actualRehearsal": {
+    "sequence": 24,
+    "checkpointId": "1f1c057c-4c74-6f00-8025-b7e965b050ae",
+    "step": "audition",
+    "gate": "escalate",
+    "debugPaused": true,
+    "nativeWorkerTurns": 2,
+    "firstWorkerOutput": "Rejected note retained in durable dispatch receipt",
+    "correctedWorkerOutput": "Genuine planning-blocked for missing account-verified Cartesia pricing",
+    "providerOrMediaReviewCalls": 0,
+    "generationJobs": 0,
+    "generatedMedia": false,
+    "priorStoryApprovalsPreserved": true,
+    "existingVerifiedClonePreserved": true,
+    "originalRecordingImported": false,
+    "budgetGrantsOrReservations": 0,
+    "modelsOrWorkerIDsChanged": false
+  },
+  "primarySync": {
+    "backup": "/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/memoir-planner-primary-backup-8a9nfynd",
+    "scopedFiles": 14,
+    "unrelatedChangesPreserved": true
+  },
+  "remaining": [
+    "Verify actual Cartesia account rate and obtain real budget/request authorization before synthesis",
+    "Producer blocker delivery still includes verbose internal diagnostics; tracked in remaining-work checklist",
+    "Actual listening/TTS/film quality and real production end-to-end proof remain outstanding",
+    "Dependency reuse is not a clean-install proof"
+  ]
+}

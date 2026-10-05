@@ -137,7 +137,7 @@ export async function driveCrew(workflow,thread,host,{maxTasks,receiptDirectory,
   const status=await workflow.status(thread),task=status.pending;
   if(status.project.debug?.enabled&&status.project.debug.paused)return {completed,stop:'debug-pause',status};
   // Provider execution stays in the authorized runner; this loop never generates media.
-  if(!['author','owner-review','review'].includes(task.gate)||['audioReviewerQualification','reviewerQualification'].includes(task.step))return {completed,stop:'graph-gate',status};
+  if(!['author','owner-review','review','produce'].includes(task.gate)||task.gate==='produce'&&task.step==='film'||['audioReviewerQualification','reviewerQualification'].includes(task.step))return {completed,stop:'graph-gate',status};
   onProgress({step:task.step,gate:task.gate});
   const path=join(receiptDirectory,task.taskId+'.json'),receipt=await readJson(path);
   if(receipt&&receipt.workerDigest!==digest(task.crewWorker))throw new Error('DISPATCH_WORKER_CHANGED');

@@ -32,8 +32,9 @@ function workerLabel(worker,step){
  return worker?`${worker.name} (${roles[worker.role]??worker.role})`:null;
 }
 function lastResult(project){
- const h=project.history?.findLast(h=>(h.artifactId||h.jobId)&&['artifact','review','owner-review','approve','receipt','rendered','plan','authorize','begin','job-id','provider-error','reconcile'].includes(h.action));
+ const h=project.history?.findLast(h=>(h.artifactId||h.jobId||h.action==='planning-blocked')&&['artifact','review','owner-review','approve','receipt','rendered','plan','authorize','begin','job-id','provider-error','reconcile','planning-blocked'].includes(h.action));
  if(!h)return null; // Historical rows without provenance never acquire invented worker identities.
+ if(h.action==='planning-blocked')return {sequence:h.sequence,actor:h.actor,worker:h.worker??null,message:`${workerLabel(h.worker,h.step)??'The generation planner'} paused planning: ${h.message}`,findings:[]};
  if(!h.artifactId){
   const job=project.jobs.find(j=>j.id===h.jobId);if(!job)return null;
   const reconciled=job.reconciliation?.outcome;

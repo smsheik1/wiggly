@@ -1,6 +1,6 @@
 # Memoir studio — remaining work
 
-Last updated: October 3, 2026. Owner: Shaz + implementing agent.
+Last updated: October 4, 2026. Owner: Shaz + implementing agent.
 
 [The living spec](memoir-system-living-spec.md) is the design authority; this checklist records implementation and evidence. The operator explicitly authorized **human-supervised v1** while deferring formal reviewer qualification. That supersedes the old requirement to stop all development for human-labelled media. It does not certify reviewers or authorize paid media, AI video or a real production film test.
 
@@ -112,3 +112,12 @@ During unapproved script work before media, an explicitly authorized writing-ins
 ## Existing own-voice reuse (2026-10-04)
 
 Implemented: human-selected existing Cartesia voice, authenticated read-only lookup, persisted metadata/provenance, guarded reuse directly to audition without a mandatory recording, and unchanged audition/narration/human/spend gates. Default new-clone path remains available when no existing voice is selected. Remaining real validation: authorized audition generation, Ava's direct listening/measurements, and human identity approval. A successful owned/active metadata lookup alone is not that validation.
+
+
+## October 4 actual audition-planning debug rehearsal
+
+- [x] Native driver dispatches Max at generation planning; human, provider-execution, qualification and local film-assembly gates remain separate.
+- [x] Canonical audition text comes from the first locked story beat; narration text comes from all four. No separate audition-text approval or new recording for an existing verified clone.
+- [x] Assigned planner can return an evidenced `planning-blocked`; graph records it and pauses without jobs, spend or fabricated prices. Resolving a pricing blocker retains approved visual prompts and retry counters.
+- [ ] Verify the actual Cartesia account rate/estimate for Round 1, supply it to the planner, and obtain an explicit human project ceiling and exact audition request authorization. Actual Max is paused on this missing input at audition/escalate; no audio generated.
+- [ ] Shorten human-facing producer blocker delivery. Current producer concatenates the full worker diagnostic with technical identifiers; preserve the complete internal evidence while delivering a brief stage/reason/next-decision message.

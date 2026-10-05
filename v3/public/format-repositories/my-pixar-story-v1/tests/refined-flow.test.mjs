@@ -114,3 +114,15 @@ test('native character prompt author and Sage reviewer must actually view every 
   const seen=await runCrewTask(p,task,host);assert.equal(seen.review.toolEvidence[0].sha256,photo.sha256);assert.equal(applyEvent(p,seen).gate,'human');
  }finally{await rm(dir,{recursive:true});}
 });
+
+
+test('resolving a planner pricing blocker preserves approved visual prompts and retry counters',async()=>{
+ const {promptLocked}=await import('./shot-helpers.mjs'),{videoReady}=await import('./studio-helpers.mjs');
+ const candidates=approved(reviewed(author(promptReady(),promptFor(promptReady()),'cast-owner')));
+ for(let p of [candidates,promptLocked(),videoReady()]){
+  const before=JSON.stringify(p.artifacts),jobs=JSON.stringify(p.jobs),budget=JSON.stringify(p.budget),step=p.step; p.reviewDisagreements=1;
+  p=send(p,'planning-blocked',{actor:'agent',workerId:'planner',message:'ISOLATED exact account pricing unavailable; verify rate.'});assert.equal(p.gate,'escalate');assert.equal(p.reviewDisagreements,1);
+  p=send(p,'resolve',{actor:'human',message:'ISOLATED pricing verified for the exact request'});
+  assert.equal(p.step,step);assert.equal(p.gate,'produce');assert.equal(JSON.stringify(p.artifacts),before);assert.equal(JSON.stringify(p.jobs),jobs);assert.equal(JSON.stringify(p.budget),budget);assert.equal(p.reviewDisagreements,1);
+ }
+});

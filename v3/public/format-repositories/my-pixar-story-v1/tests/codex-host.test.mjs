@@ -6,8 +6,8 @@ import {mkdtemp,rm,readFile,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {CodexHost,driveCrew,DEFAULT_WORKER_MODEL} from '../runtime/codex-host.mjs';
-import {openWorkflow,initialProject,taskFor} from '../runtime/workflow.mjs';
-import {inputs,intakeFixture,script,event,send} from './helpers.mjs';
+import {openWorkflow,initialProject,taskFor,applyEvent} from '../runtime/workflow.mjs';
+import {inputs,intakeFixture,script,event,send,authored,reviewed,approved} from './helpers.mjs';
 import {crewRoles,runCrewTask} from '../runtime/crew.mjs';
 
 function fixture({respondTool=false,toolName='generateVideo',failTurn=false,wrongModel=false,failStartAt=0}={}){
@@ -138,4 +138,59 @@ test('known finished role and JSON errors permit evidenced repair; unknown trans
    else{const result=await driveCrew(workflow,'run',host,{...options,repairInvalid:true});assert.ok(repair.error);assert.equal(calls,2);assert.equal(result.status.project.gate,'review');}
   }finally{workflow.close();await rm(dir,{recursive:true});}
  }
+});
+
+
+function existingClonePlanFixture(){
+ let p=approved(reviewed(authored(initialProject('isolated-plan',inputs,{workflowRevision:2}))));
+ const voiceId='00000000-0000-4000-8000-000000000003';
+ p=send(p,'choose-voice',{actor:'human',message:'ISOLATED existing clone',content:{voiceId,name:'ISOLATED clone',consentMessage:'ISOLATED own voice',reuseWithoutSample:true}});
+ p=send(p,'voice-verified',{actor:'runtime',content:{voiceId,name:'ISOLATED clone',language:'en',isOwner:true,status:'active',access:'private',apiVersion:'2026-08-14',checkedAt:'2026-10-04T00:00:00Z',endpoint:`https://api.cartesia.ai/voices/${voiceId}`,httpStatus:200}});
+ p=send(p,'configure-crew',{actor:'human',message:'ISOLATED bind planner',crew:{workers:Object.entries(crewRoles).map(([role,{name}])=>({workerId:`isolated-${role}`,name,role,modelVersion:'isolated-host',capabilityVersion:'isolated-tools',execution:'host'}))}});
+ return p;
+}
+
+test('driver dispatches Max to plan an existing-clone audition and stops before authorization or media',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'memoir-planner-drive-'));let p=existingClonePlanFixture(),calls=0;
+ const workflow={status:async()=>({project:p,pending:taskFor(p)}),respond:async(_id,e)=>{p=applyEvent(p,e);return workflow.status();}};
+ const host={runTask:async(task,{worker,callTool})=>{calls++;assert.equal(worker.role,'generation-planner');assert.equal(task.voiceBasis.kind,'existing-clone');assert.equal(task.voiceReference,null);
+  await assert.rejects(callTool('generateAudio',{}),/TOOL_PERMISSION_DENIED/);
+  return {taskId:task.taskId,actor:'agent',workerId:worker.workerId,action:'plan',plan:{provider:'cartesia',operation:'audition',estimatedCostUsd:.05,parameters:{}}};}};
+ try{
+  const result=await driveCrew(workflow,'run',host,{maxTasks:4,receiptDirectory:dir});assert.equal(result.completed,1);assert.equal(result.stop,'graph-gate');assert.equal(calls,1);assert.equal(p.gate,'authorize');
+  const job=p.jobs[0];assert.equal(job.status,'planned');assert.equal(job.request.voice,p.voiceChoice.voiceId);assert.deepEqual(job.request.transcripts,[script.beats[0].narration]);assert.equal(job.request.generation_config.speed,1);assert.equal(p.artifacts.some(a=>a.kind==='audition'),false);assert.equal(p.budget.maxCostUsd,0);
+  assert.throws(()=>send(p,'authorize',{actor:'human',jobId:job.id,artifactDigest:job.digest,message:'ISOLATED approval without ceiling'}),/BUDGET_EXCEEDED/);
+  assert.equal((await driveCrew(workflow,'run',host,{receiptDirectory:dir})).completed,0);assert.equal(calls,1);
+ }finally{await rm(dir,{recursive:true});}
+});
+
+test('planning dispatch retains debug pause and cannot dispatch runtime film assembly, human or submission gates',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'memoir-plan-gates-'));let p=send(existingClonePlanFixture(),'configure-debug',{actor:'human',debugEnabled:true,message:'ISOLATED one step'}),calls=0;
+ const workflow={status:async()=>({project:p,pending:taskFor(p)}),respond:async(_id,e)=>{p=applyEvent(p,e);return workflow.status();}};
+ const host={runTask:async(task,{worker})=>{calls++;return {taskId:task.taskId,actor:'agent',workerId:worker.workerId,action:'plan',plan:{provider:'cartesia',operation:'audition',estimatedCostUsd:.05,parameters:{}}};}};
+ try{
+  assert.equal((await driveCrew(workflow,'run',host,{receiptDirectory:dir})).stop,'debug-pause');assert.equal(calls,0);
+  p=send(p,'debug-next',{actor:'human',message:'ISOLATED release planner'});const result=await driveCrew(workflow,'run',host,{receiptDirectory:dir});assert.equal(result.completed,1);assert.equal(result.stop,'debug-pause');assert.equal(p.debug.paused,true);assert.equal(p.gate,'authorize');assert.equal(calls,1);
+  for(const [step,gate] of [['film','produce'],['audition','authorize'],['audition','collect'],['audition','human'],['audition','escalate'],['audioReviewerQualification','author'],['reviewerQualification','author']]){
+   const guarded={status:async()=>({project:{debug:{enabled:false}},pending:{step,gate}})};
+   assert.equal((await driveCrew(guarded,'run',host,{receiptDirectory:dir})).stop,'graph-gate');assert.equal(calls,1);
+  }
+ }finally{await rm(dir,{recursive:true});}
+});
+
+test('Max can report a pricing blocker with canonical audition text without inventing a plan or changing locks',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'memoir-plan-block-'));let p=send(existingClonePlanFixture(),'configure-debug',{actor:'human',debugEnabled:true,message:'ISOLATED debug'});
+ p=send(p,'debug-next',{actor:'human',message:'ISOLATED release'});const prior=p.artifacts.map(a=>JSON.stringify(a)),budget=JSON.stringify(p.budget),task=taskFor(p);
+ const message='ISOLATED account-verified Cartesia price is unavailable; operator must verify the account rate.';
+ const workflow={status:async()=>({project:p,pending:taskFor(p)}),respond:async(_id,e)=>{p=applyEvent(p,e);return workflow.status();}};
+ let calls=0;const host={runTask:async(task,{worker})=>{calls++;assert.deepEqual(task.generationTexts.beats,[{beat:1,text:script.beats[0].narration}]);assert.match(task.instruction,/no separate audition text/);return {taskId:task.taskId,actor:'agent',workerId:worker.workerId,action:'planning-blocked',message};}};
+ try{
+  await assert.rejects(runCrewTask(p,task,{runTask:async()=>({taskId:task.taskId,actor:'agent',workerId:'not-max',action:'planning-blocked',message})}),/PERMISSION_DENIED/);
+  await assert.rejects(runCrewTask(p,{...task,generationTexts:{...task.generationTexts,beats:[]} },host),/TASK_INPUT_MISMATCH/);
+  assert.throws(()=>send(p,'planning-blocked',{actor:'human',message}),/agent authority|assigned worker/);
+  const result=await driveCrew(workflow,'run',host,{receiptDirectory:dir});assert.equal(result.completed,1);assert.equal(p.gate,'escalate');assert.equal(p.debug.paused,true);assert.equal(p.jobs.length,0);assert.equal(calls,1);assert.deepEqual(p.artifacts.map(a=>JSON.stringify(a)),prior);assert.equal(JSON.stringify(p.budget),budget);
+  const {producerUpdate}=await import('../runtime/presentation.mjs');const producer=producerUpdate(await workflow.status());assert.match(producer.message,/Max \(Generation Planner\) paused planning/);assert.match(producer.message,/account-verified Cartesia price/);
+  assert.equal((await driveCrew(workflow,'run',host,{receiptDirectory:dir})).completed,0);assert.equal(calls,1);
+  p=send(p,'resolve',{actor:'human',message:'ISOLATED verified account pricing supplied'});assert.equal(p.gate,'produce');assert.equal(p.debug.paused,true);assert.equal(p.jobs.length,0);
+ }finally{await rm(dir,{recursive:true});}
 });

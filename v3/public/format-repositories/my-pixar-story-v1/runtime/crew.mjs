@@ -22,7 +22,7 @@ export function roleFor(p){
 }
 export function assignedWorker(p){return p.crew?.workers.find(w=>w.role===roleFor(p));}
 export function assertCrewEvent(p,event){
- if(!p.crew||!['artifact','owner-review','review','plan'].includes(event.action)||event.actor==='human')return;
+ if(!p.crew||!['artifact','owner-review','review','plan','planning-blocked'].includes(event.action)||event.actor==='human')return;
  const worker=assignedWorker(p);
  if(!worker||event.workerId!==worker.workerId)throw new Error('CREW_PERMISSION_DENIED: only the assigned worker may submit this task.');
  if(['review','owner-review'].includes(event.action)&&(event.review?.modelVersion!==worker.modelVersion||event.review?.capabilityVersion!==worker.capabilityVersion))throw new Error('CREW_MODEL_CHANGED: review must bind the assigned model.');
@@ -57,7 +57,7 @@ export async function prepareCrewTask(p,task){
  const expected=taskFor(p);
  if(task.taskId!==expected.taskId||task.step!==p.step||task.gate!==p.gate)throw new Error('STALE_TASK: read current status before dispatch.');
  // No worker can receive replaced, omitted, stale or invented project context.
- const fields=['voiceBasis','voiceChoice','creativeDirections','workflowRevision','proposedCast','locationEntry','characterReferences','narration','projectId','artifact','dependencies','approvedScript','lockedAnswers','inputs','sourceInputs','sourceInputDigest','originalInputsRequired','questionnaire','castEntry','recipe','references','referenceBindings','availableLocations','shotIntentions','immediateScenes','shot','videoBinding','visualReferences','voiceReference','intakeConfirmation','feedback','criteria','formatRole','crewWorker','skill','allowedTools','studioConfig','studioSha256','instruction'];
+ const fields=['generationTexts','voiceBasis','voiceChoice','creativeDirections','workflowRevision','proposedCast','locationEntry','characterReferences','narration','projectId','artifact','dependencies','approvedScript','lockedAnswers','inputs','sourceInputs','sourceInputDigest','originalInputsRequired','questionnaire','castEntry','recipe','references','referenceBindings','availableLocations','shotIntentions','immediateScenes','shot','videoBinding','visualReferences','voiceReference','intakeConfirmation','feedback','criteria','formatRole','crewWorker','skill','allowedTools','studioConfig','studioSha256','instruction'];
  for(const field of fields)if(digest(task[field]??null)!==digest(expected[field]??null))throw new Error(`TASK_INPUT_MISMATCH: ${field} is missing, changed or stale; read the current task packet.`);
  if(['author','produce'].includes(p.gate))assertAllowed(p,p.step);
  for(const a of expected.dependencies??[])if(!a.valid||(!a.approvedBy&&a.kind!=='clone')||current(p,a.key)?.id!==a.id)throw new Error(`TASK_INPUT_NOT_LOCKED: ${a.key}`);
@@ -82,7 +82,7 @@ export async function runCrewTask(p,task,host){
  const event=await host.runTask({...task,worker,allowedTools:task.allowedTools??crewRoles[worker.role].tools},{worker,callTool:crewTools(task,worker,host.tools,(r,value)=>{receipts.push(r);outputs.set(`${r.tool}:${r.sha256}`,value);})});
  try{
  const expected=task.gate==='review'?'review':task.gate==='owner-review'?'owner-review':task.gate==='produce'?'plan':'artifact';
- if(event.taskId!==task.taskId||event.actor!==task.actor||event.action!==expected)throw new Error('CREW_PERMISSION_DENIED: worker may only submit its assigned deliverable; no human approvals, state writes or provider calls.');
+ if(event.taskId!==task.taskId||event.actor!==task.actor||!(event.action===expected||task.gate==='produce'&&event.action==='planning-blocked'))throw new Error('CREW_PERMISSION_DENIED: worker may only submit its assigned deliverable; no human approvals, state writes or provider calls.');
  assertCrewEvent(p,event);
  if(task.step==='characterPrompt'&&event.review?.decision!=='inconclusive')for(const f of task.castEntry?.references??[]){if(!receipts.some(r=>r.tool==='viewImage'&&r.sha256===f.sha256))throw new Error('CHARACTER_REFERENCES_NOT_VIEWED: prompt author/reviewer must inspect every actual source photo, not its metadata.');}
  if(['review','owner-review'].includes(event.action)&&event.review?.decision!=='inconclusive'){
