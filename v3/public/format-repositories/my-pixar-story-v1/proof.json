@@ -517,5 +517,30 @@
     "credentialsRead": false,
     "productionQualityProven": false,
     "simplificationReview": "Lean already. Ship. Instructions and existing task/confirmation tests only; no runtime, dependency, renderer or state-store change."
+  },
+  "groundedWriting": {
+    "date": "2026-10-05",
+    "policy": "grounded-v1",
+    "sourceTestsPassed": 224,
+    "packagingChecksPassed": 106,
+    "independentPackageTestsPassed": 224,
+    "smokeInputs": [
+      "parent",
+      "grandparent"
+    ],
+    "dependencyReuse": "Exact lockfile match; not a clean install.",
+    "auditedCodeArchiveSha256": "135583ebb1090fa40c6cb7f3aac556ee6b7b53101ccf2e2b2c99a37205d4565e",
+    "personaCases": 14,
+    "confirmedSemanticLabels": 0,
+    "semanticQualification": false,
+    "existingProjectsMigrated": false,
+    "paidProviderCalls": 0,
+    "productionCredentialsRead": false,
+    "realFilmProof": false,
+    "repairs": [
+      "Strict semantic input/label authority and neutral task IDs",
+      "Exact word boundaries and multiline quotation support"
+    ],
+    "independentAudit": "All prior mechanical findings corrected; actual semantic/perceptual qualification remains unproven."
   }
 }

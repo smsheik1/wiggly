@@ -121,3 +121,14 @@ Implemented: human-selected existing Cartesia voice, authenticated read-only loo
 - [x] Assigned planner can return an evidenced `planning-blocked`; graph records it and pauses without jobs, spend or fabricated prices. Resolving a pricing blocker retains approved visual prompts and retry counters.
 - [ ] Verify the actual Cartesia account rate/estimate for Round 1, supply it to the planner, and obtain an explicit human project ceiling and exact audition request authorization. Actual Max is paused on this missing input at audition/escalate; no audio generated.
 - [ ] Shorten human-facing producer blocker delivery. Current producer concatenates the full worker diagnostic with technical identifiers; preserve the complete internal evidence while delivering a brief stage/reason/next-decision message.
+
+## October 4 grounded-writing safeguards
+
+- [x] Agreed hard rules reach Leo's skill and Sage's independent rubric: no material invented facts, exact selected direct quotations, semantic grounding for names, faithful paraphrase/gestures allowed.
+- [x] New pinned `grounded-v1` projects reject altered or unbound direct quotes before script acceptance; native script schemas include citations. Existing project snapshots/locks are unchanged.
+- [x] Fear/cost, chronology and a concrete closing image stay optional guidance; essential gaps alone justify blocking follow-ups.
+- [x] Four additional regression cases cover quotation binding, human-confirmed source clarification, historical-state preservation, worker handoff and honest semantic evaluation.
+- [x] Fourteen invented persona cases with good/broken controls are packaged with the independent rubric, unconfirmed labels and an inconclusive/unscored local baseline.
+- [ ] Human-adjudicated labels, additional separated holdouts and genuine reviewer predictions are still needed before claiming semantic-review accuracy. This is calibration work, not a blocker to supervised human approval in v1.
+
+Canonical policy: [living spec](memoir-system-living-spec.md#2026-10-04--grounded-writing-rules-and-quotation-checks). Verification: [release evidence](proofs/memoir-grounded-writing-release.json).
