@@ -20,6 +20,7 @@ const CastProposal = z.array(z.object({id:text.regex(/^[a-z][a-z0-9-]*$/),name:t
 const Script = z.object({
   proposedCast: CastProposal.optional(),
   beats: z.array(z.object({ beat: z.number().int(), durationSeconds: z.literal(15), narration: text,
+    directQuotes: z.array(z.object({text:z.string().min(1),sourceAnswer:z.enum(Object.keys(Inputs.shape.answers.shape)),sourceField:text}).strict()).optional(),
     emotionalPurpose: text, sourceAnswers: z.array(z.enum(Object.keys(Inputs.shape.answers.shape))).min(1),
   })).length(4).refine(beats => beats.every((b, i) => b.beat === i + 1), 'Exactly four ordered 15-second beats'),
   commonSenseChecks: z.array(z.object({ category: z.enum(['character', 'age', 'location', 'prop', 'action', 'fact']),

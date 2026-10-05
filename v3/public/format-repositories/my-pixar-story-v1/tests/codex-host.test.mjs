@@ -40,6 +40,9 @@ test('Codex bridge uses the explicitly selected model, real role threads and sco
   await host.initialize();const crew=await host.startCrew();assert.equal(DEFAULT_WORKER_MODEL,'gpt-5.6-sol');assert.equal(crew.workers.length,Object.keys(crewRoles).length);assert.equal(new Set(crew.workers.map(w=>w.workerId)).size,crew.workers.length);
   const p=send(initialProject('bridge',inputs,{workflowRevision:2}),'configure-crew',{actor:'human',message:'ISOLATED bridge',crew});const task=taskFor(p);
   const result=await runCrewTask(p,task,host);assert.equal(result.workerId,crew.workers[0].workerId);assert.deepEqual(result.content,script);
+  const payload=JSON.parse(mock.requests.findLast(r=>r.method==='turn/start').params.input[0].text);
+  const quotes=payload.contentSchema.properties.beats.items.properties.directQuotes;assert.equal(quotes.type,'array');assert.ok(quotes.items.properties.sourceAnswer.enum.includes('scene1Childhood'));assert.ok(quotes.items.properties.sourceField);
+  assert.equal(payload.task.studioConfig.writingPolicy,'grounded-v1');assert.match(payload.task.skill.content,/Direct quotations must keep the selected source words exactly/);
   const start=mock.requests.find(r=>r.method==='thread/start');assert.equal(start.params.allowProviderModelFallback,false);assert.equal(start.params.sandbox,'read-only');assert.equal(start.params.dynamicTools[0].name,'wiggly_tool');
   assert.match(mock.requests.find(r=>r.id===999).result.contentItems[0].text,/TOOL_PERMISSION_DENIED/);
   assert.equal(mock.requests.filter(r=>r.method==='turn/start').length,crew.workers.length+1);

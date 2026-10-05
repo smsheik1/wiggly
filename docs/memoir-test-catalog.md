@@ -2,13 +2,13 @@
 
 A plain-English inventory for Shaz, Claude and future builders.
 
-**Snapshot:** October 4, 2026 (America/Chicago), source commit `edc446cd` plus the unfinished local blocker-alert work. This is a documentation inventory; no production workflow, provider request or project approval was changed to create it.
+**Snapshot:** October 4, 2026 (America/Chicago), the grounded-writing update on top of `01a73bf1`, plus a separately retained unfinished blocker-alert appendix. Runtime changes are limited to the new writing policy; no real provider request or project approval was changed.
 
 ## What happened to “219 tests”?
 
-That was an earlier reported suite total. The latest committed suite contains **220 named test cases**. The working tree contains **two additional, unfinished cases**, making **222 cases listed on this page**. All 220 committed cases are listed first; the two additions are in a clearly marked appendix.
+That was an earlier reported suite total. The previous release contained **220 named test cases**. The grounded-writing update adds **four**, bringing the verified source suite to **224**. Two unfinished blocker-alert cases remain in a separate checkout and appendix, making **226 cases described on this page**; they are not part of this clean 224-case suite.
 
-The most recent saved release proof records 220 passing source tests. That result belongs to that release, not automatically to today's edited working tree. The recent focused run of the blocker-alert edits reported 32 passes and two failures: both new cases stopped during fixture setup because an artifact author worker ID was missing. They have not reached their intended blocker assertions. This page does not claim those edits are verified.
+The grounded-writing source run passes 224 cases. Earlier release evidence records 220 at its own checkpoint; totals are specific to the tested source. The recent focused run of the blocker-alert edits reported 32 passes and two failures: both new cases stopped during fixture setup because an artifact author worker ID was missing. They have not reached their intended blocker assertions. This page does not claim those edits are verified.
 
 The source suite, package-check subset and focused audit subset overlap. Do not add their totals together as if they were different tests.
 
@@ -670,13 +670,29 @@ Every defect is a scripted observation or deliberately altered reference. No mod
 
 220. **Escalate when perception is unavailable instead of approving or inventing a visual judgment.** [Test source](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/supervised-regression.test.mjs:12)
 
+## Grounded writing: exact rules and honest semantic evaluation
+
+**Source:** `tests/grounded-writing.test.mjs`
+
+These tests enforce literal quotation/source binding and the reviewer protocol. They do not ask a real model to distinguish truthful from invented memories. Fourteen invented persona examples are separate data, not fourteen additional test cases.
+
+221. **Reject altered, undeclared, wrongly cited, partial-word or unbalanced direct quotations; accept exact sourced words, including multiline excerpts and unquoted paraphrase while leaving factual meaning to independent review.** [Test source](/Users/shaz/Projects/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/grounded-writing.test.mjs:17)
+
+222. **Use actual human-confirmed answer clarifications for quotations, retain original raw answers, and preserve older instruction snapshots through SQLite restart without a policy migration.** [Test source](/Users/shaz/Projects/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/grounded-writing.test.mjs:31)
+
+223. **Give the writer and independent reviewer the agreed rules through canonical tasks, including optional fear/chronology/ending guidance and essential-only follow-ups.** [Test source](/Users/shaz/Projects/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/grounded-writing.test.mjs:44)
+
+224. **Hide proposed persona labels using neutral IDs and strict task inputs, reject nonhuman semantic-label authority or structural-only verdicts, bind the actual rubric into predictions, and keep semantic baseline results inconclusive and unscored without human-confirmed labels.** [Test source](/Users/shaz/Projects/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/grounded-writing.test.mjs:50)
+
+The existing native Codex bridge test also checks that the worker receives the quotation fields and current writer policy.
+
 ## Unfinished blocker-alert additions
 
-**These two cases are not part of the committed 220-case release.** Both currently fail before their intended assertions because their shared sample-input fixture lacks the required author worker ID. They document intended protection, not verified behavior. No test or production code was changed while creating this catalog.
+**These two cases are not part of the verified 224-case grounded-writing release.** Both currently fail before their intended assertions because their shared sample-input fixture lacks the required author worker ID. They document intended protection, not verified behavior. They remain unfinished in the separate blocker-alert checkout and were not included in this update.
 
-221. **Require a billing blocker to explain the problem, solution and canonical baby steps, without inventing an API failure or assuming a free plan cannot work.** [Test source](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/producer-handoff.test.mjs:155)
+225. **Require a billing blocker to explain the problem, solution and canonical baby steps, without inventing an API failure or assuming a free plan cannot work.** [Test source](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/producer-handoff.test.mjs:155)
 
-222. **Keep missing-input blockers and historical records readable without inventing billing evidence, approvals or new generation jobs.** [Test source](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/producer-handoff.test.mjs:166)
+226. **Keep missing-input blockers and historical records readable without inventing billing evidence, approvals or new generation jobs.** [Test source](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/producer-handoff.test.mjs:166)
 
 ## How Claude should review this
 
@@ -692,10 +708,11 @@ This document is a snapshot. If tests are added, removed or renamed, reconcile i
 
 ## Source and verification references
 
-- [Last committed release proof](/Users/shaz/.codex/worktrees/2f6f/wiggly/docs/proofs/memoir-planner-debug-release.json): records the 220-case source result and its production-proof limitations.
+- [Grounded-writing release proof](/Users/shaz/Projects/wiggly/docs/proofs/memoir-grounded-writing-release.json).
+- [Earlier release proof](/Users/shaz/.codex/worktrees/2f6f/wiggly/docs/proofs/memoir-planner-debug-release.json): records the 220-case source result and its production-proof limitations.
 - [Test script and dependencies](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/package.json): `npm test` runs `node --test tests/*.test.mjs`.
 - [Invented regression corpus](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/evaluation/invented-regression.json): the ten expanded routing-only trap cases.
 - [Living system spec](/Users/shaz/.codex/worktrees/2f6f/wiggly/docs/memoir-system-living-spec.md).
 - [Remaining work](/Users/shaz/.codex/worktrees/2f6f/wiggly/docs/memoir-system-remaining-work.md).
 
-To run the suite locally, enter the format kit directory and run `npm test`. This catalog was built by inspecting source and existing verification records; the full suite was not rerun for a documentation-only change.
+To run the suite locally, enter the format kit directory and run `npm test`. The grounded-writing source suite was rerun: 224 passed. The independently extracted package and limits of that verification are recorded in the grounded-writing release proof. The unfinished appendix is not included in that result.

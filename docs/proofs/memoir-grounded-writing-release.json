@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-05",
+  "timezone": "America/Chicago",
+  "baseCommit": "01a73bf1",
+  "branch": "codex/memoir-grounded-writing",
+  "scope": "Grounded writing policy, exact quotation/source gate and honest semantic evaluation; no studio state migration or media generation.",
+  "sourceTests": {
+    "passed": 224,
+    "failed": 0,
+    "log": "/tmp/grounded-writing-source-release-tests.log"
+  },
+  "officialPackagingChecks": {
+    "passed": 106,
+    "failed": 0,
+    "log": "/tmp/grounded-writing-pack-release.log"
+  },
+  "independentPackage": {
+    "passed": 224,
+    "failed": 0,
+    "check": true,
+    "smoke": [
+      "parent",
+      "grandparent"
+    ],
+    "auditedArchiveSha256": "135583ebb1090fa40c6cb7f3aac556ee6b7b53101ccf2e2b2c99a37205d4565e",
+    "dependencyInstall": "Exact lockfile verified; reused installed dependencies, not a clean npm ci proof.",
+    "audit": "memoir-grounded-writing-package-audit.md"
+  },
+  "observedFailuresAndRepairs": [
+    "Sparse development checkout initially lacked the unchanged ignored Remotion bundle; copied the existing official bundle and verified its inventory before complete tests.",
+    "Independent audit exposed nonhuman semantic scoring authority, expected-label leakage and partial-word/multiline quotation weaknesses. Corrected inputs/authority, neutralized IDs and added literal word-boundary/multiline probes.",
+    "First final-audit turn hit host usage limit; resumed on October 5 and recovered its completed local test result before independent probes."
+  ],
+  "personaDataset": {
+    "cases": 14,
+    "humanConfirmed": 0,
+    "holdoutCases": 0,
+    "provisionalLabels": true,
+    "semanticBaseline": "All inconclusive and unscored; no semantic qualification."
+  },
+  "studioStatePreserved": {
+    "sequence": 24,
+    "stage": "audition",
+    "gate": "escalate",
+    "lockedAnswers": true,
+    "lockedScript": true,
+    "existingCloneVerified": true,
+    "providerJobs": 0,
+    "budgetUsd": 0,
+    "checkpointChanged": false
+  },
+  "paidProviderCalls": 0,
+  "productionCredentialsRead": false,
+  "realMediaGeneration": false,
+  "finishedFilmProof": false,
+  "simplificationReview": "Ponytail review: Lean already. Ship. Existing schemas, task loader, gates and offline harness; no new dependency, state store, worker or renderer.",
+  "unproven": [
+    "Actual semantic reviewer accuracy and human-adjudicated holdouts",
+    "Speaker likeness, audio/video perception and real-provider generation compatibility",
+    "Real end-to-end film production"
+  ],
+  "finalArchive": {
+    "sha256": "792cdab589caebc4fe0af8546eaa2a1fd1fbbf1a9193163dc6a2d99584531ff6",
+    "bytes": 7028386,
+    "changesSinceIndependentAudit": [
+      "proof.json only"
+    ],
+    "verifiedEveryOtherPackagedFileMatches": true
+  }
+}

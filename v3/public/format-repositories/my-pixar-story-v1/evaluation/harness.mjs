@@ -1,9 +1,12 @@
 import { z } from 'zod';
 import { digest, text } from '../runtime/contracts.mjs';
 import { evaluateTask } from '../runtime/evaluators.mjs';
+import {loadStudio} from '../runtime/instructions.mjs';
 const status = z.enum(['pass', 'fail', 'inconclusive']);
 const Check = z.object({ criterion: text, status, evidence: text, location: text, repair: z.string() }).strict().refine(c => c.status !== 'fail' || c.repair.trim(), 'Failed findings require a specific repair.');
-const kinds = { 'audio-duration': 'duration', composition: 'composition', 'review-evidence': 'review-evidence', 'script-structure': 'structure', 'video-anatomy': 'anatomy', 'audio-voice': 'voice-match' };
+const semanticKinds=['script-facts','answers-completeness'];
+const semanticInput=z.object({source:text,draft:z.union([text,z.object({commonSenseChecks:z.array(z.object({finding:text,resolution:text}).strict())}).strict()]),optionalFields:z.array(text).optional()}).strict();
+const kinds = { 'script-facts':'facts', 'answers-completeness':'completeness', 'audio-duration': 'duration', composition: 'composition', 'review-evidence': 'review-evidence', 'script-structure': 'structure', 'video-anatomy': 'anatomy', 'audio-voice': 'voice-match' };
 const Case = z.object({ id: text, group: text, split: z.enum(['calibration', 'holdout']), kind: z.enum(Object.keys(kinds)), origin: text,
   input: z.record(z.string(), z.unknown()), label: z.object({ criterion: text, status, evidence: text, location: text, repair: z.string(), authority: z.enum(['objective', 'direct-frame-inspection', 'capability-audit', 'human', 'agent-provisional']), confirmed: z.boolean() }).strict() });
 export const Prediction = z.object({ caseId: text, inputDigest: text, evaluator: text, check: Check,
@@ -13,6 +16,7 @@ export function validateDataset(raw) {
   const ids = new Set(), groups = new Map(), hashes = new Map();
   for (const value of raw.cases) {
     const c = Case.parse(value); const label = Check.parse({ criterion: c.label.criterion, status: c.label.status, evidence: c.label.evidence, location: c.label.location, repair: c.label.repair });
+    if(semanticKinds.includes(c.kind)){semanticInput.parse(c.input);if(!['human','agent-provisional'].includes(c.label.authority))throw new Error('SEMANTIC_LABEL_AUTHORITY: semantic labels require human adjudication or unconfirmed agent proposals.');}
     if (c.label.authority === 'agent-provisional' && c.label.confirmed) throw new Error('PROVISIONAL_LABEL: agent-provisional findings cannot be calibration truth.');
     if (!c.label.authority || typeof c.label.confirmed !== 'boolean' || label.criterion !== kinds[c.kind]) throw new Error('Label needs declared authority, confirmation and the scoped criterion.');
     if (ids.has(c.id)) throw new Error(`Duplicate case ID: ${c.id}`); ids.add(c.id);
@@ -24,6 +28,7 @@ export function validateDataset(raw) {
 }
 export function taskForCase(c) {
   const input = structuredClone(c.input);
+  if(semanticKinds.includes(c.kind)){semanticInput.parse(input);input.reviewerRubric=loadStudio().documents['evaluation/rubrics/text.md'].content;}
   return { caseId: c.id, inputDigest: digest({ kind: c.kind, input }), kind: c.kind, input, criterion: kinds[c.kind],
     instruction: 'Inspect only the supplied input and actual available media. Return one scoped check with status, localized evidence and repair for a failure. Missing perception/reference is inconclusive. A scope pass never authorizes a production artifact.',
     responseContract: 'Prediction schema: caseId, inputDigest, evaluator, check {criterion,status,evidence,location,repair}, basis {mode,mediaVerified,scope}, productionApproval:false' };
@@ -38,6 +43,7 @@ export async function runEvaluation(dataset, { split = 'calibration', prediction
     const p = Prediction.parse(raw); const task = known.get(p.caseId);
     if (!task || p.inputDigest !== task.inputDigest || p.check.criterion !== task.criterion || p.basis.scope !== task.criterion || supplied.has(p.caseId)) throw new Error(`STALE_OR_DUPLICATE_PREDICTION: ${p.caseId}`);
     if (['video-anatomy', 'audio-voice'].includes(task.kind) && p.check.status !== 'inconclusive' && (!p.basis.mediaVerified || !(task.kind === 'audio-voice' ? ['direct-audio'] : ['direct-image', 'direct-video']).includes(p.basis.mode))) throw new Error('Perceptual verdict requires declared direct perception of actual verified media.');
+    if(semanticKinds.includes(task.kind)&&p.check.status!=='inconclusive'&&p.basis.mode!=='direct-text')throw new Error('Semantic verdict requires declared independent direct-text review.');
     supplied.set(p.caseId, p);
   }
   if (predictions !== undefined && supplied.size !== selected.length) throw new Error('INCOMPLETE_PREDICTIONS: supply exactly one response per selected case; baseline and reviewer results cannot be mixed.');

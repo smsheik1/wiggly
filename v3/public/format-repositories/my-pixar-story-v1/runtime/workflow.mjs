@@ -13,6 +13,7 @@ import { studioSteps, studioDependencies, studioNext, validateStudioContent, vid
 import { requireVisualQualification } from '../evaluation/visual-qualification.mjs';
 import { shotFor, shotReferences, referenceBindings, planningReferences, validateShots, validateLocationRegistry, validateKeyframePrompt } from './shots.mjs';
 import { requestDescriptor } from './providers.mjs';
+import {scriptQuoteChecks} from './evaluators.mjs';
 import { VERSION, Inputs, Project, Content, Review, Event, Plans, IntakeConfirmation, VoiceChoiceInput, VoiceLookup, criteria, digest } from './contracts.mjs';
 
 import { keyFor, current, locked, audioLocked, assertAllowed, backgroundSteps, imageSteps, authorSteps, supervised, reviewPassed, refinedWorkflow, miniProduction, voiceBasis } from './gates.mjs';
@@ -127,6 +128,7 @@ function addArtifact(p, content, author) {
     if(parsed.sourceInputDigest!==digest(p.inputs))throw new Error('ANSWER_SOURCE_MISMATCH: bind the immutable original questionnaire.');
     if(digest(parsed.inputs)!==digest(p.inputs)&&!p.feedback.some(f=>f.key==='answers'&&f.intent&&f.message))throw new Error('ANSWER_CLARIFICATION_REQUIRED: changed answers require recorded human feedback before independent review and human confirmation.');
   }
+  if(p.step==='script'&&p.studio?.config.writingPolicy==='grounded-v1'){const quoted=scriptQuoteChecks(parsed,effectiveInputs(p));if(quoted.status==='fail')throw new Error(`QUOTATION_BINDING_REQUIRED: ${quoted.evidence} ${quoted.repair}`);}
   if(p.workflowRevision>=4&&p.step==='script'&&!parsed.proposedCast)throw new Error('SCRIPT_CAST_PROPOSAL_REQUIRED: the writer must propose the necessary on-screen people and age variants, with a story purpose.');
   if(p.step==='characterPrompt'){
     const cast=current(p,'roster').content.characters.find(c=>c.id===p.characterId);

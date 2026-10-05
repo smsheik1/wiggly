@@ -18,6 +18,27 @@ export function transcriptDiff(expected, observed) {
   }
   return { expectedWords: a.length, observedWords: b.length, editDistance: previous[b.length], wordErrorRate: a.length ? previous[b.length] / a.length : b.length ? 1 : 0 };
 }
+function exactQuoteWords(source, quote) {
+  const escaped=quote.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const start=/^[\p{L}\p{N}\p{M}_]/u.test(quote)?'(?<![\\p{L}\\p{N}\\p{M}_])':'';
+  const end=/[\p{L}\p{N}\p{M}_]$/u.test(quote)?'(?![\\p{L}\\p{N}\\p{M}_])':'';
+  return new RegExp(start+escaped+end,'u').test(source);
+}
+// Only literal quoted wording/source binding is mechanical. Speaker, meaning and facts still need review.
+export function scriptQuoteChecks(script, inputs) {
+  const failures=[];
+  for(const beat of script.beats){
+    const quoted=[...beat.narration.matchAll(/"([^"]+)"|“([^”]+)”/gu)].map(m=>m[1]??m[2]);
+    if((beat.narration.match(/["“”]/gu)??[]).length!==quoted.length*2)failures.push(`Beat ${beat.beat}: direct quotations need balanced straight or curly double quotation marks.`);
+    const declared=beat.directQuotes??[];
+    if(digest([...quoted].sort())!==digest(declared.map(q=>q.text).sort()))failures.push(`Beat ${beat.beat}: every double-quoted span needs one directQuotes source binding, with unchanged wording.`);
+    for(const q of declared){
+      const source=inputs?.answers?.[q.sourceAnswer]?.[q.sourceField];
+      if(!beat.sourceAnswers.includes(q.sourceAnswer)||typeof source!=='string'||!exactQuoteWords(source,q.text))failures.push(`Beat ${beat.beat}: quotation is not an exact excerpt of its cited answer field.`);
+    }
+  }
+  return check('quotations',failures.length?'fail':'pass',failures.join(' ')||'Quoted spans match their declared source wording; this does not certify factual meaning or who said them.',failures.length?'cited beats':'beats 1–4',failures.length?'Restore the exact supplied words and cite their answer field, or paraphrase without quotation marks; never invent a source.':'');
+}
 export function scriptChecks(script) {
   const result = Content.script.safeParse(script);
   const structure = result.success ? check('structure', 'pass', 'Four ordered 15-second beats with narration, emotional purpose and source citations satisfy the script schema.', 'beats 1–4') :
@@ -67,6 +88,7 @@ export async function evaluateTask(task, { mediaRoot } = {}) {
     if (mediaRoot) { const file = await verifiedMedia(input.media, mediaRoot, true); measurements = await measureAudio(file); duration = measurements.durationSeconds; mediaVerified = true; }
     const measured = Number.isFinite(duration) && duration > 0;
     finding = !measured ? unknown('duration', 'Positive measured duration is unavailable.') : check('duration', duration <= input.windowSeconds ? 'pass' : 'fail', `${mediaRoot ? 'Verified actual file' : 'Saved measurement snapshot'} duration ${duration}s; maximum ${input.windowSeconds}s.`, 'whole stem', duration <= input.windowSeconds ? '' : 'Return affected copy/timing to the writer; never speed narration up or truncate words.');
+  } else if (['script-facts','answers-completeness'].includes(kind)) { finding=unknown(task.criterion,'Requires an actual independent text reviewer comparing source, draft and the agreed policy; no semantic verdict is inferred from structure.');
   } else if (kind === 'audio-voice') { if (mediaRoot) { await verifiedMedia(input.media, mediaRoot, true); mediaVerified = true; } finding = unknown('voice-match', 'No qualified direct listening and calibrated speaker comparison against the genuine reference sample are available.'); }
   else if (kind === 'video-anatomy') {
     if (mediaRoot) { await verifiedMedia(input.media, mediaRoot); mediaVerified = true; }
@@ -82,7 +104,7 @@ export async function artifactEvidence(project) {
   const artifact = project.artifacts.findLast(a => a.key === key && a.valid);
   if (!artifact) throw new Error('No current artifact to evaluate.');
   let checks, measurements = null;
-  if (project.step === 'script') checks = scriptChecks(artifact.content);
+  if (project.step === 'script') { checks = scriptChecks(artifact.content); if(project.studio?.config.writingPolicy==='grounded-v1')checks.push(scriptQuoteChecks(artifact.content,project.artifacts.findLast(a=>a.key==='answers'&&a.valid)?.content.inputs??project.inputs)); }
   else if (['audition', 'narration'].includes(project.step)) {
     measurements = await Promise.all(artifact.content.files.map(measureAudio));
     const script = project.artifacts.findLast(a => a.key === 'script' && a.valid).content;

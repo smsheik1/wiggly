@@ -48,3 +48,15 @@ Qualification reports include evidenceDirectory; its saved dataset/prediction so
 ## Independent audio qualification
 
 `evaluation/audio-qualification.mjs` defines AudioCase/AudioPrediction, label-free tasks, six held-out criterion scores and verified saved evidence. `audio-tasks` / `qualify-audio` parallel the visual qualification commands without substituting visual qualification for audio expertise. Real sample references are mandatory for voice-match and locked text for transcript checks; family/source groups and all media/references must remain in one split. New host model/tool profiles need new qualification. Synthetic audio unit fixtures prove plumbing only, never production listening quality. Production corpus collection and direct host perception/STT/speaker tools remain pending.
+
+## Grounded-writing persona collection
+
+`text-personas.json` adds 14 invented, narrowly scoped source/draft or proposed-follow-up pairs for factual grounding and intake completeness. Good controls accompany invented ages, motives, promises and relationships; the set also exercises faithful gestures, nicknames, paraphrases, optional questionnaire omissions and unnecessary fear follow-ups. All labels are explicitly **agent-provisional, unconfirmed and calibration-only**. They are proposals to discuss, not human gold or qualification evidence. The local baseline returns inconclusive on every semantic case and scores none.
+
+```sh
+node runner.mjs eval-tasks --dataset evaluation/text-personas.json --out /absolute/persona-tasks.json
+node runner.mjs eval --dataset evaluation/text-personas.json --out /absolute/persona-baseline.json
+node runner.mjs eval --dataset evaluation/text-personas.json --predictions /absolute/persona-predictions.json --out /absolute/persona-review.json
+```
+
+Semantic tasks carry the actual packaged independent text rubric, bound into their input digest. Exported tasks use neutral IDs, omit expected labels/group/split, and reject extra fields outside the scoped semantic input contract, including nested expected-label fields. Semantic truth authority must be human or an unconfirmed agent proposal; objective/frame/capability labels cannot score factual meaning. Supplied semantic verdicts must declare direct-text review. A changed rubric invalidates earlier predictions. A genuine reviewer may supply predictions for discussion, but unconfirmed labels produce no accuracy score and neither predictions nor scores authorize production. Human-confirmed independent labels and additional separated holdout examples are needed before claiming semantic qualification.

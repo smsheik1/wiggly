@@ -195,5 +195,6 @@
     "backgroundPrompt": "background-prompter.md",
     "backgroundAnglePrompt": "background-prompter.md"
   },
-  "communication": "orchestrator-voice.md"
+  "communication": "orchestrator-voice.md",
+  "writingPolicy": "grounded-v1"
 }
