@@ -189,3 +189,8 @@ The earlier instruction to shorten the locked script is conditional on editing p
 - [x] Real bounded retry proves editor STT and two immutable 15-second draft renders, without proving a reviewed repair.
 - [ ] Resolve the new coverage mismatch: measured second draft 15.00 seconds; listening report 15.23. Preserve response and unfinished native dispatch; reconcile before any retry or worker refresh. Do not loosen bounds merely to accept the draft.
 - [ ] Obtain independent Ava review and human narration approval after recovery. Existing inference budget remains authoritative; no new ceiling is assumed.
+
+## Duration review correction — October 5, 2026
+
+- [x] Remove generated coverage endpoints from the shared Gemini audio/video gate. Verified FFprobe duration remains authoritative; explicit full-inspection/perceptibility declarations, observation bounds and fail-stop handling remain. Existing guardrails extended; no new sample-count tool or named test added.
+- [ ] Resume the actual narration repair safely: reconcile its unfinished native dispatch, refresh the same worker/model capability binding, then obtain a compatible listening report within the existing authorization. Preserve the old 15.23 report and both edited drafts; no approval or artifact substitution is implied by this code fix.

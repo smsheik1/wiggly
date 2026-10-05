@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-05",
+  "rootCause": "Model-generated coverage endpoints were incorrectly used as a precise full-inspection gate; actual 15.00-second WAV received endpoint 15.23.",
+  "change": "Verified FFprobe metadata owns duration; Gemini declares fullMediaInspected/perceptible and returns bounded observations/limitations, not duration endpoints.",
+  "receiptPolicy": "New report profile; no reinterpretation of old reports, automatic resubmission, or forged inspection declaration.",
+  "checks": {
+    "focusedPassed": 37,
+    "fullSourcePassed": 232,
+    "officialPackagingPassed": 123,
+    "newNamedTests": 0
+  },
+  "archive": {
+    "path": "/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/my-pixar-story-v2.0.0.tgz",
+    "sha256": "1571aeb87fef1c163b86fc90e2d17c3e16bc7dc273b358851e0c0bee14f0726a"
+  },
+  "liveRun": {
+    "projectStateChanged": false,
+    "mediaChanged": false,
+    "providerCalls": 0,
+    "newReservations": 0,
+    "narrationApproved": false,
+    "nativeDispatchRetried": false,
+    "oldResponsePreserved": true
+  },
+  "ponytailReview": "Lean already. Ship: one shared adapter, existing guardrails extended; no new dependency, sample verifier, renderer or state store.",
+  "limitations": [
+    "Full inspection is a model declaration, not independently proven perception.",
+    "Source checks use isolated provider responses; no new real listening result.",
+    "Old unresolved native dispatch needs reconciliation and same-worker capability refresh before an actual retry.",
+    "No video generation or end-to-end production proof."
+  ],
+  "independentAudit": {
+    "report": "memoir-measured-duration-package-audit.md",
+    "checkAndSmoke": "pass",
+    "targetedPassed": 10,
+    "independentProbe": "Synthetic 15.23-second PCM file: FFprobe duration, incomplete/unavailable refusal, receipt recovery and reservation controls",
+    "dependencyReuse": "Exact package-lock comparison; not a clean-install proof",
+    "providerCalls": 0,
+    "productionCredentialsRead": false,
+    "realMediaUsed": false
+  }
+}
