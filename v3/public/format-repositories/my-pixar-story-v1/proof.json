@@ -542,5 +542,22 @@
       "Exact word boundaries and multiline quotation support"
     ],
     "independentAudit": "All prior mechanical findings corrected; actual semantic/perceptual qualification remains unproven."
+  },
+  "operatorBlockerAlerts": {
+    "date": "2026-10-05",
+    "sourceTestsPassed": 226,
+    "focusedTestsPassed": 34,
+    "scope": "Required structured planner help, canonical account guidance, preserved internal diagnostics and concise producer alerts",
+    "packagedAudit": "PASS: check, parent/grandparent smoke, 226 tests and independent provider-guide, binding, SQLite preservation and historical-blocker probes.",
+    "actualNewMaxResponseProven": false,
+    "realAccountPricingVerified": false,
+    "paidProviderCalls": 0,
+    "productionCredentialsRead": false,
+    "savedProductionProjectsChanged": false,
+    "realFilmProof": false,
+    "packagingChecksPassed": 108,
+    "independentPackageTestsPassed": 226,
+    "auditedCodeArchiveSha256": "cbea842cd44b9a66c6d1e13dcd555e41d499a891dcfb0263f0be041f980ef216",
+    "dependencyReuse": "Exact lockfile matched; not a clean npm install."
   }
 }

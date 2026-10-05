@@ -144,3 +144,27 @@ test('authorized submission requires debug continuation but completed reconcilia
   else {assert.equal(p.gate,'collect');assert.match(u.nextDecision,/Collect the existing/);assert.doesNotMatch(u.nextDecision,/continue|reconcile/);assert.match(u.message,/No replacement request is authorized/);}
  }
 });
+
+
+function blockedPlanning(){
+ let p=review(author(start()));p=send(p,'approve',{actor:'human',artifactId:current(p).id,artifactDigest:current(p).digest,message:'ISOLATED story approval',intakeConfirmation:intakeFixture(p)});
+ p=send(p,'artifact',{actor:'human',workerId:'human',content:{files:[file()],consent:true,language:'en'}});
+ return p;
+}
+
+test('billing readiness alert requires problem, solution and canonical baby steps without a fake API failure',()=>{
+ const p=blockedPlanning(),task=taskFor(p),message='ISOLATED no account-verified cost; technical identifiers stay internal.',base={actor:'agent',workerId:task.crewWorker.workerId,message};
+ assert.throws(()=>send(p,'planning-blocked',base),/PLANNING_HELP_REQUIRED/);
+ for(const replacement of [{problem:'No paid plan so this request definitely fails'},{solution:'Pay immediately; free TTS is forbidden'},{steps:['Paste your API key into this chat']}]){
+  assert.throws(()=>send(p,'planning-blocked',{...base,blocker:{kind:'account-readiness',...task.planningGuide,...replacement}}),/PLANNING_HELP_BINDING/);
+ }
+ const q=send(p,'planning-blocked',{...base,blocker:{kind:'account-readiness',...task.planningGuide}}),bytes=JSON.stringify(q),u=producerUpdate(status(q));
+ assert.equal(u.alert.severity,'stop');assert.equal(u.alert.reportedBy,'Max (Generation Planner)');assert.equal(u.alert.problem,task.planningGuide.problem);assert.equal(u.alert.solution,task.planningGuide.solution);assert.deepEqual(u.alert.steps,task.planningGuide.steps);assert.match(u.message,/STOP/);assert.match(u.message,/https:\/\/play.cartesia.ai\/subscription/);assert.match(u.message,/upgrade only if needed/);assert.doesNotMatch(u.message,/technical identifiers|which plan|HTTP 402|API failed/);assert.equal(u.diagnostic,message);assert.equal(u.nextWorker,null);assert.equal(q.jobs.length,0);assert.equal(JSON.stringify(q),bytes);
+ assert.deepEqual(Project.parse(q).history.at(-1).blocker,u.completion.blocker);
+});
+
+test('missing-input and historical blockers retain diagnostics without inventing billing evidence or approvals',()=>{
+ const p=blockedPlanning(),task=taskFor(p),blocker={kind:'missing-input',problem:'The selected audio source is unavailable.',solution:'Restore the approved source before planning.',steps:['Restore the exact approved source file, then request a file verification.']};
+ let q=send(p,'planning-blocked',{actor:'agent',workerId:task.crewWorker.workerId,message:'ISOLATED exact missing file evidence',blocker}),u=producerUpdate(status(q));assert.equal(u.alert.kind,'missing-input');assert.match(u.message,/Restore the approved source/);assert.doesNotMatch(u.message,/Subscription|credits/);
+ delete q.history.at(-1).blocker;u=producerUpdate(status(Project.parse(q)));assert.equal(u.alert,undefined);assert.match(u.completion.diagnostic,/exact missing file/);assert.equal(q.gate,'escalate');assert.equal(q.jobs.length,0);
+});

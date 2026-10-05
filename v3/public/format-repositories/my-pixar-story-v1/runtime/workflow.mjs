@@ -12,7 +12,7 @@ import {requireAudioQualification} from '../evaluation/audio-qualification.mjs';
 import { studioSteps, studioDependencies, studioNext, validateStudioContent, videoBinding, effectFor } from './studio.mjs';
 import { requireVisualQualification } from '../evaluation/visual-qualification.mjs';
 import { shotFor, shotReferences, referenceBindings, planningReferences, validateShots, validateLocationRegistry, validateKeyframePrompt } from './shots.mjs';
-import { requestDescriptor } from './providers.mjs';
+import { requestDescriptor,planningAccountGuide } from './providers.mjs';
 import {scriptQuoteChecks} from './evaluators.mjs';
 import { VERSION, Inputs, Project, Content, Review, Event, Plans, IntakeConfirmation, VoiceChoiceInput, VoiceLookup, criteria, digest } from './contracts.mjs';
 
@@ -230,6 +230,7 @@ export function taskFor(p) {
     ...(p.step === 'shots' ? { availableLocations: planningReferences(p) } : {}),
     ...(['keyframePrompt', 'keyframe'].includes(p.step) ? { references: shotReferences(p), referenceBindings: referenceBindings(p), shotDigest: digest(shotFor(p)) } : {}),
     crewWorker:assignedWorker(p)??null, formatRole:roleFor(p),
+    planningGuide:p.gate==='produce'&&p.step!=='film'?planningAccountGuide(p):null,
     generationTexts:['audition','narration'].includes(p.step)?{scriptId:current(p,'script').id,scriptDigest:current(p,'script').digest,beats:current(p,'script').content.beats.slice(0,p.step==='audition'?1:4).map(b=>({beat:b.beat,text:b.narration}))}:null,
     voiceReference:roleFor(p)==='audio-reviewer'?current(p,'voiceSample')??null:null,voiceChoice:p.voiceChoice??null,voiceBasis:voiceBasis(p),
     role: p.gate === 'review' ? 'independent-reviewer' : p.gate==='author'&&p.step==='videoPlan'?'motion-director':p.gate==='author'&&p.step==='videoPrompt'?'video-prompt-engineer':p.gate==='author'&&p.step==='soundPlan'?'sound-designer':p.gate==='author'&&p.step==='editPlan'?'film-editor': p.gate === 'author' && ['shotIntentions','shots'].includes(p.step) ? 'shot-planner' : p.gate === 'author' && p.step === 'keyframePrompt' ? 'composition-writer' : p.gate === 'owner-review' || ['backgrounds', 'backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'background-product-owner' : isPrompt(p) && p.gate === 'author' ? 'pixar-prompter' : 'orchestrator',
@@ -248,7 +249,7 @@ export function taskFor(p) {
     dependencies: dependencies(p).map(id => p.artifacts.find(a => a.id === id)),
     creativeDirections:p.creativeDirections??[],
     feedback: p.feedback.filter(f => f.key === keyFor(p)), criteria: p.step==='film'&&p.gate==='review'?filmCriteria(p):criteria[p.step] ?? [],
-    instruction: p.gate==='produce'&&p.step!=='film' ? `Prepare the assigned generation plan from the canonical task inputs. For audition, generationTexts contains the FIRST locked story beat; no separate audition text or approval is needed. For narration it contains all four locked beats. Return plan only with a verified cost estimate. If required inputs or account pricing are unavailable, return planning-blocked with a specific message explaining the missing evidence and required resolution. Never invent prices, provider receipts, approvals or a new recording requirement for an existing clone. Follow the attached skill for the remaining procedure.` : loaded && ['author','owner-review','review','produce'].includes(p.gate) ? `Follow the attached ${loaded.skill.path} for this ${p.step}/${p.gate} task and return only the assigned Event.` : legacyInstruction(p),
+    instruction: p.gate==='produce'&&p.step!=='film' ? `Prepare the assigned generation plan from the canonical task inputs. For audition, generationTexts contains the FIRST locked story beat; no separate audition text or approval is needed. For narration it contains all four locked beats. Return plan only with a verified cost estimate. If required inputs or account pricing are unavailable, return planning-blocked with message containing the full evidence plus blocker: {kind, problem, solution, steps}. Use kind account-readiness and the canonical planningGuide fields exactly for unavailable pricing, credits or generation access. For missing-input, state the specific problem, solution and 1–5 concrete baby steps. Keep the operator alert brief; put technical diagnostics in message. A free plan alone is not evidence of insufficient credits or failed access. Never invent prices, provider receipts, approvals or a new recording requirement for an existing clone. Follow the attached skill for the remaining procedure.` : loaded && ['author','owner-review','review','produce'].includes(p.gate) ? `Follow the attached ${loaded.skill.path} for this ${p.step}/${p.gate} task and return only the assigned Event.` : legacyInstruction(p),
   };
 }
 function repairVisual(p, message) {
@@ -282,7 +283,7 @@ export function applyEvent(project, raw) {
   assertCrewEvent(p,e);
   const worker=['agent','reviewer'].includes(e.actor)?p.crew?.workers.find(w=>w.workerId===e.workerId):null;
   const submittedKey=keyFor(p);
-  const activity={step:p.step,...(worker?{worker:{workerId:worker.workerId,name:worker.name,role:worker.role}}:{}),
+  const activity={step:p.step,...(e.blocker?{blocker:e.blocker}:{}),...(worker?{worker:{workerId:worker.workerId,name:worker.name,role:worker.role}}:{}),
     ...(e.artifactId?{artifactId:e.artifactId,artifactDigest:e.artifactDigest}:{}),...(e.jobId?{jobId:e.jobId}:{})};
   if(['configure-debug','debug-next','debug-stop'].includes(e.action)){
     requiredActor(e,e.action==='debug-stop'?'runtime':'human');if(!e.message)throw new Error('Debug control needs the human instruction or runtime diagnostic.');
@@ -509,6 +510,8 @@ export function applyEvent(project, raw) {
     p.allowances.push({ ...e.allowance, id: `allowance-${p.allowances.length + 1}`, message: e.message, at: new Date().toISOString() });
   } else if(e.action==='planning-blocked'){
     requiredActor(e,'agent');if(p.gate!=='produce'||p.step==='film'||!e.message||e.plan)throw new Error('PLANNING_BLOCKER_SCOPE: only the assigned generation planner may report an evidenced missing prerequisite; no plan or media execution.');
+    if(!e.blocker)throw new Error('PLANNING_HELP_REQUIRED: report the problem, solution and baby steps with the diagnostic.');
+    if(e.blocker.kind==='account-readiness'){const {kind,...help}=e.blocker;if(digest(help)!==digest(planningAccountGuide(p)))throw new Error('PLANNING_HELP_BINDING: use canonical account guidance; never invent payment requirements, URLs or account failures.');}
     p.gate='escalate';p.feedback.push({key:keyFor(p),message:e.message});
   } else if (e.action === 'plan') {
     requiredActor(e, 'agent');

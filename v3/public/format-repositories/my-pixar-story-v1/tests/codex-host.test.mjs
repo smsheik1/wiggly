@@ -186,13 +186,13 @@ test('Max can report a pricing blocker with canonical audition text without inve
  p=send(p,'debug-next',{actor:'human',message:'ISOLATED release'});const prior=p.artifacts.map(a=>JSON.stringify(a)),budget=JSON.stringify(p.budget),task=taskFor(p);
  const message='ISOLATED account-verified Cartesia price is unavailable; operator must verify the account rate.';
  const workflow={status:async()=>({project:p,pending:taskFor(p)}),respond:async(_id,e)=>{p=applyEvent(p,e);return workflow.status();}};
- let calls=0;const host={runTask:async(task,{worker})=>{calls++;assert.deepEqual(task.generationTexts.beats,[{beat:1,text:script.beats[0].narration}]);assert.match(task.instruction,/no separate audition text/);return {taskId:task.taskId,actor:'agent',workerId:worker.workerId,action:'planning-blocked',message};}};
+ let calls=0;const host={runTask:async(task,{worker})=>{calls++;assert.deepEqual(task.generationTexts.beats,[{beat:1,text:script.beats[0].narration}]);assert.match(task.instruction,/no separate audition text/);return {taskId:task.taskId,actor:'agent',workerId:worker.workerId,action:'planning-blocked',message,blocker:{kind:'account-readiness',...task.planningGuide}};}};
  try{
   await assert.rejects(runCrewTask(p,task,{runTask:async()=>({taskId:task.taskId,actor:'agent',workerId:'not-max',action:'planning-blocked',message})}),/PERMISSION_DENIED/);
   await assert.rejects(runCrewTask(p,{...task,generationTexts:{...task.generationTexts,beats:[]} },host),/TASK_INPUT_MISMATCH/);
   assert.throws(()=>send(p,'planning-blocked',{actor:'human',message}),/agent authority|assigned worker/);
   const result=await driveCrew(workflow,'run',host,{receiptDirectory:dir});assert.equal(result.completed,1);assert.equal(p.gate,'escalate');assert.equal(p.debug.paused,true);assert.equal(p.jobs.length,0);assert.equal(calls,1);assert.deepEqual(p.artifacts.map(a=>JSON.stringify(a)),prior);assert.equal(JSON.stringify(p.budget),budget);
-  const {producerUpdate}=await import('../runtime/presentation.mjs');const producer=producerUpdate(await workflow.status());assert.match(producer.message,/Max \(Generation Planner\) paused planning/);assert.match(producer.message,/account-verified Cartesia price/);
+  const {producerUpdate}=await import('../runtime/presentation.mjs');const producer=producerUpdate(await workflow.status());assert.match(producer.message,/STOP.*Voice audition/);assert.match(producer.message,/Max \(Generation Planner\)/);assert.match(producer.message,/Cartesia generation access/);assert.match(producer.diagnostic,/account-verified Cartesia price/);
   assert.equal((await driveCrew(workflow,'run',host,{receiptDirectory:dir})).completed,0);assert.equal(calls,1);
   p=send(p,'resolve',{actor:'human',message:'ISOLATED verified account pricing supplied'});assert.equal(p.gate,'produce');assert.equal(p.debug.paused,true);assert.equal(p.jobs.length,0);
  }finally{await rm(dir,{recursive:true});}

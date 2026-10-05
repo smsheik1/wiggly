@@ -2,13 +2,13 @@
 
 A plain-English inventory for Shaz, Claude and future builders.
 
-**Snapshot:** October 4, 2026 (America/Chicago), the grounded-writing update on top of `01a73bf1`, plus a separately retained unfinished blocker-alert appendix. Runtime changes are limited to the new writing policy; no real provider request or project approval was changed.
+**Snapshot:** October 5, 2026 (America/Chicago), grounded writing plus the completed blocker-alert fix. No real provider request or project approval was changed.
 
 ## What happened to “219 tests”?
 
-That was an earlier reported suite total. The previous release contained **220 named test cases**. The grounded-writing update adds **four**, bringing the verified source suite to **224**. Two unfinished blocker-alert cases remain in a separate checkout and appendix, making **226 cases described on this page**; they are not part of this clean 224-case suite.
+That was an earlier reported suite total. The previous release contained **220 named cases**. Grounded writing added **four**, and blocker alerts added **two**, giving **226 cases** in the current source suite. All 226 pass. The two alert fixtures now supply the required author worker ID and reach their intended assertions.
 
-The grounded-writing source run passes 224 cases. Earlier release evidence records 220 at its own checkpoint; totals are specific to the tested source. The recent focused run of the blocker-alert edits reported 32 passes and two failures: both new cases stopped during fixture setup because an artifact author worker ID was missing. They have not reached their intended blocker assertions. This page does not claim those edits are verified.
+Earlier release proofs retain their own totals: 220 before these changes and 224 for grounded writing alone. Counts belong to a specific tested checkpoint.
 
 The source suite, package-check subset and focused audit subset overlap. Do not add their totals together as if they were different tests.
 
@@ -66,7 +66,9 @@ The source links point to this inspected checkout and the beginning of the corre
 | [Visual reviewer qualification mechanics](#visual-reviewer-qualification-mechanics) | 4 |
 | [Audio reviewer qualification mechanics](#audio-reviewer-qualification-mechanics) | 1 |
 | [Ten planted visual traps: routing only](#ten-planted-visual-traps-routing-only) | 10 |
-| **Total committed** | **220** |
+| [Grounded writing](#grounded-writing-exact-rules-and-honest-semantic-evaluation) | 4 |
+| [Blocker alerts](#blocker-alerts) | 2 |
+| **Total committed** | **226** |
 
 ## Workflow, locks and repair loops
 
@@ -486,7 +488,7 @@ Uses simulated workers and temporary checkpoints. The CLI inspector is read-only
 
 **Source:** `tests/producer-handoff.test.mjs`
 
-Checks the producer's generated status text against simulated history. The two unfinished blocker-message additions are listed separately at the end.
+Checks the producer's generated status text against simulated history. The two additional blocker-message cases are listed separately at the end.
 
 157. **Name the author who actually completed work and the next reviewer; do not claim an assigned worker is already running.** [Test source](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/producer-handoff.test.mjs:24)
 
@@ -686,9 +688,9 @@ These tests enforce literal quotation/source binding and the reviewer protocol. 
 
 The existing native Codex bridge test also checks that the worker receives the quotation fields and current writer policy.
 
-## Unfinished blocker-alert additions
+## Blocker alerts
 
-**These two cases are not part of the verified 224-case grounded-writing release.** Both currently fail before their intended assertions because their shared sample-input fixture lacks the required author worker ID. They document intended protection, not verified behavior. They remain unfinished in the separate blocker-alert checkout and were not included in this update.
+**Source:** `tests/producer-handoff.test.mjs`. Both cases pass in the 226-case source suite. They enforce the handoff and display contract using isolated fixtures; an actual new Max response and verified account pricing remain untested.
 
 225. **Require a billing blocker to explain the problem, solution and canonical baby steps, without inventing an API failure or assuming a free plan cannot work.** [Test source](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/producer-handoff.test.mjs:155)
 
@@ -708,6 +710,7 @@ This document is a snapshot. If tests are added, removed or renamed, reconcile i
 
 ## Source and verification references
 
+- [Blocker-alert release proof](/Users/shaz/Projects/wiggly/docs/proofs/memoir-blocker-alert-release.json).
 - [Grounded-writing release proof](/Users/shaz/Projects/wiggly/docs/proofs/memoir-grounded-writing-release.json).
 - [Earlier release proof](/Users/shaz/.codex/worktrees/2f6f/wiggly/docs/proofs/memoir-planner-debug-release.json): records the 220-case source result and its production-proof limitations.
 - [Test script and dependencies](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/package.json): `npm test` runs `node --test tests/*.test.mjs`.

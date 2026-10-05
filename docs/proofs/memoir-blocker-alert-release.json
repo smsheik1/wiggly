@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-05",
+  "baseCommit": "fa713417",
+  "branch": "codex/memoir-operator-blocker-alert",
+  "scope": "Required structured planning blockers, canonical account help and concise producer delivery; no generation or saved run mutation.",
+  "sourceTests": {
+    "passed": 226,
+    "failed": 0,
+    "log": "/tmp/memoir-blocker-source-tests.log"
+  },
+  "focusedTests": {
+    "passed": 34,
+    "failed": 0,
+    "log": "/tmp/memoir-blocker-focused.log"
+  },
+  "officialPackagingChecks": {
+    "passed": 108,
+    "failed": 0,
+    "log": "/tmp/memoir-blocker-pack.log"
+  },
+  "sourceCheck": true,
+  "sourceSmokeInputs": [
+    "parent",
+    "grandparent"
+  ],
+  "independentPackage": {
+    "status": "pass",
+    "auditedCodeArchiveSha256": "cbea842cd44b9a66c6d1e13dcd555e41d499a891dcfb0263f0be041f980ef216",
+    "testsPassed": 226,
+    "testsFailed": 0,
+    "check": true,
+    "smokeInputs": [
+      "parent",
+      "grandparent"
+    ],
+    "probes": [
+      "Four provider guides fit the bounded schema",
+      "Unassigned/stale/altered task and account help refused",
+      "SQLite restart/resolve preserves approved artifacts, jobs and compute reservation",
+      "Historical blocker does not acquire invented structured help or worker provenance"
+    ],
+    "dependencyReuse": "Exact lockfile matched; not a clean npm install.",
+    "auditReport": "docs/proofs/memoir-blocker-alert-package-audit.md"
+  },
+  "simplificationReview": "net: 0 lines worth cutting. Lean already. Ship. Existing event, crew and producer paths; no dependencies, renderers or state stores added.",
+  "actualNewMaxResponseProven": false,
+  "realAccountPricingVerified": false,
+  "paidProviderCalls": 0,
+  "productionCredentialsRead": false,
+  "savedProductionProjectChanged": false,
+  "productionFilmQualityProven": false,
+  "finalPackage": {
+    "path": "/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/my-pixar-story-v2.0.0.tgz",
+    "bytes": 7031769,
+    "sha256": "0b3e95a6bdc74bd2e48703327f8cc0881ee11fcf3c73c345245993abe7156c9d",
+    "changedFromAuditedPackage": [
+      "proof.json"
+    ],
+    "codeAndSkillsByteIdenticalToAudit": true,
+    "packagingChecksPassed": 108,
+    "log": "/tmp/memoir-blocker-release-pack.log"
+  }
+}

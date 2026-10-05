@@ -121,7 +121,7 @@ test('resolving a planner pricing blocker preserves approved visual prompts and 
  const candidates=approved(reviewed(author(promptReady(),promptFor(promptReady()),'cast-owner')));
  for(let p of [candidates,promptLocked(),videoReady()]){
   const before=JSON.stringify(p.artifacts),jobs=JSON.stringify(p.jobs),budget=JSON.stringify(p.budget),step=p.step; p.reviewDisagreements=1;
-  p=send(p,'planning-blocked',{actor:'agent',workerId:'planner',message:'ISOLATED exact account pricing unavailable; verify rate.'});assert.equal(p.gate,'escalate');assert.equal(p.reviewDisagreements,1);
+  p=send(p,'planning-blocked',{actor:'agent',workerId:'planner',message:'ISOLATED exact account pricing unavailable; verify rate.',blocker:{kind:'account-readiness',...taskFor(p).planningGuide}});assert.equal(p.gate,'escalate');assert.equal(p.reviewDisagreements,1);
   p=send(p,'resolve',{actor:'human',message:'ISOLATED pricing verified for the exact request'});
   assert.equal(p.step,step);assert.equal(p.gate,'produce');assert.equal(JSON.stringify(p.artifacts),before);assert.equal(JSON.stringify(p.jobs),jobs);assert.equal(JSON.stringify(p.budget),budget);assert.equal(p.reviewDisagreements,1);
  }

@@ -120,7 +120,7 @@ Implemented: human-selected existing Cartesia voice, authenticated read-only loo
 - [x] Canonical audition text comes from the first locked story beat; narration text comes from all four. No separate audition-text approval or new recording for an existing verified clone.
 - [x] Assigned planner can return an evidenced `planning-blocked`; graph records it and pauses without jobs, spend or fabricated prices. Resolving a pricing blocker retains approved visual prompts and retry counters.
 - [ ] Verify the actual Cartesia account rate/estimate for Round 1, supply it to the planner, and obtain an explicit human project ceiling and exact audition request authorization. Actual Max is paused on this missing input at audition/escalate; no audio generated.
-- [ ] Shorten human-facing producer blocker delivery. Current producer concatenates the full worker diagnostic with technical identifiers; preserve the complete internal evidence while delivering a brief stage/reason/next-decision message.
+- [x] Require Max’s structured problem/solution/steps, preserve full internal diagnostics, and display a brief producer STOP alert. Account guidance is canonical; missing-input guidance remains specific to the worker’s evidence. Offline suite passes 226 cases; actual new Max output under this contract remains to be rehearsed.
 
 ## October 4 grounded-writing safeguards
 
