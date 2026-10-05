@@ -60,7 +60,7 @@ export function producerUpdate(status,runDir){
  const halt=project.history?.findLast(h=>h.action==='debug-stop'&&h.sequence===project.sequence);
  if(halt?.action==='debug-stop')return {reporter:'Orchestrator (Producer)',stage:pending.step,stageLabel:label,gate:pending.gate,completion:null,nextWorker:null,inputRequest:null,debugNote:'Debug paused.',diagnostic:halt.message,nextDecision:'Inspect the saved failure and dispatch receipt before deciding whether repair or reconciliation is needed. Do not repeat an unknown request.',message:'Execution stopped. Inspect the recorded failure before continuing.'};
  const completion=lastResult(project);
- const request=pending.step==='voiceSample'&&pending.gate==='human'?{
+ const request=pending.step==='voiceSample'&&pending.gate==='human'&&!project.voiceChoice?.reuseWithoutSample?{
   kind:'voice-sample',minimumDurationSeconds:10,recommendedDurationSeconds:[20,30],formats:['wav','mp3','flac','ogg'],maxBytes:16*1024*1024,
   ...(runDir?{folder:join(runDir,'incoming-voice')}:{}),
   message:project.voiceChoice?'Add your original cloning recording, or a clean 20–30-second recording of yourself speaking naturally, to the voice-sample folder, then say “done”. We need your real voice to compare the audition; we will reuse the selected clone.':'Record 20–30 seconds of yourself speaking naturally, with only your voice and no background music. Add the recording to the voice-sample folder, then say “done”.',
@@ -71,6 +71,8 @@ export function producerUpdate(status,runDir){
   human:request?.message??(pending.step==='roster'?'Confirm the proposed character references and rights; missing references stay unresolved.':['candidates','backgroundCandidates'].includes(pending.step)?'Review the passing options and pick one.':'Review this version, then approve or ask for changes.'),
   produce:project.step==='film'?'The approved edit is ready for the official local render.':pending.job?.status==='authorized'?'The exact authorized request is ready for submission.':`${who??'The generation planner'} is next to prepare the exact request and cost estimate. No generation has started.`,
   authorize:'Approve the exact request and its spend before generation.',collect:pending.job?.status==='authorized'?'The exact authorized request is ready for submission.':['collect-existing','confirmed-completed'].includes(pending.job?.reconciliation?.outcome)?'Collect the existing request; do not submit a replacement.':['submitting','uncertain'].includes(pending.job?.status)?'The submission outcome is not confirmed. Inspect or reconcile the original request; do not repeat it.':'Collect the recorded request; do not submit it again.',escalate:'Your decision is needed on the recorded issue before work continues.',pending:project.step==='complete'?'Your final approved film is ready.':'Follow the saved resume instruction.'};
+ if(pending.gate==='human'&&['audition','narration'].includes(pending.step)&&!current(project,'voiceSample')&&project.voiceChoice?.reuseWithoutSample)decisions.human='Listen and confirm this sounds like your voice, then approve or ask for changes.';
+ if(pending.step==='voiceSample'&&project.voiceChoice?.reuseWithoutSample)decisions.human='Verify the selected existing clone before audition planning. No new recording is required.';
  const needsContinuation=paused&&(['author','review','owner-review','produce'].includes(pending.gate)||pending.gate==='collect'&&pending.job?.status==='authorized');
  if(project.voiceChoice&&pending.step==='clone'&&!project.voiceChoice.lookup)decisions.escalate='Verify the selected Cartesia voice with verify-voice before any audition planning. No replacement clone is allowed.';
  const nextDecision=needsContinuation?`Inspect the last output, then say “continue” to release one ${who??'runtime'} step. This approves nothing.`:decisions[pending.gate];
@@ -78,7 +80,7 @@ export function producerUpdate(status,runDir){
  const lockedScript=pending.step==='voiceSample'&&current(project,'script')?.approvedBy;
  const result=completion?.message??(lockedScript?'Story and cast locked by your approval.':`Current stage: ${label.toLowerCase()}.`);
  const debugNote=paused?'Debug paused.':null;
- const voice=project.voiceChoice,voiceMessage=voice&&['voiceSample','clone'].includes(pending.step)?` ${voice.name} is selected${voice.lookup?' and verified as active and owned by your account':'; account verification is still required'}. Voice approval is still pending.`:'';
+ const voice=project.voiceChoice,voiceMessage=voice&&['voiceSample','clone','audition'].includes(pending.step)?` ${voice.name} is selected${voice.lookup?' and verified as active and owned by your account':'; account verification is still required'}. Voice approval is still pending.${voice.reuseWithoutSample?' No new recording is required.':''}`:'';
  return {reporter:'Orchestrator (Producer)',stage:pending.step,stageLabel:label,gate:pending.gate,completion,nextWorker:workerStatus,inputRequest:request,debugNote,nextDecision,
   ...(voice?{voiceChoice:{voiceId:voice.voiceId,name:voice.name,verified:!!voice.lookup,access:voice.lookup?.access??null}}:{}),
   message:`${result}${voiceMessage} ${request?request.message:decisions[pending.gate]}${needsContinuation?' Debug paused; say “continue” to release this one step.':''}`};

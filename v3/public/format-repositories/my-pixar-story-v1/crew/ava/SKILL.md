@@ -9,6 +9,6 @@ The runtime supplies permitted tools and the output schema. Return only the assi
 
 ## review
 
-Review the exact current audio or final-film soundtrack with the independent audio rubric. Actually listen to every full file, measure durations/silence and independently transcribe voice deliverables. Compare locked text and genuine sample. Never infer listening from transcripts, invent speaker scores or ignore missing tools. Supervised voice matching requires explicit human comparison; qualified mode requires calibrated tools. Evidence and repairs go through the orchestrator.
+Review the exact current audio or final-film soundtrack with the independent audio rubric. Actually listen to every full file, measure durations/silence and independently transcribe voice deliverables. Compare locked text and the genuine sample when supplied. For a verified existing clone without a sample, do not ask for a new recording: mark voice-match inconclusive and require the human to recognize their own voice in the audition. Account ownership is not biometric evidence. Never infer listening from transcripts, invent speaker scores or ignore missing tools. Supervised voice matching requires explicit human comparison; qualified mode requires calibrated tools. Evidence and repairs go through the orchestrator.
 
 Use the task’s agreed criteria as quality standards. Reviewer verdicts are independent; follow evidenced repairs, preserve uncertainty and escalate missing facts instead of guessing.

@@ -5,7 +5,7 @@ import {digest} from './contracts.mjs';
 import {verifyFiles,sha} from './media.mjs';
 import {loadKey,remediation,atomicJson} from './providers.mjs';
 
-export const CARTESIA_STT_PROFILE={model:'ink-whisper',api:'POST /stt',version:'2026-08-14',language:'locked voice sample language',timestamps:'word',scriptHint:false};
+export const CARTESIA_STT_PROFILE={model:'ink-whisper',api:'POST /stt',version:'2026-08-14',language:'canonical voice basis language',timestamps:'word',scriptHint:false};
 const ResponseSchema=z.object({type:z.literal('transcript'),text:z.string().trim().min(1),request_id:z.string().min(1).optional(),language:z.string().optional(),duration:z.number().positive().optional(),words:z.array(z.object({word:z.string(),start:z.number().nonnegative(),end:z.number().nonnegative()})).optional()});
 const mime={'.wav':'audio/wav','.mp3':'audio/mpeg','.m4a':'audio/mp4','.flac':'audio/flac','.ogg':'audio/ogg'};
 async function readJson(path){try{return JSON.parse(await readFile(path,'utf8'));}catch(e){if(e.code==='ENOENT')return null;throw e;}}
@@ -16,9 +16,9 @@ export function createCartesiaTranscriptionTool({secretsPath,receiptDirectory,ma
  if(!Number.isInteger(maxCalls)||maxCalls<0||maxCalls>32)throw new Error('Use a bounded --transcription-calls between 0 and 32.');
  let submitted=0;const inFlight=new Map();
  return {transcribe:async({file,worker,task})=>{
-  const language=task?.voiceReference?.content.language;
+  const language=task?.voiceBasis?.language??task?.voiceReference?.content.language;
   if(!task?.taskId||worker?.role!=='audio-reviewer'||!worker.workerId)throw new Error('STT_SCOPE_DENIED: transcription requires a current Ava task.');
-  if(!/^[a-z]{2,3}$/.test(language??''))throw new Error('STT_LANGUAGE_REQUIRED: use the locked voice sample ISO language.');
+  if(!/^[a-z]{2,3}$/.test(language??''))throw new Error('STT_LANGUAGE_REQUIRED: use the canonical voice basis ISO language.');
   const mimeType=mime[extname(file.path).toLowerCase()];
   if(!mimeType||file.width||!file.durationSeconds)throw new Error('Cartesia transcription requires a measured audio-only file.');
   await verifyFiles(file);

@@ -15,8 +15,8 @@ import { shotFor, shotReferences, referenceBindings, planningReferences, validat
 import { requestDescriptor } from './providers.mjs';
 import { VERSION, Inputs, Project, Content, Review, Event, Plans, IntakeConfirmation, VoiceChoiceInput, VoiceLookup, criteria, digest } from './contracts.mjs';
 
-import { keyFor, current, locked, audioLocked, assertAllowed, backgroundSteps, imageSteps, authorSteps, supervised, reviewPassed, refinedWorkflow, miniProduction } from './gates.mjs';
-export { keyFor, current, locked, audioLocked, assertAllowed } from './gates.mjs';
+import { keyFor, current, locked, audioLocked, assertAllowed, backgroundSteps, imageSteps, authorSteps, supervised, reviewPassed, refinedWorkflow, miniProduction, voiceBasis } from './gates.mjs';
+export { keyFor, current, locked, audioLocked, assertAllowed, voiceBasis } from './gates.mjs';
 const characterRecipe=readFileSync(new URL('../character-sheet-recipe.md',import.meta.url),'utf8');
 export const characterRecipeSha256=createHash('sha256').update(characterRecipe).digest('hex');
 export const backgroundRecipe = readFileSync(new URL('../background-prompter.md', import.meta.url), 'utf8');
@@ -57,7 +57,7 @@ export function revisionImpact(p, id) {
 }
 export function dependencies(p) {
   const keys = studioDependencies(p) ?? {
-    answers: [], script: refinedWorkflow(p)?['answers']:[], voiceSample: [], clone: ['voiceSample'], audioReviewerQualification: [], audition: ['clone', 'script','audioReviewerQualification'],
+    answers: [], script: refinedWorkflow(p)?['answers']:[], voiceSample: [], clone: p.voiceChoice?.reuseWithoutSample&&!current(p,'voiceSample')?[]:['voiceSample'], audioReviewerQualification: [], audition: ['clone', 'script','audioReviewerQualification'],
     narration: ['script', 'clone', 'audition','audioReviewerQualification'], roster: p.workflowRevision>=4?['script','narration']:['script'],
     characterPrompt:['roster','script'], candidates: refinedWorkflow(p)?['roster',`characterPrompt:${p.characterId}`]:['roster'], sheetPrompt: [`candidates:${p.characterId}`],
     shotIntentions:['script','narration','roster',...(current(p,'roster')?.content.characters??[]).map(c=>`sheet:${c.id}`)],
@@ -104,6 +104,7 @@ function next(p) {
   else if (p.step === 'shots') { p.shotId = current(p, 'shots').content.shots[0].id; p.step = 'keyframePrompt'; }
   else if (p.step === 'keyframePrompt') p.step = 'keyframe';
   else if (p.step === 'keyframe') { const missing = current(p, 'shots').content.shots.find(s => !locked(p, `keyframe:${s.id}`)); p.shotId = missing?.id ?? null; p.step = missing ? 'keyframePrompt' : supervised(p)?'videoPlan':'reviewerQualification'; }
+  if(p.step==='voiceSample'&&p.voiceChoice?.reuseWithoutSample&&current(p,'clone'))p.step='clone';
   if(supervised(p)&&p.step==='audioReviewerQualification')p.step='audition';
   p.gate = authorSteps.includes(p.step) ? 'author' : p.step === 'voiceSample' ? 'human' : p.step === 'complete' ? 'pending' : 'produce';
   // Reopening a deliverable keeps unrelated locks; do not force their regeneration.
@@ -189,9 +190,10 @@ function addArtifact(p, content, author) {
   importExistingVoice(p);
 }
 function importExistingVoice(p){
+  if(p.step==='voiceSample'&&p.voiceChoice?.reuseWithoutSample&&p.voiceChoice.lookup){p.step='clone';p.gate='produce';}
   if(p.step!=='clone'||!p.voiceChoice)return;
   if(!p.voiceChoice.lookup){p.gate='escalate';return;}
-  if(!current(p,'voiceSample')?.content.consent)throw new Error('Existing voice still requires a genuine consented reference sample.');
+  if(!p.voiceChoice.reuseWithoutSample&&!current(p,'voiceSample')?.content.consent)throw new Error('Existing voice still requires a genuine consented reference sample.');
   const choice=p.voiceChoice;
   addArtifact(p,{voiceId:choice.voiceId,provider:'cartesia',receiptId:`voice-lookup:${digest(choice.lookup)}`,origin:{kind:'existing',lookup:choice.lookup,selectionMessage:choice.selectedBy.message,consentMessage:choice.consentMessage}},'provider-runtime');
 }
@@ -226,7 +228,7 @@ export function taskFor(p) {
     ...(p.step === 'shots' ? { availableLocations: planningReferences(p) } : {}),
     ...(['keyframePrompt', 'keyframe'].includes(p.step) ? { references: shotReferences(p), referenceBindings: referenceBindings(p), shotDigest: digest(shotFor(p)) } : {}),
     crewWorker:assignedWorker(p)??null, formatRole:roleFor(p),
-    voiceReference:roleFor(p)==='audio-reviewer'?current(p,'voiceSample')??null:null,voiceChoice:p.voiceChoice??null,
+    voiceReference:roleFor(p)==='audio-reviewer'?current(p,'voiceSample')??null:null,voiceChoice:p.voiceChoice??null,voiceBasis:voiceBasis(p),
     role: p.gate === 'review' ? 'independent-reviewer' : p.gate==='author'&&p.step==='videoPlan'?'motion-director':p.gate==='author'&&p.step==='videoPrompt'?'video-prompt-engineer':p.gate==='author'&&p.step==='soundPlan'?'sound-designer':p.gate==='author'&&p.step==='editPlan'?'film-editor': p.gate === 'author' && ['shotIntentions','shots'].includes(p.step) ? 'shot-planner' : p.gate === 'author' && p.step === 'keyframePrompt' ? 'composition-writer' : p.gate === 'owner-review' || ['backgrounds', 'backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'background-product-owner' : isPrompt(p) && p.gate === 'author' ? 'pixar-prompter' : 'orchestrator',
     immediateScenes: sceneLocation?.scenes.filter(s => shot ? s.id === shot.sceneId : !p.angleId || sceneLocation.angles.find(a => a.id === p.angleId)?.sceneIds.includes(s.id)) ?? [],
     lockedAnswers:current(p,'answers')??null,
@@ -296,9 +298,12 @@ export function applyEvent(project, raw) {
     return Project.parse(p);
   }
   if(['artifact','owner-review','review','plan','begin','rendered','qualified','audio-qualified'].includes(e.action)&&!(e.action==='artifact'&&e.actor==='human'&&p.step==='voiceSample'&&p.gate==='human'))assertDebugReady(p);
-  if(['choose-voice','voice-verification-start','voice-verified'].includes(e.action)){
+  if(['reuse-voice','choose-voice','voice-verification-start','voice-verified'].includes(e.action)){
     if(!locked(p,'script')||!['voiceSample','clone'].includes(p.step)||!(p.step==='voiceSample'&&p.gate==='human'||p.step==='clone'&&['produce','escalate'].includes(p.gate))||p.jobs.length||current(p,'clone'))throw new Error('EXISTING_VOICE_LOCKED: select an existing voice only after script approval and before any provider jobs or clone binding.');
-    if(e.action==='choose-voice'){
+    if(e.action==='reuse-voice'){
+      requiredActor(e,'human');if(!e.message||!p.voiceChoice?.lookup)throw new Error('EXISTING_VOICE_NOT_VERIFIED: explicit human reuse needs the saved authenticated lookup.');
+      p.voiceChoice.reuseWithoutSample=true;importExistingVoice(p);
+    }else if(e.action==='choose-voice'){
       requiredActor(e,'human');if(!e.message)throw new Error('Voice selection needs the actual human instruction.');
       p.voiceChoice={...VoiceChoiceInput.parse(e.content),selectedBy:{message:e.message,at:new Date().toISOString()}};
     }else if(e.action==='voice-verification-start'){
@@ -324,6 +329,11 @@ export function applyEvent(project, raw) {
     const next=loadStudio(),allowed=['crew/leo/SKILL.md','evaluation/rubrics/text.md'];
     if(digest(next.config)!==digest(p.studio.config)||Object.keys(next.documents).length!==Object.keys(p.studio.documents).length||Object.keys(next.documents).some(path=>!allowed.includes(path)&&digest(next.documents[path])!==digest(p.studio.documents[path])))throw new Error('WRITING_REFRESH_SCOPE: only writer skill and text rubric may change; tools, models, budgets, recipes and other instructions stay pinned.');
     p.studio=next;p.gate=current(p)?'review':'author';if(p.debug?.enabled)p.debug.paused=true;
+  }else if(e.action==='refresh-audio-instructions'){
+    requiredActor(e,'human');if(!e.message||!p.studio||!['voiceSample','clone','audition'].includes(p.step)||p.jobs.length||p.artifacts.some(a=>a.approvedBy&&['audition','narration'].includes(a.kind)))throw new Error('AUDIO_REFRESH_LOCKED: refresh voice-review instructions explicitly before provider work or audio approval.');
+    const next=loadStudio(),allowed=['crew/ava/SKILL.md','evaluation/rubrics/audio.md'];
+    if(digest(next.config)!==digest(p.studio.config)||Object.keys(next.documents).length!==Object.keys(p.studio.documents).length||Object.keys(next.documents).some(path=>!allowed.includes(path)&&digest(next.documents[path])!==digest(p.studio.documents[path])))throw new Error('AUDIO_REFRESH_SCOPE: only Ava skill and audio rubric may change; all other bindings stay pinned.');
+    p.studio=next;
   }else if(e.action==='set-budget'){
     requiredActor(e,'human');if(e.budgetLimitUsd===undefined||!e.message||e.budgetLimitUsd+1e-9<spendSummary(p).totalReservedUsd)throw new Error('Budget needs explicit human limit covering existing reservations.');
     p.budget??={maxCostUsd:0,reservations:[]};p.budget.maxCostUsd=e.budgetLimitUsd;
@@ -392,6 +402,11 @@ export function applyEvent(project, raw) {
     if (p.gate !== (ownerReview ? 'owner-review' : 'review') || !a || e.artifactId !== a.id || e.artifactDigest !== a.digest || !e.workerId || e.workerId === a.authoredBy) throw new Error('Review must bind the current artifact and use a distinct reviewer worker.');
     if (isPrompt(p) && (ownerReview ? e.workerId !== current(p, briefKey(p)).authoredBy : e.workerId === current(p, briefKey(p)).authoredBy || a.ownerReview?.decision !== 'approved')) throw new Error('Prompt requires the original owner check followed by a distinct independent reviewer.');
     const r = Review.parse(e.review);
+    if(['audition','narration'].includes(p.step)&&voiceBasis(p).kind==='existing-clone'){
+      const m=r.measurements,identity=r.checks.find(c=>c.criterion==='voice-match');
+      if(m?.referenceSha256!==undefined||m?.speakerSimilarity!==undefined||m?.speakerSimilarityMethod!==undefined||m?.identityBasis!==undefined&&m.identityBasis!=='human-recognition'||identity?.status==='pass'||r.toolEvidence?.some(t=>t.tool==='speakerSimilarity'||t.referenceSha256!==undefined))throw new Error('HUMAN_VOICE_IDENTITY_REQUIRED: no original reference; never invent speaker similarity, source hashes or an automated identity pass.');
+      if(reviewPassed(r)&&(!supervised(p)||identity?.status!=='inconclusive'||m?.identityBasis!=='human-recognition'))throw new Error('HUMAN_VOICE_IDENTITY_REQUIRED: use supervised human recognition without an original recording.');
+    }
     const required=p.step==='film'?filmCriteria(p):criteria[p.step];
     const names = r.checks.map(c => c.criterion);
     if (names.length !== required.length || new Set(names).size !== names.length || required.some(c => !names.includes(c))) throw new Error('Every required criterion needs exactly one evidenced finding.');
@@ -407,8 +422,8 @@ export function applyEvent(project, raw) {
     if(r.decision!=='inconclusive'&&(['audition','narration','music','effect'].includes(p.step)||filmAudio)){const q=supervised(p)?{workerId:e.workerId,modelVersion:r.modelVersion,capabilityVersion:r.capabilityVersion}:current(p,'audioReviewerQualification')?.content;if(!supervised(p))requireAudioQualification(q);if(r.perception!==perception||!supervised(p)&&!locked(p,'audioReviewerQualification')||e.workerId!==q.workerId||r.modelVersion!==q.modelVersion||r.capabilityVersion!==q.capabilityVersion||e.workerId===a.visualReviewedBy)throw new Error('Qualified independent audio reviewer must bind its model and tool profile.');const coverage=r.coverage?.audioFiles;if(!coverage||coverage.length!==a.content.files.length||a.content.files.some((f,i)=>coverage[i].sha256!==f.sha256||coverage[i].seconds+.02<f.durationSeconds))throw new Error('Audio reviewer must hear every entire current file and bind its hash.');}
     if (reviewPassed(r) && ['audition', 'narration'].includes(p.step)) {
       if (a.content.files.some(f => f.durationSeconds > 15)) throw new Error('Overlong narration cannot be approved; return the affected text to the writer, never accelerate it.');
-      const m = r.measurements;
-      if (!m || !m.speechToTextMethod || (!supervised(p)&&(!m.speakerSimilarityMethod || m.speakerSimilarity === undefined)) || !m.measurementNotes || m.referenceSha256 !== current(p, 'voiceSample').content.files[0].sha256 || m.transcripts?.length !== a.content.files.length || m.speakingRateWpm?.length !== a.content.files.length || m.silenceSeconds?.length !== a.content.files.length) throw new Error('Audio pass requires transcript, speaking rate, silence and speaker-similarity measurements against the actual sample.');
+      const m = r.measurements,basis=voiceBasis(p);
+      if (!m || !m.speechToTextMethod || (!supervised(p)&&(!m.speakerSimilarityMethod || m.speakerSimilarity === undefined)) || !m.measurementNotes || basis.kind==='unavailable' || (basis.kind==='recorded-reference'&&m.referenceSha256!==basis.referenceSha256) || m.transcripts?.length !== a.content.files.length || m.speakingRateWpm?.length !== a.content.files.length || m.silenceSeconds?.length !== a.content.files.length) throw new Error('Audio review requires transcript, speaking-rate/silence measurements, notes and truthful identity evidence for the current voice basis.');
       const words = s => s.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu)?.join(' ') ?? '';
       if (m.transcripts.some((t, i) => words(t) !== words(current(p, 'script').content.beats[i].narration))) throw new Error('Speech-to-text differs from the locked script.');
     }

@@ -6,7 +6,7 @@ import { videoBinding, effectFor } from './studio.mjs';
 import { executeVideo } from './video-provider.mjs';
 import { shotReferences } from './shots.mjs';
 import { digest, VoiceLookup } from './contracts.mjs';
-import { assertAllowed, keyFor, miniProduction } from './gates.mjs';
+import { assertAllowed, keyFor, miniProduction, voiceBasis } from './gates.mjs';
 import { importMedia, verifyFiles, narrationWindow } from './media.mjs';
 const artifact = (p, key) => p.artifacts.findLast(a => a.key === key && a.valid);
 export function requestDescriptor(p, plan) {
@@ -19,7 +19,7 @@ export function requestDescriptor(p, plan) {
   if (plan.operation === 'clone') return { endpoint: 'https://api.cartesia.ai/voices/clone', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
     clip: sample.files[0], language: sample.language, name: `${(artifact(p,'answers')?.content.inputs??p.inputs).subject.preferredName} — ${p.id}`, access: 'private' };
   if (['audition', 'narration'].includes(plan.operation)) return { endpoint: 'https://api.cartesia.ai/tts/bytes', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
-    model_id: plan.parameters.model ?? generation.voice.model, voice: artifact(p, 'clone').content.voiceId, language: sample.language,
+    model_id: plan.parameters.model ?? generation.voice.model, voice: artifact(p, 'clone').content.voiceId, language: voiceBasis(p).language,
     transcripts: artifact(p, 'script').content.beats.slice(0, plan.operation === 'audition' ? 1 : 4).map(b => b.narration),
     ...(plan.operation==='narration'&&p.workflowRevision>=3?{beatWindowSeconds:15}:{}),
     output_format: { container: 'wav', encoding: 'pcm_s16le', sample_rate: 44100 }, generation_config: { speed: 1, volume: 1 } };

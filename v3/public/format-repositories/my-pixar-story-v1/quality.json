@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "rubrics": "runtime/contracts.mjs criteria + Review schema",
   "script": "facts, relationship, clarity, emotional purpose, timing and common sense; reject defects with evidence rather than taste",
-  "audio": "ffprobe duration, ffmpeg silence, STT diff, speaking rate, speaker similarity against hashed storyteller sample, direct listening for integrity/delivery/safety",
+  "audio": "ffprobe duration, ffmpeg silence, STT diff, speaking rate, speaker similarity against hashed storyteller sample when supplied; existing clone without recording uses explicit human recognition, direct listening for integrity/delivery/safety",
   "characters": "important cast and age completeness, actual references, likeness, stylized rendering, anatomy, consistency, four full-body views and eight expressions",
   "reviewerIndependence": "distinct actual worker from author; IDs do not prove independence by themselves",
   "missingPerception": "inconclusive",
@@ -50,7 +50,7 @@
     "perception": "required direct actual media; unavailable stays inconclusive",
     "qualification": "deferred; no invented scores or human labels",
     "provisional": "advisory candidate with direct perception, no known failing criterion; human confirms all media criteria",
-    "voiceIdentity": "human comparison against original sample; score unavailable until calibrated tool connected",
+    "voiceIdentity": "human comparison against original sample when supplied, otherwise recognition of own voice in the existing-clone audition; never invent a score",
     "videoRepairs": "every request exact human authorization",
     "regression": "invented binding/routing corpus, never qualification evidence"
   }

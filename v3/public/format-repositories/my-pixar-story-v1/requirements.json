@@ -56,7 +56,7 @@
         "key": "CARTESIA_API_KEY from canonical --secrets",
         "calls": "explicit --transcription-calls 0–32 per invocation, default 0",
         "scriptHints": false,
-        "language": "locked voice sample ISO language",
+        "language": "canonical recorded-source or verified existing-clone ISO language",
         "receipts": "exact task/hash/worker/language/profile; completed results recover offline; unknown outcomes stop without retry",
         "qualification": "not production-qualified; independent of Gemini listening and speaker measurement",
         "estimate": "Positive --transcription-cost-usd in supervised mode; project-wide reserved-estimate ceiling plus call cap"

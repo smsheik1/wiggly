@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {verifyRenderer} from './runtime/remotion.mjs';
 await verifyRenderer();
-execFileSync(process.execPath,['--test','tests/supervised-regression.test.mjs','tests/refined-flow.test.mjs','tests/script-led-cast.test.mjs','tests/review-grounding.test.mjs','tests/mini-core-flow.test.mjs','tests/studio-instructions.test.mjs','tests/debug-mode.test.mjs','tests/producer-handoff.test.mjs','tests/existing-voice.test.mjs'],{cwd:dirname(fileURLToPath(import.meta.url)),stdio:'inherit'});
+execFileSync(process.execPath,['--test','tests/supervised-regression.test.mjs','tests/refined-flow.test.mjs','tests/script-led-cast.test.mjs','tests/review-grounding.test.mjs','tests/mini-core-flow.test.mjs','tests/studio-instructions.test.mjs','tests/debug-mode.test.mjs','tests/producer-handoff.test.mjs','tests/existing-voice.test.mjs','tests/existing-voice-no-sample.test.mjs'],{cwd:dirname(fileURLToPath(import.meta.url)),stdio:'inherit'});
 const root = dirname(fileURLToPath(import.meta.url));
 const files = ['build/remotion', 'build-renderer.mjs', 'AGENTS.md', 'SKILL.md', 'README.md', 'format.json', 'pipeline.json', 'quality.json', 'requirements.json', 'scene-contract.json',
   'studio.json', 'crew', 'orchestrator-voice.md', 'questionnaire.json', 'character-prompter.md', 'character-sheet-recipe.md', 'background-prompter.md', 'proof.json', 'package.json', 'package-lock.json', 'runner.mjs', 'kit-smoke.mjs', 'pack.mjs', 'runtime', 'evaluation', 'examples', 'tests'];

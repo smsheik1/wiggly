@@ -1,0 +1,63 @@
+{
+  "recordedAt": "2026-10-05T00:20:43.577358+00:00",
+  "scope": "Correct existing-clone reuse: original recording optional; creation of a new clone still requires a genuine recording",
+  "branch": "codex/memoir-existing-voice",
+  "sourceParent": "50d4e05c",
+  "sourceTests": {
+    "passed": 216,
+    "failed": 0
+  },
+  "packagingGuardrails": {
+    "passed": 88,
+    "failed": 0
+  },
+  "blindFinalPackage": {
+    "check": "passed",
+    "parentAndGrandparentFreeSmoke": "passed",
+    "focusedTestsPassed": 33,
+    "independentForgeryProbesRejected": 24,
+    "finding": "Rejected/inconclusive reviews persisted fabricated speaker identity provenance",
+    "resolution": "All verdicts reject invented reference hashes, speaker scores, methods, identity passes and tool evidence; legitimate human recognition, evidenced quality rejection and inconclusive escalation remain intact",
+    "dependencyReuse": "exact package-lock comparison; not a clean install"
+  },
+  "artifact": {
+    "directory": "/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/memoir-no-recording-final-package-ksc1nzua",
+    "archiveSha256": "7fa073ca80c10775fd4776aaceaeb493a8fda73c46e0626b4a38d6b3276a17a5",
+    "byteMatchedFiles": 153,
+    "dependencyReuse": "exact package-lock comparison; not a clean install"
+  },
+  "ponytailReview": "Lean already. Ship.",
+  "actualRehearsal": {
+    "beforeSequence": 18,
+    "afterSequence": 21,
+    "checkpointId": "1f1c0525-7087-67a0-801d-66cb1c22ac3e",
+    "step": "audition",
+    "gate": "produce",
+    "verifiedExistingCloneImported": true,
+    "originalRecordingImported": false,
+    "cloneArtifactApproved": false,
+    "voiceApproval": false,
+    "providerJobs": 0,
+    "newProviderOrInferenceCalls": 0,
+    "paidMediaGenerated": false,
+    "priorAnswersAndStoryApprovalsPreserved": true,
+    "spendLimitOrReservationsChanged": false,
+    "debugPaused": true,
+    "instructionRefreshScope": [
+      "crew/ava/SKILL.md",
+      "evaluation/rubrics/audio.md"
+    ],
+    "crewRefresh": "Explicit metadata-only resume of same 15 host workers/models to bind changed runtime tool profile; no worker turns dispatched"
+  },
+  "primarySync": {
+    "backup": "/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/memoir-no-recording-primary-backup-qnlcz6xy",
+    "scopedFiles": 22,
+    "unrelatedChangesPreserved": true
+  },
+  "limitations": [
+    "Existing-clone account verification is not biometric voice identity; human audition recognition is required without an original recording",
+    "Actual listening, measurement, transcription and human voice/narration approval remain required",
+    "No new audition, narration, image or video produced; real perception quality and end-to-end production remain unproven",
+    "Dependencies reused from exact-lock environment; not a clean-install proof"
+  ]
+}

@@ -88,11 +88,12 @@ async function main() {
     }
     if (command === 'import') { print(await importMedia(args[0], runDir)); return; }
     const status = await workflow.status('project');
+    if(command==='reuse-voice'){const message=option('message');if(!message||args.length)throw new Error('reuse-voice needs the actual human instruction.');print(presentation(await workflow.respond('project',{taskId:status.pending.taskId,actor:'human',action:'reuse-voice',message})));return;}
     if(['use-voice','verify-voice'].includes(command)){
       let selected=status;
       if(command==='use-voice'){
         const voiceId=option('id'),name=option('name'),message=option('message'),consentMessage=option('consent-message');
-        const content=VoiceChoiceInput.parse({voiceId,name,consentMessage});if(!message||args.length)throw new Error('use-voice needs the exact human selection and own-voice consent messages.');
+        const content=VoiceChoiceInput.parse({voiceId,name,consentMessage,reuseWithoutSample:true});if(!message||args.length)throw new Error('use-voice needs the exact human selection and own-voice consent messages.');
         selected=await workflow.respond('project',{taskId:status.pending.taskId,actor:'human',action:'choose-voice',message,content});
       }else if(args.length||!status.project.voiceChoice)throw new Error('verify-voice requires the current human-selected voice.');
       const p=selected.project;
@@ -106,7 +107,7 @@ async function main() {
     if(command==='input-folder'){
       const show=args.includes('--open');if(show)args.splice(args.indexOf('--open'),1);
       if(args.length||status.project.lifecycle==='abandoned'||status.pending.step!=='voiceSample'||status.pending.gate!=='human')throw new Error('INPUT_FOLDER_UNAVAILABLE: the current step must be waiting for your voice sample.');
-      const producer=producerUpdate(status,runDir),folder=producer.inputRequest.folder;
+      const producer=producerUpdate(status,runDir);if(!producer.inputRequest)throw new Error('INPUT_FOLDER_UNAVAILABLE: the existing-clone path requires verification, not a new recording.');const folder=producer.inputRequest.folder;
       await mkdir(folder,{recursive:true,mode:0o700});
       if(show){const result=spawnSync(process.platform==='darwin'?'open':process.platform==='win32'?'explorer.exe':'xdg-open',[folder],{encoding:'utf8'});if(result.error||result.status!==0)throw new Error(`INPUT_FOLDER_OPEN_FAILED: ${folder}: ${result.error?.message??result.stderr??result.status}`);}
       print({producer,folder,opened:show,providerCalls:0,projectStateMutated:false});return;
@@ -244,7 +245,7 @@ async function main() {
         await runtimeEvent('provider-error',{message:diagnostic});throw new Error(`${diagnostic}\n${remediation(job.plan.provider,secretsPath)}`);
       }return;
     }
-    throw new Error('Use check, check-provider, schema, init, status, present, work, respond, use-voice, verify-voice, input-folder, import, measure, validate, impact, generate, collect, crew-template, crew-start, crew-refresh, work-codex, drive-codex, debug, debug-next, debug-inspect, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
+    throw new Error('Use check, check-provider, schema, init, status, present, work, respond, use-voice, verify-voice, reuse-voice, input-folder, import, measure, validate, impact, generate, collect, crew-template, crew-start, crew-refresh, work-codex, drive-codex, debug, debug-next, debug-inspect, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
   } catch(error){
     const latest=await workflow.status('project').catch(()=>null);
     if(latest?.project.debug?.enabled&&!latest.project.debug.paused)await workflow.respond('project',{taskId:latest.pending.taskId,actor:'runtime',action:'debug-stop',message:'Command stopped: '+error.message});

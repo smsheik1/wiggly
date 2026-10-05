@@ -1,4 +1,4 @@
-import { keyFor } from './gates.mjs';
+import { keyFor,voiceBasis } from './gates.mjs';
 import { readFile, realpath } from 'node:fs/promises';
 import { resolve, relative, sep } from 'node:path';
 import { Content, Review, digest, criteria } from './contracts.mjs';
@@ -86,9 +86,10 @@ export async function artifactEvidence(project) {
   else if (['audition', 'narration'].includes(project.step)) {
     measurements = await Promise.all(artifact.content.files.map(measureAudio));
     const script = project.artifacts.findLast(a => a.key === 'script' && a.valid).content;
-    const sample = project.artifacts.findLast(a => a.key === 'voiceSample' && a.valid).content.files[0];
-    checks = audioChecks({ durations: measurements.map(m => m.durationSeconds), audioHashes: artifact.content.files.map(f => f.sha256), sampleHash: sample.sha256,
+    const sample = project.artifacts.findLast(a => a.key === 'voiceSample' && a.valid)?.content.files[0];
+    checks = audioChecks({ durations: measurements.map(m => m.durationSeconds), audioHashes: artifact.content.files.map(f => f.sha256), sampleHash: sample?.sha256,
       lockedTexts: script.beats.slice(0, project.step === 'audition' ? 1 : 4).map(b => b.narration) }).checks;
+    if(voiceBasis(project).kind==='existing-clone')checks=checks.map(c=>c.criterion==='voice-match'?{...c,evidence:'Existing clone supplied without an original recording. Automated identity comparison is unavailable; the human must recognize their own voice in the audition.'}:c);
   } else checks = (criteria[project.step] ?? []).map(c => unknown(c, 'The host reviewer must directly inspect the actual references/artifact. Contract or file validity cannot establish creative quality.'));
   return { evaluator: EVALUATOR_VERSION, artifactId: artifact.id, artifactDigest: artifact.digest, checks, measurements, productionApproval: false,
     instruction: 'These are scoped measurements and missing-capability findings, not a completed review. Resolve each required criterion with genuine independent perception and measured evidence; return the normal bound review event. Do not treat structural passes as semantic/audio/image approval.' };

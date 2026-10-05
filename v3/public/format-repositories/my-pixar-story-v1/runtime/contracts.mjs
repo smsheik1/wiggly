@@ -14,7 +14,7 @@ export const Inputs = z.object({
     'scene4Romance', 'scene5LegacyFinale'].map(key => [key, z.record(z.string(), text).refine(v => Object.keys(v).length > 0)]))),
 }).passthrough();
 export const File = z.object({ path: text, sha256: text.regex(/^[a-f0-9]{64}$/), bytes: z.number().int().positive(), durationSeconds: z.number().positive().optional(), width: z.number().int().positive().optional(), height: z.number().int().positive().optional(), fps: z.number().positive().optional(), hasAudio: z.boolean().optional() });
-export const VoiceChoiceInput=z.object({voiceId:z.uuid(),name:text,consentMessage:text}).strict();
+export const VoiceChoiceInput=z.object({voiceId:z.uuid(),name:text,consentMessage:text,reuseWithoutSample:z.boolean().optional()}).strict();
 export const VoiceLookup=z.object({voiceId:z.uuid(),name:text,language:text,isOwner:z.literal(true),status:z.literal('active'),access:z.enum(['public','private']),apiVersion:text,checkedAt:z.iso.datetime(),endpoint:text,httpStatus:z.literal(200)}).strict();
 const CastProposal = z.array(z.object({id:text.regex(/^[a-z][a-z0-9-]*$/),name:text,ageVariant:text,minor:z.boolean(),storyPurpose:text})).min(1).refine(xs=>new Set(xs.map(c=>c.id)).size===xs.length, 'Unique proposed character IDs');
 const Script = z.object({
@@ -115,14 +115,14 @@ export const Review = z.object({
   measurements: z.object({
     transcripts: z.array(text).optional(), speechToTextMethod: text.optional(),
     speakerSimilarity: z.number().min(0).max(1).optional(), speakerSimilarityMethod: text.optional(),
-    referenceSha256: text.optional(), speakingRateWpm: z.array(z.number().positive()).optional(),
+    referenceSha256: text.optional(), identityBasis:z.enum(['recorded-reference','human-recognition']).optional(), speakingRateWpm: z.array(z.number().positive()).optional(),
     silenceSeconds: z.array(z.number().nonnegative()).optional(), measurementNotes: text.optional(),
   }).optional(),
 });
 export const Plans = z.object({ provider: z.enum(['cartesia', 'meta-muse', 'replicate', 'elevenlabs']), operation: z.enum(['clone', 'audition', 'narration', 'candidates', 'sheet', 'backgroundCandidates', 'backgroundAngle', 'keyframe', 'video', 'music', 'effect']),
   estimatedCostUsd: z.number().nonnegative(), parameters: z.object({ model: text.optional(), prompt: text.optional(), cartesiaVersion: text.optional() }).strict() }).strict();
 const CreativeDirection=z.object({scope:z.enum(['script','cast']),direction:text,sourceMessages:z.array(text).min(1)}).strict();
-export const Event = z.object({ taskId: text, action: z.enum(['choose-voice','voice-verification-start','voice-verified','configure-debug','debug-next','debug-stop','upgrade-studio','refresh-writing-instructions','configure-crew', 'configure-review','set-budget','reserve-compute', 'start-audio-review', 'audio-qualified', 'artifact', 'owner-review', 'start-backgrounds', 'start-shots', 'start-studio', 'qualified', 'rendered', 'review', 'approve', 'changes', 'redo', 'abandon', 'reject', 'note', 'resolve', 'plan', 'authorize', 'begin', 'job-id', 'receipt', 'provider-error', 'reconcile', 'allowance']),
+export const Event = z.object({ taskId: text, action: z.enum(['reuse-voice','refresh-audio-instructions','choose-voice','voice-verification-start','voice-verified','configure-debug','debug-next','debug-stop','upgrade-studio','refresh-writing-instructions','configure-crew', 'configure-review','set-budget','reserve-compute', 'start-audio-review', 'audio-qualified', 'artifact', 'owner-review', 'start-backgrounds', 'start-shots', 'start-studio', 'qualified', 'rendered', 'review', 'approve', 'changes', 'redo', 'abandon', 'reject', 'note', 'resolve', 'plan', 'authorize', 'begin', 'job-id', 'receipt', 'provider-error', 'reconcile', 'allowance']),
   creativeDirection:CreativeDirection.optional(), debugEnabled:z.boolean().optional(),
   budgetLimitUsd:z.number().nonnegative().optional(), reservation:z.object({id:text,provider:z.enum(['gemini','cartesia-stt']),estimatedCostUsd:z.number().positive()}).strict().optional(),
   actor: z.enum(['agent', 'reviewer', 'human', 'runtime']), workerId: text.optional(),

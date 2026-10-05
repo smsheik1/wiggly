@@ -4,6 +4,10 @@ export const authorSteps = ['answers','characterPrompt','audioReviewerQualificat
 export const keyFor = p => ['videoPrompt','video'].includes(p.step) ? `${p.step}:${p.clipId}` : p.step === 'effect' ? `effect:${p.effectId}` : ['keyframePrompt', 'keyframe'].includes(p.step) ? `${p.step}:${p.shotId}` : backgroundSteps.includes(p.step) ? `${p.step}:${p.locationId}${p.step.startsWith('backgroundAngle') ? ':' + p.angleId : ''}` : ['characterPrompt','candidates', 'sheetPrompt', 'sheet'].includes(p.step) ? `${p.step}:${p.characterId}` : p.step;
 export const current = (p, key = keyFor(p)) => p.artifacts.findLast(a => a.key === key && a.valid);
 export const supervised = p => p.reviewMode === 'supervised';
+export function voiceBasis(p){
+ const sample=current(p,'voiceSample'),clone=current(p,'clone');
+ return {kind:sample?'recorded-reference':clone?.content.origin?.kind==='existing'&&p.voiceChoice?.reuseWithoutSample?'existing-clone':'unavailable',language:sample?.content.language??clone?.content.origin?.lookup.language??null,referenceSha256:sample?.content.files[0].sha256??null,voiceId:clone?.content.voiceId??null};
+}
 export const miniProduction = p => p.productionProfile === 'seedance-mini-480p';
 export const refinedWorkflow = p => p.workflowRevision >= 3;
 export const reviewPassed = r => ['approved','provisional'].includes(r?.decision);
