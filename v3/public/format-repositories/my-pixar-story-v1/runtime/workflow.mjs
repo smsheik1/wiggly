@@ -355,7 +355,10 @@ export function applyEvent(project, raw) {
     const crew=Crew.parse(e.crew);if(p.crew&&digest(p.crew)===digest(crew))throw new Error('Crew is already configured with these bindings.');
     const changed=role=>p.crew&&digest(p.crew.workers.find(w=>w.role===role))!==digest(crew.workers.find(w=>w.role===role));
     const audioChanged=changed('audio-reviewer'),visualChanged=changed('visual-reviewer');
-    if(supervised(p)&&p.artifacts.some(a=>a.valid&&a.approvedBy&&a.content.files&&(audioChanged&&['audition','narration','music','effect','film'].includes(a.kind)||visualChanged&&[...imageSteps,'video','film'].includes(a.kind))))throw new Error('REVIEW_CREW_LOCKED: keep the approved-media reviewer bindings for this v1 project; start a separate project to change reviewer profiles.');
+    // Explicit host-code refresh keeps the same worker/model and historical
+    // review evidence. Replacing a reviewer after approved media stays forbidden.
+    const replaced=role=>changed(role)&&digest({...p.crew.workers.find(w=>w.role===role),capabilityVersion:null})!==digest({...crew.workers.find(w=>w.role===role),capabilityVersion:null});
+    if(supervised(p)&&p.artifacts.some(a=>a.valid&&a.approvedBy&&a.content.files&&(replaced('audio-reviewer')&&['audition','narration','music','effect','film'].includes(a.kind)||replaced('visual-reviewer')&&[...imageSteps,'video','film'].includes(a.kind))))throw new Error('REVIEW_CREW_LOCKED: keep the approved-media reviewer identity and model for this v1 project; an explicit same-worker host refresh preserves historical approvals.');
     const audio=current(p,'audioReviewerQualification'),visual=current(p,'reviewerQualification');
     if(visualChanged&&visual)invalidate(p,visual.id);
     if(!supervised(p)&&audioChanged&&audio){invalidate(p,audio.id);p.step='audioReviewerQualification';p.gate='author';}

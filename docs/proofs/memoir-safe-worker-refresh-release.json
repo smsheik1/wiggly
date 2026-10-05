@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-05",
+  "change": "Explicit same-worker host maintenance preserves supervised approved media",
+  "focusedTestsPassed": 36,
+  "packageTestsPassed": 109,
+  "archiveSha256": "4c35dfee9d6d9cb6a25a48eb6ba65fb3d5a2e7e4de47fa57691b06932297c809",
+  "independentFinalPackageAudit": "Not performed: fresh-agent follow-up blocked by ChatGPT worker usage limit",
+  "liveRun": {
+    "voiceApprovalMessage": "looks great",
+    "voiceLocked": true,
+    "approvedSampleDigest": "3b1eea0b3ccbcc82c2197fe1d5a94e50be1ffe247aa05f95bc4b681d3910aa13",
+    "workerIdsModelsPreserved": true,
+    "approvedArtifactDigestsAndJobsPreserved": true,
+    "generationPlanner": "Max (Generation Planner)",
+    "plan": {
+      "provider": "cartesia",
+      "operation": "narration",
+      "beatCount": 4,
+      "windowSeconds": 15,
+      "speed": 1,
+      "characters": 866,
+      "estimatedCostUsd": 0.06,
+      "requestDigest": "77956544291f60c1068e44d38efb4314209db4955cb6a9bde6f5fd2e918ebc09"
+    },
+    "state": "narration/authorize; debug inspection checkpoint",
+    "sequence": 45,
+    "newAudioImageVideoGenerations": 0
+  },
+  "limits": [
+    "No four-beat synthesis or review proof yet",
+    "No end-to-end film proof",
+    "Published estimate is not a verified invoice"
+  ],
+  "ponytailReview": "Lean already. Ship."
+}

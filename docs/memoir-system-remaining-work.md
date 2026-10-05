@@ -147,7 +147,9 @@ Canonical policy: [living spec](memoir-system-living-spec.md#2026-10-04--grounde
 - [x] Explicitly refresh only Max's saved instructions before provider work, retaining all other pinned state.
 - [x] Retry the authorized first-beat sample through the real runtime. Cartesia returned one 14.64-second WAV; locked answers/story and existing clone binding stayed unchanged.
 - [x] Ava independently listened through Gemini 3.8 Flash, transcribed through Cartesia Ink-Whisper, measured and reviewed the exact sample. Integrity, delivery and safety passed; existing-clone identity comparison remains honestly unresolved without an original recording.
-- [ ] Shaz listens and confirms that the short sample sounds like his voice. No voice/narration approval is inferred from reviewer success.
+- [x] Shaz approved the reviewed short sample with “looks great”; VOICE LOCK is now recorded. Narration approval remains separate.
+- [x] Explicit same-worker code refresh preserves that approval and historic reviewer evidence. Max prepared the four-beat narration request; no narration generation yet.
+- [ ] Generate the four narration files through the planned Cartesia request, review each independently, then obtain human narration approval before visuals unlock.
 
 ### Reviewer tool connection and spoken-number comparison
 

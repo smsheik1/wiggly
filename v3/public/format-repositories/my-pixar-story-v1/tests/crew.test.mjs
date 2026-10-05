@@ -94,6 +94,10 @@ test('explicit reviewer profile upgrades reopen qualification and its descendant
  const changed=send(p,'configure-crew',{actor:'human',message:'ISOLATED upgrade real tool profile',crew:replacement});
  assert.equal(changed.step,'audioReviewerQualification');assert.equal(changed.gate,'author');assert.equal(current(changed,'narration'),undefined);assert.equal(current(changed,'audioReviewerQualification'),undefined);
  assert.deepEqual(current(changed,'script'),current(p,'script'));assert.deepEqual(current(changed,'voiceSample'),current(p,'voiceSample'));assert.deepEqual(current(changed,'clone'),current(p,'clone'));
+ const supervised=structuredClone(p);supervised.reviewMode='supervised';
+ const refreshed=send(supervised,'configure-crew',{actor:'human',message:'ISOLATED refresh the same workers after a code fix',crew:replacement});
+ assert.deepEqual(refreshed.artifacts,supervised.artifacts);assert.deepEqual(refreshed.jobs,supervised.jobs);assert.deepEqual(refreshed.budget,supervised.budget);assert.equal(refreshed.step,supervised.step);assert.equal(refreshed.gate,supervised.gate);assert.deepEqual(refreshed.crew,replacement);
+ for(const field of ['workerId','modelVersion','name','execution']){const swapped=structuredClone(replacement);swapped.workers.find(w=>w.role==='audio-reviewer')[field]=field==='execution'?'api':'ISOLATED replacement';assert.throws(()=>send(supervised,'configure-crew',{actor:'human',message:'ISOLATED replace reviewer',crew:swapped}));}
  const busy=structuredClone(p);busy.jobs[0].status='uncertain';assert.throws(()=>send(busy,'configure-crew',{actor:'human',message:'ISOLATED',crew:replacement}),/reconciled jobs/);
  const visual=bind(rendered()),newVisual={workers:crew.workers.map(w=>w.role==='visual-reviewer'?{...w,modelVersion:'new-real-model'}:w)};
  const reopened=send(visual,'configure-crew',{actor:'human',message:'ISOLATED visual upgrade',crew:newVisual});
