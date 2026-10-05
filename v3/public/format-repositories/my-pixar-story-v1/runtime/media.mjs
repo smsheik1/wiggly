@@ -23,7 +23,7 @@ export async function importMedia(source, runDir) {
   if (sha(await readFile(path)) !== sha256) throw new Error('Immutable asset collision/tampering.');
   return { path, sha256, bytes: bytes.length, ...await probe(path) };
 }
-// Only append silence. Overlong speech stays untouched for evidenced script repair.
+// Generation only appends silence. Local repair is a separate recorded edit; never silently trim here.
 export async function narrationWindow(file, runDir, outputPath) {
   await verifyFiles(file);
   if(file.durationSeconds>15)return {file,tailSilenceSeconds:0};

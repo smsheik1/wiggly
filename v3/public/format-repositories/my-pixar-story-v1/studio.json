@@ -109,7 +109,10 @@
         "viewImage",
         "watchVideo",
         "listenAudio",
-        "measureAudio"
+        "measureAudio",
+        "transcribe",
+        "inspectAudio",
+        "renderAudioEdit"
       ]
     },
     "audio-reviewer": {

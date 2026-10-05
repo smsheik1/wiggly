@@ -7,6 +7,7 @@ import {z} from 'zod';
 import {Content,Event,digest} from './contracts.mjs';
 import {applyEvent} from './workflow.mjs';
 import {crewRoles,runCrewTask,taskAssets} from './crew.mjs';
+import {AudioEditPlan} from './audio-edit.mjs';
 
 export const DEFAULT_WORKER_MODEL=loadStudio().config.agents['script-writer'].model;
 // Explicit host profile: no model fallback, native shell, apps or nested worker dispatch.
@@ -14,7 +15,7 @@ const disabled=['shell_tool','unified_exec','apps','plugins','multi_agent','code
 // The local Code Mode host executes the registered scoped function tools even
 // when the optional code_mode feature is off. Disabling it breaks every tool.
 const enabled=['code_mode_host'];
-const tool={type:'function',name:'wiggly_tool',description:'Call an allowed format tool on a hash from the current task. Never read another path or submit a generation.',inputSchema:{type:'object',properties:{name:{type:'string'},sha256:{type:'string'},referenceSha256:{type:['string','null']}},required:['name','sha256','referenceSha256'],additionalProperties:false}};
+const tool={type:'function',name:'wiggly_tool',description:'Call an allowed format tool on a hash from the current task. For renderAudioEdit supply edit with kind, keepRanges in fractional seconds and reason. Never read another path or submit a generation.',inputSchema:{type:'object',properties:{name:{type:'string'},sha256:{type:'string'},referenceSha256:{type:['string','null']},edit:{anyOf:[z.toJSONSchema(AudioEditPlan),{type:'null'}]}},required:['name','sha256','referenceSha256'],additionalProperties:false}};
 
 async function readJson(path){try{return JSON.parse(await readFile(path,'utf8'));}catch(e){if(e.code==='ENOENT')return null;throw e;}}
 async function saveJson(path,value){await writeFile(path+'.tmp',JSON.stringify(value)+'\n',{mode:0o600});await rename(path+'.tmp',path);}
@@ -54,8 +55,8 @@ export class CodexHost {
   const active=this.active,params=message.params;
   try{
    if(!active||params.threadId!==active.threadId||params.turnId!==active.turnId||params.tool!=='wiggly_tool')throw new Error('TOOL_SCOPE_DENIED');
-   const arguments_=z.object({name:z.string(),sha256:z.string(),referenceSha256:z.string().nullable()}).strict().parse(params.arguments);
-   const value=await active.callTool(arguments_.name,{sha256:arguments_.sha256,...(arguments_.referenceSha256?{referenceSha256:arguments_.referenceSha256}:{})});
+   const arguments_=z.object({name:z.string(),sha256:z.string(),referenceSha256:z.string().nullable(),edit:AudioEditPlan.nullable().optional()}).strict().parse(params.arguments);
+   const value=await active.callTool(arguments_.name,{sha256:arguments_.sha256,...(arguments_.referenceSha256?{referenceSha256:arguments_.referenceSha256}:{}),...(arguments_.edit?{edit:arguments_.edit}:{})});
    const contentItems=value.imageUrl?[{type:'inputText',text:JSON.stringify({fileSha256:arguments_.sha256,perception:value.perception})},{type:'inputImage',imageUrl:value.imageUrl}]:[{type:'inputText',text:JSON.stringify(value.bytes?{file:value.file,...(/\.(json|md|txt)$/i.test(value.file.path)?{text:value.bytes.toString('utf8')}:{instruction:'Binary media: use your permitted perception tool.'})}:value)}];
    this.send({id:message.id,result:{success:true,contentItems}});
   }catch(error){if(error.stopDispatch)this.active?.reject(error);this.send({id:message.id,result:{success:false,contentItems:[{type:'inputText',text:error.message}]}});}
@@ -63,7 +64,7 @@ export class CodexHost {
  async initialize(){await mkdir(this.cwd,{recursive:true});await this.call('initialize',{clientInfo:{name:'wiggly_memoir',title:'Wiggly memoir studio',version:'2.0.0'},capabilities:{experimentalApi:true}});this.send({method:'initialized',params:{}});}
  async profile(){
   const version=execFileSync('codex',['--version'],{encoding:'utf8'}).trim();
-  return `${version}:${digest({sources:await Promise.all(['codex-host.mjs','crew.mjs','media.mjs','contracts.mjs','gemini-review.mjs','cartesia-stt.mjs','providers.mjs','evaluators.mjs','instructions.mjs'].map(name=>readFile(new URL(name,import.meta.url),'utf8'))),perception:this.perceptionProfile,enabled,disabled,tool})}`;
+  return `${version}:${digest({sources:await Promise.all(['codex-host.mjs','crew.mjs','media.mjs','audio-edit.mjs','contracts.mjs','gemini-review.mjs','cartesia-stt.mjs','providers.mjs','evaluators.mjs','instructions.mjs'].map(name=>readFile(new URL(name,import.meta.url),'utf8'))),perception:this.perceptionProfile,enabled,disabled,tool})}`;
  }
  async startCrew(model,config=loadStudio().config){
   const capabilityVersion=await this.profile(),path=join(this.cwd,'crew-startup.json');

@@ -15,6 +15,7 @@ export const Crew=z.object({workers:z.array(z.object({workerId:text,name:text,ro
  if(Object.keys(crewRoles).some(role=>!crew.workers.some(w=>w.role===role)))ctx.addIssue({code:'custom',message:'Assign every format role; missing workers cannot silently fall back.'});
 });
 export function roleFor(p){
+ if(p.step==='narration'&&p.gate==='author')return 'film-editor';
  if(p.gate==='owner-review')return 'background-product-owner';
  if(p.gate==='review')return p.step==='film'?(reviewPassed(p.artifacts.findLast(a=>a.key==='film'&&a.valid)?.visualReview)?'audio-reviewer':'visual-reviewer'):['audition','narration','music','effect'].includes(p.step)?'audio-reviewer':['candidates','sheet','backgroundCandidates','backgroundAngle','keyframe','video'].includes(p.step)?'visual-reviewer':'text-reviewer';
  if(p.gate==='produce')return 'generation-planner';
@@ -34,6 +35,7 @@ function filesIn(value,out=new Map()){
 }
 export function taskAssets(task){return filesIn({artifact:task.artifact,dependencies:task.dependencies,visualReferences:task.visualReferences,references:task.references,availableLocations:task.availableLocations,videoBinding:task.videoBinding,sample:task.voiceReference,intake:task.intakeConfirmation,characters:task.characterReferences,narration:task.narration});}
 export function crewTools(task,worker,adapters={},record=()=>{}){
+ const observed=new Set();
  const allowed=(task.allowedTools??maximumTools[worker.role]??[]).filter(t=>maximumTools[worker.role]?.includes(t)),assets=taskAssets(task);
  const get=async hash=>{const file=assets.get(hash);if(!file)throw new Error('ASSET_SCOPE_DENIED: use a hash from this current task.');await verifyFiles(file);return file;};
  const execute=async(name,parameters={})=>{
@@ -41,6 +43,14 @@ export function crewTools(task,worker,adapters={},record=()=>{}){
   const file=await get(parameters.sha256);
   if(name==='readAsset')return {file,bytes:await readFile(file.path)};
   if(name==='measureAudio'){if(!file.durationSeconds||file.width)throw new Error('Expected an audio-only file.');return measureAudio(file);}
+  if(['inspectAudio','renderAudioEdit'].includes(name)){
+   if(task.step!=='narration'||task.gate!=='author'||worker.role!=='film-editor'||!task.artifact?.content.files.some(f=>f.sha256===file.sha256))throw new Error('AUDIO_EDIT_SCOPE_DENIED');
+   if(name==='renderAudioEdit'&&(!observed.has(`listenAudio:${file.sha256}`)||!observed.has(`inspectAudio:${file.sha256}`)))throw new Error('AUDIO_EDIT_LISTEN_REQUIRED: actually listen and inspect this source before choosing cuts.');
+   if(!adapters[name])throw new Error('CAPABILITY_UNAVAILABLE: connect the local audio editor.');
+   const result=await adapters[name]({file,task,worker,edit:parameters.edit});
+   if(name==='renderAudioEdit')for(const draft of [result.editedFile,result.outputFile])assets.set(draft.sha256,draft);
+   return result;
+  }
   if(name==='speakerSimilarity'){if(!task.voiceReference||parameters.referenceSha256!==task.voiceReference.content.files[0].sha256)throw new Error('VOICE_REFERENCE_UNAVAILABLE: similarity needs the genuine bound original recording; never compare synthesized speech to itself.');const reference=await get(parameters.referenceSha256);if(!adapters[name])throw new Error('CAPABILITY_UNAVAILABLE: calibrated speaker comparison tool required.');return z.object({score:z.number().min(0).max(1),method:text,calibrationNotes:text}).parse(await adapters[name]({file,reference,worker}));}
   if(name==='viewImage'&&(!file.width||file.durationSeconds))throw new Error('Expected a still image.');
   if(name==='watchVideo'&&(!file.width||!file.durationSeconds))throw new Error('Expected a measured video.');
@@ -49,9 +59,11 @@ export function crewTools(task,worker,adapters={},record=()=>{}){
   const result=await adapters[name]({file,worker,task});
   if(name==='transcribe')return z.object({transcript:text,method:text}).passthrough().parse(result);
   if(name==='viewImage')return z.object({perception:z.literal('direct-image')}).passthrough().parse(result);
-  return z.object({perception:z.literal(name==='watchVideo'?'direct-video':'direct-audio'),seconds:z.number().positive()}).passthrough().parse(result);
+  const perceived=z.object({perception:z.literal(name==='watchVideo'?'direct-video':'direct-audio'),seconds:z.number().positive()}).passthrough().parse(result);
+  if(name==='listenAudio'&&worker.role==='film-editor'&&task.step==='narration'&&task.gate==='author'&&perceived.seconds+.02<file.durationSeconds)throw new Error('AUDIO_EDIT_LISTEN_REQUIRED: complete source listening required.');
+  return perceived;
  };
- return async(name,parameters={})=>{const value=await execute(name,parameters);record({tool:name,sha256:parameters.sha256,referenceSha256:parameters.referenceSha256,seconds:value.seconds,...(value.provider?{provider:value.provider,modelVersion:value.modelVersion,requestDigest:value.requestDigest,receiptPath:value.receiptPath,samplingFps:value.samplingFps}: {})},value);return value;};
+ return async(name,parameters={})=>{const value=await execute(name,parameters);observed.add(`${name}:${parameters.sha256}`);record({tool:name,sha256:parameters.sha256,referenceSha256:parameters.referenceSha256,seconds:value.seconds,...(value.provider?{provider:value.provider,modelVersion:value.modelVersion,requestDigest:value.requestDigest,receiptPath:value.receiptPath,samplingFps:value.samplingFps}: {})},value);return value;};
 }
 export async function prepareCrewTask(p,task){
  const expected=taskFor(p);
@@ -82,8 +94,16 @@ export async function runCrewTask(p,task,host){
  const event=await host.runTask({...task,worker,allowedTools:task.allowedTools??crewRoles[worker.role].tools},{worker,callTool:crewTools(task,worker,host.tools,(r,value)=>{receipts.push(r);outputs.set(`${r.tool}:${r.sha256}`,value);})});
  try{
  const expected=task.gate==='review'?'review':task.gate==='owner-review'?'owner-review':task.gate==='produce'?'plan':'artifact';
- if(event.taskId!==task.taskId||event.actor!==task.actor||!(event.action===expected||task.gate==='produce'&&event.action==='planning-blocked'))throw new Error('CREW_PERMISSION_DENIED: worker may only submit its assigned deliverable; no human approvals, state writes or provider calls.');
+ if(event.taskId!==task.taskId||event.actor!==task.actor||!(event.action===expected||(task.gate==='produce'||task.step==='narration'&&task.gate==='author')&&event.action==='planning-blocked'))throw new Error('CREW_PERMISSION_DENIED: worker may only submit its assigned deliverable; no human approvals, state writes or provider calls.');
  assertCrewEvent(p,event);
+ if(task.step==='narration'&&task.gate==='author'&&event.action==='artifact'){
+  const rendered=[...outputs.entries()].filter(([key])=>key.startsWith('renderAudioEdit:')).map(([,value])=>value);
+  for(const edit of event.content?.audioEdits??[])if(edit.parentArtifactId===task.artifact.id){
+   if(!rendered.some(r=>digest(r)===digest(edit)))throw new Error('AUDIO_EDIT_NOT_RENDERED: submit the exact receipt from your current scoped editing tool.');
+   if(!receipts.some(r=>r.tool==='listenAudio'&&r.sha256===edit.outputFile.sha256&&r.seconds+.02>=edit.outputFile.durationSeconds))throw new Error('AUDIO_EDIT_PREVIEW_REQUIRED: listen to the full rendered draft before submitting it for independent review.');
+  }
+  if(!rendered.length)throw new Error('AUDIO_EDIT_NOT_RENDERED');
+ }
  if(task.step==='characterPrompt'&&event.review?.decision!=='inconclusive')for(const f of task.castEntry?.references??[]){if(!receipts.some(r=>r.tool==='viewImage'&&r.sha256===f.sha256))throw new Error('CHARACTER_REFERENCES_NOT_VIEWED: prompt author/reviewer must inspect every actual source photo, not its metadata.');}
  if(['review','owner-review'].includes(event.action)&&event.review?.decision!=='inconclusive'){
   const required=worker.role==='audio-reviewer'?['listenAudio',...(['audition','narration'].includes(task.step)?['measureAudio','transcribe',...(!supervised(p)?['speakerSimilarity']:[])]:[])]:worker.role==='visual-reviewer'?[['video','film'].includes(task.step)?'watchVideo':'viewImage']:[];

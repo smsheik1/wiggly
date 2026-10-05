@@ -19,6 +19,7 @@ import {Crew,crewRoles,runCrewTask,prepareCrewTask} from './runtime/crew.mjs';
 import {CodexHost,driveCrew} from './runtime/codex-host.mjs';
 import {createGeminiReviewTools,GEMINI_REVIEW_PROFILE} from './runtime/gemini-review.mjs';
 import {createCartesiaTranscriptionTool,CARTESIA_STT_PROFILE} from './runtime/cartesia-stt.mjs';
+import {createAudioEditTools,AUDIO_EDIT_PROFILE} from './runtime/audio-edit.mjs';
 import {AudioCase,audioTask,qualifyAudio,requireAudioQualification} from './evaluation/audio-qualification.mjs';
 import { VisualCase, visualTask, qualifyVisual, requireVisualQualification } from './evaluation/visual-qualification.mjs';
 const root = dirname(fileURLToPath(import.meta.url));
@@ -128,10 +129,10 @@ async function main() {
       const reviewCost=Number(option('review-cost-usd','0')),transcriptionCost=Number(option('transcription-cost-usd','0'));
       let budgetQueue=Promise.resolve();
       const beforeRequest=async({provider,requestDigest,task})=>{if(status.project.reviewMode!=='supervised')return;const amount=provider==='gemini'?reviewCost:transcriptionCost;if(!Number.isFinite(amount)||amount<=0)throw new Error('ACCOUNT_ESTIMATE_REQUIRED: set positive --review-cost-usd / --transcription-cost-usd before paid inference.');budgetQueue=budgetQueue.then(async()=>{const latest=await workflow.status('project');if(latest.pending.taskId!==task.taskId)throw new Error('STALE_TASK: inference reservation belongs to an older task.');await workflow.respond('project',{taskId:task.taskId,actor:'runtime',action:'reserve-compute',reservation:{id:provider+':'+requestDigest,provider,estimatedCostUsd:amount}});});return budgetQueue;};
-      const perceptionTools={...createGeminiReviewTools({secretsPath,receiptDirectory:join(runDir,'gemini-reviews'),maxCalls:reviewCalls,beforeRequest}),...createCartesiaTranscriptionTool({secretsPath,receiptDirectory:join(runDir,'cartesia-transcriptions'),maxCalls:transcriptionCalls,beforeRequest})};
+      const perceptionTools={...createGeminiReviewTools({secretsPath,receiptDirectory:join(runDir,'gemini-reviews'),maxCalls:reviewCalls,beforeRequest}),...createCartesiaTranscriptionTool({secretsPath,receiptDirectory:join(runDir,'cartesia-transcriptions'),maxCalls:transcriptionCalls,beforeRequest}),...createAudioEditTools({runDir})};
       // A four-file review includes twelve tool calls and a structured report.
       // Keep a bounded ten-minute window; timeout still stops without a retry.
-      const host=new CodexHost({cwd:join(runDir,'host-workspace'),timeoutMs:600000,perceptionTools,perceptionProfile:{media:GEMINI_REVIEW_PROFILE,transcription:CARTESIA_STT_PROFILE},onProgress:({worker,item})=>process.stderr.write(`${worker}: ${item}\n`)});
+      const host=new CodexHost({cwd:join(runDir,'host-workspace'),timeoutMs:600000,perceptionTools,perceptionProfile:{media:GEMINI_REVIEW_PROFILE,transcription:CARTESIA_STT_PROFILE,audioEditing:AUDIO_EDIT_PROFILE},onProgress:({worker,item})=>process.stderr.write(`${worker}: ${item}\n`)});
       try{
         if(['crew-start','crew-refresh'].includes(command)){
           const message=option('message'),model=option('model');

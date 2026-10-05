@@ -169,3 +169,14 @@ Canonical policy: [living spec](memoir-system-living-spec.md#2026-10-04--grounde
 - [x] Revalidate Ava's exact saved completed report through the official event boundary. No duplicate listening/STT/synthesis was needed. See [review release evidence](proofs/memoir-review-tool-host-release.json).
 
 Evidence: [audio planning release](proofs/memoir-audio-planning-release.json). The price is a conservative reservation, not a verified invoice.
+
+
+### Local narration repair — 2026-10-05 update
+
+- [x] Give Eli scoped pause inspection and fractional-range editing, enforce full source/draft listening and independent review, preserve originals/siblings/script/voice locks.
+- [x] Connect a real native editor with the actual edit schema and narrowly adopt instructions in the saved rehearsal, with no provider calls.
+- [ ] Attempt actual Beat 2 repair with bounded listening/transcription inference budget, obtain Ava review and human narration approval. Editing is local; listening/STT have separate budgets.
+- [ ] If editing proves infeasible, implement targeted single-beat synthesis. Current Cartesia adapter still generates four stems.
+- [ ] Improve substantive script-change invalidation granularity; word-preserving editing now retains locks, while actual text changes still use the broader rewind.
+
+The earlier instruction to shorten the locked script is conditional on editing proving infeasible. No script rewind has been applied.

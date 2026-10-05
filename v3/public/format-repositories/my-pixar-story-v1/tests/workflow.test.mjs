@@ -112,8 +112,9 @@ test('script revision preserves the sample and clone and resumes at audition aft
   p = approved(reviewed(authored(p))); assert.equal(p.step, 'audition'); assert.equal(current(p, 'clone').id, cloneId);
 });
 
-test('an audio timing repair requiring different words returns to the script decision instead of regeneration', () => {
+test('audio timing rejection tries a local repair before script changes or regeneration', () => {
   let p = audioProject(); p.step = 'narration'; p.gate = 'review';
-  p = reviewed(p, 'rejected', { repairTarget: 'script' }); assert.equal(p.gate, 'escalate');
+  delete current(p).approvedBy;const scriptId=current(p,'script').id;
+  p = reviewed(p, 'rejected', { repairTarget: 'script' }); assert.equal(p.gate, 'author');assert.equal(taskFor(p).formatRole,'film-editor');assert.equal(current(p,'script').id,scriptId);
   assert.throws(() => send(p, 'plan', { plan: { provider: 'cartesia', operation: 'narration', estimatedCostUsd: 0.1, parameters: {} } }), /not allowed/);
 });

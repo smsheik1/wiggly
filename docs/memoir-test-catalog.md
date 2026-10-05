@@ -737,3 +737,14 @@ This document is a snapshot. If tests are added, removed or renamed, reconcile i
 - [Remaining work](/Users/shaz/.codex/worktrees/2f6f/wiggly/docs/memoir-system-remaining-work.md).
 
 To run the suite locally, enter the format kit directory and run `npm test`. The grounded-writing source suite was rerun: 224 passed. The independently extracted package and limits of that verification are recorded in the grounded-writing release proof. The unfinished appendix is not included in that result.
+
+
+## 2026-10-05 — Scoped narration-editing checks
+
+Three named cases in `tests/audio-edit.test.mjs` protect these failures:
+
+1. Real FFmpeg synthetic 17.2-second source becomes a measured 15-second draft through a known pause. Originals, receipts and private file permissions are checked; unsafe cuts, invalid ranges, speed parameters, wrong roles/locks, excess drafts and receipt tampering fail. This proves mechanics, not natural speech quality.
+2. Rejected narration routes to the editor, then independent review. Sibling files and script/voice locks survive; forged bindings and approval bypass fail. Narrow adoption retains older pinned models and unrelated documents.
+3. Broker requires full source listening/inspection and full draft listening, actual rendered receipts, scoped hashes and read-only reviewers. Derived files cannot become arbitrary edit sources.
+
+Existing host/workflow checks cover the edit JSON schema and editing before rewrite or another paid batch. Full source suite passed 231 cases before final narrow-adoption/private-permission adjustments; those changes receive focused/package checks recorded in the release proof. A real native probe reached the listen-required guard without editing media.

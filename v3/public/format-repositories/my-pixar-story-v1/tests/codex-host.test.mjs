@@ -46,6 +46,7 @@ test('Codex bridge uses the explicitly selected model, real role threads and sco
   const quotes=payload.contentSchema.properties.beats.items.properties.directQuotes;assert.equal(quotes.type,'array');assert.ok(quotes.items.properties.sourceAnswer.enum.includes('scene1Childhood'));assert.ok(quotes.items.properties.sourceField);
   assert.equal(payload.task.studioConfig.writingPolicy,'grounded-v1');assert.match(payload.task.skill.content,/Direct quotations must keep the selected source words exactly/);
   const start=mock.requests.find(r=>r.method==='thread/start');assert.equal(start.params.allowProviderModelFallback,false);assert.equal(start.params.sandbox,'read-only');assert.equal(start.params.dynamicTools[0].name,'wiggly_tool');
+  const editSchema=start.params.dynamicTools[0].inputSchema.properties.edit.anyOf[0];assert.equal(editSchema.properties.keepRanges.items.properties.startSeconds.type,'number');assert.equal(editSchema.additionalProperties,false);
   const flags=mock.launches[0].args;
   assert.equal(flags[flags.indexOf('code_mode_host')-1],'--enable');
   for(const feature of ['shell_tool','unified_exec','apps','plugins','multi_agent','browser_use','computer_use','view_image','image_generation','in_app_browser'])assert.equal(flags[flags.indexOf(feature)-1],'--disable',feature);

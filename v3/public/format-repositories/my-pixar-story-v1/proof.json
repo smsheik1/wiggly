@@ -570,5 +570,23 @@
     "savedProductionProjectsChanged": false,
     "paidProviderCalls": 0,
     "actualNewWorkerResponseProven": false
+  },
+  "localNarrationEditing": {
+    "date": "2026-10-05",
+    "scope": "Validated FFmpeg cuts and editor-first repair, narrow project adoption, actual native schema probe",
+    "sourceSuitePassed": 231,
+    "pinnedUpgradeFocusedPassed": 14,
+    "officialPackageCasesPassed": 112,
+    "newNamedGuardrailCases": 3,
+    "nativeConnectionProbe": "Fresh editor received edit JSON; AUDIO_EDIT_LISTEN_REQUIRED prevented mutation",
+    "liveState": "sequence 54 before final capability-only refresh; narration/author, debug paused",
+    "preserved": "All original artifacts, approvals, jobs and budget",
+    "newProviderCalls": 0,
+    "realNarrationEdited": false,
+    "realNarrationApproved": false,
+    "realFilmProof": false,
+    "privacy": "Private edit directories and raw WAVs; independently observed permission gap repaired",
+    "independentAudit": "See docs/proofs/memoir-scoped-audio-editing-package-audit.md; synthetic proof does not establish real audio quality",
+    "simplificationReview": "Lean already. Ship; existing FFmpeg, broker and graph; no new dependency or renderer."
   }
 }

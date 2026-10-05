@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-05",
+  "scope": "Scoped local narration editor wired into LangGraph and actual native worker",
+  "validation": {
+    "fullSourceSuitePassedBeforeFinalNarrowPrivacyChanges": 231,
+    "finalNarrowUpgradeFocusedPassed": 14,
+    "finalPrivateEditingCasesPassed": 3,
+    "finalOfficialPackagePassed": 112
+  },
+  "archive": {
+    "path": "/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/my-pixar-story-v2.0.0.tgz",
+    "sha256": "f1b7b76f3d36357f42c0ec51567a109de21c965845455684f039f5fda9118fed"
+  },
+  "nativeConnection": {
+    "worker": "Eli (Audio Editor)",
+    "model": "gpt-5.6-sol",
+    "newThreadRequired": "Stored dynamicTools schema cannot change through thread/resume; original editor unused in project history",
+    "probe": "AUDIO_EDIT_LISTEN_REQUIRED: actually listen and inspect this source before choosing cuts.",
+    "probeMediaMutations": 0,
+    "finalCapabilityRefresh": "Same real editor and reviewers; current source profile explicitly rebound"
+  },
+  "liveProject": {
+    "sequence": 55,
+    "stage": "narration",
+    "gate": "author",
+    "debugPaused": true,
+    "allOriginalArtifactsApprovalsJobsBudgetPreserved": true,
+    "realNarrationEdited": false,
+    "narrationApproved": false,
+    "newProviderCalls": 0
+  },
+  "independentAudit": {
+    "report": "memoir-scoped-audio-editing-package-audit.md",
+    "finalArchiveSha256": "f1b7b76f3d36357f42c0ec51567a109de21c965845455684f039f5fda9118fed",
+    "checkAndSmoke": "pass",
+    "audioEditingCasesPassed": 3,
+    "independentPrivacyFixture": "directories 0700; raw edited/window WAVs and plan/result files 0600",
+    "dependencyReuse": "Exact lockfile match; not a final clean-install proof",
+    "scope": "Final changed packaged files; original full archive inspection and initial check/smoke completed separately",
+    "paidProviders": 0,
+    "credentialsRead": false,
+    "realMediaUsed": false
+  },
+  "ponytailReview": "Lean already. Ship; existing FFmpeg and graph/broker, no new cloud editor/framework/dependency/render path",
+  "limitations": [
+    "Synthetic silence fixture proves editing mechanics, not natural real speech",
+    "Actual Beat 2 repair requires scoped listening and independent review; no such inference budget silently added",
+    "Targeted single-beat synthesis not implemented; current narration provider generates four stems",
+    "Substantive locked script changes still need impact-confirmed broader rewind",
+    "No end-to-end film proof or video generation"
+  ]
+}

@@ -14,6 +14,7 @@ import { requireVisualQualification } from '../evaluation/visual-qualification.m
 import { shotFor, shotReferences, referenceBindings, planningReferences, validateShots, validateLocationRegistry, validateKeyframePrompt } from './shots.mjs';
 import { requestDescriptor,planningAccountGuide,generationEstimate } from './providers.mjs';
 import {scriptQuoteChecks,transcriptDiff} from './evaluators.mjs';
+import {AudioEditReceipt,AUDIO_EDIT_PROFILE,validateAudioEdit} from './audio-edit.mjs';
 import { VERSION, Inputs, Project, Content, Review, Event, Plans, IntakeConfirmation, VoiceChoiceInput, VoiceLookup, criteria, digest } from './contracts.mjs';
 
 import { keyFor, current, locked, audioLocked, assertAllowed, backgroundSteps, imageSteps, authorSteps, supervised, reviewPassed, refinedWorkflow, miniProduction, voiceBasis } from './gates.mjs';
@@ -30,6 +31,7 @@ const location = p => current(p, 'backgrounds')?.content.locations.find(l => l.i
 const briefKey = p => `${p.step === 'backgroundAnglePrompt' ? 'backgroundAngleBrief' : 'backgroundBrief'}:${p.locationId}${p.step === 'backgroundAnglePrompt' ? ':' + p.angleId : ''}`;
 const promptKey = p => `${p.step === 'backgroundAngle' ? 'backgroundAnglePrompt' : 'backgroundPrompt'}:${p.locationId}${p.step === 'backgroundAngle' ? ':' + p.angleId : ''}`;
 const isPrompt = p => ['backgroundPrompt', 'backgroundAnglePrompt'].includes(p.step);
+const audioEditingEnabled=p=>studioFor(p)?.config.agents['film-editor'].tools.includes('renderAudioEdit');
 export function initialProject(id, inputs, options = {}) {
   const workflowRevision=options.workflowRevision ?? (options.reviewMode==='qualified'?2:4),studio=options.studio??loadStudio();
   return Project.parse({ formatVersion: VERSION, schemaVersion: 2, studio, workflowRevision, productionProfile:options.productionProfile??studio.config.generation.video.profile, id, reviewMode:options.reviewMode ?? 'supervised', budget:{maxCostUsd:studio.config.limits.initialSpendCeilingUsd,reservations:[]}, inputs: Inputs.parse(inputs), step: workflowRevision>=3?'answers':'script', gate: 'author', characterId: null,
@@ -115,6 +117,7 @@ function next(p) {
 function addArtifact(p, content, author) {
   if (['script','characterPrompt'].includes(p.step) || studioSteps.includes(p.step) || backgroundSteps.includes(p.step) || ['backgrounds', 'shotIntentions', 'shots', 'keyframePrompt', 'keyframe'].includes(p.step)) assertAllowed(p, p.step);
   const key = keyFor(p);
+  const previous=current(p);
   for (const a of p.artifacts.filter(a => a.key === key && a.valid)) invalidate(p, a.id);
   const version = p.artifacts.filter(a => a.key === key).length + 1;
   const parsed = Content[p.step].parse(content);
@@ -138,9 +141,27 @@ function addArtifact(p, content, author) {
   if (p.step === 'voiceSample' && (!parsed.files[0].durationSeconds || parsed.files[0].durationSeconds < 10)) throw new Error('Voice sample must contain at least 10 seconds of measured audio.');
   if (p.step === 'audition' && (parsed.voiceId !== current(p, 'clone').content.voiceId || parsed.transcript !== current(p, 'script').content.beats[0].narration)) throw new Error('Audition must use the current clone and locked narration.');
   if (p.step === 'narration') {
+    if(p.gate==='author'){
+      if(!audioEditingEnabled(p)||!previous||previous.approvedBy||previous.review?.decision!=='rejected'||author!==assignedWorker(p)?.workerId&&p.crew)throw new Error('AUDIO_EDIT_SCOPE_DENIED');
+      if(p.artifacts.filter(a=>a.kind==='narration'&&a.content.audioEdits).length>=limitsFor(p).generationAttempts)throw new Error('AUDIO_EDIT_ATTEMPT_LIMIT');
+      if(!parsed.audioEdits||parsed.voiceId!==previous.content.voiceId||parsed.model!==previous.content.model||digest(parsed.transcripts)!==digest(previous.content.transcripts))throw new Error('AUDIO_EDIT_SOURCE_BINDING_REQUIRED: preserve clone, generation model and locked text.');
+      const edits=parsed.audioEdits.map(e=>AudioEditReceipt.parse(e));
+      if(new Set(edits.map(e=>e.beat)).size!==edits.length)throw new Error('AUDIO_EDIT_SOURCE_BINDING_REQUIRED');
+      let changes=0;
+      for(let i=0;i<4;i++){
+        const edit=edits.find(e=>e.beat===i+1),changed=parsed.files[i].sha256!==previous.content.files[i].sha256;
+        if(!changed){if(digest(parsed.files[i])!==digest(previous.content.files[i])||digest(parsed.sourceFiles?.[i])!==digest(previous.content.sourceFiles?.[i])||parsed.tailSilenceSeconds?.[i]!==previous.content.tailSilenceSeconds?.[i]||edit&&digest(edit)!==digest(previous.content.audioEdits?.find(e=>e.beat===i+1)))throw new Error('AUDIO_EDIT_UNCHANGED_BEAT_MISMATCH');continue;}
+        changes++;
+        if(!edit||edit.parentArtifactId!==previous.id||edit.parentArtifactDigest!==previous.digest||digest(edit.sourceFile)!==digest(previous.content.files[i])||digest(edit.outputFile)!==digest(parsed.files[i])||digest(edit.editedFile)!==digest(parsed.sourceFiles?.[i])||edit.tailSilenceSeconds!==parsed.tailSilenceSeconds?.[i])throw new Error('AUDIO_EDIT_SOURCE_BINDING_REQUIRED');
+        const {retainedSeconds}=validateAudioEdit(edit.sourceFile,edit.plan);
+        const expected=digest({profile:AUDIO_EDIT_PROFILE,taskId:taskFor(p).taskId,workerId:author,artifactId:previous.id,artifactDigest:previous.digest,sourceSha256:edit.sourceFile.sha256,plan:edit.plan});
+        if(edit.editDigest!==expected||Math.abs(edit.editedFile.durationSeconds-retainedSeconds)>.001||edit.outputFile.durationSeconds!==15)throw new Error('AUDIO_EDIT_RENDER_MISMATCH');
+      }
+      if(!changes)throw new Error('AUDIO_EDIT_NO_CHANGE');
+    }else if(parsed.audioEdits)throw new Error('AUDIO_EDIT_SCOPE_DENIED: provider receipts cannot impersonate an editor.');
     if(refinedWorkflow(p)){
       if(!parsed.sourceFiles||!parsed.tailSilenceSeconds)throw new Error('NARRATION_WINDOW_PROVENANCE_REQUIRED: bind unmodified source stems and explicit silence-only holds.');
-      for(const [i,f] of parsed.files.entries()){const source=parsed.sourceFiles[i],hold=parsed.tailSilenceSeconds[i];if(!source.durationSeconds||source.width||f.width||Math.abs(hold-Math.max(0,15-source.durationSeconds))>1e-6||(source.durationSeconds<=15&&f.durationSeconds!==15)||(source.durationSeconds>=15&&f.sha256!==source.sha256))throw new Error('NARRATION_WINDOW_MISMATCH: pad short speech only, leave overlong speech unchanged for script repair.');}
+      for(const [i,f] of parsed.files.entries()){const source=parsed.sourceFiles[i],hold=parsed.tailSilenceSeconds[i];if(!source.durationSeconds||source.width||f.width||Math.abs(hold-Math.max(0,15-source.durationSeconds))>1e-6||(source.durationSeconds<=15&&f.durationSeconds!==15)||(source.durationSeconds>=15&&f.sha256!==source.sha256))throw new Error('NARRATION_WINDOW_MISMATCH: pad shorter sources only; longer sources require evidenced local editing or explicit script repair.');}
     }
     if (parsed.voiceId !== current(p, 'clone').content.voiceId) throw new Error('Narration must use the current clone.');
     if (parsed.files.some(f => !f.durationSeconds)) throw new Error('Narration needs measured durations.');
@@ -233,7 +254,7 @@ export function taskFor(p) {
     planningGuide:p.gate==='produce'&&p.step!=='film'?planningAccountGuide(p):null,
     generationEstimate:p.gate==='produce'?generationEstimate(p):null,
     generationTexts:['audition','narration'].includes(p.step)?{scriptId:current(p,'script').id,scriptDigest:current(p,'script').digest,beats:current(p,'script').content.beats.slice(0,p.step==='audition'?1:4).map(b=>({beat:b.beat,text:b.narration}))}:null,
-    voiceReference:roleFor(p)==='audio-reviewer'?current(p,'voiceSample')??null:null,voiceChoice:p.voiceChoice??null,voiceBasis:voiceBasis(p),
+    voiceReference:['audio-reviewer','film-editor'].includes(roleFor(p))?current(p,'voiceSample')??null:null,voiceChoice:p.voiceChoice??null,voiceBasis:voiceBasis(p),
     role: p.gate === 'review' ? 'independent-reviewer' : p.gate==='author'&&p.step==='videoPlan'?'motion-director':p.gate==='author'&&p.step==='videoPrompt'?'video-prompt-engineer':p.gate==='author'&&p.step==='soundPlan'?'sound-designer':p.gate==='author'&&p.step==='editPlan'?'film-editor': p.gate === 'author' && ['shotIntentions','shots'].includes(p.step) ? 'shot-planner' : p.gate === 'author' && p.step === 'keyframePrompt' ? 'composition-writer' : p.gate === 'owner-review' || ['backgrounds', 'backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'background-product-owner' : isPrompt(p) && p.gate === 'author' ? 'pixar-prompter' : 'orchestrator',
     immediateScenes: sceneLocation?.scenes.filter(s => shot ? s.id === shot.sceneId : !p.angleId || sceneLocation.angles.find(a => a.id === p.angleId)?.sceneIds.includes(s.id)) ?? [],
     lockedAnswers:current(p,'answers')??null,
@@ -340,6 +361,14 @@ export function applyEvent(project, raw) {
     const path=p.studio.config.agents['generation-planner'].skill;
     const documents={...p.studio.documents,[path]:loadStudio().documents[path]};
     p.studio={...p.studio,documents,sha256:digest({config:p.studio.config,documents})};
+  }else if(e.action==='start-audio-edit'){
+    requiredActor(e,'human');
+    const a=current(p);
+    if(!e.message||!p.studio||p.step!=='narration'||a?.review?.decision!=='rejected'||a.approvedBy||!locked(p,'script')||!locked(p,'audition')||p.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status))||!['author','escalate'].includes(p.gate)||p.reviewDisagreements>=limitsFor(p).reviewDisagreements)throw new Error('AUDIO_EDIT_START_DENIED: explicitly enable editing only for rejected, unlocked narration with reconciled jobs and remaining attempts.');
+    const next=loadStudio(),config=structuredClone(p.studio.config),documents={...p.studio.documents};
+    config.agents['film-editor'].tools=[...new Set([...config.agents['film-editor'].tools,'listenAudio','transcribe','inspectAudio','renderAudioEdit'])];
+    for(const path of ['crew/eli/SKILL.md','crew/ava/SKILL.md','evaluation/rubrics/audio.md'])documents[path]=next.documents[path];
+    p.studio={config,documents,sha256:digest({config,documents})};p.gate='author';if(p.debug?.enabled)p.debug.paused=true;
   }else if(e.action==='refresh-audio-instructions'){
     requiredActor(e,'human');if(!e.message||!p.studio||!['voiceSample','clone','audition'].includes(p.step)||p.jobs.length||p.artifacts.some(a=>a.approvedBy&&['audition','narration'].includes(a.kind)))throw new Error('AUDIO_REFRESH_LOCKED: refresh voice-review instructions explicitly before provider work or audio approval.');
     const next=loadStudio(),allowed=['crew/ava/SKILL.md','evaluation/rubrics/audio.md'];
@@ -455,7 +484,8 @@ export function applyEvent(project, raw) {
         }
       } else p.reviewDisagreements++;
       p.feedback.push({ key: a.key, message: JSON.stringify(r.checks.filter(c => c.status !== 'pass')) });
-      p.gate = r.decision === 'inconclusive' || r.repairTarget === 'script' || filmRepair?.kind==='narration' || p.reviewDisagreements >= limitsFor(p).reviewDisagreements ? 'escalate' : (authorSteps.includes(p.step)||p.step==='music'&&current(p,'soundPlan').content.music.mode==='import'||p.step==='effect'&&effectFor(p).mode==='import') ? 'author' : 'produce'; }
+      const audioRepair=p.step==='narration'&&!a.approvedBy&&r.decision==='rejected'&&audioEditingEnabled(p)&&p.reviewDisagreements<limitsFor(p).reviewDisagreements;
+      p.gate = audioRepair?'author':r.decision === 'inconclusive' || r.repairTarget === 'script' || filmRepair?.kind==='narration' || p.reviewDisagreements >= limitsFor(p).reviewDisagreements ? 'escalate' : (authorSteps.includes(p.step)||p.step==='music'&&current(p,'soundPlan').content.music.mode==='import'||p.step==='effect'&&effectFor(p).mode==='import') ? 'author' : 'produce'; }
     }
     if(filmRepair?.kind==='narration')p.feedback.push({key:a.key,message:'Source narration repair reopens its downstream visuals and film in this v1 dependency model. Run impact on the narration artifact and obtain explicit human direction before rebuilding.'});
     if(p.step==='film'&&r.decision==='rejected'&&p.gate==='produce'){reopen(p,revisionRoot(p,filmRepair),JSON.stringify(r.checks.filter(c=>c.status!=='pass')));}
@@ -502,8 +532,10 @@ export function applyEvent(project, raw) {
     if (p.gate !== 'escalate' || !e.message) throw new Error('Resolution needs explicit user direction at an escalation.');
     const planningBlocked=p.history.findLast(h=>['planning-blocked','review','provider-error'].includes(h.action));
     const resumePlanning=planningBlocked?.action==='planning-blocked'&&planningBlocked.step===p.step;
-    p.feedback.push({ key: keyFor(p), message: e.message,...(p.step==='answers'?{intent:'detail'}:{}) }); if(!resumePlanning)p.reviewDisagreements = 0;
-    p.gate = isPrompt(p) && current(p)?.ownerReview?.decision === 'inconclusive' ? 'owner-review' : current(p)?.review?.decision === 'inconclusive' ? 'review' : (authorSteps.includes(p.step)||p.step==='music'&&current(p,'soundPlan').content.music.mode==='import'||p.step==='effect'&&effectFor(p).mode==='import') ? 'author' : 'produce';
+    const resumeEditing=p.step==='narration'&&audioEditingEnabled(p)&&current(p)?.review?.decision==='rejected';
+    if(resumeEditing&&p.reviewDisagreements>=limitsFor(p).reviewDisagreements)throw new Error('AUDIO_EDIT_ATTEMPT_LIMIT: exhausted review/repair loop; inspect the evidence before a scoped script change.');
+    p.feedback.push({ key: keyFor(p), message: e.message,...(p.step==='answers'?{intent:'detail'}:{}) }); if(!resumePlanning&&!resumeEditing)p.reviewDisagreements = 0;
+    p.gate = resumeEditing?'author':isPrompt(p) && current(p)?.ownerReview?.decision === 'inconclusive' ? 'owner-review' : current(p)?.review?.decision === 'inconclusive' ? 'review' : (authorSteps.includes(p.step)||p.step==='music'&&current(p,'soundPlan').content.music.mode==='import'||p.step==='effect'&&effectFor(p).mode==='import') ? 'author' : 'produce';
     if(p.step==='film'&&p.gate==='produce'){const target=current(p)?.review?.repairArtifactId;const a=target?p.artifacts.find(a=>a.id===target&&a.valid):current(p,'editPlan');reopen(p,revisionRoot(p,a),e.message);}
     if ((['keyframe','video'].includes(p.step)||refinedWorkflow(p)&&p.step==='candidates'||miniProduction(p)&&imageSteps.includes(p.step)) && p.gate === 'produce'&&!resumePlanning) repairVisual(p, e.message);
   } else if (e.action === 'reconcile') {
@@ -518,7 +550,8 @@ export function applyEvent(project, raw) {
     if (!e.allowance || !e.message) throw new Error('Allowance requires explicit user limits and original message.');
     p.allowances.push({ ...e.allowance, id: `allowance-${p.allowances.length + 1}`, message: e.message, at: new Date().toISOString() });
   } else if(e.action==='planning-blocked'){
-    requiredActor(e,'agent');if(p.gate!=='produce'||p.step==='film'||!e.message||e.plan)throw new Error('PLANNING_BLOCKER_SCOPE: only the assigned generation planner may report an evidenced missing prerequisite; no plan or media execution.');
+    requiredActor(e,'agent');if(!(p.gate==='produce'&&p.step!=='film'||p.step==='narration'&&p.gate==='author')||!e.message||e.plan)throw new Error('PLANNING_BLOCKER_SCOPE: only the assigned planner/editor may report an evidenced blocker; no plan or approval.');
+    if(e.blocker?.kind==='editing-infeasible'&&!(p.step==='narration'&&p.gate==='author'))throw new Error('AUDIO_EDIT_SCOPE_DENIED');
     if(!e.blocker)throw new Error('PLANNING_HELP_REQUIRED: report the problem, solution and baby steps with the diagnostic.');
     if(e.blocker.kind==='account-readiness'){const {kind,...help}=e.blocker;if(digest(help)!==digest(planningAccountGuide(p)))throw new Error('PLANNING_HELP_BINDING: use canonical account guidance; never invent payment requirements, URLs or account failures.');}
     p.gate='escalate';p.feedback.push({key:keyFor(p),message:e.message});
