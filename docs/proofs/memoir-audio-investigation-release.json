@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-05",
+  "rootCause": {
+    "actualTranscriptionAttempt": true,
+    "oldAdapterFailure": "STT_SCOPE_DENIED: transcription requires a current Ava task.",
+    "unsupportedClassification": "editing-infeasible accepted despite failed timing tool",
+    "operatorCorrection": "Earlier claim that Eli skipped transcription was incorrect; saved native tool log proves attempt and denial"
+  },
+  "fixes": [
+    "Actual Cartesia STT access for rejected-narration editor only",
+    "Essential listening/inspection/transcription errors stop dispatch as tool errors",
+    "Pronunciation cuts require actual nonempty word timing",
+    "Infeasibility needs source-bound successful listening, full pause inspection and timed transcription captured by broker and verified at graph boundary",
+    "Investigation evidence persists in history; human repair notes reach canonical feedback without invalidating locks"
+  ],
+  "checks": {
+    "fullSourcePassedBeforeFinalEmptyTimingTightening": 232,
+    "finalFocusedPassed": 45,
+    "finalOfficialPackagingPassed": 113,
+    "newNamedRegressionCases": 1
+  },
+  "archive": {
+    "path": "/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/my-pixar-story-v2.0.0.tgz",
+    "sha256": "294bd6eedfc78ad263c512b6ae26a67a92829122e8fd79a56f2a187d82749501"
+  },
+  "independentAudit": {
+    "report": "memoir-audio-investigation-package-audit.md",
+    "checkAndSmoke": "pass",
+    "targetedPassed": 11,
+    "independentUntimedProbe": "STT_WORD_TIMING_UNAVAILABLE, stopDispatch=true, before verdict; graph rejects untimed forged evidence",
+    "dependencyReuse": "Exact lockfile comparison; not clean-install proof",
+    "providerCalls": 0,
+    "productionCredentialsRead": false,
+    "realMediaUsed": false
+  },
+  "actualRetry": {
+    "worker": "Eli (Audio Editor)",
+    "model": "gpt-5.6-sol",
+    "sourceTimedTranscriptionSucceeded": true,
+    "newTranscriptionRequests": 3,
+    "newListeningRequests": 2,
+    "reusedSourceListeningReceipt": true,
+    "localDrafts": 2,
+    "eachDraftOutputSeconds": 15,
+    "generationCalls": 0,
+    "newReservedEstimateUsd": 0.11,
+    "earlierAttemptReservedEstimateUsd": 0.04,
+    "combinedRepairAllowanceUsd": 0.2,
+    "invoiceVerified": false,
+    "originalArtifactsApprovalsJobsPreserved": true,
+    "currentNarrationReplaced": false,
+    "narrationApproved": false,
+    "scriptVoiceApprovalsReopened": false,
+    "sequence": 60,
+    "stage": "narration/author",
+    "debugPaused": true,
+    "distinctBlocker": "Second draft measured 15.00 seconds; Gemini returned coverageEndSeconds15.23, rejected by existing validation",
+    "nativeDispatch": "started receipt preserved; outcome must be reconciled before replay or capability refresh",
+    "remainingWorkerCapabilityRefreshRequiredAfterReconciliation": true
+  },
+  "ponytailReview": "Lean already. Ship; reused adapters/broker/graph; no new dependency, renderer, service or parallel state store",
+  "limitations": [
+    "Nonempty approximate word timing is a prerequisite, not proof of a clean splice",
+    "No new independent Ava review or human narration approval",
+    "Listening-report validation blocker remains unresolved; bounds not loosened for this draft",
+    "Targeted replacement synthesis remains unimplemented",
+    "No end-to-end film proof or video generation"
+  ]
+}

@@ -180,3 +180,12 @@ Evidence: [audio planning release](proofs/memoir-audio-planning-release.json). T
 - [ ] Improve substantive script-change invalidation granularity; word-preserving editing now retains locks, while actual text changes still use the broader rewind.
 
 The earlier instruction to shorten the locked script is conditional on editing proving infeasible. No script rewind has been applied.
+
+
+### Audio investigation gate — 2026-10-05
+
+- [x] Fix actual editor Cartesia transcription access, not only the advertised tool list.
+- [x] Reject unsupported infeasibility: require captured successful listening, pause inspection and nonempty word timing. Essential tool failures remain tool errors. Preserve evidence and human repair wording.
+- [x] Real bounded retry proves editor STT and two immutable 15-second draft renders, without proving a reviewed repair.
+- [ ] Resolve the new coverage mismatch: measured second draft 15.00 seconds; listening report 15.23. Preserve response and unfinished native dispatch; reconcile before any retry or worker refresh. Do not loosen bounds merely to accept the draft.
+- [ ] Obtain independent Ava review and human narration approval after recovery. Existing inference budget remains authoritative; no new ceiling is assumed.

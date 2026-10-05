@@ -8,6 +8,7 @@ import {assertAllowed,keyFor,current} from './gates.mjs';
 import {verifyFiles,measureAudio,probe} from './media.mjs';
 import {supervised,reviewPassed} from './gates.mjs';
 import {artifactEvidence} from './evaluators.mjs';
+import {validateEditingInvestigation} from './audio-edit.mjs';
 // These are format capabilities, not arbitrary filesystem/network/shell access.
 export const crewRoles=loadStudio().config.agents;
 export const Crew=z.object({workers:z.array(z.object({workerId:text,name:text,role:z.enum(Object.keys(crewRoles)),modelVersion:text,capabilityVersion:text,execution:z.literal('host')})).min(1)}).strict().superRefine((crew,ctx)=>{
@@ -46,6 +47,7 @@ export function crewTools(task,worker,adapters={},record=()=>{}){
   if(['inspectAudio','renderAudioEdit'].includes(name)){
    if(task.step!=='narration'||task.gate!=='author'||worker.role!=='film-editor'||!task.artifact?.content.files.some(f=>f.sha256===file.sha256))throw new Error('AUDIO_EDIT_SCOPE_DENIED');
    if(name==='renderAudioEdit'&&(!observed.has(`listenAudio:${file.sha256}`)||!observed.has(`inspectAudio:${file.sha256}`)))throw new Error('AUDIO_EDIT_LISTEN_REQUIRED: actually listen and inspect this source before choosing cuts.');
+   if(name==='renderAudioEdit'&&parameters.edit?.kind==='pronunciation-repair'&&!observed.has(`wordTiming:${file.sha256}`))throw new Error('AUDIO_EDIT_WORD_TIMING_REQUIRED: inspect actual word-timed transcription before cutting speech.');
    if(!adapters[name])throw new Error('CAPABILITY_UNAVAILABLE: connect the local audio editor.');
    const result=await adapters[name]({file,task,worker,edit:parameters.edit});
    if(name==='renderAudioEdit')for(const draft of [result.editedFile,result.outputFile])assets.set(draft.sha256,draft);
@@ -57,13 +59,13 @@ export function crewTools(task,worker,adapters={},record=()=>{}){
   if(['listenAudio','transcribe'].includes(name)&&(!file.durationSeconds||(file.width&&!(await probe(file.path)).hasAudio)))throw new Error('Expected an audible file.');
   if(!adapters[name])throw new Error(`CAPABILITY_UNAVAILABLE: host must connect actual ${name}; file access/metadata are insufficient.`);
   const result=await adapters[name]({file,worker,task});
-  if(name==='transcribe')return z.object({transcript:text,method:text}).passthrough().parse(result);
+  if(name==='transcribe'){const transcript=z.object({transcript:text,method:text,words:z.array(z.object({word:text,start:z.number().nonnegative(),end:z.number().nonnegative()})).optional()}).passthrough().parse(result);if(transcript.words?.some(w=>w.end<w.start||w.end>file.durationSeconds+.1))throw new Error('STT_RESPONSE_MISMATCH: word timing must describe the current audio.');if(worker.role==='film-editor'&&task.step==='narration'&&task.gate==='author'&&!transcript.words?.length)throw new Error('STT_WORD_TIMING_UNAVAILABLE: editor transcription returned no word times. Preserve its receipt and repair timing output; this is a tool limitation, not proof speech cannot be edited.');return transcript;}
   if(name==='viewImage')return z.object({perception:z.literal('direct-image')}).passthrough().parse(result);
   const perceived=z.object({perception:z.literal(name==='watchVideo'?'direct-video':'direct-audio'),seconds:z.number().positive()}).passthrough().parse(result);
   if(name==='listenAudio'&&worker.role==='film-editor'&&task.step==='narration'&&task.gate==='author'&&perceived.seconds+.02<file.durationSeconds)throw new Error('AUDIO_EDIT_LISTEN_REQUIRED: complete source listening required.');
   return perceived;
  };
- return async(name,parameters={})=>{const value=await execute(name,parameters);observed.add(`${name}:${parameters.sha256}`);record({tool:name,sha256:parameters.sha256,referenceSha256:parameters.referenceSha256,seconds:value.seconds,...(value.provider?{provider:value.provider,modelVersion:value.modelVersion,requestDigest:value.requestDigest,receiptPath:value.receiptPath,samplingFps:value.samplingFps}: {})},value);return value;};
+ return async(name,parameters={})=>{try{const value=await execute(name,parameters);observed.add(`${name}:${parameters.sha256}`);if(name==='transcribe'&&value.words?.length)observed.add(`wordTiming:${parameters.sha256}`);record({tool:name,sha256:parameters.sha256,referenceSha256:parameters.referenceSha256,seconds:value.seconds,...(value.provider?{provider:value.provider,modelVersion:value.modelVersion,requestDigest:value.requestDigest,receiptPath:value.receiptPath,samplingFps:value.samplingFps}: {})},value);return value;}catch(error){if(task.step==='narration'&&task.gate==='author'&&worker.role==='film-editor'&&['listenAudio','inspectAudio','transcribe'].includes(name))error.stopDispatch=true;throw error;}};
 }
 export async function prepareCrewTask(p,task){
  const expected=taskFor(p);
@@ -96,6 +98,12 @@ export async function runCrewTask(p,task,host){
  const expected=task.gate==='review'?'review':task.gate==='owner-review'?'owner-review':task.gate==='produce'?'plan':'artifact';
  if(event.taskId!==task.taskId||event.actor!==task.actor||!(event.action===expected||(task.gate==='produce'||task.step==='narration'&&task.gate==='author')&&event.action==='planning-blocked'))throw new Error('CREW_PERMISSION_DENIED: worker may only submit its assigned deliverable; no human approvals, state writes or provider calls.');
  assertCrewEvent(p,event);
+ if(task.step==='narration'&&task.gate==='author'&&event.action==='planning-blocked'){
+  if(event.blocker?.kind!=='editing-infeasible')throw new Error('AUDIO_EDIT_INVESTIGATION_REQUIRED: editor refusals require investigated editing evidence; unavailable tools must stop as tool errors.');
+  event.toolEvidence=receipts;
+  event.audioInvestigation=(event.blocker.beats??[]).map(beat=>{const file=task.artifact.content.files[beat-1],inspection=outputs.get(`inspectAudio:${file.sha256}`),transcription=outputs.get(`transcribe:${file.sha256}`);if(!inspection||!transcription)throw new Error('AUDIO_EDIT_INVESTIGATION_REQUIRED: inspect pauses and call transcribe before declaring the affected speech uneditable.');return {beat,sha256:file.sha256,inspection:{durationSeconds:inspection.durationSeconds,method:inspection.method,pauses:inspection.pauses},transcription:{transcript:transcription.transcript,method:transcription.method,words:transcription.words??[]}};});
+  validateEditingInvestigation(task,event);
+ }
  if(task.step==='narration'&&task.gate==='author'&&event.action==='artifact'){
   const rendered=[...outputs.entries()].filter(([key])=>key.startsWith('renderAudioEdit:')).map(([,value])=>value);
   for(const edit of event.content?.audioEdits??[])if(edit.parentArtifactId===task.artifact.id){

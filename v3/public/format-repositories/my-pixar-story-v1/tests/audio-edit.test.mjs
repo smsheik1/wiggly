@@ -9,6 +9,7 @@ import {importMedia,verifyFiles,sha} from '../runtime/media.mjs';
 import {digest} from '../runtime/contracts.mjs';
 import {current,taskFor,applyEvent} from '../runtime/workflow.mjs';
 import {crewTools,runCrewTask,crewRoles} from '../runtime/crew.mjs';
+import {createCartesiaTranscriptionTool} from '../runtime/cartesia-stt.mjs';
 import {audioProject,file,script,reviewed,event} from './helpers.mjs';
 const plan={kind:'pause-shortening',keepRanges:[{startSeconds:0,endSeconds:7},{startSeconds:9.2,endSeconds:17.2}],reason:'ISOLATED remove 2.2 seconds from a known synthetic silent region.'};
 const crew={workers:Object.entries(crewRoles).map(([role,a])=>({role,name:a.name,workerId:`isolated-${role}`,modelVersion:'ISOLATED',capabilityVersion:'ISOLATED',execution:'host'}))};
@@ -19,6 +20,7 @@ function rejected(){
  return p;
 }
 function content(p,receipt){const result=structuredClone(current(p).content),i=receipt.beat-1;result.files[i]=receipt.outputFile;result.sourceFiles[i]=receipt.editedFile;result.tailSilenceSeconds[i]=receipt.tailSilenceSeconds;result.audioEdits=[receipt];return result;}
+function investigation(p){const source=current(p).content.files[1];return {audioInvestigation:[{beat:2,sha256:source.sha256,inspection:{durationSeconds:source.durationSeconds,method:'ISOLATED pause inspection',pauses:[]},transcription:{transcript:'ISOLATED words',method:'ISOLATED ASR',words:[{word:'ISOLATED',start:0,end:1}]}}],toolEvidence:['listenAudio','inspectAudio','transcribe'].map(tool=>({tool,sha256:source.sha256,...(tool==='listenAudio'?{seconds:source.durationSeconds}:{})}))};}
 function isolatedReceipt(p){
  const parent=current(p),task=taskFor(p),sourceFile=parent.content.files[1],editedFile=file(105,15);
  return AudioEditReceipt.parse({beat:2,parentArtifactId:parent.id,parentArtifactDigest:parent.digest,sourceFile,editedFile,outputFile:editedFile,tailSilenceSeconds:0,plan,editDigest:digest({profile:AUDIO_EDIT_PROFILE,taskId:task.taskId,workerId:'isolated-film-editor',artifactId:parent.id,artifactDigest:parent.digest,sourceSha256:sourceFile.sha256,plan}),receiptPath:'/isolated-test/audio-edit'});
@@ -54,12 +56,34 @@ test('narration repair routes to the editor, preserves sibling bytes and locks, 
   assert.throws(()=>applyEvent(updated,event(updated,'approve',{actor:'human',artifactId:current(updated).id,artifactDigest:current(updated).digest,message:'skip reviewer'})),/agent-passing/);
   const failed=reviewed({...updated,crew:undefined},'rejected');assert.equal(failed.gate,'escalate');
   assert.throws(()=>applyEvent(failed,event(failed,'resolve',{actor:'human',message:'Try indefinitely.'})),/ATTEMPT_LIMIT/);
-  const blocked=applyEvent(p,event(p,'planning-blocked',{workerId:'isolated-film-editor',message:'ISOLATED safe cuts insufficient.',blocker:{kind:'editing-infeasible',problem:'Cannot cut speech safely.',solution:'Request affected-beat repair.',steps:['Show exact remaining defect.']}}));assert.equal(blocked.gate,'escalate');assert.deepEqual(blocked.jobs,p.jobs);
+  const refusal=event(p,'planning-blocked',{workerId:'isolated-film-editor',message:'ISOLATED safe cuts insufficient.',blocker:{kind:'editing-infeasible',beats:[2],problem:'Cannot cut speech safely.',solution:'Request affected-beat repair.',steps:['Show exact remaining defect.']}});
+  assert.throws(()=>applyEvent(p,refusal),/INVESTIGATION_REQUIRED/);
+  const blocked=applyEvent(p,{...refusal,...investigation(p)});assert.equal(blocked.gate,'escalate');assert.deepEqual(blocked.jobs,p.jobs);assert.deepEqual(blocked.history.at(-1).audioInvestigation,investigation(p).audioInvestigation);
   const resumed=applyEvent(blocked,event(blocked,'resolve',{actor:'human',message:'Try a different local cut.'}));assert.equal(resumed.gate,'author');assert.equal(resumed.reviewDisagreements,blocked.reviewDisagreements);
   const old=structuredClone(p);old.gate='escalate';old.studio.config.agents['film-editor'].tools=old.studio.config.agents['film-editor'].tools.filter(t=>!['transcribe','inspectAudio','renderAudioEdit'].includes(t));old.studio.sha256=digest({config:old.studio.config,documents:old.studio.documents});
   const enabled=applyEvent(old,event(old,'start-audio-edit',{actor:'human',message:'Enable the local audio editor.'}));assert.equal(enabled.gate,'author');assert.deepEqual(enabled.artifacts,old.artifacts);assert.deepEqual(enabled.budget,old.budget);
   const pinned=structuredClone(old);pinned.studio.config.agents['film-editor'].model='older-pinned-model';pinned.studio.config.agents['script-writer'].model='older-writer-model';const path='crew/leo/SKILL.md';pinned.studio.documents[path]={content:'ISOLATED older pinned writer instruction',sha256:sha('ISOLATED older pinned writer instruction')};pinned.studio.sha256=digest({config:pinned.studio.config,documents:pinned.studio.documents});
   const narrow=applyEvent(pinned,event(pinned,'start-audio-edit',{actor:'human',message:'Enable only editing.'}));assert.equal(narrow.studio.config.agents['film-editor'].model,'older-pinned-model');assert.equal(narrow.studio.config.agents['script-writer'].model,'older-writer-model');assert.deepEqual(narrow.studio.documents[path],pinned.studio.documents[path]);
+  const noted=applyEvent(p,event(p,'note',{actor:'human',message:'Say AC; do not expand the abbreviation.'}));assert.equal(taskFor(noted).feedback.at(-1).message,'Say AC; do not expand the abbreviation.');assert.deepEqual(noted.artifacts,p.artifacts);
+});
+test('editor transcription really connects and an infeasibility verdict needs actual investigated evidence',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'memoir-editor-investigation-'));
+ try{
+  const path=join(dir,'source.wav');execFileSync('ffmpeg',['-v','error','-f','lavfi','-i','sine=frequency=500:duration=17.2',path]);const source=await importMedia(path,dir),p=rejected();p.crew=crew;current(p).content.files[1]=source;current(p).content.sourceFiles[1]=source;current(p).digest=digest(current(p).content);const task=taskFor(p),worker=task.crewWorker,args={sha256:source.sha256};
+  const secretsPath=join(dir,'secrets.env');await writeFile(secretsPath,'CARTESIA_API_KEY=ISOLATED_EDITOR_SECRET\n');let calls=0;
+  const tools={...createAudioEditTools({runDir:dir}),listenAudio:async({file})=>({perception:'direct-audio',seconds:file.durationSeconds}),...createCartesiaTranscriptionTool({secretsPath,receiptDirectory:join(dir,'stt'),maxCalls:1,fetcher:async()=>{calls++;return Response.json({type:'transcript',text:'ISOLATED A slash C',language:'en',duration:17.2,words:[{word:'A',start:4.9,end:5.2},{word:'slash C',start:5.2,end:6.2}]});}})};
+  const preflight=crewTools(task,worker,tools);await preflight('listenAudio',args);await preflight('inspectAudio',args);await assert.rejects(preflight('renderAudioEdit',{...args,edit:{...plan,kind:'pronunciation-repair'}}),/WORD_TIMING_REQUIRED/);
+  const noTiming=crewTools(task,worker,{...tools,transcribe:async()=>({transcript:'ISOLATED words',method:'ISOLATED untimed ASR',words:[]})});await noTiming('listenAudio',args);await noTiming('inspectAudio',args);await assert.rejects(noTiming('transcribe',args),e=>e.stopDispatch&&/WORD_TIMING_UNAVAILABLE/.test(e.message));await assert.rejects(noTiming('renderAudioEdit',{...args,edit:{...plan,kind:'pronunciation-repair'}}),/WORD_TIMING_REQUIRED/);
+  const refusal=event(p,'planning-blocked',{workerId:worker.workerId,message:'ISOLATED fused word timing does not establish a safe internal cut.',blocker:{kind:'editing-infeasible',beats:[2],problem:'No established safe splice.',solution:'Show evidence before any script change.',steps:['Review the fused word timing.']},...investigation(p)});
+  const host={tools,runTask:async()=>structuredClone(refusal)};
+  await assert.rejects(runCrewTask(p,task,host),e=>e.knownFinished&&/INVESTIGATION_REQUIRED/.test(e.message));
+  host.runTask=async(_,{callTool})=>{await callTool('listenAudio',args);await callTool('inspectAudio',args);return structuredClone(refusal);};await assert.rejects(runCrewTask(p,task,host),/INVESTIGATION_REQUIRED/);
+  host.runTask=async(_,{callTool})=>{await callTool('listenAudio',args);await callTool('inspectAudio',args);await callTool('transcribe',args);return structuredClone(refusal);};
+  const result=await runCrewTask(p,task,host);assert.equal(calls,1);assert.equal(result.audioInvestigation[0].transcription.words[1].word,'slash C');assert.equal(result.audioInvestigation[0].transcription.transcript,'ISOLATED A slash C');const stopped=applyEvent(p,result);assert.equal(stopped.gate,'escalate');assert.deepEqual(stopped.artifacts,p.artifacts);assert.deepEqual(stopped.history.at(-1).audioInvestigation,result.audioInvestigation);
+  for(const mutate of [r=>r.audioInvestigation[0].sha256='wrong',r=>r.audioInvestigation[0].transcription.words[0].end=30,r=>r.audioInvestigation[0].transcription.words=[],r=>r.toolEvidence=r.toolEvidence.filter(e=>e.tool!=='transcribe'),r=>r.blocker.beats=[1],r=>r.blocker.kind='missing-input']){const bad=structuredClone(result);mutate(bad);assert.throws(()=>applyEvent(p,bad),/INVESTIGATION/);}
+  for(const name of ['listenAudio','inspectAudio','transcribe'])await assert.rejects(crewTools(task,worker,{[name]:async()=>{throw new Error('ISOLATED tool access failed');}})(name,args),e=>e.stopDispatch===true);
+  for(const badTask of [{...task,gate:'review'},{...task,step:'editPlan'},{...task,artifact:{...task.artifact,approvedBy:{message:'locked'}}}])await assert.rejects(tools.transcribe({file:source,task:badTask,worker}),/SCOPE_DENIED/);assert.equal(calls,1);
+ }finally{await rm(dir,{recursive:true});}
 });
 test('editing broker requires real listening and inspection and cannot grant edits to the reviewer',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'memoir-audio-edit-broker-'));

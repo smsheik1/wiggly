@@ -748,3 +748,10 @@ Three named cases in `tests/audio-edit.test.mjs` protect these failures:
 3. Broker requires full source listening/inspection and full draft listening, actual rendered receipts, scoped hashes and read-only reviewers. Derived files cannot become arbitrary edit sources.
 
 Existing host/workflow checks cover the edit JSON schema and editing before rewrite or another paid batch. Full source suite passed 231 cases before final narrow-adoption/private-permission adjustments; those changes receive focused/package checks recorded in the release proof. A real native probe reached the listen-required guard without editing media.
+
+
+## 2026-10-05 — Investigation gate and actual tool access
+
+One named case was added to `tests/audio-edit.test.mjs`: isolated audio is transcribed through the actual Cartesia adapter with a mocked response using the editor role. Unsupported refusals, forged claims, missing/empty timing, wrong hashes/time ranges/beat scopes and essential-tool failures are rejected. Actual captured outputs and valid evidence persist in history. Timed-pronunciation prerequisites and denied STT outside rejected-narration authoring are checked. Existing routing checks now use valid investigation fixtures and verify human repair notes reach feedback without invalidating locks.
+
+Full source checks passed 232 cases before final empty-timing tightening; final focused checks pass 45 and packaging checks pass 113. These protect permissions/protocols, not audio judgment accuracy. The real retry proves editor STT and two local drafts; a separate coverage-report error stopped it before independent review.

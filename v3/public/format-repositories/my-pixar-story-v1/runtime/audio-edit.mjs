@@ -3,12 +3,24 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {mkdir,readFile,writeFile,rename,readdir,chmod} from 'node:fs/promises';
 import {join} from 'node:path';
-import {digest,File,text} from './contracts.mjs';
+import {digest,File,text,AudioInvestigation} from './contracts.mjs';
 import {verifyFiles,importMedia,narrationWindow} from './media.mjs';
 const exec=promisify(execFile);
 export const AUDIO_EDIT_PROFILE='ffmpeg-narration-ranges-v1';
 export const AudioEditPlan=z.object({kind:z.enum(['pause-shortening','pronunciation-repair']),keepRanges:z.array(z.object({startSeconds:z.number().finite().nonnegative(),endSeconds:z.number().finite().positive()}).strict()).min(1).max(32),reason:text}).strict();
 export const AudioEditReceipt=z.object({beat:z.number().int().min(1).max(4),parentArtifactId:text,parentArtifactDigest:text,sourceFile:File,editedFile:File,outputFile:File,tailSilenceSeconds:z.number().nonnegative(),plan:AudioEditPlan,editDigest:text,receiptPath:text}).strict();
+export function validateEditingInvestigation(task,event){
+ const beats=event.blocker?.beats,files=task.artifact?.content.files;
+ if(!beats?.length||new Set(beats).size!==beats.length||!files||files.some((f,i)=>f.durationSeconds>15&&!beats.includes(i+1)))throw new Error('AUDIO_EDIT_INVESTIGATION_REQUIRED: identify every affected beat, including every overlong stem.');
+ const investigations=event.audioInvestigation?.map(x=>AudioInvestigation.parse(x));
+ if(!investigations||investigations.length!==beats.length||new Set(investigations.map(x=>x.beat)).size!==beats.length)throw new Error('AUDIO_EDIT_INVESTIGATION_REQUIRED: actual source listening, full pause inspection and transcription are required before declaring editing infeasible.');
+ for(const beat of beats){
+  const file=files[beat-1],evidence=investigations.find(x=>x.beat===beat);
+  if(!evidence||!evidence.transcription.words.length||evidence.sha256!==file.sha256||evidence.inspection.durationSeconds!==file.durationSeconds||evidence.inspection.pauses.some(x=>x.endSeconds<x.startSeconds||x.endSeconds>file.durationSeconds+.001)||evidence.transcription.words.some(x=>x.end<x.start||x.end>file.durationSeconds+.1))throw new Error('AUDIO_EDIT_INVESTIGATION_MISMATCH: evidence must include word times for the exact current stem; missing timing is a tool limitation, not infeasible speech.');
+  for(const tool of ['listenAudio','inspectAudio','transcribe'])if(!event.toolEvidence?.some(r=>r.tool===tool&&r.sha256===file.sha256&&(tool!=='listenAudio'||r.seconds+.02>=file.durationSeconds)))throw new Error('AUDIO_EDIT_INVESTIGATION_REQUIRED: successful current-task source listening, inspection and transcription calls required; a failed tool is not evidence of infeasible editing.');
+ }
+ return investigations;
+}
 export function validateAudioEdit(file,raw){
  const plan=AudioEditPlan.parse(raw);let end=0,total=0;
  for(const r of plan.keepRanges){if(r.startSeconds<end||r.endSeconds<=r.startSeconds||r.endSeconds>file.durationSeconds)throw new Error('AUDIO_EDIT_RANGE_INVALID: ordered, non-overlapping ranges inside the measured source required.');end=r.endSeconds;total+=r.endSeconds-r.startSeconds;}

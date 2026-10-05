@@ -17,7 +17,8 @@ export function createCartesiaTranscriptionTool({secretsPath,receiptDirectory,ma
  let submitted=0;const inFlight=new Map();
  return {transcribe:async({file,worker,task})=>{
   const language=task?.voiceBasis?.language??task?.voiceReference?.content.language;
-  if(!task?.taskId||worker?.role!=='audio-reviewer'||!worker.workerId)throw new Error('STT_SCOPE_DENIED: transcription requires a current Ava task.');
+  const editor=worker?.role==='film-editor'&&task?.step==='narration'&&task.gate==='author'&&task.artifact?.review?.decision==='rejected'&&!task.artifact.approvedBy;
+  if(!task?.taskId||!(worker?.role==='audio-reviewer'||editor)||!worker.workerId)throw new Error('STT_SCOPE_DENIED: transcription requires a current audio-reviewer task or rejected-narration editor task.');
   if(!/^[a-z]{2,3}$/.test(language??''))throw new Error('STT_LANGUAGE_REQUIRED: use the canonical voice basis ISO language.');
   const mimeType=mime[extname(file.path).toLowerCase()];
   if(!mimeType||file.width||!file.durationSeconds)throw new Error('Cartesia transcription requires a measured audio-only file.');

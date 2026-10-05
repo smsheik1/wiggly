@@ -14,7 +14,7 @@ import { requireVisualQualification } from '../evaluation/visual-qualification.m
 import { shotFor, shotReferences, referenceBindings, planningReferences, validateShots, validateLocationRegistry, validateKeyframePrompt } from './shots.mjs';
 import { requestDescriptor,planningAccountGuide,generationEstimate } from './providers.mjs';
 import {scriptQuoteChecks,transcriptDiff} from './evaluators.mjs';
-import {AudioEditReceipt,AUDIO_EDIT_PROFILE,validateAudioEdit} from './audio-edit.mjs';
+import {AudioEditReceipt,AUDIO_EDIT_PROFILE,validateAudioEdit,validateEditingInvestigation} from './audio-edit.mjs';
 import { VERSION, Inputs, Project, Content, Review, Event, Plans, IntakeConfirmation, VoiceChoiceInput, VoiceLookup, criteria, digest } from './contracts.mjs';
 
 import { keyFor, current, locked, audioLocked, assertAllowed, backgroundSteps, imageSteps, authorSteps, supervised, reviewPassed, refinedWorkflow, miniProduction, voiceBasis } from './gates.mjs';
@@ -305,7 +305,7 @@ export function applyEvent(project, raw) {
   assertCrewEvent(p,e);
   const worker=['agent','reviewer'].includes(e.actor)?p.crew?.workers.find(w=>w.workerId===e.workerId):null;
   const submittedKey=keyFor(p);
-  const activity={step:p.step,...(e.blocker?{blocker:e.blocker}:{}),...(worker?{worker:{workerId:worker.workerId,name:worker.name,role:worker.role}}:{}),
+  const activity={step:p.step,...(e.blocker?{blocker:e.blocker}:{}),...(e.audioInvestigation?{audioInvestigation:e.audioInvestigation,toolEvidence:e.toolEvidence}:{}),...(worker?{worker:{workerId:worker.workerId,name:worker.name,role:worker.role}}:{}),
     ...(e.artifactId?{artifactId:e.artifactId,artifactDigest:e.artifactDigest}:{}),...(e.jobId?{jobId:e.jobId}:{})};
   if(['configure-debug','debug-next','debug-stop'].includes(e.action)){
     requiredActor(e,e.action==='debug-stop'?'runtime':'human');if(!e.message)throw new Error('Debug control needs the human instruction or runtime diagnostic.');
@@ -405,6 +405,7 @@ export function applyEvent(project, raw) {
     requiredActor(e,'runtime');if(p.step!=='reviewerQualification'||p.gate!=='author')throw new Error('Qualification requires current qualification task.');const worker=p.crew?.workers.find(w=>w.role==='visual-reviewer');if(worker&&(worker.workerId!==e.content?.workerId||worker.modelVersion!==e.content?.modelVersion||worker.capabilityVersion!==e.content?.capabilityVersion))throw new Error('Visual qualification must match assigned Vera model.');addArtifact(p,e.content,'verified-local-evaluator');
   } else if (e.action === 'note') {
     if (!e.message) throw new Error('Note needs text.');
+    if(e.actor==='human'&&p.step==='narration'&&['author','escalate'].includes(p.gate))p.feedback.push({key:keyFor(p),message:e.message});
     if(e.creativeDirection){
       requiredActor(e,'human');
       if(!['answers','script'].includes(p.step)||locked(p,'script')||p.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status)))throw new Error('CREATIVE_DIRECTION_REWIND_REQUIRED: new writing/cast direction belongs to an unapproved script; use impact-confirmed changes to reopen locked work first.');
@@ -553,6 +554,7 @@ export function applyEvent(project, raw) {
     requiredActor(e,'agent');if(!(p.gate==='produce'&&p.step!=='film'||p.step==='narration'&&p.gate==='author')||!e.message||e.plan)throw new Error('PLANNING_BLOCKER_SCOPE: only the assigned planner/editor may report an evidenced blocker; no plan or approval.');
     if(e.blocker?.kind==='editing-infeasible'&&!(p.step==='narration'&&p.gate==='author'))throw new Error('AUDIO_EDIT_SCOPE_DENIED');
     if(!e.blocker)throw new Error('PLANNING_HELP_REQUIRED: report the problem, solution and baby steps with the diagnostic.');
+    if(p.step==='narration'&&p.gate==='author'){if(e.blocker.kind!=='editing-infeasible')throw new Error('AUDIO_EDIT_INVESTIGATION_REQUIRED: editor refusals require investigated editing evidence; tool failures are not infeasibility.');validateEditingInvestigation(taskFor(p),e);}
     if(e.blocker.kind==='account-readiness'){const {kind,...help}=e.blocker;if(digest(help)!==digest(planningAccountGuide(p)))throw new Error('PLANNING_HELP_BINDING: use canonical account guidance; never invent payment requirements, URLs or account failures.');}
     p.gate='escalate';p.feedback.push({key:keyFor(p),message:e.message});
   } else if (e.action === 'plan') {
