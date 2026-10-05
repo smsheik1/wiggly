@@ -56,6 +56,8 @@ test('script structure never establishes semantic quality, and malformed drafts 
 
 test('STT diff catches skipped/changed words; wrong hashes cannot impersonate transcription or likeness', () => {
   assert.equal(transcriptDiff('We laughed, together.', 'we laughed together').editDistance, 0);
+  assert.equal(transcriptDiff('At eight I was quiet. At twenty-one I moved.', 'At 8 I was quiet. At 21 I moved.').editDistance, 0);
+  for(const observed of ['At 9 I was quiet','At 08 I was quiet','At eighth I was quiet','At I was quiet'])assert.ok(transcriptDiff('At eight I was quiet',observed).editDistance);
   assert.equal(transcriptDiff('we tried again together', 'we tried together').editDistance, 1);
   assert.equal(transcriptDiff('we tried again', 'we flew again').editDistance, 1);
   const input = { durations: [12], lockedTexts: ['we tried again together'], audioHashes: ['audio-1'], sampleHash: 'sample', stt: { method: 'ISOLATED test transcript', audioHashes: ['audio-1'], transcripts: ['we tried together'] } };

@@ -10,7 +10,10 @@ import {crewRoles,runCrewTask,taskAssets} from './crew.mjs';
 
 export const DEFAULT_WORKER_MODEL=loadStudio().config.agents['script-writer'].model;
 // Explicit host profile: no model fallback, native shell, apps or nested worker dispatch.
-const disabled=['shell_tool','unified_exec','apps','plugins','multi_agent','code_mode','code_mode_host','browser_use','computer_use','view_image','image_generation','in_app_browser'];
+const disabled=['shell_tool','unified_exec','apps','plugins','multi_agent','code_mode','browser_use','computer_use','view_image','image_generation','in_app_browser'];
+// The local Code Mode host executes the registered scoped function tools even
+// when the optional code_mode feature is off. Disabling it breaks every tool.
+const enabled=['code_mode_host'];
 const tool={type:'function',name:'wiggly_tool',description:'Call an allowed format tool on a hash from the current task. Never read another path or submit a generation.',inputSchema:{type:'object',properties:{name:{type:'string'},sha256:{type:'string'},referenceSha256:{type:['string','null']}},required:['name','sha256','referenceSha256'],additionalProperties:false}};
 
 async function readJson(path){try{return JSON.parse(await readFile(path,'utf8'));}catch(e){if(e.code==='ENOENT')return null;throw e;}}
@@ -19,7 +22,7 @@ async function saveJson(path,value){await writeFile(path+'.tmp',JSON.stringify(v
 export class CodexHost {
  constructor({cwd,spawnProcess=spawn,timeoutMs=180000,onProgress=()=>{},perceptionTools={},perceptionProfile=null}={}){
   this.cwd=cwd;this.timeoutMs=timeoutMs;this.onProgress=onProgress;this.sequence=0;this.pending=new Map();this.active=null;this.perceptionProfile=perceptionProfile;
-  this.child=spawnProcess('codex',['app-server','--stdio',...disabled.flatMap(name=>['--disable',name]),'-c','web_search="disabled"'],{stdio:['pipe','pipe','pipe']});
+  this.child=spawnProcess('codex',['app-server','--stdio',...enabled.flatMap(name=>['--enable',name]),...disabled.flatMap(name=>['--disable',name]),'-c','web_search="disabled"'],{stdio:['pipe','pipe','pipe']});
   this.lines=createInterface({input:this.child.stdout});
   this.lines.on('line',line=>{try{this.message(JSON.parse(line));}catch(error){this.fail(error);}});
   // Do not print ambient host logs, credentials or media payloads.
@@ -60,7 +63,7 @@ export class CodexHost {
  async initialize(){await mkdir(this.cwd,{recursive:true});await this.call('initialize',{clientInfo:{name:'wiggly_memoir',title:'Wiggly memoir studio',version:'2.0.0'},capabilities:{experimentalApi:true}});this.send({method:'initialized',params:{}});}
  async profile(){
   const version=execFileSync('codex',['--version'],{encoding:'utf8'}).trim();
-  return `${version}:${digest({sources:await Promise.all(['codex-host.mjs','crew.mjs','media.mjs','contracts.mjs','gemini-review.mjs','cartesia-stt.mjs','providers.mjs','evaluators.mjs','instructions.mjs'].map(name=>readFile(new URL(name,import.meta.url),'utf8'))),perception:this.perceptionProfile,disabled,tool})}`;
+  return `${version}:${digest({sources:await Promise.all(['codex-host.mjs','crew.mjs','media.mjs','contracts.mjs','gemini-review.mjs','cartesia-stt.mjs','providers.mjs','evaluators.mjs','instructions.mjs'].map(name=>readFile(new URL(name,import.meta.url),'utf8'))),perception:this.perceptionProfile,enabled,disabled,tool})}`;
  }
  async startCrew(model,config=loadStudio().config){
   const capabilityVersion=await this.profile(),path=join(this.cwd,'crew-startup.json');

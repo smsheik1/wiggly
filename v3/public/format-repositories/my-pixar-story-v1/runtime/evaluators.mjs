@@ -7,8 +7,16 @@ export const EVALUATOR_VERSION = 'local-rules-1';
 const check = (criterion, status, evidence, location, repair = '') => ({ criterion, status, evidence, location, repair });
 const unknown = (criterion, reason, location = 'whole artifact') => check(criterion, 'inconclusive', reason, location);
 export const words = text => text.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+// ASR may write small spoken cardinal numbers as digits. Expand only 0–99;
+// changed values, ordinals, leading zeros and larger/ambiguous forms stay distinct.
+const smallNumbers='zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split(' ');
+const tens='zero ten twenty thirty forty fifty sixty seventy eighty ninety'.split(' ');
+export const spokenWords = text => words(text).flatMap(word => {
+  if(!/^(?:0|[1-9]\d?)$/.test(word))return [word];
+  const n=Number(word);return n<20?[smallNumbers[n]]:[tens[Math.floor(n/10)],...(n%10?[smallNumbers[n%10]]:[])];
+});
 export function transcriptDiff(expected, observed) {
-  const a = words(expected), b = words(observed);
+  const a = spokenWords(expected), b = spokenWords(observed);
   // Levenshtein distance counts insertions, deletions and substitutions; punctuation is ignored.
   let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
   for (let i = 1; i <= a.length; i++) {

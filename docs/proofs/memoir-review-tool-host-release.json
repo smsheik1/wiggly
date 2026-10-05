@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-05",
+  "change": "Restore scoped Codex tool execution and normalize spoken cardinal ASR spelling",
+  "focusedTests": {
+    "hostCrewInstructionsPassed": 33,
+    "reviewHostEvaluationPassed": 45
+  },
+  "packageTests": {
+    "passed": 109,
+    "log": "/tmp/memoir-review-tool-host-final-pack.log"
+  },
+  "archive": {
+    "sha256": "76f1583e83676d4fe6d05c65617f2fb5170cb4533b29605204d30a67dafe8d5b",
+    "path": "/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/my-pixar-story-v2.0.0.tgz"
+  },
+  "nativeConnectivity": {
+    "firstActualError": "code-mode host is disabled",
+    "fixedTool": "measureAudio",
+    "resultDurationSeconds": 14.64,
+    "providerCalls": 0
+  },
+  "liveReview": {
+    "worker": "Ava (Audio Reviewer)",
+    "workerModel": "gpt-5.6-sol",
+    "listenModel": "gemini-3.8-flash",
+    "transcriptionModel": "ink-whisper",
+    "listeningRequests": 1,
+    "transcriptionRequests": 1,
+    "newSynthesisRequests": 0,
+    "imageVideoRequests": 0,
+    "outcome": "provisional: integrity/delivery/safety pass; identity requires human recognition",
+    "audioSha256": "4a12c6bf7e802f1cb75febeba4827a5bdd1cc1cf2f8c6cdec4b2a7365438c222",
+    "durationSeconds": 14.64,
+    "reviewRequestDigest": "50af099732441067b2efbb36f0a7c2be7c573a83f1e71801ec712139aa16c07c",
+    "transcriptionRequestDigest": "c2353354989416fd49d518959bbb6df286adc4fc283ad7c0f84c5001eeaec307",
+    "savedEventRecovery": "Exact finished reviewer event revalidated through runner respond after numeric spelling fix; no substituted judgment or duplicate call",
+    "finalSequence": 42,
+    "gate": "audition/human",
+    "voiceApproved": false,
+    "narrationApproved": false,
+    "reservedReviewUsd": 0.05,
+    "actualInvoiceVerified": false,
+    "preserved": [
+      "locked answers",
+      "locked script",
+      "voice binding",
+      "sample bytes",
+      "worker IDs/models",
+      "original failure receipts"
+    ]
+  },
+  "independentAudit": {
+    "report": "memoir-review-tool-host-package-audit.md",
+    "hostArchiveFocusedPassed": 23,
+    "finalArchiveFollowup": "Blocked by ChatGPT worker usage limit; no final fresh-agent audit claimed",
+    "freshInstall": false
+  },
+  "ponytailReview": "Lean already. Ship.",
+  "limitations": [
+    "Final expanded package fresh-agent followup blocked by worker usage limit; local final package tests pass",
+    "Single successful sample review is not reviewer calibration",
+    "Human voice recognition and four-beat narration still pending",
+    "No end-to-end film proof",
+    "English cardinal normalization intentionally limited to unambiguous 0\u201399 forms"
+  ]
+}

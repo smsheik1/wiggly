@@ -688,6 +688,10 @@ These tests enforce literal quotation/source binding and the reviewer protocol. 
 
 The existing native Codex bridge test also checks that the worker receives the quotation fields and current writer policy.
 
+The same bridge test now checks that `code_mode_host` is explicitly enabled while ambient shell, apps, plugins, nested agents, browsing and image generation remain disabled. This protects scoped tool execution without adding another named case; the suite total remains 227.
+
+The existing STT-diff test also accepts equivalent English cardinal spelling such as “eight”/“8” and “twenty-one”/“21”, while rejecting changed values, omitted words, ordinals and leading zeros. This narrow normalization affects audio comparison only, not the locked script or verbatim quotation rules.
+
 ## Blocker alerts
 
 **Source:** `tests/producer-handoff.test.mjs`. Both cases pass in the 226-case source suite. They enforce the handoff and display contract using isolated fixtures; an actual new Max response and verified account pricing remain untested.

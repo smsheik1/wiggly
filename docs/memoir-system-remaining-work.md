@@ -146,6 +146,13 @@ Canonical policy: [living spec](memoir-system-living-spec.md#2026-10-04--grounde
 - [x] Supply a sourced character-based speech estimate; bind it to the task and save it in the exact request.
 - [x] Explicitly refresh only Max's saved instructions before provider work, retaining all other pinned state.
 - [x] Retry the authorized first-beat sample through the real runtime. Cartesia returned one 14.64-second WAV; locked answers/story and existing clone binding stayed unchanged.
-- [ ] Ava independently listens/transcribes/reviews the sample; Shaz confirms likeness after review. No voice/narration approval is inferred from generation success.
+- [x] Ava independently listened through Gemini 3.8 Flash, transcribed through Cartesia Ink-Whisper, measured and reviewed the exact sample. Integrity, delivery and safety passed; existing-clone identity comparison remains honestly unresolved without an original recording.
+- [ ] Shaz listens and confirms that the short sample sounds like his voice. No voice/narration approval is inferred from reviewer success.
+
+### Reviewer tool connection and spoken-number comparison
+
+- [x] Fix the native tool execution host and verify a real scoped measurement call without provider spend.
+- [x] Accept equivalent “eight”/“8” ASR spelling using one shared narrow spoken-number comparison; retain rejection of changed/missing words and preserve the original transcript.
+- [x] Revalidate Ava's exact saved completed report through the official event boundary. No duplicate listening/STT/synthesis was needed. See [review release evidence](proofs/memoir-review-tool-host-release.json).
 
 Evidence: [audio planning release](proofs/memoir-audio-planning-release.json). The price is a conservative reservation, not a verified invoice.
