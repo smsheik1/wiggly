@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-05",
+  "change": "Bounded audio endpoint tolerance, integrity-checked completed listening receipt reuse, accurate report error guidance, bounded ten-minute multi-file worker window",
+  "focusedTests": {
+    "initialHostCrewGeminiPassed": 33,
+    "finalHostGeminiPassed": 24,
+    "fullSourceSuiteRun": false,
+    "namedSourceInventory": 228
+  },
+  "packageTests": {
+    "passed": 109,
+    "log": "/tmp/memoir-audio-review-recovery-final-pack.log"
+  },
+  "archive": {
+    "path": "/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/my-pixar-story-v2.0.0.tgz",
+    "sha256": "582299dc9bd494ab85273de1e345c64e08db954ddee7d2e867b42d1c234d17e3"
+  },
+  "independentAudit": {
+    "report": "memoir-audio-review-recovery-package-audit.md",
+    "initialAuditedArchiveSha256": "17a786f8568691a67277848fc5a49a0fb5671b0dd695c427af2479a682284679",
+    "checkAndSmoke": "pass",
+    "geminiCasesPassed": 10,
+    "supplementalCasesPassed": 4,
+    "finalArchiveFollowup": "Blocked by ChatGPT worker usage limit after runner timeout/assertion-only change; local final package tests pass. No final fresh-agent audit claimed.",
+    "freshInstall": false
+  },
+  "liveReview": {
+    "worker": "Ava (Audio Reviewer)",
+    "workerModel": "gpt-5.6-sol",
+    "listeningModel": "gemini-3.8-flash",
+    "transcriptionModel": "ink-whisper",
+    "listeningRequests": 4,
+    "transcriptionRequests": 4,
+    "duplicateInferenceRequests": 0,
+    "newSynthesisImageVideoRequests": 0,
+    "artifactId": "narration@1",
+    "artifactDigest": "00a69a41aec4fa99c3fbe49ab08e8661a31cca73965b804714151e64e9aeb3d8",
+    "acceptedSequence": 52,
+    "decision": "rejected",
+    "repairTarget": "script@2",
+    "defects": [
+      {
+        "beat": 2,
+        "durationSeconds": 17.2,
+        "overrunSeconds": 2.2
+      },
+      {
+        "beat": 2,
+        "intervalSeconds": [
+          4.6,
+          5.6
+        ],
+        "finding": "A/C spoken as A slash C"
+      }
+    ],
+    "voiceIdentity": "human recognition; automated comparison inconclusive",
+    "hostAttempts": {
+      "1": "finished report rejected for missing current-turn perception calls",
+      "2": "interrupted before final report; explicit operator reconciliation retained original receipt/turn provenance",
+      "3": "accepted actual reviewer Event"
+    },
+    "gate": "narration/escalate",
+    "narrationApproved": false,
+    "scriptApprovalChanged": false,
+    "totalProjectReservedEstimateUsd": 0.33,
+    "invoiceVerified": false
+  },
+  "ponytailReview": "Lean already. Ship.",
+  "limitations": [
+    "Single observed catch is not calibrated general media review accuracy",
+    "Final timeout-only archive change did not receive a fresh-agent follow-up due usage limit",
+    "Current script dependency granularity reopens all narration and short sample approval; no per-beat rewind yet",
+    "No end-to-end film proof; no image/video generation"
+  ]
+}

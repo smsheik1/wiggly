@@ -1,5 +1,5 @@
 import {loadStudio} from './instructions.mjs';
-import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {readFile,writeFile,mkdir,readdir} from 'node:fs/promises';
 import {join,extname} from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -71,15 +71,20 @@ export function createGeminiReviewTools({secretsPath,receiptDirectory,maxCalls=0
   const requestDigest=digest(descriptor),dir=join(receiptDirectory,requestDigest);await mkdir(dir,{recursive:true});
   if(inFlight.has(requestDigest))return inFlight.get(requestDigest);
   const run=async()=>{
-  const finish=async response=>{
+  const finish=async (response,origin={requestDigest,dir})=>{
+   try{
    // Stateless store:false replies may omit an interaction ID; the local exact
    // request/response digest is the durable receipt. Never invent a provider ID.
    if(response.status!=='completed'||response.model!==GEMINI_REVIEW_MODEL)throw new Error('GEMINI_REVIEW_INCOMPLETE: exact model and completed interaction required.');
    const output=(response.steps??[]).filter(s=>s.type==='model_output').flatMap(s=>s.content??[]).filter(c=>c.type==='text').map(c=>c.text).join('');
    const report=Report.parse(JSON.parse(output));
-   if(!report.perceptible||report.coverageStartSeconds!==0||Math.abs(report.coverageEndSeconds-file.durationSeconds)>.02||report.observations.some(o=>o.endSeconds<o.startSeconds||o.endSeconds>file.durationSeconds+.02))throw new Error('GEMINI_PERCEPTION_INCONCLUSIVE: complete, valid temporal coverage required.');
-   const result={perception:tool==='watchVideo'?'direct-video':'direct-audio',seconds:file.durationSeconds,provider:'gemini',modelVersion:GEMINI_REVIEW_MODEL,requestDigest,receiptPath:dir,interactionId:response.id??null,...(tool==='watchVideo'?{sourceFps:file.fps,samplingFps}:{}),report};
-   await atomicJson(join(dir,'result.json'),{requestDigest,resultDigest:digest(result),result});return result;
+   // Keep undercoverage strict; a small audio endpoint overestimate does not
+   // omit media. Measured duration remains authoritative, raw report is retained.
+   const overhang=tool==='listenAudio'?.1:.02;
+   if(!report.perceptible||report.coverageStartSeconds!==0||report.coverageEndSeconds<file.durationSeconds-.02||report.coverageEndSeconds>file.durationSeconds+overhang||report.observations.some(o=>o.endSeconds<o.startSeconds||o.endSeconds>file.durationSeconds+.02))throw new Error('GEMINI_PERCEPTION_INCONCLUSIVE: complete, valid temporal coverage required.');
+   const result={perception:tool==='watchVideo'?'direct-video':'direct-audio',seconds:file.durationSeconds,provider:'gemini',modelVersion:GEMINI_REVIEW_MODEL,requestDigest:origin.requestDigest,receiptPath:origin.dir,interactionId:response.id??null,...(tool==='watchVideo'?{sourceFps:file.fps,samplingFps}:{}),report};
+   await atomicJson(join(dir,'result.json'),{requestDigest,resultDigest:digest(result),result,...(origin.requestDigest!==requestDigest?{reusedFrom:origin.requestDigest}:{})});return result;
+   }catch(error){throw Object.assign(new Error(`${error.message}\nSTOP: Gemini returned a review report that could not be validated.\n1. Open ${origin.dir}/response.json and inspect its model_output report.\n2. Check the reported coverage and model against the measured media and selected model.\n3. Repair the report validation or obtain a complete review; preserve the original response and media.\n4. Resume from the recorded receipt. No duplicate provider request was submitted.`),{stopDispatch:true});}
   };
   const cached=await readJson(join(dir,'result.json'));
   if(cached){if(cached.requestDigest!==requestDigest||cached.resultDigest!==digest(cached.result))throw new Error('GEMINI_RECEIPT_CHANGED');return cached.result;}
@@ -89,6 +94,21 @@ export function createGeminiReviewTools({secretsPath,receiptDirectory,maxCalls=0
    return finish(finished.response);
   }
   if(started)throw new Error(`GEMINI_REVIEW_UNCERTAIN: inspect ${dir}; this request will not be repeated automatically.`);
+  // A routing/worker-code refresh changes taskId, not these perception inputs.
+  // Reuse only completed, integrity-checked responses with every other binding
+  // identical. The actual paid request digest/path remain in returned evidence.
+  const {taskId:_taskId,...binding}=descriptor;
+  for(const entry of await readdir(receiptDirectory,{withFileTypes:true})){
+   if(!entry.isDirectory()||entry.name===requestDigest||!/^[a-f0-9]{64}$/.test(entry.name))continue;
+   const priorDir=join(receiptDirectory,entry.name),prior=await readJson(join(priorDir,'started.json'));
+   if(!prior)continue;
+   const {taskId:_priorTaskId,...priorBinding}=prior;
+   if(digest(priorBinding)!==digest(binding))continue;
+   const reply=await readJson(join(priorDir,'response.json'));
+   if(!reply)throw new Error(`GEMINI_REVIEW_UNCERTAIN: inspect ${priorDir}; identical perception inputs already have an unknown request; no duplicate submitted.`);
+   if(digest(prior)!==entry.name||reply.requestDigest!==entry.name||reply.responseDigest!==digest(reply.response))throw new Error('GEMINI_RECEIPT_CHANGED');
+   return finish(reply.response,{requestDigest:entry.name,dir:priorDir});
+  }
   if(submitted>=maxCalls)throw new Error('GEMINI_REVIEW_BUDGET_REQUIRED: supply an explicit bounded --review-calls; no request submitted.');
   // Reserve before any await: concurrent tool requests cannot exceed the cap.
   submitted++;
@@ -111,7 +131,7 @@ export function createGeminiReviewTools({secretsPath,receiptDirectory,maxCalls=0
    const response=await (await request(base+'/v1beta/interactions',{method:'POST',headers:{'Content-Type':'application/json'},body:serialized},key)).json();
    await atomicJson(join(dir,'response.json'),{requestDigest,responseDigest:digest(response),response});
    return await finish(response);
-  }catch(error){const message=error.code==='EEXIST'?`GEMINI_REVIEW_UNCERTAIN: inspect ${dir}; another process owns this request; no duplicate submitted.`:key?error.message.replaceAll(key,'[redacted]'):error.message;throw Object.assign(new Error(`${message}\n${remediation('gemini',secretsPath)}`),{stopDispatch:true});}
+  }catch(error){if(error.stopDispatch)throw error;const message=error.code==='EEXIST'?`GEMINI_REVIEW_UNCERTAIN: inspect ${dir}; another process owns this request; no duplicate submitted.`:key?error.message.replaceAll(key,'[redacted]'):error.message;throw Object.assign(new Error(`${message}\n${remediation('gemini',secretsPath)}`),{stopDispatch:true});}
   };
   const pending=run();inFlight.set(requestDigest,pending);
   try{return await pending;}finally{inFlight.delete(requestDigest);}

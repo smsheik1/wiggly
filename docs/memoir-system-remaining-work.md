@@ -148,8 +148,19 @@ Canonical policy: [living spec](memoir-system-living-spec.md#2026-10-04--grounde
 - [x] Retry the authorized first-beat sample through the real runtime. Cartesia returned one 14.64-second WAV; locked answers/story and existing clone binding stayed unchanged.
 - [x] Ava independently listened through Gemini 3.8 Flash, transcribed through Cartesia Ink-Whisper, measured and reviewed the exact sample. Integrity, delivery and safety passed; existing-clone identity comparison remains honestly unresolved without an original recording.
 - [x] Shaz approved the reviewed short sample with “looks great”; VOICE LOCK is now recorded. Narration approval remains separate.
-- [x] Explicit same-worker code refresh preserves that approval and historic reviewer evidence. Max prepared the four-beat narration request; no narration generation yet.
-- [ ] Generate the four narration files through the planned Cartesia request, review each independently, then obtain human narration approval before visuals unlock.
+- [x] Explicit same-worker code refresh preserves that approval and historic reviewer evidence. Max prepared the four-beat narration request before generation.
+- [x] Generate four narration files through Cartesia at speed 1. Source durations: 14.88, 17.20, 14.40 and 13.28 seconds; Beat 2 remains overlong and cannot lock.
+- [x] Ava completed the real independent narration review: Beat 2 exceeds its window and mispronounces A/C; actual rejected Event accepted at sequence 52.
+- [ ] Obtain impact confirmation, repair the affected script with human approval, regenerate as authorized and obtain human narration approval before visuals unlock.
+- [ ] Improve per-beat dependency granularity: current locked-script repair reopens script, short sample approval and narration as a whole, preserving answers and clone. Do not claim other beat approvals remain independently valid.
+
+### Audio review receipt recovery
+
+- [x] Repair the observed 40-millisecond audio endpoint overestimate false block; retain strict partial/unavailable coverage rejection and raw evidence.
+- [x] Reuse completed input-equivalent listening receipts across explicit task refresh, preserving original paid provenance. Unknown outcomes and mismatched inputs remain blocked.
+- [x] Replace misleading billing advice on unusable completed reports with report-inspection guidance.
+- [x] Fresh agent verified the recovery archive: free check/smoke, 10 Gemini cases and four independent supplemental checks. Final timeout-only follow-up blocked by worker usage limit; final local checks pass, not a fresh final audit.
+- [x] Give four-file native reviews a bounded ten-minute window; retain stop-on-timeout and explicit saved-turn reconciliation.
 
 ### Reviewer tool connection and spoken-number comparison
 

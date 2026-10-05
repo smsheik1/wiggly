@@ -10,6 +10,8 @@ That was an earlier reported suite total. The previous release contained **220 n
 
 Earlier release proofs retain their own totals: 220 before these changes and 224 for grounded writing alone. Counts belong to a specific tested checkpoint.
 
+Audio review recovery adds one focused regression case for bounded endpoint estimates and completed-receipt reuse across routing changes, bringing the inventory to **228 named cases**. The recovery release ran its focused source/package subsets and independent extracted-package audit; it does not claim a new full 228-case suite run.
+
 The source suite, package-check subset and focused audit subset overlap. Do not add their totals together as if they were different tests.
 
 ## What a passing test tells us
@@ -693,6 +695,10 @@ The same bridge test now checks that `code_mode_host` is explicitly enabled whil
 The existing STT-diff test also accepts equivalent English cardinal spelling such as “eight”/“8” and “twenty-one”/“21”, while rejecting changed values, omitted words, ordinals and leading zeros. This narrow normalization affects audio comparison only, not the locked script or verbatim quotation rules.
 
 The existing crew-upgrade test now verifies that an explicit supervised capability-version-only refresh keeps approved media, historical reviews, jobs and budget intact. Reviewer replacement remains blocked; qualified upgrades still reopen qualification. No additional named case was added.
+
+The existing native-host test also checks that the runner supplies the bounded ten-minute window needed for multi-file reviews; timeout still stops without automatic retries.
+
+The added audio recovery case accepts a small endpoint overestimate while rejecting missing coverage, nonzero start, unavailable perception, out-of-range observations and excessive estimates. It also verifies completed raw-response reuse after a task refresh without another paid call, preserving original provenance, refusing changed criteria/worker bindings, and blocking unknown outcomes. This is an offline mechanism test, not proof that the reviewer catches every real defect.
 
 ## Blocker alerts
 

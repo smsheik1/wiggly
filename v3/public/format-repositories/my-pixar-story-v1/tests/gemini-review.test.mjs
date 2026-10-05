@@ -48,7 +48,7 @@ test('missing allowance, incomplete coverage and provider failures never fake he
   const f=await fixture();let calls=0;
   try{
    const tools=createGeminiReviewTools({...f.options,maxCalls:mode==='budget'?0:1,fetcher:async()=>{calls++;if(mode==='http')return new Response('ISOLATED_SECRET bad credentials',{status:401});if(mode==='partial')f.report.coverageEndSeconds/=2;if(mode==='model')return new Response(JSON.stringify({model:'other-model',status:'completed',id:'isolated'}));return f.response();}});
-   await assert.rejects(tools.listenAudio(f),e=>{assert.ok(!e.message.includes('ISOLATED_SECRET'));if(mode!=='budget'){assert.equal(e.stopDispatch,true);assert.match(e.message,/STOP: Gemini/);}return true;});
+   await assert.rejects(tools.listenAudio(f),e=>{assert.ok(!e.message.includes('ISOLATED_SECRET'));if(mode!=='budget'){assert.equal(e.stopDispatch,true);assert.match(e.message,/STOP: Gemini/);if(mode==='partial')assert.ok(!e.message.includes('Usage/Billing'));}return true;});
    assert.equal(calls,mode==='budget'?0:1);
    if(mode!=='budget'){await assert.rejects(tools.listenAudio(f),mode==='http'?/REVIEW_UNCERTAIN/:mode==='partial'?/PERCEPTION_INCONCLUSIVE/:/REVIEW_INCOMPLETE/);assert.equal(calls,1);}
    await assert.rejects(crewTools(f.task,f.worker,tools)('transcribe',{sha256:f.file.sha256}),/CAPABILITY_UNAVAILABLE/);
@@ -77,7 +77,7 @@ test('large media uploads retain sessions, poll recorded files and never automat
   };
   const tools=createGeminiReviewTools({...f.options,fetcher,wait:async()=>{}});await tools.listenAudio(f);assert.equal(requests.length,4);assert.equal(requests.filter(r=>r.url.endsWith('/interactions')).length,1);
   const uploaded=JSON.parse(await readFile(join(f.options.receiptDirectory,'uploads',f.file.sha256+'.json'),'utf8'));assert.equal(uploaded.file.state,'ACTIVE');
-  const other={...f.task,taskId:'new-isolated-task'};await assert.rejects(tools.listenAudio({...f,task:other}),/BUDGET_REQUIRED/);assert.equal(requests.length,4);
+  const other={...f.task,taskId:'new-isolated-task',criteria:['ISOLATED changed review inputs']};await assert.rejects(tools.listenAudio({...f,task:other}),/BUDGET_REQUIRED/);assert.equal(requests.length,4);
  }finally{await rm(f.dir,{recursive:true});}
  const unknown=await fixture(false,true);let posts=0;
  try{
@@ -88,7 +88,7 @@ test('large media uploads retain sessions, poll recorded files and never automat
 test('concurrent perception calls cannot race past the explicit inference cap',async()=>{
  const f=await fixture();let calls=0;
  try{const tools=createGeminiReviewTools({...f.options,fetcher:async()=>{calls++;return f.response();}});
-  const results=await Promise.allSettled([tools.listenAudio(f),tools.listenAudio({...f,task:{...f.task,taskId:'other-isolated-task'}})]);
+  const results=await Promise.allSettled([tools.listenAudio(f),tools.listenAudio({...f,task:{...f.task,taskId:'other-isolated-task',criteria:['ISOLATED changed review inputs']}})]);
   assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.match(results.find(r=>r.status==='rejected').reason.message,/BUDGET_REQUIRED/);assert.equal(calls,1);
  }finally{await rm(f.dir,{recursive:true});}
 });
@@ -97,7 +97,7 @@ test('identical concurrent Gemini requests share a result without consuming the 
  const f=await fixture();let calls=0;
  try{const tools=createGeminiReviewTools({...f.options,maxCalls:2,fetcher:async()=>{calls++;await new Promise(resolve=>setTimeout(resolve,20));return f.response();}});
   const [first,duplicate]=await Promise.all([tools.listenAudio(f),tools.listenAudio(f)]);assert.deepEqual(first,duplicate);assert.equal(calls,1);
-  await tools.listenAudio({...f,task:{...f.task,taskId:'next-legitimate-task'}});assert.equal(calls,2);
+  await tools.listenAudio({...f,task:{...f.task,taskId:'next-legitimate-task',criteria:['ISOLATED changed review inputs']}});assert.equal(calls,2);
  }finally{await rm(f.dir,{recursive:true});}
 });
 
@@ -114,4 +114,34 @@ test('project reservation blocks network first and completed cache consumes no a
   const tools=createGeminiReviewTools({...f.options,beforeRequest:async({requestDigest,task})=>{reserved++;assert.ok(requestDigest);assert.equal(task.taskId,f.task.taskId);},fetcher:async()=>{calls++;return f.response();}});
   await tools.listenAudio(f);await tools.listenAudio(f);assert.equal(reserved,1);assert.equal(calls,1);
  }finally{await rm(f.dir,{recursive:true});}
+});
+
+test('audio endpoint overhang and refreshed routing recover completed evidence without repeating paid calls',async()=>{
+ const f=await fixture();let calls=0;
+ try{
+  f.report.coverageEndSeconds=f.file.durationSeconds+.04;
+  const tools=createGeminiReviewTools({...f.options,fetcher:async()=>{calls++;return f.response();}});
+  const first=await tools.listenAudio(f);assert.equal(first.seconds,f.file.durationSeconds);assert.equal(first.report.coverageEndSeconds,f.report.coverageEndSeconds);
+  await rm(join(first.receiptPath,'result.json')); // Recover raw response after validation-code maintenance.
+  const noSpend=createGeminiReviewTools({...f.options,maxCalls:0,fetcher:async()=>{throw new Error('Must not repeat inference');}});
+  const current={...f,task:{...f.task,taskId:'refreshed-routing'}};
+  const recovered=await noSpend.listenAudio(current);assert.equal(recovered.requestDigest,first.requestDigest);assert.equal(recovered.receiptPath,first.receiptPath);assert.equal(calls,1);
+  await assert.rejects(noSpend.listenAudio({...current,worker:{...f.worker,workerId:'different-reviewer'}}),/BUDGET_REQUIRED/);
+  await assert.rejects(noSpend.listenAudio({...current,task:{...current.task,criteria:['changed criteria']}}),/BUDGET_REQUIRED/);
+  await rm(join(first.receiptPath,'response.json'));
+  await assert.rejects(noSpend.listenAudio({...f,task:{...f.task,taskId:'another-routing'}}),/REVIEW_UNCERTAIN/);
+ }finally{await rm(f.dir,{recursive:true});}
+ for(const mode of ['under','over','offset','unavailable','observation','video-over']){
+  const f=await fixture(mode==='video-over');
+  try{
+   if(mode==='under')f.report.coverageEndSeconds=f.file.durationSeconds-.04;
+   if(mode==='over')f.report.coverageEndSeconds=f.file.durationSeconds+.2;
+   if(mode==='video-over')f.report.coverageEndSeconds=f.file.durationSeconds+.04;
+   if(mode==='offset')f.report.coverageStartSeconds=.04;
+   if(mode==='unavailable')f.report.perceptible=false;
+   if(mode==='observation')f.report.observations=[{startSeconds:0,endSeconds:f.file.durationSeconds+.04,finding:'ISOLATED impossible timestamp',repair:'Inspect',severity:'major'}];
+   const tools=createGeminiReviewTools({...f.options,fetcher:async()=>f.response()});
+   await assert.rejects(tools[mode==='video-over'?'watchVideo':'listenAudio'](f),/PERCEPTION_INCONCLUSIVE/);
+  }finally{await rm(f.dir,{recursive:true});}
+ }
 });
