@@ -9,6 +9,18 @@ import { digest, VoiceLookup } from './contracts.mjs';
 import { assertAllowed, keyFor, miniProduction, voiceBasis } from './gates.mjs';
 import { importMedia, verifyFiles, narrationWindow } from './media.mjs';
 const artifact = (p, key) => p.artifacts.findLast(a => a.key === key && a.valid);
+// Published Pro overage rate is a conservative reservation, not an account balance
+// or a claim that included subscription credits incur an additional charge.
+export function generationEstimate(p, operation=p.step) {
+  if (!['audition','narration'].includes(operation)) return null;
+  const beats=artifact(p,'script')?.content.beats;
+  if (!beats) return null;
+  const characters=beats.slice(0,operation==='audition'?1:4).reduce((n,b)=>n+Array.from(b.narration).length,0);
+  return {provider:'cartesia',operation,characters,creditsPerCharacter:1,usdPerMillionCredits:65,
+    estimatedCostUsd:Math.max(.01,Math.ceil(characters*65/1000000*100)/100),
+    source:'https://cartesia.ai/pricing',verifiedAt:'2026-10-05',
+    basis:'Published Pro overage rate, rounded up to cents. Included credits may cover the request. Current balance and final billing are unverified.'};
+}
 export function requestDescriptor(p, plan) {
   const generation=studioFor(p)?.config.generation??legacyGeneration;
   if(p.studio&&['clone','audition','narration'].includes(plan.operation)&&(plan.parameters.model&&plan.parameters.model!==generation.voice.model||plan.parameters.cartesiaVersion&&plan.parameters.cartesiaVersion!==generation.voice.apiVersion))throw new Error('STUDIO_BINDING_CHANGED: use the pinned Cartesia model/API version.');
@@ -18,11 +30,15 @@ export function requestDescriptor(p, plan) {
   if(plan.operation==='clone'&&p.voiceChoice)throw new Error('EXISTING_VOICE_SELECTED: do not create a replacement for the selected voice.');
   if (plan.operation === 'clone') return { endpoint: 'https://api.cartesia.ai/voices/clone', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
     clip: sample.files[0], language: sample.language, name: `${(artifact(p,'answers')?.content.inputs??p.inputs).subject.preferredName} — ${p.id}`, access: 'private' };
-  if (['audition', 'narration'].includes(plan.operation)) return { endpoint: 'https://api.cartesia.ai/tts/bytes', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
+  if (['audition', 'narration'].includes(plan.operation)) {
+    const costEstimate=generationEstimate(p,plan.operation);
+    if(!costEstimate||plan.estimatedCostUsd+1e-9<costEstimate.estimatedCostUsd)throw new Error('AUDIO_ESTIMATE_REQUIRED: reserve at least the sourced character-based estimate.');
+    return { costEstimate, endpoint: 'https://api.cartesia.ai/tts/bytes', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
     model_id: plan.parameters.model ?? generation.voice.model, voice: artifact(p, 'clone').content.voiceId, language: voiceBasis(p).language,
     transcripts: artifact(p, 'script').content.beats.slice(0, plan.operation === 'audition' ? 1 : 4).map(b => b.narration),
     ...(plan.operation==='narration'&&p.workflowRevision>=3?{beatWindowSeconds:15}:{}),
     output_format: { container: 'wav', encoding: 'pcm_s16le', sample_rate: 44100 }, generation_config: { speed: 1, volume: 1 } };
+  }
   let images, n;
   if (plan.operation === 'keyframe') { images = shotReferences(p).map(r => r.file); n = 1; }
   else if (plan.operation === 'backgroundCandidates') { images = artifact(p, `backgroundBrief:${p.locationId}`).content.references; n = 3; }
@@ -43,7 +59,7 @@ export async function atomicJson(path, value) { const temp = `${path}.tmp`; awai
 export function planningAccountGuide(p){
  const provider=['clone','audition','narration'].includes(p.step)?'Cartesia':['music','effect'].includes(p.step)?'ElevenLabs':p.step==='video'?'Replicate':'Muse Image';
  const accountStep={Cartesia:'Open https://play.cartesia.ai/subscription and sign in to the account used by this project. Check the Subscription page’s current plan and credits.',ElevenLabs:'Sign in at https://elevenlabs.io. Click your profile icon at the top right, then Subscription; check your plan and credits.',Replicate:'Open https://replicate.com/account/billing and sign in to the account used by this project. Check the credit balance and billing status.','Muse Image':'Open https://dev.meta.ai and sign in to the account used by this project. Find its billing and usage information.'}[provider];
- return {problem:`${provider} generation access, available credits and this request's cost are not verified.`,solution:'Check the account before production. Add credits or upgrade only if needed, then approve the exact request and project budget.',steps:[accountStep,"Confirm access to the selected model/voice and this request’s cost using your account’s current rates. Share the estimate and credit/access status, never an API key.","If credits or access are insufficient, add credits or select a suitable plan. A free plan alone is not evidence of failure.","Approve a project spending limit and the exact request before generation. Account access alone does not authorize spending."]};
+ return {problem:`A sourced cost estimate for this ${provider} request is missing.`,solution:'Obtain the provider rate and estimate this exact request, then use the existing approval and budget gates.',steps:[`Check ${provider==='Cartesia'?'https://cartesia.ai/pricing':provider==='Replicate'?'https://replicate.com/bytedance/seedance-2.0-mini':provider==='ElevenLabs'?'https://elevenlabs.io/pricing':'https://dev.meta.ai'} for the applicable rate.`,"Calculate the estimate for this exact request; identify the rate source and any uncertainty.","Present the estimate and obtain authorization within the project budget. Unknown credits alone do not block planning.",accountStep]};
 }
 
 export function remediation(provider, secretsPath) {

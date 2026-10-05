@@ -12,7 +12,7 @@ import {requireAudioQualification} from '../evaluation/audio-qualification.mjs';
 import { studioSteps, studioDependencies, studioNext, validateStudioContent, videoBinding, effectFor } from './studio.mjs';
 import { requireVisualQualification } from '../evaluation/visual-qualification.mjs';
 import { shotFor, shotReferences, referenceBindings, planningReferences, validateShots, validateLocationRegistry, validateKeyframePrompt } from './shots.mjs';
-import { requestDescriptor,planningAccountGuide } from './providers.mjs';
+import { requestDescriptor,planningAccountGuide,generationEstimate } from './providers.mjs';
 import {scriptQuoteChecks} from './evaluators.mjs';
 import { VERSION, Inputs, Project, Content, Review, Event, Plans, IntakeConfirmation, VoiceChoiceInput, VoiceLookup, criteria, digest } from './contracts.mjs';
 
@@ -231,6 +231,7 @@ export function taskFor(p) {
     ...(['keyframePrompt', 'keyframe'].includes(p.step) ? { references: shotReferences(p), referenceBindings: referenceBindings(p), shotDigest: digest(shotFor(p)) } : {}),
     crewWorker:assignedWorker(p)??null, formatRole:roleFor(p),
     planningGuide:p.gate==='produce'&&p.step!=='film'?planningAccountGuide(p):null,
+    generationEstimate:p.gate==='produce'?generationEstimate(p):null,
     generationTexts:['audition','narration'].includes(p.step)?{scriptId:current(p,'script').id,scriptDigest:current(p,'script').digest,beats:current(p,'script').content.beats.slice(0,p.step==='audition'?1:4).map(b=>({beat:b.beat,text:b.narration}))}:null,
     voiceReference:roleFor(p)==='audio-reviewer'?current(p,'voiceSample')??null:null,voiceChoice:p.voiceChoice??null,voiceBasis:voiceBasis(p),
     role: p.gate === 'review' ? 'independent-reviewer' : p.gate==='author'&&p.step==='videoPlan'?'motion-director':p.gate==='author'&&p.step==='videoPrompt'?'video-prompt-engineer':p.gate==='author'&&p.step==='soundPlan'?'sound-designer':p.gate==='author'&&p.step==='editPlan'?'film-editor': p.gate === 'author' && ['shotIntentions','shots'].includes(p.step) ? 'shot-planner' : p.gate === 'author' && p.step === 'keyframePrompt' ? 'composition-writer' : p.gate === 'owner-review' || ['backgrounds', 'backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'background-product-owner' : isPrompt(p) && p.gate === 'author' ? 'pixar-prompter' : 'orchestrator',
@@ -249,7 +250,7 @@ export function taskFor(p) {
     dependencies: dependencies(p).map(id => p.artifacts.find(a => a.id === id)),
     creativeDirections:p.creativeDirections??[],
     feedback: p.feedback.filter(f => f.key === keyFor(p)), criteria: p.step==='film'&&p.gate==='review'?filmCriteria(p):criteria[p.step] ?? [],
-    instruction: p.gate==='produce'&&p.step!=='film' ? `Prepare the assigned generation plan from the canonical task inputs. For audition, generationTexts contains the FIRST locked story beat; no separate audition text or approval is needed. For narration it contains all four locked beats. Return plan only with a verified cost estimate. If required inputs or account pricing are unavailable, return planning-blocked with message containing the full evidence plus blocker: {kind, problem, solution, steps}. Use kind account-readiness and the canonical planningGuide fields exactly for unavailable pricing, credits or generation access. For missing-input, state the specific problem, solution and 1–5 concrete baby steps. Keep the operator alert brief; put technical diagnostics in message. A free plan alone is not evidence of insufficient credits or failed access. Never invent prices, provider receipts, approvals or a new recording requirement for an existing clone. Follow the attached skill for the remaining procedure.` : loaded && ['author','owner-review','review','produce'].includes(p.gate) ? `Follow the attached ${loaded.skill.path} for this ${p.step}/${p.gate} task and return only the assigned Event.` : legacyInstruction(p),
+    instruction: p.gate==='produce'&&p.step!=='film' ? `Prepare the assigned generation plan from the canonical task inputs. For audition, generationTexts contains the FIRST locked story beat; no separate audition text or approval is needed. For narration it contains all four locked beats. Use generationEstimate when supplied: it is a sourced conservative reservation, not verified account billing. Unknown credit balance, untested generation access, or a zero project budget do not block PLANNING. Return a plan; the runtime owns authorization, budget enforcement and submission. Do not demand a dashboard screenshot or admin key merely to plan. If a rate truly is unavailable and no generationEstimate is supplied, return planning-blocked using the canonical planningGuide. If essential inputs are missing, return missing-input with specific evidence and baby steps. Actual provider errors stop submission through the runtime, with no fallback or automatic retry. Never invent prices, provider receipts, approvals or a new recording requirement for an existing clone. Follow the attached skill for the remaining procedure.` : loaded && ['author','owner-review','review','produce'].includes(p.gate) ? `Follow the attached ${loaded.skill.path} for this ${p.step}/${p.gate} task and return only the assigned Event.` : legacyInstruction(p),
   };
 }
 function repairVisual(p, message) {
@@ -333,6 +334,12 @@ export function applyEvent(project, raw) {
     const next=loadStudio(),allowed=['crew/leo/SKILL.md','evaluation/rubrics/text.md'];
     if(digest(next.config)!==digest(p.studio.config)||Object.keys(next.documents).length!==Object.keys(p.studio.documents).length||Object.keys(next.documents).some(path=>!allowed.includes(path)&&digest(next.documents[path])!==digest(p.studio.documents[path])))throw new Error('WRITING_REFRESH_SCOPE: only writer skill and text rubric may change; tools, models, budgets, recipes and other instructions stay pinned.');
     p.studio=next;p.gate=current(p)?'review':'author';if(p.debug?.enabled)p.debug.paused=true;
+  }else if(e.action==='refresh-planning-instructions'){
+    requiredActor(e,'human');
+    if(!e.message||!p.studio||p.jobs.length||!['clone','audition','narration'].includes(p.step)||!['produce','escalate'].includes(p.gate))throw new Error('PLANNING_REFRESH_LOCKED: explicit pre-provider instruction refresh only; preserve existing approvals and bindings.');
+    const path=p.studio.config.agents['generation-planner'].skill;
+    const documents={...p.studio.documents,[path]:loadStudio().documents[path]};
+    p.studio={...p.studio,documents,sha256:digest({config:p.studio.config,documents})};
   }else if(e.action==='refresh-audio-instructions'){
     requiredActor(e,'human');if(!e.message||!p.studio||!['voiceSample','clone','audition'].includes(p.step)||p.jobs.length||p.artifacts.some(a=>a.approvedBy&&['audition','narration'].includes(a.kind)))throw new Error('AUDIO_REFRESH_LOCKED: refresh voice-review instructions explicitly before provider work or audio approval.');
     const next=loadStudio(),allowed=['crew/ava/SKILL.md','evaluation/rubrics/audio.md'];

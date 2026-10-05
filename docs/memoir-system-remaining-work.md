@@ -138,4 +138,14 @@ Canonical policy: [living spec](memoir-system-living-spec.md#2026-10-04--grounde
 - [x] Distinguish a genuine blockage from waiting for an intentional debug inspection; give the reason and next action.
 - [x] Present the voice check as a short sample using the storyteller’s cloned voice; keep internal stage IDs intact.
 - [x] Preserve historical diagnostics separately and require the host to explain their actual missing information; avoid a stale current-blocked claim after resolution.
-- [ ] Rehearse the actual next Max response and resulting producer message when the account-cost/budget inputs are supplied.
+- [x] Rehearse Max with the corrected sourced audio estimate: he returned a $0.02 plan; one real Cartesia request produced the short sample. Ava review and human voice approval remain pending.
+
+## Audio planning root correction and Round 1 retry
+
+- [x] Remove unavailable balance/access checks as speculative planning prerequisites in Max's skill and canonical task.
+- [x] Supply a sourced character-based speech estimate; bind it to the task and save it in the exact request.
+- [x] Explicitly refresh only Max's saved instructions before provider work, retaining all other pinned state.
+- [x] Retry the authorized first-beat sample through the real runtime. Cartesia returned one 14.64-second WAV; locked answers/story and existing clone binding stayed unchanged.
+- [ ] Ava independently listens/transcribes/reviews the sample; Shaz confirms likeness after review. No voice/narration approval is inferred from generation success.
+
+Evidence: [audio planning release](proofs/memoir-audio-planning-release.json). The price is a conservative reservation, not a verified invoice.

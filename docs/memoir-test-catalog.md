@@ -2,11 +2,11 @@
 
 A plain-English inventory for Shaz, Claude and future builders.
 
-**Snapshot:** October 5, 2026 (America/Chicago), grounded writing plus the completed blocker-alert fix. No real provider request or project approval was changed.
+**Snapshot:** October 5, 2026 (America/Chicago), grounded writing, blocker alerts and the audio planning correction. This catalog describes offline tests; a separate live sample retry is recorded in the audio-planning release proof.
 
 ## What happened to “219 tests”?
 
-That was an earlier reported suite total. The previous release contained **220 named cases**. Grounded writing added **four**, and blocker alerts added **two**, giving **226 cases** in the current source suite. All 226 pass. The two alert fixtures now supply the required author worker ID and reach their intended assertions.
+That was an earlier reported suite total. The previous release contained **220 named cases**. Grounded writing added **four**, and blocker alerts added **two**, giving **226 cases** in the current source suite. Audio planning adds one case, giving **227 cases**, all passing. The two alert fixtures now supply the required author worker ID and reach their intended assertions.
 
 Earlier release proofs retain their own totals: 220 before these changes and 224 for grounded writing alone. Counts belong to a specific tested checkpoint.
 
@@ -54,7 +54,7 @@ The source links point to this inspected checkout and the beginning of the corre
 | [Whole simulated supervised workflow](#whole-simulated-supervised-workflow) | 1 |
 | [Worker identities, independence and tool permissions](#worker-identities-independence-and-tool-permissions) | 9 |
 | [Load the right skills, rubrics, recipes and config](#load-the-right-skills-rubrics-recipes-and-config) | 10 |
-| [Native Codex worker connection and safe dispatch](#native-codex-worker-connection-and-safe-dispatch) | 13 |
+| [Native Codex worker connection and safe dispatch](#native-codex-worker-connection-and-safe-dispatch) | 14 |
 | [Pause and inspect each worker in debug mode](#pause-and-inspect-each-worker-in-debug-mode) | 9 |
 | [Clear producer messages and next steps](#clear-producer-messages-and-next-steps) | 11 |
 | [Provider metadata checks and deliverable display](#provider-metadata-checks-and-deliverable-display) | 3 |
@@ -695,6 +695,12 @@ The existing native Codex bridge test also checks that the worker receives the q
 225. **Require a billing blocker to explain the problem, solution and canonical baby steps, without inventing an API failure or assuming a free plan cannot work.** [Test source](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/producer-handoff.test.mjs:155)
 
 226. **Keep missing-input blockers and historical records readable without inventing billing evidence, approvals or new generation jobs.** [Test source](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/producer-handoff.test.mjs:166)
+
+## Audio planning correction
+
+227. **Plan cheap speech without unavailable balance proof, while refusing forged cost inputs, zero-cost reservations, unauthorized instruction refresh, insufficient budgets and mismatched request approval.** Also verifies that refreshing Max leaves the approved story, clone, crew and other pinned skills unchanged. [Test source](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/codex-host.test.mjs:202)
+
+The actual Cartesia sample generation is separate evidence; this offline case uses no real provider.
 
 ## How Claude should review this
 

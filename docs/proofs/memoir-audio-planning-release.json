@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-05",
+  "change": "Remove speculative account verification blockers from sourced cheap audio planning",
+  "sourceTests": {
+    "passed": 227,
+    "log": "/tmp/memoir-audio-planning-full.log"
+  },
+  "packageTests": {
+    "passed": 109,
+    "log": "/tmp/memoir-audio-planning-repack.log"
+  },
+  "archive": {
+    "sha256": "a978793cdd6bb3097caab20af5ee9ddadf741eb79c540078a05b3b14857ceb82",
+    "path": "/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/my-pixar-story-v2.0.0.tgz"
+  },
+  "independentAudit": {
+    "report": "memoir-audio-planning-package-audit.md",
+    "focusedPassed": 41,
+    "additionalGuardPassed": 18,
+    "adversarialPassed": 25,
+    "freshInstall": false
+  },
+  "liveRehearsal": {
+    "planner": "Max (Generation Planner)",
+    "planEstimatedCostUsd": 0.02,
+    "budgetUsd": 0.02,
+    "synthesisRequests": 1,
+    "outcome": "successful WAV, pending independent audio review",
+    "audioDurationSeconds": 14.64,
+    "audioSha256": "4a12c6bf7e802f1cb75febeba4827a5bdd1cc1cf2f8c6cdec4b2a7365438c222",
+    "preserved": [
+      "locked answers",
+      "locked script",
+      "existing clone binding"
+    ],
+    "voiceApproved": false,
+    "narrationApproved": false,
+    "broadAllowance": false,
+    "imageVideoCalls": 0,
+    "actualProviderInvoiceVerified": false
+  },
+  "limitations": [
+    "No independent listening or voice-likeness verdict yet",
+    "No end-to-end film proof",
+    "Published rate requires maintenance; estimate is not actual account billing"
+  ],
+  "ponytailReview": "Lean already. Ship."
+}

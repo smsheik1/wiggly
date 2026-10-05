@@ -157,6 +157,7 @@ test('driver dispatches Max to plan an existing-clone audition and stops before 
  const dir=await mkdtemp(join(tmpdir(),'memoir-planner-drive-'));let p=existingClonePlanFixture(),calls=0;
  const workflow={status:async()=>({project:p,pending:taskFor(p)}),respond:async(_id,e)=>{p=applyEvent(p,e);return workflow.status();}};
  const host={runTask:async(task,{worker,callTool})=>{calls++;assert.equal(worker.role,'generation-planner');assert.equal(task.voiceBasis.kind,'existing-clone');assert.equal(task.voiceReference,null);
+  assert.ok(task.generationEstimate.estimatedCostUsd>0);assert.equal(task.generationEstimate.source,'https://cartesia.ai/pricing');assert.match(task.instruction,/zero project budget do not block PLANNING/);assert.match(task.skill.content,/Unknown account credits.*not planning blockers/);
   await assert.rejects(callTool('generateAudio',{}),/TOOL_PERMISSION_DENIED/);
   return {taskId:task.taskId,actor:'agent',workerId:worker.workerId,action:'plan',plan:{provider:'cartesia',operation:'audition',estimatedCostUsd:.05,parameters:{}}};}};
  try{
@@ -192,8 +193,34 @@ test('Max can report a pricing blocker with canonical audition text without inve
   await assert.rejects(runCrewTask(p,{...task,generationTexts:{...task.generationTexts,beats:[]} },host),/TASK_INPUT_MISMATCH/);
   assert.throws(()=>send(p,'planning-blocked',{actor:'human',message}),/agent authority|assigned worker/);
   const result=await driveCrew(workflow,'run',host,{receiptDirectory:dir});assert.equal(result.completed,1);assert.equal(p.gate,'escalate');assert.equal(p.debug.paused,true);assert.equal(p.jobs.length,0);assert.equal(calls,1);assert.deepEqual(p.artifacts.map(a=>JSON.stringify(a)),prior);assert.equal(JSON.stringify(p.budget),budget);
-  const {producerUpdate}=await import('../runtime/presentation.mjs');const producer=producerUpdate(await workflow.status());assert.match(producer.message,/STOP.*Short sample using your cloned voice/);assert.equal(producer.stage,'audition');assert.doesNotMatch(producer.message,/paused|audition/i);assert.equal(producer.debugNote,null);assert.match(producer.message,/Max \(Generation Planner\)/);assert.match(producer.message,/Cartesia generation access/);assert.match(producer.diagnostic,/account-verified Cartesia price/);
+  const {producerUpdate}=await import('../runtime/presentation.mjs');const producer=producerUpdate(await workflow.status());assert.match(producer.message,/STOP.*Short sample using your cloned voice/);assert.equal(producer.stage,'audition');assert.doesNotMatch(producer.message,/paused|audition/i);assert.equal(producer.debugNote,null);assert.match(producer.message,/Max \(Generation Planner\)/);assert.match(producer.message,/sourced cost estimate/);assert.match(producer.diagnostic,/account-verified Cartesia price/);
   assert.equal((await driveCrew(workflow,'run',host,{receiptDirectory:dir})).completed,0);assert.equal(calls,1);
   p=send(p,'resolve',{actor:'human',message:'ISOLATED verified account pricing supplied'});assert.equal(p.gate,'produce');assert.equal(p.debug.paused,true);assert.equal(p.jobs.length,0);
  }finally{await rm(dir,{recursive:true});}
+});
+
+test('sourced audio estimate plans without balance proof but preserves budget and exact authorization gates',async()=>{
+ const {generationEstimate,requestDescriptor}=await import('../runtime/providers.mjs');
+ let p=existingClonePlanFixture(),task=taskFor(p);const initial=JSON.stringify(p.artifacts),voice=JSON.stringify(p.voiceChoice),crew=JSON.stringify(p.crew);
+ assert.equal(task.generationEstimate.characters,Array.from(script.beats[0].narration).length);
+ assert.match(task.generationEstimate.basis,/balance and final billing are unverified/);
+ for(const changed of [null,{...task.generationEstimate,estimatedCostUsd:0}])await assert.rejects(runCrewTask(p,{...task,generationEstimate:changed},{runTask:()=>{throw new Error('must not reach worker');}}),/TASK_INPUT_MISMATCH/);
+ const old=structuredClone(p.studio.documents['crew/max/SKILL.md']);old.content='ISOLATED old instruction: require a verified account balance.';
+ const {createHash}=await import('node:crypto');old.sha256=createHash('sha256').update(old.content).digest('hex');p.studio.documents['crew/max/SKILL.md']=old;p.studio.sha256=(await import('../runtime/contracts.mjs')).digest({config:p.studio.config,documents:p.studio.documents});
+ const before=structuredClone(p.studio);assert.match(taskFor(p).skill.content,/ISOLATED old/);
+ assert.throws(()=>send(p,'refresh-planning-instructions',{actor:'agent',workerId:task.crewWorker.workerId,message:'ISOLATED unauthorized'}),/human authority|PERMISSION/);
+ p=send(p,'refresh-planning-instructions',{actor:'human',message:'ISOLATED fix Max before provider work'});
+ assert.match(taskFor(p).skill.content,/Unknown account credits/);assert.deepEqual(p.studio.config,before.config);
+ for(const [path,doc] of Object.entries(before.documents))if(path!=='crew/max/SKILL.md')assert.deepEqual(p.studio.documents[path],doc);
+ assert.equal(JSON.stringify(p.artifacts),initial);assert.equal(JSON.stringify(p.voiceChoice),voice);assert.equal(JSON.stringify(p.crew),crew);assert.equal(p.budget.maxCostUsd,0);
+ const cost=generationEstimate(p).estimatedCostUsd,plan={provider:'cartesia',operation:'audition',estimatedCostUsd:cost,parameters:{}};
+ assert.throws(()=>requestDescriptor(p,{...plan,estimatedCostUsd:0}),/AUDIO_ESTIMATE_REQUIRED/);
+ p=send(p,'plan',{actor:'agent',workerId:taskFor(p).crewWorker.workerId,plan});const j=p.jobs.at(-1);
+ assert.deepEqual(j.request.costEstimate,task.generationEstimate);assert.equal(j.status,'planned');assert.equal(p.gate,'authorize');
+ assert.throws(()=>send(p,'refresh-planning-instructions',{actor:'human',message:'ISOLATED too late'}),/PLANNING_REFRESH_LOCKED/);
+ assert.throws(()=>send(p,'authorize',{actor:'human',jobId:j.id,artifactDigest:j.digest,message:'ISOLATED no budget'}),/BUDGET_EXCEEDED/);
+ p=send(p,'set-budget',{actor:'human',budgetLimitUsd:cost,message:'ISOLATED exact request limit'});
+ assert.throws(()=>send(p,'authorize',{actor:'human',jobId:j.id,artifactDigest:'wrong',message:'ISOLATED wrong request'}),/exact generation request/);
+ p=send(p,'authorize',{actor:'human',jobId:j.id,artifactDigest:j.digest,message:'ISOLATED scoped audio permission'});
+ assert.equal(p.jobs.at(-1).status,'authorized');assert.equal(p.gate,'collect');assert.equal(p.allowances.length,0);assert.equal(JSON.stringify(p.artifacts),initial);
 });
