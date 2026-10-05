@@ -132,3 +132,10 @@ Implemented: human-selected existing Cartesia voice, authenticated read-only loo
 - [ ] Human-adjudicated labels, additional separated holdouts and genuine reviewer predictions are still needed before claiming semantic-review accuracy. This is calibration work, not a blocker to supervised human approval in v1.
 
 Canonical policy: [living spec](memoir-system-living-spec.md#2026-10-04--grounded-writing-rules-and-quotation-checks). Verification: [release evidence](proofs/memoir-grounded-writing-release.json).
+
+## Plain producer communication correction
+
+- [x] Distinguish a genuine blockage from waiting for an intentional debug inspection; give the reason and next action.
+- [x] Present the voice check as a short sample using the storyteller’s cloned voice; keep internal stage IDs intact.
+- [x] Preserve historical diagnostics separately and require the host to explain their actual missing information; avoid a stale current-blocked claim after resolution.
+- [ ] Rehearse the actual next Max response and resulting producer message when the account-cost/budget inputs are supplied.

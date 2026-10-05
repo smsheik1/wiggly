@@ -27,7 +27,7 @@ test('producer names the completed author and next reviewer without claiming ass
  p=send(p,'debug-next',{actor:'human',message:'ISOLATED continue'});p=author(p);
  const before=JSON.stringify(p),u=producerUpdate(status(p));
  assert.equal(u.reporter,'Orchestrator (Producer)');assert.match(u.message,/Leo \(Script Engineer\) submitted/);
- assert.match(u.message,/Sage \(Script Reviewer\) is next to review/);assert.match(u.message,/Debug paused/);
+ assert.match(u.message,/Sage \(Script Reviewer\) is next to review/);assert.match(u.message,/Waiting for your debug check/);assert.doesNotMatch(u.message,/paused/i);
  assert.equal(u.completion.artifactDigest,current(p).digest);assert.equal(u.completion.worker.workerId,current(p).authoredBy);
  assert.equal(u.nextWorker.status,'waiting-for-debug-continuation');assert.match(u.nextDecision,/approves nothing/);
  assert.doesNotMatch(u.message,/is preparing|is reviewing|is running/);assert.equal(JSON.stringify(p),before);
@@ -91,7 +91,7 @@ test('provider planning and unknown submission outcomes are reported without cla
  const sampleUpdate=producerUpdate(status(p));assert.equal(sampleUpdate.completion.worker,null);assert.match(sampleUpdate.completion.message,/You submitted/);
  p=send(p,'set-budget',{actor:'human',message:'ISOLATED budget',budgetLimitUsd:1});
  p=send(p,'plan',{workerId:taskFor(p).crewWorker.workerId,plan:{provider:'cartesia',operation:'clone',estimatedCostUsd:.05,parameters:{}}});
- let u=producerUpdate(status(p));assert.match(u.message,/Max \(Generation Planner\) prepared the clone request/);assert.equal(u.completion.jobId,p.jobs.at(-1).id);assert.match(u.nextDecision,/spend/);
+ let u=producerUpdate(status(p));assert.match(u.message,/Max \(Generation Planner\) prepared a request and cost estimate for voice clone/);assert.equal(u.completion.jobId,p.jobs.at(-1).id);assert.match(u.nextDecision,/spend/);
  const job=p.jobs.at(-1);p=send(p,'authorize',{actor:'human',jobId:job.id,artifactDigest:job.digest,message:'ISOLATED authorize exact test request'});
  u=producerUpdate(status(p));assert.match(u.message,/ready for submission/);assert.equal(u.nextWorker,null);assert.doesNotMatch(u.message,/prepare the exact request|clone complete/);
  p=send(p,'begin',{jobId:job.id,artifactDigest:job.digest});u=producerUpdate(status(p));assert.match(u.completion.message,/outcome is not confirmed/);
@@ -111,8 +111,8 @@ test('rewinding an approval or requiring fresh review never reports the old deci
 
 test('a saved worker failure requests diagnosis, not another normal dispatch or a guessed completion',()=>{
  let p=start();p=send(p,'configure-debug',{actor:'human',message:'ISOLATED enable debug',debugEnabled:true});p=send(p,'debug-stop',{actor:'runtime',message:'ISOLATED worker outcome unknown; inspect saved receipt'});
- const before=JSON.stringify(p),u=producerUpdate(status(p));assert.match(u.message,/Execution stopped/);assert.match(u.diagnostic,/outcome unknown/);assert.equal(u.nextWorker,null);assert.equal(u.inputRequest,null);assert.equal(u.completion,null);assert.doesNotMatch(u.nextDecision,/say.*continue/);assert.match(u.nextDecision,/Do not repeat an unknown request/);assert.equal(JSON.stringify(p),before);
- p=send(p,'debug-next',{actor:'human',message:'ISOLATED continue'});const continued=producerUpdate(status(p));assert.equal(continued.nextWorker,null);assert.equal(continued.diagnostic,u.diagnostic);assert.match(continued.message,/Execution stopped/);
+ const before=JSON.stringify(p),u=producerUpdate(status(p));assert.match(u.message,/STOP.*blocked after an error/);assert.match(u.diagnostic,/outcome unknown/);assert.equal(u.nextWorker,null);assert.equal(u.inputRequest,null);assert.equal(u.completion,null);assert.doesNotMatch(u.nextDecision,/say.*continue/);assert.match(u.nextDecision,/Do not repeat an unknown request/);assert.equal(JSON.stringify(p),before);
+ p=send(p,'debug-next',{actor:'human',message:'ISOLATED continue'});const continued=producerUpdate(status(p));assert.equal(continued.nextWorker,null);assert.equal(continued.diagnostic,u.diagnostic);assert.match(continued.message,/STOP.*blocked after an error/);
 });
 
 
@@ -160,11 +160,12 @@ test('billing readiness alert requires problem, solution and canonical baby step
  }
  const q=send(p,'planning-blocked',{...base,blocker:{kind:'account-readiness',...task.planningGuide}}),bytes=JSON.stringify(q),u=producerUpdate(status(q));
  assert.equal(u.alert.severity,'stop');assert.equal(u.alert.reportedBy,'Max (Generation Planner)');assert.equal(u.alert.problem,task.planningGuide.problem);assert.equal(u.alert.solution,task.planningGuide.solution);assert.deepEqual(u.alert.steps,task.planningGuide.steps);assert.match(u.message,/STOP/);assert.match(u.message,/https:\/\/play.cartesia.ai\/subscription/);assert.match(u.message,/upgrade only if needed/);assert.doesNotMatch(u.message,/technical identifiers|which plan|HTTP 402|API failed/);assert.equal(u.diagnostic,message);assert.equal(u.nextWorker,null);assert.equal(q.jobs.length,0);assert.equal(JSON.stringify(q),bytes);
- assert.deepEqual(Project.parse(q).history.at(-1).blocker,u.completion.blocker);
+ assert.deepEqual(Project.parse(q).history.at(-1).blocker,u.completion.blocker);assert.equal(u.stage,'clone');assert.doesNotMatch(u.message,/paused|audition/i);assert.equal(u.debugNote,null);
 });
 
 test('missing-input and historical blockers retain diagnostics without inventing billing evidence or approvals',()=>{
  const p=blockedPlanning(),task=taskFor(p),blocker={kind:'missing-input',problem:'The selected audio source is unavailable.',solution:'Restore the approved source before planning.',steps:['Restore the exact approved source file, then request a file verification.']};
  let q=send(p,'planning-blocked',{actor:'agent',workerId:task.crewWorker.workerId,message:'ISOLATED exact missing file evidence',blocker}),u=producerUpdate(status(q));assert.equal(u.alert.kind,'missing-input');assert.match(u.message,/Restore the approved source/);assert.doesNotMatch(u.message,/Subscription|credits/);
- delete q.history.at(-1).blocker;u=producerUpdate(status(Project.parse(q)));assert.equal(u.alert,undefined);assert.match(u.completion.diagnostic,/exact missing file/);assert.equal(q.gate,'escalate');assert.equal(q.jobs.length,0);
+ delete q.history.at(-1).blocker;u=producerUpdate(status(Project.parse(q)));assert.equal(u.alert,undefined);assert.match(u.completion.diagnostic,/exact missing file/);assert.match(u.message,/^STOP.*blocked/);assert.doesNotMatch(u.message,/paused|audition|ISOLATED exact missing file/i);assert.equal(u.diagnostic,'ISOLATED exact missing file evidence');assert.equal(q.gate,'escalate');assert.equal(q.jobs.length,0);
+ const before=JSON.stringify(q);producerUpdate(status(q));assert.equal(JSON.stringify(q),before);q=send(q,'resolve',{actor:'human',message:'ISOLATED restored the missing input'});u=producerUpdate(status(q));assert.equal(q.gate,'produce');assert.doesNotMatch(u.message,/is blocked|STOP|paused/i);assert.equal(q.jobs.length,0);
 });

@@ -13,3 +13,7 @@ Present reviewed deliverables clearly: four narration beat players together, thr
 SQLite owns state and approvals. Read the runtime status before speaking about progress. This file controls communication only; it cannot grant tools, approve anything or alter transitions. No separate narrator-model call is required.
 
 In workflow revision 4, never ask the user to design who appears. Present the writer’s story-led cast proposal alongside the script for approval or changes. Ask only necessary unresolved facts. Confirm reference/likeness choices for that approved cast at roster, after narration lock.
+
+When work cannot continue, lead with “Blocked,” the specific missing item or error, and one concrete next action. Reserve “waiting for your debug check” for an intentional inspection stop; say what the user should inspect. Never use “paused” by itself. Translate internal stage names: `audition` means a short sample using the user’s cloned voice so they can hear it before approving. Internal stage IDs remain unchanged.
+
+If a historical planning report has only a diagnostic, read that evidence and explain its actual reason and repair in plain language before asking the user for anything. Do not copy the technical report into the chat, invent structured fields on the old record, infer account failure from a free plan, or ask the user to interpret the diagnostic.

@@ -141,7 +141,7 @@ test('CLI debug control and read-only inspector use the real saved project witho
  try{
   const init=invoke('init',fileURLToPath(new URL('../examples/parent.json',import.meta.url)));
   const paused=invoke('debug','on','--message','ISOLATED debug instruction');assert.equal(paused.pending.taskId,init.pending.taskId);assert.equal(paused.debug.paused,true);
-  assert.match(paused.producer.message,/Debug paused/);const snapshot=invoke('debug-inspect');assert.equal(snapshot.providerCalls,0);assert.equal(snapshot.operatorOnly,true);
+  assert.match(paused.producer.message,/Waiting for your debug check/);const snapshot=invoke('debug-inspect');assert.equal(snapshot.providerCalls,0);assert.equal(snapshot.operatorOnly,true);
   const after=invoke('status');assert.equal(after.checkpointId,snapshot.checkpointId);assert.equal(after.sequence,snapshot.sequence);
   const ready=invoke('debug-next','--message','ISOLATED continue one step');assert.equal(ready.debug.paused,false);
   const off=invoke('debug','off','--message','ISOLATED disable');assert.equal(off.debug.enabled,false);assert.equal(off.pending.taskId,init.pending.taskId);

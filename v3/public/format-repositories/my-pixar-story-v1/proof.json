@@ -559,5 +559,16 @@
     "independentPackageTestsPassed": 226,
     "auditedCodeArchiveSha256": "cbea842cd44b9a66c6d1e13dcd555e41d499a891dcfb0263f0be041f980ef216",
     "dependencyReuse": "Exact lockfile matched; not a clean npm install."
+  },
+  "plainProducerMessages": {
+    "date": "2026-10-05",
+    "sourceTestsPassed": 226,
+    "namedTestsAdded": 0,
+    "scope": "Plain voice-sample label, blocked versus intentional debug-wait messages, separate historical diagnostics and no stale blocked claim after resolution",
+    "checkAndParentGrandparentSmoke": "pass",
+    "runtimeStateAndStageIdsChanged": false,
+    "savedProductionProjectsChanged": false,
+    "paidProviderCalls": 0,
+    "actualNewWorkerResponseProven": false
   }
 }

@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-05",
+  "branch": "codex/memoir-plain-producer-messages",
+  "baseCommit": "0ba2be5d",
+  "scope": "Human producer terminology and blocked/debug-wait/history messages; no workflow transition or stage-ID change",
+  "sourceTests": {
+    "passed": 226,
+    "failed": 0,
+    "namedCasesAdded": 0,
+    "log": "/tmp/memoir-plain-producer-final-tests.log"
+  },
+  "packagingChecks": {
+    "passed": 108,
+    "failed": 0,
+    "log": "/tmp/memoir-plain-producer-pack.log"
+  },
+  "sourceCheck": true,
+  "sourceSmokeInputs": [
+    "parent",
+    "grandparent"
+  ],
+  "package": {
+    "sha256": "fa331746c7b42f09894097da88e924e5d07322bd469f8cff639007343d5d2ea4",
+    "bytes": 7032688
+  },
+  "independentPackageAudit": {
+    "status": "pass",
+    "focusedTestsPassed": 57,
+    "independentProbesPassed": 5,
+    "check": true,
+    "smokeInputs": [
+      "parent",
+      "grandparent"
+    ],
+    "report": "docs/proofs/memoir-plain-producer-package-audit.md",
+    "dependencies": "Exact lockfile match and existing modules reused; not a clean install."
+  },
+  "simplificationReview": "net: 0 lines worth cutting. Lean already. Ship. Existing display map, status formatter and instructions; no dependency, renderer or state store added.",
+  "savedProductionProjectChanged": false,
+  "paidProviderCalls": 0,
+  "credentialsRead": false,
+  "actualNewWorkerResponseProven": false,
+  "realFilmProof": false
+}

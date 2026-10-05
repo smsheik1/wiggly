@@ -28,7 +28,7 @@ test('existing voice selection and authenticated lookup preserve the locked scri
  assert.equal(p.step,'voiceSample');assert.equal(p.gate,'human');assert.equal(p.debug.paused,true);
  assert.equal(JSON.stringify(current(p,'script')),locked);assert.equal(p.studio.sha256,snapshot);assert.equal(p.jobs.length,0);assert.equal(p.budget.maxCostUsd,0);assert.equal(current(p,'clone'),undefined);
  const status={project:p,pending:taskFor(p)},u=producerUpdate(status,'/isolated-test/run');
- assert.equal(u.voiceChoice.verified,true);assert.equal(u.voiceChoice.access,'public');assert.match(u.message,/owned by your account/);assert.match(u.message,/original cloning recording/);assert.match(u.message,/Voice approval is still pending/);assert.equal(u.nextWorker,null);
+ assert.equal(u.voiceChoice.verified,true);assert.equal(u.voiceChoice.access,'public');assert.match(u.message,/owned by your account/);assert.match(u.message,/original cloning recording/);assert.match(u.message,/hear a short sample before approving the voice/);assert.equal(u.nextWorker,null);
 });
 
 test('reference submission binds the exact existing voice and lookup provenance then reaches audition planning, still debug-paused',()=>{

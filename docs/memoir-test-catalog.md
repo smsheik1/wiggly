@@ -488,7 +488,7 @@ Uses simulated workers and temporary checkpoints. The CLI inspector is read-only
 
 **Source:** `tests/producer-handoff.test.mjs`
 
-Checks the producer's generated status text against simulated history. The two additional blocker-message cases are listed separately at the end.
+Checks the producer's generated status text against simulated history. Current assertions also distinguish blocked work from waiting for debug inspection, use plain voice-sample labels, keep historical diagnostics separate and clear stale blocked wording after resolution. The two additional blocker-message cases are listed separately at the end.
 
 157. **Name the author who actually completed work and the next reviewer; do not claim an assigned worker is already running.** [Test source](/Users/shaz/.codex/worktrees/2f6f/wiggly/v3/public/format-repositories/my-pixar-story-v1/tests/producer-handoff.test.mjs:24)
 
