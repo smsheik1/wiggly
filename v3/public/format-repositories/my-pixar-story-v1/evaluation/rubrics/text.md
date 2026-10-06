@@ -8,13 +8,50 @@ Every verdict uses the existing Review contract: one finding per required criter
 
 The offline foundation has no calibrated semantic, voice or anatomy judge yet. Test proposed reviewers on labelled examples, keep related inputs together, and report missed defects and incorrect rejections separately by criterion. Holdout examples are not prompt examples. Numerical benchmark results from this small collection do not authorize automatic production acceptance.
 
+## Select the current text task
+
+The task's `step` and required criteria determine the review. Apply shared grounding rules below to every mode; do not import criteria from another stage. Use the verified dependencies and human creativeDirections, not an author's assertion that a lock or approval exists.
+
+| Assigned step | Review focus |
+| --- | --- |
+| answers | Usable source-grounded memories, relationships and essential common-sense clarifications. Optional omissions stay optional. |
+| script | Facts, relationship, clarity, emotional purpose, estimated timing and necessary cast/common-sense flags. See the script quality guidance below. |
+| roster | Necessary roles/age looks and rights/reference evidence or explicit interpreted likeness. Birthday differences alone do not establish distinct looks. |
+| characterPrompt / sheetPrompt | Cast/reference fit and the supplied recipe; sheet layout specifies the turnaround and eight expressions while preserving the selected identity. |
+| shotIntentions / shots | Coverage of locked beats, timing, scene fit, available references, workable staging and continuity. |
+| backgrounds | Required locations and angles derived from the reviewed shots, with essential dependencies flagged. |
+| backgroundBrief / backgroundAngleBrief | Immediate scene intent, grounded place facts, spatial action and continuity. Script is primary; questionnaire supports it. |
+| backgroundPrompt / backgroundAnglePrompt | Fidelity to the approved brief, style recipe, space for the action and consistent location geometry. |
+| keyframePrompt | Scene intent, exact character/background references, staging, camera and continuity. |
+| videoPlan / videoPrompt | Approved keyframe bindings, feasible shot coverage/timing and clear motion, physical anchors, camera and continuity. A 15-second beat need not be a single generated clip. |
+| soundPlan / editPlan | The project's agreed sound policy or timeline, locked narration preservation, mix intent, continuity and provenance. Optional music/effects may be omitted with the required reason; a piano-score criterion does not mandate adding music to a project that allows omission. |
+| reviewerQualification / audioReviewerQualification | Provenance and reported held-out evidence under the assigned qualification criteria. Do not invent measured recall, false-rejection rates or a qualification the evidence does not establish. |
+
+Text review cannot certify rendered likeness, hand anatomy, listening quality or temporal video defects. When a prompt uses photos, inspect available bound photos before asserting a visual conflict; reference IDs alone do not establish likeness. Other workers review generated media. Ordinary set dressing or staging explicitly treated as interpretation is not an asserted autobiographical fact; reject an invented remembered detail when the text presents it as authentic.
+
+## Script quality: defects versus polish
+
+A usable script helps the recipient understand this particular person's memories and what they mean. Check whether the listener can follow who is involved and what happens, whether the narration preserves the source's emotional meaning and whether the connection to the recipient is understandable. Improve raw storytelling without demanding its raw wording. Four beats may select or combine memories; they need not include every supplied anecdote or follow one mandatory arc.
+
+Fail materially confusing narration with the exact ambiguous passage and an evidenced correction. For example, a switch from sister to wife with no way to identify who “she” means needs clarification in the writing. A statement that reverses sourced affection into resentment fails emotional meaning. If no passage establishes the agreed recipient connection, identify that omission and request a connection grounded in supplied answers. Do not invent the recipient's birth, presence at an old memory or a recurring prop to manufacture an ending.
+
+An earned plain line such as “I love you” can pass. A different ending, more lyrical language, stronger callback or another preferred phrase is optional polish when the current text communicates clearly and faithfully. Vague filler becomes a blocking clarity or emotional-purpose defect only when you show what necessary meaning is lost; “I could write this better” is not evidence. Natural gestures, uncertainty and flexible plot choices follow the grounding policy below.
+
+For timing, estimate whether each beat plausibly fits its 15-second window at natural pace. Explain an apparent overflow using the actual words and available delivery evidence; do not invent an exact duration or impose an unagreed ten-second speech limit. Label estimates as estimates. FFprobe and later audio review establish recorded duration. Do not demand faster speech or reopen a locked script based only on an uncertain ASR spelling.
+
+## Findings and revision review
+
+Give exactly one finding for each supplied criterion. For a failure, `location` identifies the exact beat/sentence or plan field; `evidence` names the changed claim or unmet requirement and the relevant source/dependency; `repair` specifies the smallest correction the responsible author can make. For example: location “Beat 1, sentence 2”; evidence “Draft says Mom promised a laboratory; scene1Childhood says she seemed excited/proud and records no promise”; repair “Remove the laboratory promise; preserve the sourced encouragement.” Do not rewrite the story or add criteria to carry personal preferences. Optional polish can be clearly identified within a passing finding, without becoming a required repair or separate criterion.
+
+On a revision, verify the previous blocking findings against the new version and inspect all current criteria for regressions. A newly discovered material defect still needs evidence; an optional improvement does not become mandatory because another attempt is available. Use the runtime's pinned disagreement limit and escalation route, not a fixed personal retry count. The runtime, not Sage, dispatches the author or requests a human decision.
+
 ## Answers and character design prompts (workflow revision 3+)
 
 At answers, act as Questionnaire Reviewer. Compare existing questions/answers, immutable source inputs, explicit human clarification and current common-sense findings. Check factual grounding, usable completeness, relationships, ages, places and feasibility. Poor storytelling is not a failure: Leo will elevate the writing. Missing meaningful facts require a specific clarification, not invented autobiography or a repeated full questionnaire. Human confirmation establishes ANSWERS LOCK; it does not approve a script.
 
 Questionnaire subprompts are optional invitations. Only missing facts needed to understand or stage the story should block intake. Optional anecdotes can stay unanswered. Missing silly trouble, a shocking teenage fact, an awkward romance incident or a distinct realization of love is not a completeness failure. Gradual love is usable without another invented or requested incident.
 
-For a blocking omission, cite the specific misunderstanding, unsupported claim or necessary visual dependency it prevents. Use truthful omission, an unnamed relationship, the supplied age difference or an unspecified location when sufficient. Do not demand names, pronouns, exact ages, places or technical detail merely because absent. Review the author's commonSenseChecks too: reject an unnecessary blocking finding with evidence and a repair to remove it, without filling the gap or asking the human to waive optional prompts. Historical revision 3 retains its intake inventory gate. Revision 4 confirms rights and references at roster approval, after the reviewed script has proposed the cast. Voice sample consent and exact human approvals remain mandatory. Passing this text review does not supply those human confirmations.
+For a blocking omission, cite the specific misunderstanding, unsupported claim or necessary visual dependency it prevents. Use truthful omission, an unnamed relationship, the supplied age difference or an unspecified location when sufficient. Do not demand names, pronouns, exact ages, places or technical detail merely because absent. Review the author's commonSenseChecks too: reject an unnecessary blocking finding with evidence and a repair to remove it, without filling the gap or asking the human to waive optional prompts. Historical revision 3 retains its intake inventory gate. Revision 4 confirms rights and references at roster approval, after the reviewed script has proposed the cast. Voice consent and exact human approvals remain mandatory; reuse of an existing verified clone follows the project’s recorded voice choice and does not require a new sample merely for this text review. Passing this text review does not supply those human confirmations.
 
 At characterPrompt, compare the locked script, approved cast/age entry, actual source photos and character-prompter.md recipe. Verify exact ordered reference hashes and concise full-body design instructions. Identify evidenced age/likeness/wardrobe/proportion conflicts. Questionnaire supports these primary inputs. Distinguish interpreted no-photo likeness from photo-grounded likeness. The human approves the prompt before three Muse candidates; text approval cannot replace actual image review and selection.
 

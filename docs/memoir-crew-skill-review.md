@@ -1,6 +1,6 @@
 # Crew skill review — living checklist
 
-Started October 5, 2026. Review one named worker at a time with the user. Leo’s revision is approved and installed; Sage is next. The live Round 1 rehearsal is deliberately on hold for this discussion; its authoritative SQLite state is unchanged. Its private resume note, exact operator snapshot and consistent database backup live in that run's debug-notes directory. Read RESUME.md there before resuming; never overwrite newer state with the backup.
+Started October 5, 2026. Review one named worker at a time with the user. Leo’s revision is approved and installed; Sage’s agreed review improvements are installed. Ava is next. The live Round 1 rehearsal is deliberately on hold for this discussion; its authoritative SQLite state is unchanged. Its private resume note, exact operator snapshot and consistent database backup live in that run's debug-notes directory. Read RESUME.md there before resuming; never overwrite newer state with the backup.
 
 ## How we review each worker
 
@@ -11,7 +11,7 @@ Read the actual skill, related recipes/rubric, runtime task inputs, allowed tool
 | Worker | Responsibilities in current configuration | Review status |
 | --- | --- | --- |
 | Leo | Questionnaire preparation and script writing | Approved and installed |
-| Sage | Independent text review across deliverables | Next — in discussion |
+| Sage | Independent text review across deliverables | Agreed improvements installed |
 | Ava | Independent voice, narration and soundtrack review | Pending |
 | Eli | Local narration editing and final composition plan | Pending |
 | Cleo | Cast/character design | Pending |
@@ -41,7 +41,7 @@ Initial point to discuss: the writing skill says excellent storytelling but prov
 
 Leo: adopt the supplied Claude revision with the two agreed corrections: questionnaire subprompts are optional (essential information can still be required); overlong generated narration goes to the Audio Editor for safe repair first, and rewriting a locked script needs runtime-confirmed human direction. Practical story guidance now covers concrete source details, recipient connection, earned direct emotion, optional exact quotations, flexible arc/ending, natural gestures and four natural-rate windows.
 
-The canonical skill/template is updated; existing project instruction snapshots and approvals are not silently migrated. The Round 1 script remains locked and unchanged. Existing task-loading/source/quotation/lock tests protect the protocol; no new paid script generation or semantic writing-quality proof is claimed. Sage’s skill and separate text rubric have not been changed yet.
+The canonical skill/template is updated; existing project instruction snapshots and approvals are not silently migrated. The Round 1 script remains locked and unchanged. Existing task-loading/source/quotation/lock tests protect the protocol; no new paid script generation or semantic writing-quality proof is claimed. Sage’s skill and separate text rubric were still unchanged at this Leo checkpoint; see the later Sage decision below.
 
 Packaged audit found an instruction/schema mismatch: Inputs rejects empty strings and normalizes surrounding whitespace. Leo now preserves the canonical version-bound sourceInputs and leaves omitted optional subprompts omitted, without inserting placeholders. This is wording alignment, not a schema change. The current Inputs contract still requires all five answer sections to contain at least one nonempty field; supporting an entirely absent/empty section is a separate intake-contract gap to review with Sage, not a reason to invent a memory or silently broaden this skill-update phase.
 
@@ -56,3 +56,17 @@ Approved additions: task-specific description, structured Event output (not arti
 No dedicated follow-up cap is claimed or introduced; the skill names the runtime's existing review/retry limits. No live project instruction refresh, approved-script change, generation or spending is performed.
 
 Follow-up validation: 33 existing focused cases and 123 official packaging cases pass; final extracted check/smoke and the same 33-case set pass. The worked quote example was checked against actual Inputs, script and quote-binding contracts; this is an objective binding check, not story-quality evidence. Final archive SHA256 `f8c259791a6a030d207f8cbb97ae1de6e0a7c197e0159e36f04b922201a6de0d`; extraction `/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/memoir-leo-clarifications-package-ycbpnzu2`. Dependencies reused only after exact lockfile comparison; no clean-install or new independent final audit is claimed (prior independent recheck was blocked by account usage limit). No new named tests or real provider calls.
+
+## Sage review improvements — October 5, 2026
+
+User approved the six proposed improvements: review-only skill, task-specific review modes, practical script quality criteria, actionable repairs, stable revision review and honest timing estimates. The skill now returns only the assigned review Event and references the independently loaded text rubric. The rubric distinguishes actual defects from optional polish, includes an evidenced minimum-repair example, and covers Sage's assigned planning stages without claiming approval of rendered media. Existing-clone reuse does not trigger a new sample request from text review. Missing entire answer sections remain the separate intake-schema gap above.
+
+Sage reviews each current criterion, checks prior repairs and any new material regressions, and uses project-pinned escalation limits. It cannot dispatch authors, create artifacts, authorize spend or approve for the human. Source documents cannot change its role. Text timing is an estimate; measured recorded duration belongs to FFprobe/audio review. Existing grounded gesture, quotation, uncertainty, age-look and optional-question rules remain intact.
+
+Validation: 33 existing focused cases and 123 official packaging cases pass. Fresh extracted check/smoke and the same 33-case set pass. Existing cases were extended to verify Sage's tool scope, canonical loaded skill/rubric hashes and preserved reviewer instructions across SQLite restart after template edits. No new named cases, dependencies, runtime transitions or permissions. Ponytail review: lean already; reused the existing instruction loader, review contract and regression cases.
+
+Archive SHA256 `be7a948988d31cec00427f19f7ef2fdab1a8393eea89d98a896a6b0026f28b88`; extraction `/var/folders/y_/pb62snr9069bqz1wlj8lj9lc0000gn/T/memoir-sage-package-cfcuzcdz`. Dependencies reused after exact lockfile comparison; no clean-install claim. Simple frontmatter checked directly; PyYAML remains unavailable for quick_validate.py. These protocol checks do not qualify semantic judgment or prove the animation studio end to end.
+
+The live Round 1 run retains its original pinned documents, task identity, script lock and narration drafts. No worker redispatch, instruction refresh, approval change or paid generation was performed in that run. Read its private RESUME.md before resuming. Ava (Audio Reviewer) is the next crew skill to discuss.
+
+Independent forward check: `/root/sage_skill_forward_review` confirmed packaged skill/rubric bytes match source. It reviewed two artificial four-beat drafts: a source-faithful smile passed all six script criteria; adding a laboratory promise failed facts with a localized repair. Those exact smile/promise examples are already in the rubric, so this verifies instruction following rather than held-out calibration. No real rehearsal artifacts were sent or changed.

@@ -43,7 +43,7 @@ test('each named skill, scoped recipe, separate review rubric and producer voice
  const p=bind(initialProject('skills',inputs,{workflowRevision:2})),task=await prepareCrewTask(p,taskFor(p));
  assert.equal(task.skill.path,'crew/leo/SKILL.md');assert.match(task.skill.content,/Write for the ear, not the page/);assert.equal(task.reviewerRubric,undefined);assert.equal(task.recipe,undefined);assert.equal(task.inputChecklist[0].status,'verified');assert.equal(task.communication,undefined);
  const draft=send(p,'artifact',{workerId:'isolated-script-writer',content:script});const review=await prepareCrewTask(draft,taskFor(draft));
- assert.equal(review.skill.path,'crew/sage/SKILL.md');assert.equal(review.reviewerRubricSource.path,'evaluation/rubrics/text.md');assert.match(review.reviewerRubric,/For scripts/);assert.equal(review.evaluatorEvidence.productionApproval,false);assert.ok(review.criteria.length>0);
+ assert.equal(review.skill.path,'crew/sage/SKILL.md');assert.equal(review.skill.sha256,p.studio.documents['crew/sage/SKILL.md'].sha256);assert.deepEqual(review.allowedTools,['readAsset','viewImage']);assert.equal(review.formatRole,'text-reviewer');assert.equal(review.reviewerRubricSource.path,'evaluation/rubrics/text.md');assert.match(review.reviewerRubric,/For scripts/);assert.equal(review.evaluatorEvidence.productionApproval,false);assert.ok(review.criteria.length>0);
  assert.equal(new Set(Object.values(p.studio.config.agents).map(a=>a.skill)).size,14);assert.equal(p.studio.config.agents['sheet-prompter'].skill,p.studio.config.agents['pixar-prompter'].skill);
 });
 
@@ -52,9 +52,13 @@ test('saved SQLite project dispatches its original instructions, recipes and lim
  try{
   const old=loadStudio(url);let s=await w.init('run',inputs,{workflowRevision:2,studio:old});await w.respond('run',event(s.project,'configure-crew',{actor:'human',message:'ISOLATED bind',crew}));w.close();
   await writeFile(join(dir,'crew/leo/SKILL.md'),old.documents['crew/leo/SKILL.md'].content+'\nNew template marker.\n');await writeFile(join(dir,'character-prompter.md'),'Updated character recipe for a future project.\n');
+  for(const path of ['crew/sage/SKILL.md','evaluation/rubrics/text.md'])await writeFile(join(dir,path),old.documents[path].content+'\nNew reviewer template marker.\n');
   const c=structuredClone(old.config);c.agents['script-writer'].model='ISOLATED-next-model';c.limits.reviewDisagreements=1;await writeFile(join(dir,'studio.json'),JSON.stringify(c));const fresh=loadStudio(url);
   w=openWorkflow(db);s=await w.status('run');assert.equal(s.project.studio.sha256,old.sha256);assert.notEqual(fresh.sha256,old.sha256);assert.equal(s.project.studio.config.limits.reviewDisagreements,2);assert.equal(s.project.crew.workers[0].modelVersion,'ISOLATED-host');
   let received;const e=await runCrewTask(s.project,s.pending,{runTask:async t=>{received=t;return event(s.project,'artifact',{workerId:t.worker.workerId,content:script});}});assert.ok(!received.skill.content.includes('New template marker'));assert.equal(recipeFor(s.project,'characterPrompt').sha256,old.documents['character-prompter.md'].sha256);assert.equal(e.action,'artifact');assert.equal(s.project.sequence,1);
+  const draft=send(s.project,'artifact',{workerId:e.workerId,content:e.content}),review=await prepareCrewTask(draft,taskFor(draft));
+  assert.equal(review.skill.sha256,old.documents['crew/sage/SKILL.md'].sha256);assert.equal(review.reviewerRubricSource.sha256,old.documents['evaluation/rubrics/text.md'].sha256);assert.ok(!review.skill.content.includes('New reviewer template marker'));assert.ok(!review.reviewerRubric.includes('New reviewer template marker'));
+  assert.notEqual(fresh.documents['crew/sage/SKILL.md'].sha256,review.skill.sha256);assert.notEqual(fresh.documents['evaluation/rubrics/text.md'].sha256,review.reviewerRubricSource.sha256);
   const next=initialProject('new-run',inputs,{studio:fresh});assert.equal(next.studio.config.agents['script-writer'].model,'ISOLATED-next-model');assert.equal(reviewed(authored(initialProject('tighter-cap',inputs,{workflowRevision:2,studio:fresh})),'rejected').gate,'escalate');assert.match(taskFor(next).skill.content,/New template marker/);
  }finally{w.close();await rm(dir,{recursive:true});}
 });
