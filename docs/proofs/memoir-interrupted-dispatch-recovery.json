@@ -9,5 +9,12 @@
   "limitations": [
     "Live recovery still pending; no narration approval or substitution."
   ],
-  "complexityReview": "Lean already. Ship."
+  "complexityReview": "Lean already. Ship.",
+  "liveProof": {
+    "reconciled": true,
+    "sameTaskAfterRefresh": true,
+    "crewStep": "Eli attempt 2 returned historical provider-error without tools; rejected and debug paused.",
+    "newPaidCalls": 0,
+    "nextFix": "Explicit allowed actions and historical-vs-current repair evidence instruction. Await actual human continuation for final bounded worker attempt."
+  }
 }
