@@ -4,7 +4,7 @@ import {mkdtemp,rm,readFile,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {audioProject,send} from './helpers.mjs';
+import {audioProject,send,reviewed} from './helpers.mjs';
 import {current,taskFor} from '../runtime/workflow.mjs';
 import {executeJob,requestDescriptor,generationEstimate} from '../runtime/providers.mjs';
 import {importMedia,narrationWindow} from '../runtime/media.mjs';
@@ -39,6 +39,11 @@ test('one-beat regeneration preserves siblings/locks, posts once and recovers wi
   // Adapter recovery reuses the exact recorded request and completed subreceipt.
   const recovered=await executeJob(restarted,restarted.jobs.at(-1),f.dir,'',()=>{throw new Error('Forbidden replay');},true);assert.deepEqual(recovered,result);assert.equal(calls,1);
   const receipt={jobId:job.id,artifactDigest:job.digest,result};const done=send(submitted,'receipt',receipt);assert.equal(done.gate,'review');assert.equal(done.narrationRegeneration,undefined);assert.ok(!current(done).approvedBy);
+  const measurements={transcripts:current(done,'script').content.beats.map((b,i)=>i===1?'I drove my own car with no AC.':b.narration),speechToTextMethod:'ISOLATED mock STT',referenceSha256:current(done,'voiceSample').content.files[0].sha256,speakerSimilarity:.9,speakerSimilarityMethod:'ISOLATED mock identity',speakingRateWpm:[80,80,80,80],silenceSeconds:[1,1,1,1],measurementNotes:'ISOLATED contract evidence only.'};
+  assert.equal(reviewed(done,'approved',{measurements}).gate,'human');
+  const unapproved=structuredClone(done);delete current(unapproved).content.audioRegenerations;
+  assert.throws(()=>reviewed(unapproved,'approved',{measurements}),/Speech-to-text/);
+  const changed=structuredClone(measurements);changed.transcripts[1]='I drove my own boat with no AC.';assert.throws(()=>reviewed(done,'approved',{measurements:changed}),/Speech-to-text/);
   for(const mutate of [x=>x.files[0]=x.files[1],x=>x.audioRegenerations[0].requestDigest='wrong',x=>x.transcripts[1]='invented story',x=>x.voiceId='wrong']){const bad=structuredClone(result);mutate(bad);assert.throws(()=>send(submitted,'receipt',{...receipt,result:bad}),/NARRATION|voice/);}
   const stale=structuredClone(submitted);current(stale).digest='changed';await assert.rejects(executeJob(stale,stale.jobs.at(-1),f.dir,'ISOLATED',()=>{throw new Error('Forbidden');}),/STALE/);
  }finally{await rm(f.dir,{recursive:true});}
