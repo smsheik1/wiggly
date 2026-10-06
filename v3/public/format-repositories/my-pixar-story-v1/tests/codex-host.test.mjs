@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {digest} from '../runtime/contracts.mjs';
 import {EventEmitter} from 'node:events';
 import {PassThrough,Writable} from 'node:stream';
 import {mkdtemp,rm,readFile,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {CodexHost,driveCrew,DEFAULT_WORKER_MODEL} from '../runtime/codex-host.mjs';
+import {CodexHost,driveCrew,reconcileDispatch,DEFAULT_WORKER_MODEL} from '../runtime/codex-host.mjs';
 import {openWorkflow,initialProject,taskFor,applyEvent} from '../runtime/workflow.mjs';
 import {inputs,intakeFixture,script,event,send,authored,reviewed,approved} from './helpers.mjs';
 import {crewRoles,runCrewTask} from '../runtime/crew.mjs';
@@ -229,4 +230,28 @@ test('sourced audio estimate plans without balance proof but preserves budget an
  assert.throws(()=>send(p,'authorize',{actor:'human',jobId:j.id,artifactDigest:'wrong',message:'ISOLATED wrong request'}),/exact generation request/);
  p=send(p,'authorize',{actor:'human',jobId:j.id,artifactDigest:j.digest,message:'ISOLATED scoped audio permission'});
  assert.equal(p.jobs.at(-1).status,'authorized');assert.equal(p.gate,'collect');assert.equal(p.allowances.length,0);assert.equal(JSON.stringify(p.artifacts),initial);
+});
+
+test('interrupted reconciliation archives exact native evidence and preserves consumed attempts',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'memoir-reconcile-'));
+ const worker={workerId:'native-worker',name:'Eli',role:'film-editor',modelVersion:'gpt-5.6-sol',capabilityVersion:'old',execution:'host'},task={taskId:'saved-task',crewWorker:worker};
+ const receipt={status:'started',taskId:task.taskId,worker,workerDigest:digest(worker),attempt:2},path=join(dir,task.taskId+'.json');
+ const turn={id:'native-turn',status:'interrupted',items:[{type:'userMessage',content:[{type:'text',text:JSON.stringify({task:{taskId:task.taskId,worker}})}]},{type:'dynamicToolCall',status:'failed'}]};
+ const host={call:async(method,args)=>{assert.equal(method,'thread/read');assert.equal(args.threadId,worker.workerId);return {thread:{id:worker.workerId,turns:[turn]}};}};
+ try{
+  await writeFile(path,JSON.stringify(receipt));
+  for(const status of ['inProgress','completed','failed']){turn.status=status;await assert.rejects(reconcileDispatch(task,host,{receiptDirectory:dir,turnId:turn.id,message:'Actual direction'}),/UNCONFIRMED/);assert.deepEqual(JSON.parse(await readFile(path)),receipt);}
+  turn.status='interrupted';turn.items.push({type:'agentMessage',text:'finished'});await assert.rejects(reconcileDispatch(task,host,{receiptDirectory:dir,turnId:turn.id,message:'Actual direction'}),/UNCONFIRMED/);turn.items.pop();
+  const result=await reconcileDispatch(task,host,{receiptDirectory:dir,turnId:turn.id,message:'Actual direction'});
+  assert.equal(result.status,'rejected');assert.equal(result.attempt,2);assert.equal(result.taskId,task.taskId);
+  assert.deepEqual(JSON.parse(await readFile(path+'.interrupted-2.json')),receipt);assert.deepEqual(JSON.parse(await readFile(result.reconciliation.evidencePath)),turn);
+  await assert.rejects(reconcileDispatch(task,host,{receiptDirectory:dir,turnId:turn.id,message:'Again'}),/DENIED/);
+ }finally{await rm(dir,{recursive:true});}
+});
+test('same-worker host refresh retains task identity, pinned instructions and debug pause',()=>{
+ const p=initialProject('refresh-task',inputs),workers=Object.entries(crewRoles).map(([role,{name}])=>({role,name,workerId:'native-'+role,modelVersion:'gpt-5.6-sol',capabilityVersion:'old',execution:'host'}));
+ const configured=send(p,'configure-crew',{actor:'human',message:'Initialize',crew:{workers}});
+ const task=taskFor(configured),docs=digest(configured.studio);configured.debug={enabled:true,paused:true};
+ const refreshed=send(configured,'configure-crew',{actor:'human',message:'Explicit same-worker tool upgrade',crew:{workers:workers.map(w=>({...w,capabilityVersion:'new'}))}});
+ assert.equal(taskFor(refreshed).taskId,task.taskId);assert.equal(refreshed.sequence,configured.sequence);assert.equal(digest(refreshed.studio),docs);assert.equal(refreshed.debug.paused,true);
 });

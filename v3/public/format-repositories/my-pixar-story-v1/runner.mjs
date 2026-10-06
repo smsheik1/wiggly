@@ -16,7 +16,7 @@ import {prepareComposition, servePreview, verifyRenderer} from './runtime/remoti
 import { assemblyManifest, assertFilmInspection } from './runtime/studio.mjs';
 import {presentDeliverable,producerUpdate} from './runtime/presentation.mjs';
 import {Crew,crewRoles,runCrewTask,prepareCrewTask} from './runtime/crew.mjs';
-import {CodexHost,driveCrew} from './runtime/codex-host.mjs';
+import {CodexHost,driveCrew,reconcileDispatch} from './runtime/codex-host.mjs';
 import {createGeminiReviewTools,GEMINI_REVIEW_PROFILE} from './runtime/gemini-review.mjs';
 import {createCartesiaTranscriptionTool,CARTESIA_STT_PROFILE} from './runtime/cartesia-stt.mjs';
 import {createAudioEditTools,AUDIO_EDIT_PROFILE} from './runtime/audio-edit.mjs';
@@ -123,7 +123,7 @@ async function main() {
       print(presentation(await workflow.respond('project',{taskId:status.pending.taskId,actor:'human',action:'debug-next',message})));return;
     }
     if(command==='debug-inspect'){if(args.length)throw new Error('Unknown debug-inspect arguments.');print(await debugSnapshot(status,runDir));return;}
-    if(['crew-start','crew-refresh','drive-codex','work-codex'].includes(command)){
+    if(['dispatch-reconcile','crew-start','crew-refresh','drive-codex','work-codex'].includes(command)){
       const reviewCalls=Number(option('review-calls','0'));
       const transcriptionCalls=Number(option('transcription-calls','0'));
       const reviewCost=Number(option('review-cost-usd','0')),transcriptionCost=Number(option('transcription-cost-usd','0'));
@@ -134,7 +134,15 @@ async function main() {
       // Keep a bounded ten-minute window; timeout still stops without a retry.
       const host=new CodexHost({cwd:join(runDir,'host-workspace'),timeoutMs:600000,perceptionTools,perceptionProfile:{media:GEMINI_REVIEW_PROFILE,transcription:CARTESIA_STT_PROFILE,audioEditing:AUDIO_EDIT_PROFILE},onProgress:({worker,item})=>process.stderr.write(`${worker}: ${item}\n`)});
       try{
+        if(command==='dispatch-reconcile'){
+          const turnId=option('turn'),message=option('message');if(args.length)throw new Error('Unknown reconciliation arguments.');
+          await host.initialize();print(await reconcileDispatch(status.pending,host,{receiptDirectory:join(runDir,'host-dispatch'),turnId,message}));return;
+        }
         if(['crew-start','crew-refresh'].includes(command)){
+          if(command==='crew-refresh'){
+            const path=join(runDir,'host-dispatch',status.pending.taskId+'.json');
+            try{if((await json(path)).status==='started')throw new Error('CODEX_DISPATCH_UNCERTAIN: reconcile the saved native dispatch before capability refresh.');}catch(error){if(error.code!=='ENOENT')throw error;}
+          }
           const message=option('message'),model=option('model');
           if(!message||command==='crew-start'&&status.project.crew||command==='crew-refresh'&&!status.project.crew)throw new Error('crew-start requires an unconfigured run; crew-refresh requires existing bindings. Supply --message with the actual human instruction.');
           if(status.project.jobs.some(j=>['submitting','submitted','uncertain'].includes(j.status)))throw new Error('Reconcile outstanding jobs before changing crew.');
@@ -248,7 +256,7 @@ async function main() {
         await runtimeEvent('provider-error',{message:diagnostic});throw new Error(`${diagnostic}\n${remediation(job.plan.provider,secretsPath)}`);
       }return;
     }
-    throw new Error('Use check, check-provider, schema, init, status, present, work, respond, use-voice, verify-voice, reuse-voice, input-folder, import, measure, validate, impact, generate, collect, crew-template, crew-start, crew-refresh, work-codex, drive-codex, debug, debug-next, debug-inspect, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
+    throw new Error('Use check, check-provider, schema, init, status, present, work, respond, use-voice, verify-voice, reuse-voice, input-folder, import, measure, validate, impact, generate, collect, crew-template, crew-start, crew-refresh, dispatch-reconcile, work-codex, drive-codex, debug, debug-next, debug-inspect, audio-tasks, qualify-audio, visual-tasks, qualify-visual, preview, render or finalize. See SKILL.md.');
   } catch(error){
     const latest=await workflow.status('project').catch(()=>null);
     if(latest?.project.debug?.enabled&&!latest.project.debug.paused)await workflow.respond('project',{taskId:latest.pending.taskId,actor:'runtime',action:'debug-stop',message:'Command stopped: '+error.message});

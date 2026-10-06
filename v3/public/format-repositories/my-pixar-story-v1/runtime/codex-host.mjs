@@ -131,6 +131,24 @@ export class CodexHost {
  close(){this.fail(new Error('CODEX_HOST_CLOSED'));this.child.stdin.end();this.child.kill();this.lines.close();}
 }
 
+// Reconciliation is a read of the original native turn, never a replacement turn.
+export async function reconcileDispatch(task,host,{receiptDirectory,turnId,message}){
+ const path=join(receiptDirectory,task.taskId+'.json'),receipt=await readJson(path);
+ if(!message||!turnId||receipt?.status!=='started'||receipt.taskId!==task.taskId||receipt.workerDigest!==digest(task.crewWorker))throw new Error('DISPATCH_RECONCILIATION_DENIED: current started receipt, exact worker, turn ID and human direction required.');
+ const result=await host.call('thread/read',{threadId:receipt.worker.workerId,includeTurns:true});
+ const turn=result.thread?.turns?.find(t=>t.id===turnId);
+ const input=turn?.items?.find(i=>i.type==='userMessage')?.content?.find(c=>c.type==='text')?.text;
+ let packet;try{packet=JSON.parse(input);}catch{}
+ if(result.thread?.id!==receipt.worker.workerId||turn?.status!=='interrupted'||turn.items.some(i=>i.type==='agentMessage')||turn.items.some(i=>i.type==='dynamicToolCall'&& !['completed','failed'].includes(i.status))||packet?.task?.taskId!==task.taskId||packet?.task?.worker?.workerId!==receipt.worker.workerId)throw new Error('DISPATCH_RECONCILIATION_UNCONFIRMED: exact interrupted turn without a final result or pending tool required; no retry permitted.');
+ const archive=path+`.interrupted-${receipt.attempt}.json`,evidence=path+`.native-turn-${receipt.attempt}.json`;
+ for(const [target,value] of [[archive,receipt],[evidence,turn]]){
+  const prior=await readJson(target);if(prior&&digest(prior)!==digest(value))throw new Error('DISPATCH_RECEIPT_CONFLICT');
+  if(!prior)await writeFile(target,JSON.stringify(value)+'\n',{flag:'wx',mode:0o600});
+ }
+ const reconciled={...receipt,status:'rejected',error:'Confirmed native interruption without final result. Continue the saved investigation; existing local draft and paid-call attempts remain consumed. Reuse compatible finished tool receipts; do not repeat invalid or unknown provider calls.',event:{savedTools:turn.items.filter(i=>i.type==='dynamicToolCall')},reconciliation:{outcome:'confirmed-interrupted',turnId,message,evidencePath:evidence,at:new Date().toISOString()}};
+ await saveJson(path,reconciled);return reconciled;
+}
+
 export async function driveCrew(workflow,thread,host,{maxTasks,receiptDirectory,repairInvalid=false,verifySubmission=async()=>{},onProgress=()=>{}}={}){
  maxTasks??=limitsFor((await workflow.status(thread)).project).crewTasksPerDispatch;
  if(!Number.isInteger(maxTasks)||maxTasks<1||maxTasks>32)throw new Error('Use a bounded maxTasks between 1 and 32.');
@@ -144,7 +162,7 @@ export async function driveCrew(workflow,thread,host,{maxTasks,receiptDirectory,
   if(!['author','owner-review','review','produce'].includes(task.gate)||task.gate==='produce'&&task.step==='film'||['audioReviewerQualification','reviewerQualification'].includes(task.step))return {completed,stop:'graph-gate',status};
   onProgress({step:task.step,gate:task.gate});
   const path=join(receiptDirectory,task.taskId+'.json'),receipt=await readJson(path);
-  if(receipt&&receipt.workerDigest!==digest(task.crewWorker))throw new Error('DISPATCH_WORKER_CHANGED');
+  if(receipt&&receipt.workerDigest!==digest(task.crewWorker)&&!(receipt.status==='rejected'&&digest({...receipt.worker,capabilityVersion:null})===digest({...task.crewWorker,capabilityVersion:null})))throw new Error('DISPATCH_WORKER_CHANGED');
   if(receipt?.status==='started')throw new Error(`CODEX_DISPATCH_UNCERTAIN: inspect ${path} and the saved worker turn before reconciling. No automatic rerun.`);
   const attempt=(receipt?.attempt??0)+(receipt?.status==='rejected'?1:0)||1;
   if(receipt?.status==='rejected'){

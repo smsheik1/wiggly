@@ -392,7 +392,10 @@ export function applyEvent(project, raw) {
     if(visualChanged&&visual)invalidate(p,visual.id);
     if(!supervised(p)&&audioChanged&&audio){invalidate(p,audio.id);p.step='audioReviewerQualification';p.gate='author';}
     else if(!supervised(p)&&visualChanged&&visual){p.step='reviewerQualification';p.gate='author';}
+    const hostRefresh=p.crew&&p.crew.workers.length===crew.workers.length&&p.crew.workers.every(w=>digest({...w,capabilityVersion:null})===digest({...crew.workers.find(n=>n.role===w.role),capabilityVersion:null}));
     p.crew=crew;
+    // Same-worker tool refresh is setup: retain creative task/draft identities.
+    if(hostRefresh){p.history.push({sequence:p.sequence,action:e.action,actor:e.actor,message:e.message,at:new Date().toISOString()});return Project.parse(p);}
   }else if(e.action==='configure-review'){
     requiredActor(e,'human');
     if(!e.message||!e.reviewMode||!['answers','script','voiceSample','clone','audioReviewerQualification','reviewerQualification'].includes(p.step)||p.jobs.some(j=>!['ready','failed'].includes(j.status))||p.artifacts.some(a=>a.valid&&a.approvedBy&&['audition','narration','keyframe','video','film'].includes(a.kind)))throw new Error('Review policy change requires an explicit pre-production decision and reconciled jobs.');

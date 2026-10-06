@@ -1,0 +1,13 @@
+{
+  "problem": "Native interrupted dispatch had no safe runner reconciliation; same-worker refresh changed task identity and stranded local drafts.",
+  "fix": "Exact native thread/read evidence archives interruption, preserves consumed attempt, permits bounded repair. Same-worker tool refresh preserves task identity and pinned instructions. Gemini started markers publish complete JSON atomically.",
+  "validation": {
+    "focusedTests": 29,
+    "packagedTests": 125,
+    "providerCalls": 0
+  },
+  "limitations": [
+    "Live recovery still pending; no narration approval or substitution."
+  ],
+  "complexityReview": "Lean already. Ship."
+}
