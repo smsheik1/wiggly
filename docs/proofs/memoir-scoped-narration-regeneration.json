@@ -1,0 +1,20 @@
+{
+  "problem": "A human-heard AC splice still sounded discontinuous; runtime could only regenerate all four narration stems.",
+  "fix": "Human-scoped one-beat regeneration uses the existing plan/authorize/generate/collect path, pinned voice/model, spelling-only pronunciation clarification, exact parent snapshot and complete four-file candidate. Siblings and their source/hold/provenance are preserved. Locked words cannot change without script approval.",
+  "validation": {
+    "packageChecks": 128,
+    "newProviderTests": 2,
+    "mockProviderPosts": 1,
+    "realProviderCalls": 0,
+    "blocks": [
+      "unapproved spend",
+      "stale or locked parent",
+      "changed script words",
+      "changed sibling records",
+      "unknown subrequest replay"
+    ]
+  },
+  "limits": "Natural-speed timing is measured after synthesis; no promise that a fresh stem fits 15 seconds. Independent review and human full-set approval remain required.",
+  "complexityReview": "Lean already. Ship.",
+  "livePlan": "pending"
+}

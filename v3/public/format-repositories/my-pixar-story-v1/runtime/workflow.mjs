@@ -12,10 +12,10 @@ import {requireAudioQualification} from '../evaluation/audio-qualification.mjs';
 import { studioSteps, studioDependencies, studioNext, validateStudioContent, videoBinding, effectFor } from './studio.mjs';
 import { requireVisualQualification } from '../evaluation/visual-qualification.mjs';
 import { shotFor, shotReferences, referenceBindings, planningReferences, validateShots, validateLocationRegistry, validateKeyframePrompt } from './shots.mjs';
-import { requestDescriptor,planningAccountGuide,generationEstimate } from './providers.mjs';
+import { requestDescriptor,planningAccountGuide,generationEstimate,narrationGenerationTexts } from './providers.mjs';
 import {scriptQuoteChecks,transcriptDiff} from './evaluators.mjs';
 import {AudioEditReceipt,AUDIO_EDIT_PROFILE,validateAudioEdit,validateEditingInvestigation} from './audio-edit.mjs';
-import { VERSION, Inputs, Project, Content, Review, Event, Plans, IntakeConfirmation, VoiceChoiceInput, VoiceLookup, criteria, digest } from './contracts.mjs';
+import { VERSION, Inputs, Project, Content, Review, Event, Plans, IntakeConfirmation, VoiceChoiceInput, VoiceLookup, NarrationRegeneration, criteria, digest } from './contracts.mjs';
 
 import { keyFor, current, locked, audioLocked, assertAllowed, backgroundSteps, imageSteps, authorSteps, supervised, reviewPassed, refinedWorkflow, miniProduction, voiceBasis } from './gates.mjs';
 export { keyFor, current, locked, audioLocked, assertAllowed, voiceBasis } from './gates.mjs';
@@ -144,6 +144,7 @@ function addArtifact(p, content, author) {
     if(p.gate==='author'){
       if(!audioEditingEnabled(p)||!previous||previous.approvedBy||previous.review?.decision!=='rejected'||author!==assignedWorker(p)?.workerId&&p.crew)throw new Error('AUDIO_EDIT_SCOPE_DENIED');
       if(p.artifacts.filter(a=>a.kind==='narration'&&a.content.audioEdits).length>=limitsFor(p).generationAttempts)throw new Error('AUDIO_EDIT_ATTEMPT_LIMIT');
+      if(digest(parsed.audioRegenerations??[])!==digest(previous.content.audioRegenerations??[]))throw new Error('AUDIO_EDIT_REGENERATION_PROVENANCE_CHANGED');
       if(!parsed.audioEdits||parsed.voiceId!==previous.content.voiceId||parsed.model!==previous.content.model||digest(parsed.transcripts)!==digest(previous.content.transcripts))throw new Error('AUDIO_EDIT_SOURCE_BINDING_REQUIRED: preserve clone, generation model and locked text.');
       const edits=parsed.audioEdits.map(e=>AudioEditReceipt.parse(e));
       if(new Set(edits.map(e=>e.beat)).size!==edits.length)throw new Error('AUDIO_EDIT_SOURCE_BINDING_REQUIRED');
@@ -158,7 +159,14 @@ function addArtifact(p, content, author) {
         if(edit.editDigest!==expected||Math.abs(edit.editedFile.durationSeconds-retainedSeconds)>.001||edit.outputFile.durationSeconds!==15)throw new Error('AUDIO_EDIT_RENDER_MISMATCH');
       }
       if(!changes)throw new Error('AUDIO_EDIT_NO_CHANGE');
-    }else if(parsed.audioEdits)throw new Error('AUDIO_EDIT_SCOPE_DENIED: provider receipts cannot impersonate an editor.');
+    }else if(p.narrationRegeneration){
+      const scope=p.narrationRegeneration,job=p.jobs.findLast(j=>j.key==='narration'&&j.request.regeneration&&['submitting','submitted','uncertain'].includes(j.status)),i=scope.beat-1;
+      const proof=parsed.audioRegenerations?.find(e=>e.beat===scope.beat);
+      if(author!=='provider-runtime'||!job||!previous||previous.id!==scope.artifactId||previous.digest!==scope.artifactDigest||digest(job.request.regeneration.parent.content)!==digest(previous.content)||digest(proof)!==digest({beat:scope.beat,spokenText:scope.spokenText,parentArtifactId:previous.id,parentArtifactDigest:previous.digest,jobId:job.id,requestDigest:job.digest})||parsed.files[i].sha256===previous.content.files[i].sha256||parsed.voiceId!==previous.content.voiceId||parsed.model!==previous.content.model||digest(parsed.transcripts)!==digest(previous.content.transcripts))throw new Error('NARRATION_REGENERATION_BINDING_REQUIRED');
+      for(let n=0;n<4;n++)if(n!==i&&(digest(parsed.files[n])!==digest(previous.content.files[n])||digest(parsed.sourceFiles?.[n])!==digest(previous.content.sourceFiles?.[n])||parsed.tailSilenceSeconds?.[n]!==previous.content.tailSilenceSeconds?.[n]))throw new Error('NARRATION_REGENERATION_SIBLING_CHANGED');
+      const retainedEdits=(previous.content.audioEdits??[]).filter(e=>e.beat!==scope.beat),retainedRegenerations=(previous.content.audioRegenerations??[]).filter(e=>e.beat!==scope.beat);
+      if(digest(parsed.audioEdits??[])!==digest(retainedEdits)||digest((parsed.audioRegenerations??[]).filter(e=>e.beat!==scope.beat))!==digest(retainedRegenerations)||parsed.audioRegenerations.length!==retainedRegenerations.length+1)throw new Error('NARRATION_REGENERATION_PROVENANCE_CHANGED');
+    }else if(parsed.audioEdits||parsed.audioRegenerations)throw new Error('AUDIO_EDIT_SCOPE_DENIED: provider receipts cannot impersonate an editor or scoped regeneration.');
     if(refinedWorkflow(p)){
       if(!parsed.sourceFiles||!parsed.tailSilenceSeconds)throw new Error('NARRATION_WINDOW_PROVENANCE_REQUIRED: bind unmodified source stems and explicit silence-only holds.');
       for(const [i,f] of parsed.files.entries()){const source=parsed.sourceFiles[i],hold=parsed.tailSilenceSeconds[i];if(!source.durationSeconds||source.width||f.width||Math.abs(hold-Math.max(0,15-source.durationSeconds))>1e-6||(source.durationSeconds<=15&&f.durationSeconds!==15)||(source.durationSeconds>=15&&f.sha256!==source.sha256))throw new Error('NARRATION_WINDOW_MISMATCH: pad shorter sources only; longer sources require evidenced local editing or explicit script repair.');}
@@ -253,7 +261,7 @@ export function taskFor(p) {
     crewWorker:assignedWorker(p)??null, formatRole:roleFor(p),
     planningGuide:p.gate==='produce'&&p.step!=='film'?planningAccountGuide(p):null,
     generationEstimate:p.gate==='produce'?generationEstimate(p):null,
-    generationTexts:['audition','narration'].includes(p.step)?{scriptId:current(p,'script').id,scriptDigest:current(p,'script').digest,beats:current(p,'script').content.beats.slice(0,p.step==='audition'?1:4).map(b=>({beat:b.beat,text:b.narration}))}:null,
+    generationTexts:['audition','narration'].includes(p.step)?{scriptId:current(p,'script').id,scriptDigest:current(p,'script').digest,beats:narrationGenerationTexts(p),...(p.narrationRegeneration?{regeneration:p.narrationRegeneration}:{})}:null,
     voiceReference:['audio-reviewer','film-editor'].includes(roleFor(p))?current(p,'voiceSample')??null:null,voiceChoice:p.voiceChoice??null,voiceBasis:voiceBasis(p),
     role: p.gate === 'review' ? 'independent-reviewer' : p.gate==='author'&&p.step==='videoPlan'?'motion-director':p.gate==='author'&&p.step==='videoPrompt'?'video-prompt-engineer':p.gate==='author'&&p.step==='soundPlan'?'sound-designer':p.gate==='author'&&p.step==='editPlan'?'film-editor': p.gate === 'author' && ['shotIntentions','shots'].includes(p.step) ? 'shot-planner' : p.gate === 'author' && p.step === 'keyframePrompt' ? 'composition-writer' : p.gate === 'owner-review' || ['backgrounds', 'backgroundBrief', 'backgroundAngleBrief'].includes(p.step) ? 'background-product-owner' : isPrompt(p) && p.gate === 'author' ? 'pixar-prompter' : 'orchestrator',
     immediateScenes: sceneLocation?.scenes.filter(s => shot ? s.id === shot.sceneId : !p.angleId || sceneLocation.angles.find(a => a.id === p.angleId)?.sceneIds.includes(s.id)) ?? [],
@@ -271,7 +279,7 @@ export function taskFor(p) {
     dependencies: dependencies(p).map(id => p.artifacts.find(a => a.id === id)),
     creativeDirections:p.creativeDirections??[],
     feedback: p.feedback.filter(f => f.key === keyFor(p)), criteria: p.step==='film'&&p.gate==='review'?filmCriteria(p):criteria[p.step] ?? [],
-    instruction: p.gate==='produce'&&p.step!=='film' ? `Prepare the assigned generation plan from the canonical task inputs. For audition, generationTexts contains the FIRST locked story beat; no separate audition text or approval is needed. For narration it contains all four locked beats. Use generationEstimate when supplied: it is a sourced conservative reservation, not verified account billing. Unknown credit balance, untested generation access, or a zero project budget do not block PLANNING. Return a plan; the runtime owns authorization, budget enforcement and submission. Do not demand a dashboard screenshot or admin key merely to plan. If a rate truly is unavailable and no generationEstimate is supplied, return planning-blocked using the canonical planningGuide. If essential inputs are missing, return missing-input with specific evidence and baby steps. Actual provider errors stop submission through the runtime, with no fallback or automatic retry. Never invent prices, provider receipts, approvals or a new recording requirement for an existing clone. Follow the attached skill for the remaining procedure.` : loaded && ['author','owner-review','review','produce'].includes(p.gate) ? `Follow the attached ${loaded.skill.path} for this ${p.step}/${p.gate} task and return only the assigned Event.` : legacyInstruction(p),
+    instruction: p.gate==='produce'&&p.step!=='film' ? `Prepare the assigned generation plan from the canonical task inputs. For audition, generationTexts contains the FIRST locked story beat; no separate audition text or approval is needed. For narration it contains all four locked beats unless generationTexts.regeneration is present: then plan ONLY its human-selected beat and spelling/punctuation pronunciation clarification. The three other files and the locked script/clone/audition are retained. Never widen a scoped repair into a batch. Use generationEstimate when supplied: it is a sourced conservative reservation, not verified account billing. Unknown credit balance, untested generation access, or a zero project budget do not block PLANNING. Return a plan; the runtime owns authorization, budget enforcement and submission. Do not demand a dashboard screenshot or admin key merely to plan. If a rate truly is unavailable and no generationEstimate is supplied, return planning-blocked using the canonical planningGuide. If essential inputs are missing, return missing-input with specific evidence and baby steps. Actual provider errors stop submission through the runtime, with no fallback or automatic retry. Never invent prices, provider receipts, approvals or a new recording requirement for an existing clone. Follow the attached skill for the remaining procedure.` : loaded && ['author','owner-review','review','produce'].includes(p.gate) ? `Follow the attached ${loaded.skill.path} for this ${p.step}/${p.gate} task and return only the assigned Event.` : legacyInstruction(p),
   };
 }
 function repairVisual(p, message) {
@@ -361,6 +369,12 @@ export function applyEvent(project, raw) {
     const path=p.studio.config.agents['generation-planner'].skill;
     const documents={...p.studio.documents,[path]:loadStudio().documents[path]};
     p.studio={...p.studio,documents,sha256:digest({config:p.studio.config,documents})};
+  }else if(e.action==='start-narration-regeneration'){
+    requiredActor(e,'human');const a=current(p),scope=NarrationRegeneration.parse(e.narrationRegeneration);
+    if(!e.message||p.step!=='narration'||p.workflowRevision<3||!['review','human','author','escalate','produce'].includes(p.gate)||!a||a.approvedBy||!locked(p,'script')||!locked(p,'audition')||a.id!==e.artifactId||a.digest!==e.artifactDigest||p.jobs.some(j=>!['ready','failed'].includes(j.status)))throw new Error('NARRATION_REGENERATION_DENIED: bind current unlocked narration, retained script/voice locks and reconciled jobs.');
+    const words=text=>text.normalize('NFKC').replace(/[^\p{L}\p{N}]/gu,'').toLowerCase();
+    if(words(scope.spokenText)!==words(current(p,'script').content.beats[scope.beat-1].narration))throw new Error('NARRATION_TEXT_CHANGE_REQUIRES_SCRIPT_APPROVAL: this repair permits spelling/punctuation pronunciation clarification only, not new or shortened words.');
+    p.narrationRegeneration={...scope,artifactId:a.id,artifactDigest:a.digest,message:e.message};p.feedback.push({key:'narration',message:e.message});p.gate='produce';
   }else if(e.action==='start-audio-edit'){
     requiredActor(e,'human');
     const a=current(p);
@@ -580,7 +594,7 @@ export function applyEvent(project, raw) {
     const technicalRepair = p.step==='video' && p.artifacts.findLast(a=>a.review?.decision==='rejected'&&a.dependencies.includes(current(p,'videoPlan').id)&&((a.key===keyFor(p)&&a.review.checks.some(c=>c.status==='fail'&&['integrity','anatomy','identity','continuity','motion'].includes(c.criterion)))||(a.kind==='film'&&p.artifacts.find(v=>v.id===a.review.repairArtifactId)?.key===keyFor(p)&&a.review.checks.some(c=>c.status==='fail'&&['technical','visual-continuity'].includes(c.criterion)))));
     const userRevision = p.history.findLast(h=>['changes','redo','reject','resolve'].includes(h.action));
     const repairIsCurrent = technicalRepair && (!userRevision || technicalRepair.reviewSequence>userRevision.sequence);
-    const allowance = p.allowances.findLast(a => { const used = p.jobs.filter(j => j.allowanceId === a.id); return a.operations.includes(plan.operation) && (plan.operation!=='video'||(!supervised(p)&&!miniProduction(p)&&a.repairOf===keyFor(p)&&repairIsCurrent&&current(p,`videoPrompt:${p.clipId}`).content.repairOnly)) && used.length < a.maxRequests && used.reduce((n, j) => n + j.plan.estimatedCostUsd, 0) + plan.estimatedCostUsd <= a.maxCostUsd; });
+    const allowance = p.narrationRegeneration?undefined:p.allowances.findLast(a => { const used = p.jobs.filter(j => j.allowanceId === a.id); return a.operations.includes(plan.operation) && (plan.operation!=='video'||(!supervised(p)&&!miniProduction(p)&&a.repairOf===keyFor(p)&&repairIsCurrent&&current(p,`videoPrompt:${p.clipId}`).content.repairOnly)) && used.length < a.maxRequests && used.reduce((n, j) => n + j.plan.estimatedCostUsd, 0) + plan.estimatedCostUsd <= a.maxCostUsd; });
     if(allowance)requireBudget(p,plan.estimatedCostUsd);
     p.jobs.push({ id: `job-${p.jobs.length + 1}`, key: keyFor(p), plan, request, dependencies: bound.dependencies, digest: digest(bound), status: allowance ? 'authorized' : 'planned', ...(allowance ? { allowanceId: allowance.id, authorization: { message: allowance.message, at: new Date().toISOString() } } : {}) }); p.gate = allowance ? 'collect' : 'authorize';
   } else if (e.action === 'authorize') {
@@ -593,7 +607,7 @@ export function applyEvent(project, raw) {
     assertAllowed(p, p.step);
     if (e.action === 'begin') { if (j.status !== 'authorized') throw new Error('ALREADY_SUBMITTED: collect/reconcile this job; do not make a duplicate paid request.'); j.status = 'submitting'; }
     if (e.action === 'job-id') { if (!['submitting', 'submitted', 'uncertain'].includes(j.status) || !e.providerJobId) throw new Error('No submitted job to bind.'); j.providerJobId = e.providerJobId; j.status = 'submitted'; }
-    if (e.action === 'receipt') { if ([...imageSteps,'video','music','effect'].includes(p.step) && e.result?.prompt !== j.request.prompt) throw new Error('Receipt prompt differs from authorized request.'); if (['audition', 'narration'].includes(p.step) && e.result?.voiceId !== j.request.voice) throw new Error('Receipt voice differs from authorized request.'); if (!['submitting', 'submitted', 'uncertain'].includes(j.status)) throw new Error('No submitted job to collect.'); addArtifact(p, e.result, 'provider-runtime'); j.status = 'ready'; j.result = e.result; }
+    if (e.action === 'receipt') { if ([...imageSteps,'video','music','effect'].includes(p.step) && e.result?.prompt !== j.request.prompt) throw new Error('Receipt prompt differs from authorized request.'); if (['audition', 'narration'].includes(p.step) && e.result?.voiceId !== j.request.voice) throw new Error('Receipt voice differs from authorized request.'); if (!['submitting', 'submitted', 'uncertain'].includes(j.status)) throw new Error('No submitted job to collect.'); addArtifact(p, e.result, 'provider-runtime'); j.status = 'ready'; j.result = e.result;if(p.step==='narration')delete p.narrationRegeneration; }
     if (e.action === 'provider-error') { if (!e.message) throw new Error('Provider error needs diagnostics.'); j.status = 'uncertain'; p.gate = 'escalate'; }
   } else throw new Error('Unsupported action.');
   if(p.debug?.enabled&&e.action!=='begin')p.debug.paused=true;

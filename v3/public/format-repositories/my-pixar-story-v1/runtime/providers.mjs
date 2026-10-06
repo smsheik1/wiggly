@@ -11,11 +11,16 @@ import { importMedia, verifyFiles, narrationWindow } from './media.mjs';
 const artifact = (p, key) => p.artifacts.findLast(a => a.key === key && a.valid);
 // Published Pro overage rate is a conservative reservation, not an account balance
 // or a claim that included subscription credits incur an additional charge.
+export function narrationGenerationTexts(p,operation=p.step){
+ const beats=artifact(p,'script')?.content.beats;if(!beats)return [];
+ if(operation==='narration'&&p.narrationRegeneration)return [{beat:p.narrationRegeneration.beat,text:p.narrationRegeneration.spokenText}];
+ return beats.slice(0,operation==='audition'?1:4).map(b=>({beat:b.beat,text:b.narration}));
+}
 export function generationEstimate(p, operation=p.step) {
   if (!['audition','narration'].includes(operation)) return null;
   const beats=artifact(p,'script')?.content.beats;
   if (!beats) return null;
-  const characters=beats.slice(0,operation==='audition'?1:4).reduce((n,b)=>n+Array.from(b.narration).length,0);
+  const characters=narrationGenerationTexts(p,operation).reduce((n,b)=>n+Array.from(b.text).length,0);
   return {provider:'cartesia',operation,characters,creditsPerCharacter:1,usdPerMillionCredits:65,
     estimatedCostUsd:Math.max(.01,Math.ceil(characters*65/1000000*100)/100),
     source:'https://cartesia.ai/pricing',verifiedAt:'2026-10-05',
@@ -31,11 +36,13 @@ export function requestDescriptor(p, plan) {
   if (plan.operation === 'clone') return { endpoint: 'https://api.cartesia.ai/voices/clone', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
     clip: sample.files[0], language: sample.language, name: `${(artifact(p,'answers')?.content.inputs??p.inputs).subject.preferredName} — ${p.id}`, access: 'private' };
   if (['audition', 'narration'].includes(plan.operation)) {
+    if(plan.operation==='narration'&&p.narrationRegeneration){const parent=artifact(p,'narration'),scope=p.narrationRegeneration;if(parent?.id!==scope.artifactId||parent.digest!==scope.artifactDigest||!parent.content.sourceFiles||!parent.content.tailSilenceSeconds||parent.content.model!==generation.voice.model)throw new Error('NARRATION_REGENERATION_STALE: current complete parent and pinned voice model required.');}
     const costEstimate=generationEstimate(p,plan.operation);
     if(!costEstimate||plan.estimatedCostUsd+1e-9<costEstimate.estimatedCostUsd)throw new Error('AUDIO_ESTIMATE_REQUIRED: reserve at least the sourced character-based estimate.');
     return { costEstimate, endpoint: 'https://api.cartesia.ai/tts/bytes', cartesiaVersion: plan.parameters.cartesiaVersion ?? generation.voice.apiVersion,
     model_id: plan.parameters.model ?? generation.voice.model, voice: artifact(p, 'clone').content.voiceId, language: voiceBasis(p).language,
-    transcripts: artifact(p, 'script').content.beats.slice(0, plan.operation === 'audition' ? 1 : 4).map(b => b.narration),
+    transcripts:narrationGenerationTexts(p,plan.operation).map(b=>b.text),
+    ...(plan.operation==='narration'&&p.narrationRegeneration?{regeneration:{...p.narrationRegeneration,parent:structuredClone(artifact(p,'narration'))}}:{}),
     ...(plan.operation==='narration'&&p.workflowRevision>=3?{beatWindowSeconds:15}:{}),
     output_format: { container: 'wav', encoding: 'pcm_s16le', sample_rate: 44100 }, generation_config: { speed: 1, volume: 1 } };
   }
@@ -113,6 +120,7 @@ export async function executeJob(p, job, runDir, apiKey, fetcher = fetch, collec
   const recorded = p.jobs.find(j => j.id === job.id && j.digest === job.digest);
   if (p.gate !== 'collect' || p.step !== job.plan.operation || !recorded?.authorization || !['submitting', 'submitted', 'uncertain'].includes(recorded.status) || recorded.key !== keyFor(p) || digest({ plan: job.plan, request: job.request, dependencies: job.dependencies }) !== recorded.digest || job.dependencies.some(id => !p.artifacts.some(a => a.id === id && a.valid))) throw new Error('UNAUTHORIZED_PROVIDER_CALL: use the current recorded request after the runner checkpoints submission.');
   assertAllowed(p, p.step);
+  if(job.request.regeneration){const parent=artifact(p,'narration'),scope=job.request.regeneration;if(!p.narrationRegeneration||parent?.id!==scope.artifactId||parent.digest!==scope.artifactDigest||digest(parent)!==digest(scope.parent)||digest(requestDescriptor(p,job.plan))!==digest(job.request))throw new Error('NARRATION_REGENERATION_STALE: exact current parent, human scope and request required.');}
   const request = job.request; await verifyFiles(request);
   const dir = join(runDir, 'receipts', job.id); await mkdir(dir, { recursive: true });
   if(job.plan.provider==='replicate'){const cached=join(dir,'result.json');try{return JSON.parse(await readFile(cached,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}const result=await executeVideo({...job,request:{...job.request,runDir}},dir,apiKey,fetcher,collectOnly,onJobId);if(!result.pending)await atomicJson(cached,result);return result;}
@@ -147,6 +155,12 @@ export async function executeJob(p, job, runDir, apiKey, fetcher = fetch, collec
     const windows=request.beatWindowSeconds===15?[]:null;
     if(windows)for(const [i,file] of files.entries())windows.push(await narrationWindow(file,runDir,join(dir,`window-${i}.wav`)));
     result = job.plan.operation === 'audition' ? { files, voiceId: request.voice, transcript: request.transcripts[0] } : { files:windows?windows.map(w=>w.file):files, voiceId: request.voice, transcripts: request.transcripts, model: request.model_id,...(windows?{sourceFiles:files,tailSilenceSeconds:windows.map(w=>w.tailSilenceSeconds)}:{}) };
+    if(request.regeneration){
+      const scope=request.regeneration,i=scope.beat-1;result=structuredClone(scope.parent.content);
+      result.files[i]=windows[0].file;result.sourceFiles[i]=files[0];result.tailSilenceSeconds[i]=windows[0].tailSilenceSeconds;
+      const edits=result.audioEdits?.filter(e=>e.beat!==scope.beat);if(edits?.length)result.audioEdits=edits;else delete result.audioEdits;
+      result.audioRegenerations=[...(result.audioRegenerations??[]).filter(e=>e.beat!==scope.beat),{beat:scope.beat,spokenText:scope.spokenText,parentArtifactId:scope.artifactId,parentArtifactDigest:scope.artifactDigest,jobId:job.id,requestDigest:job.digest}];
+    }
   } else {
     const images = await Promise.all(request.images.map(async f => ({ image_url: `data:image/${extname(f.path).slice(1).replace('jpg', 'jpeg')};base64,${(await readFile(f.path)).toString('base64')}` })));
     const { endpoint, images: _refs, ...body } = request;
