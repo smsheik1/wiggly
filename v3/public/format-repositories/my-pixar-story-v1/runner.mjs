@@ -151,9 +151,12 @@ async function main() {
         }
         if(!status.project.crew)throw new Error('CREW_NOT_CONFIGURED: use crew-start before local Codex dispatch.');
         const maxTasks=command==='work-codex'?1:Number(option('max-tasks',String(limitsFor(status.project).crewTasksPerDispatch))),repair=option('repair-invalid','false');
+        const recoveryTask=option('recovery-task'),recoveryNumber=option('recovery-attempt'),recoveryMessage=option('recovery-message');
+        const recoveryAttempt=recoveryTask||recoveryNumber||recoveryMessage?{taskId:recoveryTask,attempt:Number(recoveryNumber),message:recoveryMessage}:undefined;
+        if(recoveryAttempt&&(!recoveryTask||!Number.isInteger(recoveryAttempt.attempt)||!recoveryMessage||maxTasks!==1))throw new Error('Recovery needs exact --recovery-task, --recovery-attempt, --recovery-message and one task.');
         if(!['true','false'].includes(repair))throw new Error('--repair-invalid needs true or false.');
         await host.initialize();
-        const result=await driveCrew(workflow,'project',host,{maxTasks,repairInvalid:repair==='true',receiptDirectory:join(runDir,'host-dispatch'),verifySubmission,onProgress:progress=>process.stderr.write(progress.type==='repair-notice'?`DEFECT FOUND: ${progress.notice.key??progress.notice.artifactId}. ${progress.notice.findings?.map(f=>f.evidence).join(' ')??'See the localized repair notice in status.'} Repair routed through the current task.\n`:`${progress.step}: ${progress.gate}\n`)});
+        const result=await driveCrew(workflow,'project',host,{maxTasks,repairInvalid:repair==='true',recoveryAttempt,receiptDirectory:join(runDir,'host-dispatch'),verifySubmission,onProgress:progress=>process.stderr.write(progress.type==='repair-notice'?`DEFECT FOUND: ${progress.notice.key??progress.notice.artifactId}. ${progress.notice.findings?.map(f=>f.evidence).join(' ')??'See the localized repair notice in status.'} Repair routed through the current task.\n`:`${progress.step}: ${progress.gate}\n`)});
         print({completed:result.completed,stop:result.stop,...presentation(result.status)});return;
       }finally{host.close();}
     }

@@ -256,3 +256,18 @@ test('same-worker host refresh retains task identity, pinned instructions and de
  const refreshed=send(configured,'configure-crew',{actor:'human',message:'Explicit same-worker tool upgrade',crew:{workers:workers.map(w=>({...w,capabilityVersion:'new'}))}});
  assert.equal(taskFor(refreshed).taskId,task.taskId);assert.equal(refreshed.sequence,configured.sequence);assert.equal(digest(refreshed.studio),docs);assert.equal(refreshed.debug.paused,true);
 });
+
+test('extra recovery needs exact human direction, retains attempt history and never repeats an unknown turn',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'memoir-extra-recovery-'));let p=initialProject('extra-attempt',inputs);p.crew={workers:Object.entries(crewRoles).map(([role,{name}])=>({role,name,workerId:'native-'+role,modelVersion:'isolated',capabilityVersion:'isolated',execution:'host'}))};
+ const task=taskFor(p),worker=task.crewWorker,path=join(dir,task.taskId+'.json'),prior={status:'rejected',taskId:task.taskId,worker,workerDigest:digest(worker),attempt:3,error:'ISOLATED known contract rejection',event:{}};let calls=0;
+ const workflow={status:async()=>({project:p,pending:taskFor(p)}),respond:async(_id,e)=>{p=applyEvent(p,e);return workflow.status();}},host={runTask:async(t,{worker})=>{calls++;return {taskId:t.taskId,actor:'agent',workerId:worker.workerId,action:'artifact',content:{sourceInputDigest:t.sourceInputDigest,inputs:t.sourceInputs,commonSenseChecks:[]}};}};
+ try{
+  await writeFile(path,JSON.stringify(prior));const options={maxTasks:1,repairInvalid:true,receiptDirectory:dir};
+  for(const recoveryAttempt of [undefined,{taskId:'wrong',attempt:4,message:'go'},{taskId:task.taskId,attempt:5,message:'go'},{taskId:task.taskId,attempt:4,message:''}])await assert.rejects(driveCrew(workflow,'run',host,{...options,recoveryAttempt}),/REPAIR_LIMIT/);
+  assert.equal(calls,0);
+  const recoveryAttempt={taskId:task.taskId,attempt:4,message:'Actual human: go after the reported cap'};
+  await writeFile(path,JSON.stringify({...prior,status:'started'}));await assert.rejects(driveCrew(workflow,'run',host,{...options,recoveryAttempt}),/UNCERTAIN/);assert.equal(calls,0);
+  await writeFile(path,JSON.stringify(prior));const result=await driveCrew(workflow,'run',host,{...options,recoveryAttempt});assert.equal(result.completed,1);assert.equal(calls,1);
+  const receipt=JSON.parse(await readFile(path));assert.equal(receipt.attempt,4);assert.equal(receipt.recoveryAuthorization.message,recoveryAttempt.message);assert.equal(receipt.recoveryAuthorization.actor,'human');assert.deepEqual(JSON.parse(await readFile(path+'.rejected-3.json')),prior);
+ }finally{await rm(dir,{recursive:true});}
+});

@@ -149,7 +149,7 @@ export async function reconcileDispatch(task,host,{receiptDirectory,turnId,messa
  await saveJson(path,reconciled);return reconciled;
 }
 
-export async function driveCrew(workflow,thread,host,{maxTasks,receiptDirectory,repairInvalid=false,verifySubmission=async()=>{},onProgress=()=>{}}={}){
+export async function driveCrew(workflow,thread,host,{maxTasks,receiptDirectory,repairInvalid=false,recoveryAttempt,verifySubmission=async()=>{},onProgress=()=>{}}={}){
  maxTasks??=limitsFor((await workflow.status(thread)).project).crewTasksPerDispatch;
  if(!Number.isInteger(maxTasks)||maxTasks<1||maxTasks>32)throw new Error('Use a bounded maxTasks between 1 and 32.');
  if(!receiptDirectory)throw new Error('DISPATCH_RECEIPTS_REQUIRED: provide the run’s durable dispatch directory.');
@@ -167,13 +167,13 @@ export async function driveCrew(workflow,thread,host,{maxTasks,receiptDirectory,
   const attempt=(receipt?.attempt??0)+(receipt?.status==='rejected'?1:0)||1;
   if(receipt?.status==='rejected'){
    if(!repairInvalid)throw new Error(`CODEX_RESULT_REJECTED: ${receipt.error}; inspect ${path}; --repair-invalid true explicitly requests a bounded repair of the known finished result.`);
-   if(attempt>limitsFor(status.project).finishedWorkerAttempts)throw new Error('CODEX_REPAIR_LIMIT: configured finished-attempt limit exhausted; reconcile the deliverable with the operator.');
+   if(attempt>limitsFor(status.project).finishedWorkerAttempts&&!(maxTasks===1&&recoveryAttempt?.taskId===task.taskId&&recoveryAttempt.attempt===attempt&&typeof recoveryAttempt.message==='string'&&recoveryAttempt.message.trim()))throw new Error('CODEX_REPAIR_LIMIT: configured finished-attempt limit exhausted; one further recovery attempt requires exact task/attempt and actual human authorization.');
    const archive=path+`.rejected-${receipt.attempt}.json`,prior=await readJson(archive);
    if(prior&&digest(prior)!==digest(receipt))throw new Error('DISPATCH_RECEIPT_CONFLICT');
    if(!prior)await writeFile(archive,JSON.stringify(receipt)+'\n',{flag:'wx',mode:0o600});
   }
   let event=receipt?.status==='completed'?receipt.event:null;
-  const started={status:'started',taskId:task.taskId,worker:task.crewWorker,workerDigest:digest(task.crewWorker),attempt};
+  const started={status:'started',taskId:task.taskId,worker:task.crewWorker,workerDigest:digest(task.crewWorker),attempt,...(attempt>limitsFor(status.project).finishedWorkerAttempts?{recoveryAuthorization:{actor:'human',...recoveryAttempt,at:new Date().toISOString()}}:{})};
   if(!event){
    if(receipt)await saveJson(path,started);else await writeFile(path,JSON.stringify(started)+'\n',{flag:'wx',mode:0o600});
   }

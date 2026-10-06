@@ -26,5 +26,11 @@
       "attemptsRetained": 3,
       "status": "Paused at attempt ceiling; no reset or retry."
     }
+  },
+  "explicitRecovery": {
+    "humanInstruction": "have that agent go now.",
+    "scope": "One exact task/attempt, retains prior receipts and all attempts; unknown started outcomes remain blocked. No provider authorization or batch execution.",
+    "test": "Exact message/task/attempt required; absent/wrong authorization and uncertain receipt block before worker. Attempt 4 retains rejected-3 archive.",
+    "liveDispatch": "pending"
   }
 }
