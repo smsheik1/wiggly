@@ -375,6 +375,10 @@ export function applyEvent(project, raw) {
     const words=text=>text.normalize('NFKC').replace(/[^\p{L}\p{N}]/gu,'').toLowerCase();
     if(words(scope.spokenText)!==words(current(p,'script').content.beats[scope.beat-1].narration))throw new Error('NARRATION_TEXT_CHANGE_REQUIRES_SCRIPT_APPROVAL: this repair permits spelling/punctuation pronunciation clarification only, not new or shortened words.');
     p.narrationRegeneration={...scope,artifactId:a.id,artifactDigest:a.digest,message:e.message};p.feedback.push({key:'narration',message:e.message});p.gate='produce';
+  }else if(e.action==='recover-audio-edit'){
+    requiredActor(e,'human');const a=current(p);
+    if(!e.message||p.step!=='narration'||p.gate!=='escalate'||!audioEditingEnabled(p)||a?.review?.decision!=='rejected'||a.approvedBy||a.id!==e.artifactId||a.digest!==e.artifactDigest||!locked(p,'script')||!locked(p,'audition')||p.reviewDisagreements<limitsFor(p).reviewDisagreements||p.jobs.some(j=>!['ready','failed'].includes(j.status))||p.history.some(h=>h.action==='recover-audio-edit'&&h.artifactId===a.id))throw new Error('AUDIO_EDIT_RECOVERY_DENIED: one explicit human recovery for the exact rejected narration at its exhausted limit; locks, history and reconciled jobs required.');
+    p.feedback.push({key:'narration',message:e.message});p.gate='author';
   }else if(e.action==='start-audio-edit'){
     requiredActor(e,'human');
     const a=current(p);

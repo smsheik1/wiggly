@@ -102,3 +102,16 @@ test('editing broker requires real listening and inspection and cannot grant edi
   const result=await runCrewTask(p,task,host);assert.equal(applyEvent(p,result).gate,'review');
  }finally{await rm(dir,{recursive:true});}
 });
+
+test('one exact human audio recovery preserves exhausted limits and cannot be reused',()=>{
+ const p=rejected();p.gate='escalate';p.reviewDisagreements=p.studio.config.limits.reviewDisagreements;
+ const a=current(p),e=event(p,'recover-audio-edit',{actor:'human',artifactId:a.id,artifactDigest:a.digest,message:'ISOLATED approve one additional repair.'});
+ const next=applyEvent(p,e);assert.equal(next.gate,'author');assert.equal(next.reviewDisagreements,p.reviewDisagreements);
+ for(const key of ['artifacts','jobs','budget','studio','crew'])assert.deepEqual(next[key],p[key]);
+ assert.equal(next.history.at(-1).artifactDigest,a.digest);assert.equal(next.history.at(-1).message,e.message);
+ for(const extra of [{actor:'agent'},{artifactDigest:'stale'},{message:''}])assert.throws(()=>applyEvent(p,{...e,...extra}),/RECOVERY_DENIED|authority|too_small/);
+ const uncertain=structuredClone(p);uncertain.jobs[0].status='uncertain';assert.throws(()=>applyEvent(uncertain,e),/RECOVERY_DENIED/);
+ const locked=structuredClone(p);current(locked).approvedBy={message:'ISOLATED locked',at:new Date().toISOString()};assert.throws(()=>applyEvent(locked,e),/RECOVERY_DENIED/);
+ const repeated={...next,gate:'escalate'};assert.throws(()=>applyEvent(repeated,event(repeated,'recover-audio-edit',{actor:'human',artifactId:a.id,artifactDigest:a.digest,message:'ISOLATED repeat.'})),/RECOVERY_DENIED/);
+ assert.throws(()=>applyEvent(repeated,event(repeated,'resolve',{actor:'human',message:'ISOLATED bypass.'})),/ATTEMPT_LIMIT/);
+});
