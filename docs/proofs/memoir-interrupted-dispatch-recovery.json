@@ -15,6 +15,16 @@
     "sameTaskAfterRefresh": true,
     "crewStep": "Eli attempt 2 returned historical provider-error without tools; rejected and debug paused.",
     "newPaidCalls": 0,
-    "nextFix": "Explicit allowed actions and historical-vs-current repair evidence instruction. Await actual human continuation for final bounded worker attempt."
+    "nextFix": "Explicit allowed actions and historical-vs-current repair evidence instruction. Await actual human continuation for final bounded worker attempt.",
+    "attempt3": {
+      "tool": "listenAudio",
+      "requestedHash": "88229cee1da0111b4c4eb5f3d6600b9afe50a16849694d5f62ba47e7fed67578",
+      "result": "ASSET_SCOPE_DENIED; native turn interrupted and officially reconciled",
+      "newProviderCalls": 0,
+      "newDrafts": 0,
+      "fix": "Host resume instructions require retrieving exact cached renderAudioEdit receipt before listening to saved output.",
+      "attemptsRetained": 3,
+      "status": "Paused at attempt ceiling; no reset or retry."
+    }
   }
 }
