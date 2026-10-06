@@ -1,0 +1,70 @@
+{
+  "phase": 1,
+  "status": "LOCAL_CHECKPOINT_LIVE_MODEL_SELECTION_PENDING",
+  "date": "2026-10-06",
+  "production": {
+    "paused": true,
+    "baseline_file_count": 313,
+    "baseline_manifest_sha256": "918176b8c88ca72e2da51a2c867dfd78f2d0bbeba54e8eabe682b40744d213fe",
+    "all_files_unchanged": true
+  },
+  "harness": {
+    "deepagents": "1.14.2",
+    "langchain": "1.5.10",
+    "langsmith": "0.9.0",
+    "typescript": "5.9.3"
+  },
+  "checks": {
+    "typecheck": "passed",
+    "offline_tests": {
+      "passed": 4,
+      "failed": 0
+    },
+    "native_skill_discovery": "passed_structural",
+    "image_tool_results": "passed_transport_not_live_perception",
+    "draft_only_permissions": "passed_write_edit_delete_traversal_symlink",
+    "submission_termination": "passed_returnDirect_no_further_model_turn",
+    "trace_payload_hygiene": "passed"
+  },
+  "langsmith": {
+    "run_id": "141f6cce-ea52-4c20-8c55-b9868fcaa198",
+    "url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/141f6cce-ea52-4c20-8c55-b9868fcaa198?poll=true",
+    "child_run_count": 24,
+    "has_tools": true,
+    "has_model_nodes": true,
+    "media_payloads_removed": true,
+    "real_model_inference": false,
+    "verified_provider_charge_usd": 0
+  },
+  "usage": {
+    "m0_total_authorized_allowance_usd": 5,
+    "paid_model_requests": 0,
+    "image_generation_requests": 0,
+    "estimated_model_consumption_usd": 0,
+    "live_trial_reservations_usd": 0,
+    "langsmith_account_billing": "not_verified"
+  },
+  "pending": {
+    "live_model": "Awaiting selection of configured Gemini for isolated trial or provision of OpenAI API access for pinned gpt-5.6-sol. Production model is unchanged.",
+    "actual_image_understanding": "Not yet tested",
+    "live_token_accounting": "Not yet tested"
+  },
+  "limits": [
+    "No production migrations or approvals",
+    "No Phase 2 author/reviewer background generation",
+    "No M1 leases or transactional publication",
+    "Transitive braces audit advisory remains; isolated trusted fixtures only"
+  ],
+  "commands": [
+    "npm ci --ignore-scripts",
+    "npm run check",
+    "npm test",
+    "npm run trace"
+  ],
+  "sources": [
+    "https://docs.langchain.com/oss/javascript/deepagents/permissions",
+    "https://docs.langchain.com/oss/javascript/deepagents/multimodal",
+    "https://docs.langchain.com/oss/javascript/deepagents/skills",
+    "https://developers.openai.com/api/docs/models/gpt-5.6-sol"
+  ]
+}
