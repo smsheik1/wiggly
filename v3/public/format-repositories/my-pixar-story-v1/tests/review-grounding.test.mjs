@@ -23,7 +23,7 @@ test('both writer and independent reviewer receive the same persisted human deci
  p=send(p,'note',{actor:'human',message:'ISOLATED record agreed design',creativeDirection:direction});
  let task=taskFor(p);assert.deepEqual(task.creativeDirections[0].direction,direction.direction);
  await assert.rejects(prepareCrewTask(p,{...task,creativeDirections:[]}),/TASK_INPUT_MISMATCH/);
- const author=await prepareCrewTask(p,task);assert.match(author.skill.content,/ordinary, emotionally consistent expression/);assert.match(author.skill.content,/Nearby ages may share one look, even across age 18/);
+ const author=await prepareCrewTask(p,task);assert.match(author.skill.content,/Natural expression and ordinary gesture/);assert.match(author.skill.content,/nearby ages may share one look, even across age 18/i);
  p=send(p,'artifact',{workerId:'writer',content:{...script,commonSenseChecks:[],proposedCast}});task=taskFor(p);const reviewer=await prepareCrewTask(p,task);
  assert.deepEqual(reviewer.creativeDirections,author.creativeDirections);assert.match(reviewer.reviewerRubric,/smile is insufficient evidence/);assert.match(reviewer.reviewerRubric,/promised to buy me a laboratory/);assert.match(reviewer.reviewerRubric,/invented promise and must fail/);assert.match(reviewer.reviewerRubric,/crossing age 18 alone does not require another character design/);
  assert.deepEqual(current(p,'answers'),original);assert.equal(p.jobs.length,0);

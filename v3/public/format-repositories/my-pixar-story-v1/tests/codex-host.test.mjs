@@ -44,7 +44,7 @@ test('Codex bridge uses the explicitly selected model, real role threads and sco
   const result=await runCrewTask(p,task,host);assert.equal(result.workerId,crew.workers[0].workerId);assert.deepEqual(result.content,script);
   const payload=JSON.parse(mock.requests.findLast(r=>r.method==='turn/start').params.input[0].text);
   const quotes=payload.contentSchema.properties.beats.items.properties.directQuotes;assert.equal(quotes.type,'array');assert.ok(quotes.items.properties.sourceAnswer.enum.includes('scene1Childhood'));assert.ok(quotes.items.properties.sourceField);
-  assert.equal(payload.task.studioConfig.writingPolicy,'grounded-v1');assert.match(payload.task.skill.content,/Direct quotations must keep the selected source words exactly/);
+  assert.equal(payload.task.studioConfig.writingPolicy,'grounded-v1');assert.match(payload.task.skill.content,/Direct quotations keep the selected source words exactly/);
   const start=mock.requests.find(r=>r.method==='thread/start');assert.equal(start.params.allowProviderModelFallback,false);assert.equal(start.params.sandbox,'read-only');assert.equal(start.params.dynamicTools[0].name,'wiggly_tool');
   const editSchema=start.params.dynamicTools[0].inputSchema.properties.edit.anyOf[0];assert.equal(editSchema.properties.keepRanges.items.properties.startSeconds.type,'number');assert.equal(editSchema.additionalProperties,false);
   const flags=mock.launches[0].args;

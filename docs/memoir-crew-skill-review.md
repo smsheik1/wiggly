@@ -1,6 +1,6 @@
 # Crew skill review — living checklist
 
-Started October 5, 2026. Review one named worker at a time with the user. No skill edits are agreed yet. The live Round 1 rehearsal is deliberately on hold for this discussion; its authoritative SQLite state is unchanged. Its private resume note, exact operator snapshot and consistent database backup live in that run's debug-notes directory. Read RESUME.md there before resuming; never overwrite newer state with the backup.
+Started October 5, 2026. Review one named worker at a time with the user. Leo’s revision is approved and installed; Sage is next. The live Round 1 rehearsal is deliberately on hold for this discussion; its authoritative SQLite state is unchanged. Its private resume note, exact operator snapshot and consistent database backup live in that run's debug-notes directory. Read RESUME.md there before resuming; never overwrite newer state with the backup.
 
 ## How we review each worker
 
@@ -10,8 +10,8 @@ Read the actual skill, related recipes/rubric, runtime task inputs, allowed tool
 
 | Worker | Responsibilities in current configuration | Review status |
 | --- | --- | --- |
-| Leo | Questionnaire preparation and script writing | In discussion — first |
-| Sage | Independent text review across deliverables | Pending |
+| Leo | Questionnaire preparation and script writing | Approved and installed |
+| Sage | Independent text review across deliverables | Next — in discussion |
 | Ava | Independent voice, narration and soundtrack review | Pending |
 | Eli | Local narration editing and final composition plan | Pending |
 | Cleo | Cast/character design | Pending |
@@ -39,4 +39,12 @@ Initial point to discuss: the writing skill says excellent storytelling but prov
 
 ## Decisions
 
-None yet. Saving progress and opening the skill for review do not change worker instructions, permissions, project state, approvals or spending.
+Leo: adopt the supplied Claude revision with the two agreed corrections: questionnaire subprompts are optional (essential information can still be required); overlong generated narration goes to the Audio Editor for safe repair first, and rewriting a locked script needs runtime-confirmed human direction. Practical story guidance now covers concrete source details, recipient connection, earned direct emotion, optional exact quotations, flexible arc/ending, natural gestures and four natural-rate windows.
+
+The canonical skill/template is updated; existing project instruction snapshots and approvals are not silently migrated. The Round 1 script remains locked and unchanged. Existing task-loading/source/quotation/lock tests protect the protocol; no new paid script generation or semantic writing-quality proof is claimed. Sage’s skill and separate text rubric have not been changed yet.
+
+Packaged audit found an instruction/schema mismatch: Inputs rejects empty strings and normalizes surrounding whitespace. Leo now preserves the canonical version-bound sourceInputs and leaves omitted optional subprompts omitted, without inserting placeholders. This is wording alignment, not a schema change. The current Inputs contract still requires all five answer sections to contain at least one nonempty field; supporting an entirely absent/empty section is a separate intake-contract gap to review with Sage, not a reason to invent a memory or silently broaden this skill-update phase.
+
+## Leo validation checkpoint
+
+Final archive SHA256 `da34df6fc7f2e0b955d42a8b567e551521ad0f856aa66eef336df787420448f9`. Official package checks pass (123 cases); final freshly extracted check/smoke and 19 scoped tests pass. Earlier independent package audit passed protocol checks and found the input-wording caveats corrected above; the independent final recheck could not complete due to account usage limit, so final-byte verification is explicitly a maintainer check. See [audit evidence](proofs/memoir-leo-skill-package-audit.md). Existing instruction-load checks were updated to match approved wording; no new named tests. This verifies loading and protocol, not actual writing quality.
