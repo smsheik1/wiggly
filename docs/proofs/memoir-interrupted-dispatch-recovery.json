@@ -31,6 +31,23 @@
     "humanInstruction": "have that agent go now.",
     "scope": "One exact task/attempt, retains prior receipts and all attempts; unknown started outcomes remain blocked. No provider authorization or batch execution.",
     "test": "Exact message/task/attempt required; absent/wrong authorization and uncertain receipt block before worker. Attempt 4 retains rejected-3 archive.",
-    "liveDispatch": "pending"
+    "liveDispatch": {
+      "status": "completed",
+      "attempt": 4,
+      "sequence": 61,
+      "artifactId": "narration@2",
+      "beat2DurationSeconds": 15,
+      "beat2Sha256": "88229cee1da0111b4c4eb5f3d6600b9afe50a16849694d5f62ba47e7fed67578",
+      "unchangedBeats": [
+        1,
+        3,
+        4
+      ],
+      "newListeningReservationsUsd": 0.04,
+      "totalReservedUsd": 0.52,
+      "pausedAt": "Ava independent narration review",
+      "approval": false,
+      "newAudioGeneration": false
+    }
   }
 }
