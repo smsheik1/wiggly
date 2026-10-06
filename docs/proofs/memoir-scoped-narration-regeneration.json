@@ -16,5 +16,17 @@
   },
   "limits": "Natural-speed timing is measured after synthesis; no promise that a fresh stem fits 15 seconds. Independent review and human full-set approval remain required.",
   "complexityReview": "Lean already. Ship.",
-  "livePlan": "pending"
+  "livePlan": {
+    "sequence": 64,
+    "worker": "Max (Generation Planner)",
+    "jobId": "job-3",
+    "requestDigest": "f391db6b68233e641c17db0239161cb3195caa7656e4ac29f1dd46ef2ebc5d08",
+    "status": "planned; awaiting exact human spend authorization",
+    "beat": 2,
+    "transcripts": 1,
+    "characters": 217,
+    "estimatedCostUsd": 0.02,
+    "remainingBudgetUsd": 0.01,
+    "realProviderCalls": 0
+  }
 }
