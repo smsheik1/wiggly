@@ -2,11 +2,17 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createHash, randomUUID } from "node:crypto";
 import { constants, mkdirSync, readFileSync, writeFileSync, openSync, closeSync, fsyncSync, linkSync, unlinkSync, realpathSync, fstatSync } from "node:fs";
 import { join, resolve, dirname, relative, isAbsolute } from "node:path";
+import { authenticateOperator, commandJSON, type SignedOperatorCommand, type OperatorPayload } from "./studio-operator.js";
 
 export type WorkerLease = { ticketId: string; workerId: string; token: number; attemptId: string };
 export type OperatorDecision = { id: string; actor: string; reason: string };
 export type InputVersions = Record<string, string>;
 export type KillPoint = "after_intent" | "after_dispatch_before_call" | "after_submit_before_request_id" | "after_request_id" | "after_publish_before_record" | "after_publication_commit";
+export type TicketLimits = { maxAttempts: number; maxStrikes: number; maxTurns: number };
+export type DirectorDecision = OperatorPayload & { action: "decide"; ticket_id: string; candidate_version_id: string; content_hash: string; expected_revision: number; decision: "APPROVE" | "REJECT"; feedback?: string };
+export type LimitExtension = OperatorPayload & { action: "extend_limits"; ticket_id: string; expected_revision: number; reason: string; max_attempts?: number; max_strikes?: number; max_turns?: number; allowance_micros?: number };
+export type ReviewDirection = { criteria: string[]; modality: string; coverage: string };
+export type ReviewVerdict = { verdict: "PASS" | "CHANGES_REQUESTED" | "INCONCLUSIVE"; findings: string; defects: { criterion: string; region: string; evidence: string }[]; evidence_references: string[] };
 type Row = Record<string, any>;
 const sha = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const requireThat = (condition: unknown, code: string): void => { if (!condition) throw new Error(code); };
@@ -25,7 +31,8 @@ export class StudioProduction {
   constructor(root: string, private now: () => number = Date.now, private kill: (point: KillPoint) => void = () => {}) {
     mkdirSync(root, { recursive: true }); this.root = realpathSync(root);
     this.#db = new DatabaseSync(join(this.root, "studio.sqlite"));
-    requireThat([0, 1].includes(this.#get("PRAGMA user_version")!.user_version), "UNSUPPORTED_STUDIO_SCHEMA");
+    this.#db.exec("PRAGMA busy_timeout=5000");
+    requireThat([0, 1, 2].includes(this.#get("PRAGMA user_version")!.user_version), "UNSUPPORTED_STUDIO_SCHEMA");
     this.#db.exec(`PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;
       CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY, paused INTEGER NOT NULL DEFAULT 1 CHECK(paused IN (0,1)), allowance INTEGER NOT NULL CHECK(allowance>=0)) STRICT;
       CREATE TABLE IF NOT EXISTS operator_decisions(id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), actor TEXT NOT NULL, action TEXT NOT NULL, value INTEGER NOT NULL, reason TEXT NOT NULL, at INTEGER NOT NULL) STRICT;
@@ -36,7 +43,26 @@ export class StudioProduction {
       CREATE TABLE IF NOT EXISTS publication_intents(ticket_id TEXT NOT NULL REFERENCES tickets(id), attempt_id TEXT NOT NULL, version_id TEXT NOT NULL UNIQUE, content_hash TEXT NOT NULL, inputs TEXT NOT NULL, evidence TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('INTENT','COMMITTED')), PRIMARY KEY(ticket_id,attempt_id)) STRICT;
       CREATE TABLE IF NOT EXISTS versions(id TEXT PRIMARY KEY, ticket_id TEXT NOT NULL REFERENCES tickets(id), attempt_id TEXT NOT NULL, content_hash TEXT NOT NULL, path TEXT NOT NULL, inputs TEXT NOT NULL, evidence TEXT NOT NULL, published_at INTEGER NOT NULL, UNIQUE(ticket_id,attempt_id)) STRICT;
       CREATE INDEX IF NOT EXISTS operations_ticket ON operations(ticket_id,state);
-      CREATE INDEX IF NOT EXISTS tickets_project ON tickets(project_id,status); PRAGMA user_version=1;`);
+      CREATE INDEX IF NOT EXISTS tickets_project ON tickets(project_id,status);`);
+    this.#tx(() => {
+      if (this.#get("PRAGMA user_version")!.user_version < 2) {
+        this.#db.exec(`ALTER TABLE tickets ADD COLUMN max_attempts INTEGER NOT NULL DEFAULT 3 CHECK(max_attempts>0);
+          ALTER TABLE tickets ADD COLUMN max_strikes INTEGER NOT NULL DEFAULT 3 CHECK(max_strikes>0);
+          ALTER TABLE tickets ADD COLUMN max_turns INTEGER NOT NULL DEFAULT 8 CHECK(max_turns>0);
+          ALTER TABLE tickets ADD COLUMN attempt_count INTEGER NOT NULL DEFAULT 0 CHECK(attempt_count>=0);
+          ALTER TABLE tickets ADD COLUMN strike_count INTEGER NOT NULL DEFAULT 0 CHECK(strike_count>=0);
+          ALTER TABLE tickets ADD COLUMN blocked_reason TEXT;
+          ALTER TABLE tickets ADD COLUMN blocked_from TEXT;
+          ALTER TABLE tickets ADD COLUMN feedback TEXT;
+          CREATE TABLE assignment_claims(ticket_id TEXT NOT NULL REFERENCES tickets(id),attempt_id TEXT NOT NULL,token INTEGER NOT NULL,worker_id TEXT NOT NULL,PRIMARY KEY(ticket_id,token)) STRICT;
+          CREATE TABLE worker_turns(id TEXT PRIMARY KEY,ticket_id TEXT NOT NULL REFERENCES tickets(id),attempt_id TEXT NOT NULL,at INTEGER NOT NULL) STRICT;
+          CREATE TABLE reviews(id TEXT PRIMARY KEY,author_ticket TEXT NOT NULL REFERENCES tickets(id),reviewer_ticket TEXT NOT NULL UNIQUE REFERENCES tickets(id),version_id TEXT NOT NULL REFERENCES versions(id),author_revision INTEGER NOT NULL,packet TEXT NOT NULL,state TEXT NOT NULL CHECK(state IN ('OPEN','FINISHED')),verdict TEXT,findings TEXT,defects TEXT,evidence TEXT) STRICT;
+          CREATE TABLE director_commands(id TEXT PRIMARY KEY,action TEXT NOT NULL,project_id TEXT NOT NULL REFERENCES projects(id),ticket_id TEXT NOT NULL REFERENCES tickets(id),principal TEXT NOT NULL,payload_hash TEXT NOT NULL,payload TEXT NOT NULL,auth_hash TEXT NOT NULL,result TEXT NOT NULL,at INTEGER NOT NULL) STRICT;
+          UPDATE tickets SET attempt_count=1 WHERE attempt_id IS NOT NULL;
+          INSERT INTO assignment_claims SELECT id,attempt_id,token,worker_id FROM tickets WHERE attempt_id IS NOT NULL AND worker_id IS NOT NULL;
+          PRAGMA user_version=2;`);
+      }
+    });
     for (const dir of ["assignments", "versions", "publication-staging"]) { mkdirSync(join(this.root, dir), { recursive: true }); requireThat(realpathSync(join(this.root, dir)) === join(this.root, dir), "WORKSPACE_SYMLINK"); }
   }
   close() { this.#db.close(); }
@@ -61,8 +87,26 @@ export class StudioProduction {
       this.#run("INSERT INTO operator_decisions VALUES (?,?,?,?,?,?,?)", decision.id, projectId, decision.actor, action, value, decision.reason, this.now());
     });
   }
-  setInput(projectId: string, name: string, version: string) { inputsJSON({ [name]: version }); this.#run("INSERT INTO input_heads VALUES (?,?,?) ON CONFLICT(project_id,name) DO UPDATE SET version=excluded.version", projectId, name, version); }
-  createTicket(ticketId: string, projectId: string, role: string, inputs: InputVersions, allowanceMicros: number, kind: "AUTHOR" | "REVIEWER" = "AUTHOR") { id(ticketId); id(role); money(allowanceMicros); this.#run("INSERT INTO tickets(id,project_id,role,kind,status,inputs,allowance) VALUES (?,?,?,?,'READY',?,?)", ticketId, projectId, role, kind, inputsJSON(inputs), allowanceMicros); }
+  authenticatedProjectCommand(command: SignedOperatorCommand<OperatorPayload & { action: "pause" | "resume" | "extend_allowance"; value: number; reason: string }>) {
+    const p = authenticateOperator(this.root, command);
+    this.operator(p.project_id, p.action, p.value, { id: p.id, actor: p.principal, reason: p.reason });
+    return { command_id: p.id, project: this.project(p.project_id) };
+  }
+  setInput(projectId: string, name: string, version: string) {
+    inputsJSON({ [name]: version });
+    this.#tx(() => {
+      const local = this.#get("SELECT * FROM versions WHERE id=?", version);
+      if (local) requireThat(this.ticket(local.ticket_id).project_id === projectId && this.#get("SELECT id FROM director_commands WHERE project_id=? AND action='decide' AND json_extract(result,'$.candidate_version_id')=? AND json_extract(result,'$.status')='APPROVED'", projectId, version), "UNAPPROVED_INPUT_VERSION");
+      // Opaque external version IDs remain a trusted producer/import boundary; no legacy migration here.
+      this.#run("INSERT INTO input_heads VALUES (?,?,?) ON CONFLICT(project_id,name) DO UPDATE SET version=excluded.version", projectId, name, version);
+    });
+  }
+  createTicket(ticketId: string, projectId: string, role: string, inputs: InputVersions, allowanceMicros: number, kind: "AUTHOR" | "REVIEWER" = "AUTHOR", limits: Partial<TicketLimits> = {}) {
+    id(ticketId); id(role); money(allowanceMicros);
+    const cap = { maxAttempts: 3, maxStrikes: 3, maxTurns: kind === "REVIEWER" ? 4 : 8, ...limits };
+    requireThat(Object.values(cap).every(n => Number.isSafeInteger(n) && n > 0), "INVALID_TICKET_LIMITS");
+    this.#run("INSERT INTO tickets(id,project_id,role,kind,status,inputs,allowance,max_attempts,max_strikes,max_turns) VALUES (?,?,?,?,'READY',?,?,?,?,?)", ticketId, projectId, role, kind, inputsJSON(inputs), allowanceMicros, cap.maxAttempts, cap.maxStrikes, cap.maxTurns);
+  }
   #currentInputs(ticket: Row) { for (const [name, version] of Object.entries(JSON.parse(ticket.inputs))) requireThat(this.#get("SELECT version FROM input_heads WHERE project_id=? AND name=?", ticket.project_id, name)?.version === version, "STALE_INPUTS"); }
   #lease(ctx: WorkerLease, submittedReplay = false) {
     const t = this.ticket(ctx.ticketId);
@@ -72,14 +116,130 @@ export class StudioProduction {
   }
   claim(ticketId: string, workerId: string, leaseMs: number): WorkerLease {
     id(workerId); requireThat(Number.isSafeInteger(leaseMs) && leaseMs > 0, "INVALID_LEASE_DURATION");
-    return this.#tx(() => {
+    const result = this.#tx(() => {
       const t = this.ticket(ticketId); requireThat(!this.project(t.project_id).paused, "PROJECT_PAUSED"); this.#currentInputs(t);
       requireThat(t.status === "READY" || (t.status === "WORKING" && t.lease_until <= this.now()), "TICKET_ALREADY_CLAIMED");
       requireThat(!this.#get("SELECT id FROM operations WHERE ticket_id=? AND state IN ('SUBMITTING','UNKNOWN')", ticketId), "UNCERTAIN_OPERATION");
+      const review = this.#get("SELECT * FROM reviews WHERE reviewer_ticket=?", ticketId);
+      if (review) requireThat(!this.#get("SELECT worker_id FROM assignment_claims WHERE ticket_id=? AND attempt_id=? AND worker_id=?", review.author_ticket, this.version(review.version_id).attempt_id, workerId), "AUTHOR_CANNOT_REVIEW_OWN_WORK");
+      if (t.status === "READY" && t.attempt_count >= t.max_attempts) { this.#block(ticketId, "ATTEMPT_LIMIT", "READY"); return { limitError: "ATTEMPT_LIMIT" }; }
       const attemptId = t.status === "WORKING" ? t.attempt_id : randomUUID();
       this.#run("UPDATE tickets SET status='WORKING',worker_id=?,attempt_id=?,token=token+1,lease_until=?,revision=revision+1 WHERE id=?", workerId, attemptId, this.now() + leaseMs, ticketId);
+      if (t.status === "READY") this.#run("UPDATE tickets SET attempt_count=attempt_count+1 WHERE id=?", ticketId);
+      this.#run("INSERT INTO assignment_claims VALUES (?,?,?,?)", ticketId, attemptId, t.token + 1, workerId);
       mkdirSync(join(this.root, "assignments", ticketId, attemptId, "drafts"), { recursive: true });
       return { ticketId, workerId, token: t.token + 1, attemptId };
+    });
+    if ("limitError" in result) throw new Error(result.limitError);
+    return result;
+  }
+  #block(ticketId: string, reason: string, from: string) {
+    this.#run("UPDATE tickets SET status='BLOCKED',blocked_reason=?,blocked_from=?,revision=revision+1 WHERE id=?", reason, from, ticketId);
+  }
+  beginTurn(ctx: WorkerLease, turnId: string) {
+    id(turnId);
+    const result = this.#tx(() => {
+      const t = this.#lease(ctx), prior = this.#get("SELECT * FROM worker_turns WHERE id=?", turnId);
+      if (prior) { requireThat(prior.ticket_id === ctx.ticketId && prior.attempt_id === ctx.attemptId, "TURN_REPLAY_CONFLICT"); return { replayed: true }; }
+      const used = this.#get("SELECT COUNT(*) AS count FROM worker_turns WHERE ticket_id=? AND attempt_id=?", ctx.ticketId, ctx.attemptId)!.count;
+      if (used >= t.max_turns) { this.#block(ctx.ticketId, "TURN_LIMIT", "WORKING"); return { limitError: "TURN_LIMIT" }; }
+      this.#run("INSERT INTO worker_turns VALUES (?,?,?,?)", turnId, ctx.ticketId, ctx.attemptId, this.now()); return { replayed: false };
+    });
+    if (result.limitError) throw new Error(result.limitError); return result;
+  }
+  #verifyVersion(version: Row) { requireThat(realpathSync(version.path) === version.path && sha(readFileSync(version.path)) === version.content_hash, "PUBLISHED_BYTES_CORRUPT"); }
+  startReview(authorTicket: string, reviewerTicket: string, role: string, direction: ReviewDirection, allowanceMicros = 0, limits: Partial<TicketLimits> = {}) {
+    requireThat(direction.criteria.length > 0 && direction.criteria.every(c => typeof c === "string" && c.trim()) && direction.coverage.trim() && direction.modality.trim(), "REVIEW_CRITERIA_REQUIRED");
+    return this.#tx(() => {
+      const author = this.ticket(authorTicket); requireThat(author.kind === "AUTHOR" && author.status === "SUBMITTED", "AUTHOR_NOT_SUBMITTED");
+      requireThat(!this.project(author.project_id).paused, "PROJECT_PAUSED"); this.#currentInputs(author);
+      const candidate = this.version(author.candidate_id); this.#verifyVersion(candidate);
+      this.createTicket(reviewerTicket, author.project_id, role, JSON.parse(author.inputs), allowanceMicros, "REVIEWER", limits);
+      const packet = { project_id: author.project_id, ticket_id: authorTicket, candidate_version_id: candidate.id, content_hash: candidate.content_hash, candidate_path: candidate.path, exact_inputs: JSON.parse(candidate.inputs), criteria: direction.criteria, modality: direction.modality, coverage: direction.coverage, director_approved: false };
+      const reviewId = randomUUID();
+      this.#run("UPDATE tickets SET status='REVIEWING',revision=revision+1 WHERE id=?", authorTicket);
+      this.#run("INSERT INTO reviews(id,author_ticket,reviewer_ticket,version_id,author_revision,packet,state) VALUES (?,?,?,?,?,?,'OPEN')", reviewId, authorTicket, reviewerTicket, candidate.id, author.revision + 1, json(packet));
+      return { reviewId, packet };
+    });
+  }
+  reviewPacket(reviewerTicket: string) { const review = this.#get("SELECT * FROM reviews WHERE reviewer_ticket=?", reviewerTicket); requireThat(review, "REVIEW_NOT_FOUND"); return JSON.parse(review!.packet); }
+  #reviewCurrent(review: Row) {
+    const author = this.ticket(review.author_ticket);
+    requireThat(author.status === "REVIEWING" && author.candidate_id === review.version_id && author.revision === review.author_revision, "STALE_REVIEW");
+    this.#currentInputs(author); this.#verifyVersion(this.version(review.version_id)); return author;
+  }
+  submitReview(ctx: WorkerLease, result: ReviewVerdict) {
+    requireThat(["PASS", "CHANGES_REQUESTED", "INCONCLUSIVE"].includes(result.verdict) && result.findings.trim().length >= 20 && result.findings.length <= 20000, "INVALID_REVIEW_VERDICT");
+    requireThat(Array.isArray(result.defects) && result.defects.every(d => d.criterion.trim() && d.region.trim() && d.evidence.trim()), "REVIEW_DEFECT_EVIDENCE_REQUIRED");
+    requireThat(result.verdict !== "PASS" || result.defects.length === 0, "PASS_CANNOT_HAVE_DEFECTS");
+    requireThat(result.verdict !== "CHANGES_REQUESTED" || result.defects.length > 0, "DEFECTS_REQUIRED");
+    return this.#tx(() => {
+      const reviewer = this.#lease(ctx, true); requireThat(reviewer.kind === "REVIEWER", "REVIEWER_ASSIGNMENT_REQUIRED");
+      const review = this.#get("SELECT * FROM reviews WHERE reviewer_ticket=?", ctx.ticketId); requireThat(review, "REVIEW_NOT_FOUND");
+      const evidence = json([...result.evidence_references].sort()), defects = json(result.defects);
+      if (review!.state === "FINISHED") { requireThat(review!.verdict === result.verdict && review!.findings === result.findings && review!.defects === defects && review!.evidence === evidence, "REVIEW_REPLAY_CONFLICT"); return { review_id: review!.id, verdict: review!.verdict, candidate_version_id: review!.version_id }; }
+      const author = this.#reviewCurrent(review!), version = this.version(review!.version_id), packet = JSON.parse(review!.packet);
+      requireThat(!this.#get("SELECT worker_id FROM assignment_claims WHERE ticket_id=? AND attempt_id=? AND worker_id=?", author.id, version.attempt_id, ctx.workerId), "AUTHOR_CANNOT_REVIEW_OWN_WORK");
+      if (result.verdict !== "INCONCLUSIVE") {
+        this.#evidence(ctx, result.evidence_references, version.content_hash);
+        for (const evidenceId of result.evidence_references) { const e = this.#get("SELECT * FROM inspections WHERE id=?", evidenceId)!; requireThat(e.coverage === packet.coverage && e.modality === packet.modality, "REVIEW_COVERAGE_MISMATCH"); }
+      }
+      let status = "AWAITING_APPROVAL", reason: string | null = null, from: string | null = null;
+      if (result.verdict === "CHANGES_REQUESTED") { const strikes = author.strike_count + 1; this.#run("UPDATE tickets SET strike_count=? WHERE id=?", strikes, author.id); status = strikes >= author.max_strikes ? "BLOCKED" : "CHANGES_REQUESTED"; if (status === "BLOCKED") { reason = "REPEATED_FAILURE"; from = "CHANGES_REQUESTED"; } }
+      if (result.verdict === "INCONCLUSIVE") { status = "BLOCKED"; reason = "REVIEW_INCONCLUSIVE"; from = "SUBMITTED"; }
+      this.#run("UPDATE reviews SET state='FINISHED',verdict=?,findings=?,defects=?,evidence=? WHERE id=?", result.verdict, result.findings, defects, evidence, review!.id);
+      this.#run("UPDATE tickets SET status=?,feedback=?,blocked_reason=?,blocked_from=?,revision=revision+1 WHERE id=?", status, result.findings, reason, from, author.id);
+      this.#run("UPDATE tickets SET status='SUBMITTED',revision=revision+1 WHERE id=?", ctx.ticketId);
+      return { review_id: review!.id, verdict: result.verdict, candidate_version_id: version.id };
+    });
+  }
+  queueRepair(ticketId: string, revisedInputs?: InputVersions) {
+    return this.#tx(() => {
+      const t = this.ticket(ticketId); requireThat(t.kind === "AUTHOR" && t.status === "CHANGES_REQUESTED", "REPAIR_NOT_ELIGIBLE");
+      requireThat(!this.project(t.project_id).paused, "PROJECT_PAUSED");
+      const inputs = revisedInputs ? inputsJSON(revisedInputs) : t.inputs; this.#currentInputs({ ...t, inputs });
+      requireThat(!this.#get("SELECT id FROM operations WHERE ticket_id=? AND (state IN ('INTENT','SUBMITTING','SUBMITTED','UNKNOWN') OR settled_at IS NULL)", ticketId), "UNRESOLVED_OPERATION");
+      if (t.strike_count >= t.max_strikes || t.attempt_count >= t.max_attempts) { this.#block(ticketId, t.strike_count >= t.max_strikes ? "REPEATED_FAILURE" : "ATTEMPT_LIMIT", "CHANGES_REQUESTED"); return this.ticket(ticketId); }
+      this.#run("UPDATE tickets SET status='READY',inputs=?,worker_id=NULL,attempt_id=NULL,lease_until=NULL,token=token+1,revision=revision+1 WHERE id=?", inputs, ticketId); return this.ticket(ticketId);
+    });
+  }
+  approvalCard(ticketId: string) {
+    return this.#tx(() => { const t = this.ticket(ticketId); requireThat(t.status === "AWAITING_APPROVAL", "NOT_AWAITING_APPROVAL"); this.#currentInputs(t); const v = this.version(t.candidate_id); this.#verifyVersion(v); return { project_id: t.project_id, ticket_id: t.id, candidate_version_id: v.id, content_hash: v.content_hash, expected_revision: t.revision }; });
+  }
+  #commandReplay(payload: OperatorPayload, serialized: string) { const previous = this.#get("SELECT * FROM director_commands WHERE id=?", payload.id); if (!previous) return; requireThat(previous.payload_hash === sha(Buffer.from(serialized)) && previous.principal === payload.principal, "CONFLICTING_DIRECTOR_COMMAND"); return JSON.parse(previous.result); }
+  #saveCommand(command: SignedOperatorCommand<OperatorPayload & { ticket_id: string }>, serialized: string, result: unknown) {
+    const p = command.payload; this.#run("INSERT INTO director_commands VALUES (?,?,?,?,?,?,?,?,?,?)", p.id, p.action, p.project_id, p.ticket_id, p.principal, sha(Buffer.from(serialized)), serialized, sha(Buffer.from(command.signature)), json(result), this.now());
+  }
+  directorDecision(command: SignedOperatorCommand<DirectorDecision>) {
+    const p = authenticateOperator(this.root, command), serialized = commandJSON(p); id(p.id);
+    requireThat(p.action === "decide" && ["APPROVE", "REJECT"].includes(p.decision) && Number.isSafeInteger(p.expected_revision) && /^[a-f0-9]{64}$/.test(p.content_hash), "INVALID_DIRECTOR_DECISION");
+    requireThat(p.decision !== "REJECT" || (typeof p.feedback === "string" && p.feedback.trim()), "REJECTION_FEEDBACK_REQUIRED");
+    return this.#tx(() => {
+      const previous = this.#commandReplay(p, serialized); if (previous) return previous;
+      const t = this.ticket(p.ticket_id);
+      requireThat(t.project_id === p.project_id && t.status === "AWAITING_APPROVAL" && t.revision === p.expected_revision && t.candidate_id === p.candidate_version_id, "STALE_DIRECTOR_DECISION");
+      this.#currentInputs(t); const v = this.version(p.candidate_version_id); this.#verifyVersion(v); requireThat(v.content_hash === p.content_hash, "STALE_DIRECTOR_DECISION");
+      requireThat(this.#get("SELECT id FROM reviews WHERE author_ticket=? AND version_id=? AND state='FINISHED' AND verdict='PASS'", t.id, v.id), "INDEPENDENT_PASS_REQUIRED");
+      const strikes = t.strike_count + (p.decision === "REJECT" ? 1 : 0), status = p.decision === "APPROVE" ? "APPROVED" : strikes >= t.max_strikes ? "BLOCKED" : "CHANGES_REQUESTED";
+      const changed = this.#run("UPDATE tickets SET status=?,strike_count=?,feedback=?,blocked_reason=?,blocked_from=?,revision=revision+1 WHERE id=? AND status='AWAITING_APPROVAL' AND revision=? AND candidate_id=?", status, strikes, p.feedback ?? t.feedback, status === "BLOCKED" ? "REPEATED_FAILURE" : null, status === "BLOCKED" ? "CHANGES_REQUESTED" : null, t.id, p.expected_revision, p.candidate_version_id);
+      requireThat(changed.changes === 1, "STALE_DIRECTOR_DECISION");
+      const result = { decision_id: p.id, ticket_id: t.id, candidate_version_id: v.id, content_hash: v.content_hash, status, revision: t.revision + 1 };
+      this.#saveCommand(command, serialized, result); return result;
+    });
+  }
+  authorizeLimits(command: SignedOperatorCommand<LimitExtension>) {
+    const p = authenticateOperator(this.root, command), serialized = commandJSON(p); id(p.id);
+    requireThat(p.action === "extend_limits" && p.reason.trim() && Number.isSafeInteger(p.expected_revision), "INVALID_LIMIT_EXTENSION");
+    return this.#tx(() => {
+      const previous = this.#commandReplay(p, serialized); if (previous) return previous;
+      const t = this.ticket(p.ticket_id); requireThat(t.project_id === p.project_id && t.revision === p.expected_revision, "STALE_LIMIT_EXTENSION");
+      const limits = { max_attempts: p.max_attempts ?? t.max_attempts, max_strikes: p.max_strikes ?? t.max_strikes, max_turns: p.max_turns ?? t.max_turns, allowance: p.allowance_micros ?? t.allowance };
+      for (const [key, value] of Object.entries(limits)) requireThat(Number.isSafeInteger(value) && value >= t[key] && (key === "allowance" ? value >= 0 : value > 0), "LIMITS_CANNOT_DECREASE");
+      requireThat(Object.entries(limits).some(([key, value]) => value > t[key]), "EXTENSION_MUST_INCREASE");
+      let status = t.status;
+      if (t.status === "BLOCKED" && ((t.blocked_reason === "TURN_LIMIT" && limits.max_turns > t.max_turns) || (t.blocked_reason === "ATTEMPT_LIMIT" && limits.max_attempts > t.attempt_count) || (t.blocked_reason === "REPEATED_FAILURE" && limits.max_strikes > t.strike_count))) status = t.blocked_from;
+      this.#run("UPDATE tickets SET max_attempts=?,max_strikes=?,max_turns=?,allowance=?,status=?,blocked_reason=?,blocked_from=?,revision=revision+1 WHERE id=?", limits.max_attempts, limits.max_strikes, limits.max_turns, limits.allowance, status, status === "BLOCKED" ? t.blocked_reason : null, status === "BLOCKED" ? t.blocked_from : null, t.id);
+      const result = { command_id: p.id, ticket_id: t.id, status, revision: t.revision + 1, limits }; this.#saveCommand(command, serialized, result); return result;
     });
   }
   heartbeat(ctx: WorkerLease, leaseMs: number) { requireThat(Number.isSafeInteger(leaseMs) && leaseMs > 0, "INVALID_LEASE_DURATION"); this.#tx(() => { this.#lease(ctx); this.#run("UPDATE tickets SET lease_until=? WHERE id=?", this.now() + leaseMs, ctx.ticketId); }); }

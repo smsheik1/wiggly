@@ -142,7 +142,7 @@ The director authorized Phase 3 after the successful Phase 2 goal. No production
 cutover is authorized. The implementation is `v3/lib/studio-production.ts`; the
 Deep Agents publication binding is `production-tools.ts`.
 
-Run `npm run check` and `npm run test:phase3` (or `npm test` for all 27 checks).
+Run `npm run check` and `npm run test:phase3` (or `npm test` for the current complete suite).
 This uses Node's built-in SQLite and requires Node 22.13+; the verified environment
 is Node 26.8.1 / SQLite 3.53.4. No dependencies, providers, credentials, dashboard,
 renderer, or external queue were added. Official references: [Node SQLite](https://nodejs.org/api/sqlite.html)
@@ -210,5 +210,60 @@ Phase 3 passes 19 safety checks plus the existing eight checks. All 313 saved
 production files remain unchanged. See `docs/proofs/studio-phase3-safety.json`.
 Full repair/review/director approval, authorization endpoints, attempt escalation,
 LangGraph checkpoint recovery, concurrent production, and migration remain later
-gates. The Phase 2 NVIDIA response reliability issue is still unresolved. Stop at
-Phase 3; do not automatically begin Phase 4 or resume production.
+gates. The Phase 2 NVIDIA response reliability issue is still unresolved. Phase 4 was subsequently authorized after the successful Phase 3 goal; its isolated lifecycle proof follows. Production remains paused.
+
+
+## Phase 4: repair, independent review, and director approval
+
+The director authorized Phase 4 after the successful Phase 3 goal. Run
+`npm run check` and `npm run test:phase4`; `npm test` passes all 41 checks,
+including 14 new lifecycle checks. No inference/media provider calls or provider
+credentials are used. The artifacts and inspection findings are explicit mocks;
+Phase 2 remains the actual visual perception evidence.
+
+Separate reviewer assignments receive the producer's exact-version packet. Authors
+cannot review their own attempt. PASS requires completed hash-bound inspection
+with the requested modality and coverage; an inconclusive result blocks progress
+without penalizing the author. Rejection records feedback and permits a new draft
+attempt without changing old versions. A local published version must be approved
+before the trusted producer makes it a downstream input.
+
+Approval cards carry project, ticket, candidate version, hash, and ticket revision.
+The authenticated transition rejects stale inputs/cards, conflicting commands,
+and modified published bytes. Identical command delivery returns the original
+receipt. Restart while awaiting approval preserves the card and project pause;
+approval does not resume production.
+
+The prototype operator surface is a local CLI, not a new dashboard or web identity
+service. Its OS-owned 0600 `operator-auth.json` stores a signing capability outside
+all worker mounts and is ignored by Git. Workers have neither that file nor signing,
+SQL, approval, or shell tools. This protects the exposed worker harness; it does not
+isolate arbitrary processes running under the operator's OS account.
+
+From this directory, use an explicitly provisioned isolated workspace:
+
+```sh
+npm run operator -- /absolute/isolated/workspace init
+npm run operator -- /absolute/isolated/workspace card ticket-id
+npm run operator -- /absolute/isolated/workspace apply /absolute/operator-command.json
+```
+
+A decision file contains the exact card fields plus `id`, `action: "decide"`,
+`decision: "APPROVE"` or `"REJECT"`, and rejection feedback when applicable.
+The CLI supplies the authenticated local principal and signs that explicit command.
+`extend_limits` requires project/ticket, expected revision, a reason, and increased
+limits; project `pause`, `resume`, and `extend_allowance` require an explicit ID,
+project, value, and reason. Ticket allowance extensions never raise the project cap.
+Do not point the CLI at saved production; no migration or cutover is authorized.
+
+Attempt, strike, and per-attempt turn counts survive restart and are not reset by
+an extension. Native Deep Agents middleware records and checks each model turn
+before invocation. A real regression test showed callback errors can be swallowed
+by LangChain, so telemetry callbacks are not used for enforcement. Native author
+and reviewer finishing tools end their separate runs. The owned v1→v2 SQL schema
+upgrade is tested on an isolated fixture, not the legacy studio database.
+
+All 313 saved production files still match the baseline. See
+`docs/proofs/studio-phase4-lifecycle.json`. Full LangGraph checkpoint recovery,
+NVIDIA response reliability, concurrent dispatch, film integration, and migration
+remain unproven gates. Phase 5 has not started; production remains paused.

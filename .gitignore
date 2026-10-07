@@ -20,6 +20,7 @@ playwright-report/
 .env*
 !.env.example
 secrets.env
+operator-auth.json
 .gstack/
 graphify-out/cache/
 workspaces/

@@ -43,7 +43,7 @@ export function createProbe(model: BaseChatModel, root: string, profileKey: stri
   return { agent, submissions };
 }
 
-export function workspaceAgent(model: BaseChatModel, root: string, profileKey: string, name: string, tools: any[], systemPrompt: string) {
+export function workspaceAgent(model: BaseChatModel, root: string, profileKey: string, name: string, tools: any[], systemPrompt: string, middleware: any[] = []) {
   registerHarnessProfile(profileKey, {
     excludedTools: ["task", "execute"],
     generalPurposeSubagent: { enabled: false },
@@ -55,7 +55,7 @@ export function workspaceAgent(model: BaseChatModel, root: string, profileKey: s
     "/versions/": mount("versions"), "/skills/": mount("skills"),
   });
   return createDeepAgent({
-    model, backend, name, skills: ["/skills/"], tools,
+    model, backend, name, skills: ["/skills/"], tools, middleware,
     permissions: [
       { operations: ["read"], paths: ["/drafts/**", "/references/**", "/versions/**", "/skills/**"], mode: "allow" },
       { operations: ["read"], paths: ["/**"], mode: "deny" },
