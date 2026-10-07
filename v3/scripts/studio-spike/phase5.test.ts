@@ -162,3 +162,13 @@ test('OpenRouter preserves native reasoning details and rejects malformed tools 
     await assert.rejects(invalid('https://openrouter.ai/api/v1/chat/completions',{body:JSON.stringify({messages:[],tools,tool_choice:'required'})}));assert.equal(requests,1);
   }
 });
+
+
+test("director-authorized DeepSeek routing uses only tested primary and backup providers", async () => {
+  const { deepseekProviders } = await import("./phase5-live.js");
+  assert.deepEqual(deepseekProviders.order, ["decart/fp4", "sail-research/fp4"]);
+  assert.deepEqual(deepseekProviders.only, deepseekProviders.order);
+  assert.equal(deepseekProviders.allow_fallbacks, true);
+  assert.equal(deepseekProviders.require_parameters, true);
+  assert.deepEqual(deepseekProviders.max_price, { prompt: .3, completion: 1.2 });
+});
