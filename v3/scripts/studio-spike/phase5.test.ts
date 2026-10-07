@@ -211,3 +211,30 @@ test("image requests exclude the text-only Sail backup", async()=>{
  assert.deepEqual(deepseekRouting(true).only,["decart/fp4"]);
  assert.equal(deepseekRouting(true).allow_fallbacks,false);
 });
+
+test("authenticated rejected-call recovery preserves reservations, turn history, and fencing", async()=>fixture(async(s,root)=>{
+ const {provisionLocalOperator,signLocalOperator}=await import('../../lib/studio-operator.js');
+ const principal=provisionLocalOperator(root);
+ s.createTicket('recovery','p','reviewer',{},1000,'REVIEWER',{maxTurns:4,maxAttempts:1});
+ const old=s.claim('recovery','old-reviewer',300000);
+ for(let n=1;n<=3;n++)s.beginTurn(old,'turn-'+n);
+ s.prepareOperation(old,request('rejected',100));s.startOperation(old,'rejected');s.failOperation('rejected','HTTP 400: image unsupported');
+ const payload={id:'authorized-recovery',principal,project_id:'p',action:'extend_limits' as const,ticket_id:'recovery',expected_revision:s.ticket('recovery').revision,reason:'Explicit mock director recovery',max_turns:6,recover_rejected_operation:{operation_id:'rejected',request_id:'gen-rejected',evidence_reference:'isolated mock rejection receipt'}};
+ assert.throws(()=>s.authorizeLimits({payload,signature:'0'.repeat(64)}),/UNAUTHENTICATED_OPERATOR/);
+ const signed=signLocalOperator(root,payload),result=s.authorizeLimits(signed);
+ assert.deepEqual(s.authorizeLimits(signed),result);
+ assert.equal(s.allowance('p').used,100);assert.equal(s.operation('rejected').settled_at,null);
+ const current=s.claim('recovery','new-reviewer',300000);assert.equal(current.attemptId,old.attemptId);
+ assert.throws(()=>s.beginTurn(old,'stale'),/STALE_WORKER/);
+ assert.throws(()=>s.prepareOperation(current,request('rejected',100)),/RECONCILE_INSTEAD_OF_RESUBMIT/);
+ s.prepareOperation(current,request('intentional-new-call',100));assert.equal(s.allowance('p').used,200);
+ for(let n=4;n<=6;n++)s.beginTurn(current,'turn-'+n);
+ assert.throws(()=>s.beginTurn(current,'turn-7'),/TURN_LIMIT/);
+}));
+
+test("operator recovery cannot declare a connection error a rejected request",async()=>fixture(async(s,root)=>{
+ const {provisionLocalOperator,signLocalOperator}=await import('../../lib/studio-operator.js');const principal=provisionLocalOperator(root),ctx=s.claim('a','worker',300000);
+ s.prepareOperation(ctx,request('unknown',100));s.startOperation(ctx,'unknown');s.failOperation('unknown','Connection error: submission outcome unknown');
+ assert.throws(()=>s.authorizeLimits(signLocalOperator(root,{id:'wrong-recovery',principal,project_id:'p',action:'extend_limits' as const,ticket_id:'a',expected_revision:s.ticket('a').revision,reason:'Explicit isolated mock negative test',max_turns:10,recover_rejected_operation:{operation_id:'unknown',request_id:'invented',evidence_reference:'mock'}})),/REJECTED_OPERATION_REQUIRED/);
+ assert.equal(s.ticket('a').status,'BLOCKED');assert.equal(s.operation('unknown').settled_at,null);
+}));

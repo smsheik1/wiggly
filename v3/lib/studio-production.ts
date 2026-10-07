@@ -11,7 +11,7 @@ export type InputVersions = Record<string, string>;
 export type KillPoint = "after_intent" | "after_dispatch_before_call" | "after_submit_before_request_id" | "after_request_id" | "after_publish_before_record" | "after_publication_commit";
 export type TicketLimits = { maxAttempts: number; maxStrikes: number; maxTurns: number };
 export type DirectorDecision = OperatorPayload & { action: "decide"; ticket_id: string; candidate_version_id: string; content_hash: string; expected_revision: number; decision: "APPROVE" | "REJECT"; feedback?: string };
-export type LimitExtension = OperatorPayload & { action: "extend_limits"; ticket_id: string; expected_revision: number; reason: string; max_attempts?: number; max_strikes?: number; max_turns?: number; allowance_micros?: number };
+export type LimitExtension = OperatorPayload & { action: "extend_limits"; ticket_id: string; expected_revision: number; reason: string; max_attempts?: number; max_strikes?: number; max_turns?: number; allowance_micros?: number; recover_rejected_operation?: { operation_id: string; request_id: string; evidence_reference: string } };
 export type ReviewDirection = { criteria: string[]; modality: string; coverage: string };
 export type ReviewVerdict = { verdict: "PASS" | "CHANGES_REQUESTED" | "INCONCLUSIVE"; findings: string; defects: { criterion: string; region: string; evidence: string }[]; evidence_references: string[] };
 type Row = Record<string, any>;
@@ -268,8 +268,19 @@ export class StudioProduction {
       requireThat(Object.entries(limits).some(([key, value]) => value > t[key]), "EXTENSION_MUST_INCREASE");
       let status = t.status;
       if (t.status === "BLOCKED" && ((t.blocked_reason === "TURN_LIMIT" && limits.max_turns > t.max_turns) || (t.blocked_reason === "ATTEMPT_LIMIT" && limits.max_attempts > t.attempt_count) || (t.blocked_reason === "REPEATED_FAILURE" && limits.max_strikes > t.strike_count))) status = t.blocked_from;
+      // An authenticated operator may recover a definitively rejected request while billing remains reserved.
+      const recovery = p.recover_rejected_operation;
+      if (recovery) {
+        const op = this.operation(recovery.operation_id);
+        requireThat(t.status === "BLOCKED" && t.blocked_reason === null && op.ticket_id === t.id && op.state === "FAILED" && /HTTP (400|404|429):/.test(op.diagnostic ?? ""), "REJECTED_OPERATION_REQUIRED");
+        requireThat(recovery.request_id.trim() && recovery.evidence_reference.trim() && (!op.request_id || op.request_id === recovery.request_id), "REJECTION_RECEIPT_REQUIRED");
+        requireThat(!this.#get("SELECT id FROM operations WHERE ticket_id=? AND state IN ('SUBMITTING','SUBMITTED','UNKNOWN')", t.id), "UNCERTAIN_OPERATION");
+        this.#run("UPDATE operations SET request_id=? WHERE id=?", recovery.request_id, op.id);
+        this.#run("UPDATE tickets SET lease_until=0,token=token+1 WHERE id=?", t.id);
+        status = "WORKING"; // claim keeps this attempt and its existing turn history, and fences the old worker.
+      }
       this.#run("UPDATE tickets SET max_attempts=?,max_strikes=?,max_turns=?,allowance=?,status=?,blocked_reason=?,blocked_from=?,revision=revision+1 WHERE id=?", limits.max_attempts, limits.max_strikes, limits.max_turns, limits.allowance, status, status === "BLOCKED" ? t.blocked_reason : null, status === "BLOCKED" ? t.blocked_from : null, t.id);
-      const result = { command_id: p.id, ticket_id: t.id, status, revision: t.revision + 1, limits }; this.#saveCommand(command, serialized, result); return result;
+      const result = { command_id: p.id, ticket_id: t.id, status, revision: t.revision + 1, limits, ...(recovery ? { recovered_operation_id: recovery.operation_id, billing_reservation_retained: this.operation(recovery.operation_id).settled_at === null } : {}) }; this.#saveCommand(command, serialized, result); return result;
     });
   }
   heartbeat(ctx: WorkerLease, leaseMs: number) { requireThat(Number.isSafeInteger(leaseMs) && leaseMs > 0, "INVALID_LEASE_DURATION"); this.#tx(() => { this.#lease(ctx); this.#run("UPDATE tickets SET lease_until=? WHERE id=?", this.now() + leaseMs, ctx.ticketId); }); }
@@ -333,7 +344,7 @@ export class StudioProduction {
     const result = this.#tx(() => {
       const t = this.#lease(ctx); const prior = this.#get("SELECT * FROM operations WHERE id=?", request.operationId);
       if (prior) { requireThat(prior.ticket_id === ctx.ticketId && prior.attempt_id === ctx.attemptId && prior.provider === request.provider && prior.request_hash === request.requestHash && prior.estimate === request.estimateMicros, "OPERATION_REPLAY_CONFLICT"); requireThat(prior.state === "INTENT", "RECONCILE_INSTEAD_OF_RESUBMIT"); this.#run("UPDATE operations SET token=? WHERE id=?", ctx.token, request.operationId); return this.operation(request.operationId); }
-      requireThat(!this.#get("SELECT id FROM operations WHERE ticket_id=? AND (state IN ('INTENT','SUBMITTING','SUBMITTED','UNKNOWN') OR settled_at IS NULL)", ctx.ticketId), "UNRESOLVED_OPERATION");
+      requireThat(!this.#get("SELECT id FROM operations WHERE ticket_id=? AND (state IN ('INTENT','SUBMITTING','SUBMITTED','UNKNOWN') OR (settled_at IS NULL AND NOT (state='FAILED' AND EXISTS (SELECT 1 FROM director_commands d WHERE d.project_id=? AND d.action='extend_limits' AND json_extract(d.result,'$.recovered_operation_id')=operations.id))))", ctx.ticketId, t.project_id), "UNRESOLVED_OPERATION");
       for (const cap of [this.allowance(t.project_id), this.allowance(t.project_id, ctx.ticketId)]) requireThat(cap.used + request.estimateMicros <= cap.limit, "ALLOWANCE_EXCEEDED");
       this.#run("INSERT INTO operations(id,ticket_id,attempt_id,token,provider,request_hash,state,estimate,reservation) VALUES (?,?,?,?,?,?,'INTENT',?,?)", request.operationId, ctx.ticketId, ctx.attemptId, ctx.token, request.provider, request.requestHash, request.estimateMicros, request.estimateMicros); return this.operation(request.operationId);
     }); this.kill("after_intent"); return result;

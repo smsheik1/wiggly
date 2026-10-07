@@ -9,6 +9,7 @@ import { tool } from 'langchain';
 import { Command } from '@langchain/langgraph';
 import { ToolMessage, HumanMessage } from '@langchain/core/messages';
 import { z } from 'zod';
+import { provisionLocalOperator, signLocalOperator } from '../../lib/studio-operator.js';
 import { StudioProduction, type WorkerLease } from '../../lib/studio-production.js';
 import { askActiveAgent } from '../../lib/agent-bridge.js';
 import { publicationTool, productionMiddleware } from './production-tools.js';
@@ -32,6 +33,7 @@ assert.ok(!recovery || /^[a-f0-9-]{36}$/.test(recovery), 'Invalid isolated recov
 const criteria='Empty stylized 3D family kitchen background, usable 16:9 landscape, believable counter/sink/stove placement, clear central floor space for character staging. No people, animals, human figures or faces anywhere, captions, logos or watermarks. Invented test scene, not a memoir location.';
 const mediaFix=process.argv.includes('--media-fix');
 const packetFix=process.argv.includes('--packet-fix');
+const directorRecovery=process.argv.includes('--director-recovery');
 const reviewBackup=process.argv.includes('--review-backup');
 export function workerReviewPacket(packet:any){return {...packet,candidate_path:'/references/candidate.webp'};}
 export function inspectionResult(bytes:Buffer, text:string, toolCallId:string){return new Command({update:{messages:[new ToolMessage({content:text,tool_call_id:toolCallId}),new HumanMessage({content:[{type:'text',text:'Actual candidate image returned by inspect_candidate.'},{type:'image_url',image_url:{url:'data:image/webp;base64,'+bytes.toString('base64')}}]})]}});}
@@ -40,7 +42,7 @@ async function worker(ctx:WorkerLease, reviewer:boolean, openRouter = false){
  const modelName=openRouter?'deepseek/deepseek-v4.1-flash':'moonshotai/kimi-k3', provider=openRouter?'openrouter':'nvidia-nim';
  const mount=dirname(store.draftDirectory(ctx)),runId=randomUUID(),name=reviewer?'independent-review':'background-author';
  for(const dir of ['references','versions',`skills/${name}`])await mkdir(join(mount,dir),{recursive:true});
- const direction=reviewer?'Read /references/packet.json. Inspect the actual image using inspect_candidate, then submit_review with detailed findings and observable defects with coarse regions.':`${criteria} Read /references/recipe.md. Author your own complete prompt, generate_background once, inspect_candidate, finish_inspection with detailed visual findings, then submit_candidate with /drafts/candidate.webp and the evidence reference returned by finish_inspection. ${ctx.ticketId.endsWith('author-a')?'Soft morning lighting.':'Cozy evening lighting with warm practical lights.'}`;
+ const direction=reviewer?(directorRecovery?'Review the authoritative packet supplied in the user request. Inspect':'Read /references/packet.json. Inspect')+' the actual image using inspect_candidate, then submit_review with detailed findings and observable defects with coarse regions.':`${criteria} Read /references/recipe.md. Author your own complete prompt, generate_background once, inspect_candidate, finish_inspection with detailed visual findings, then submit_candidate with /drafts/candidate.webp and the evidence reference returned by finish_inspection. ${ctx.ticketId.endsWith('author-a')?'Soft morning lighting.':'Cozy evening lighting with warm practical lights.'}`;
  await writeFile(join(mount,`skills/${name}/SKILL.md`),`---\nname: ${name}\ndescription: Complete this isolated Phase 5 assignment.\n---\n${direction}\n`);
  await copyFile(join(kit,'background-prompter.md'),join(mount,'references/recipe.md'));
  if(recovery&&!reviewer) await copyFile(join(mount,'generation-prompt.json'),join(mount,'references/prior-generation.json'));
@@ -50,7 +52,7 @@ async function worker(ctx:WorkerLease, reviewer:boolean, openRouter = false){
  const send:typeof fetch=async(input,init)=>{
   const body=JSON.parse(String(init?.body)),op=randomUUID();let response!:Response;
   const images=body.messages.flatMap((m:any)=>Array.isArray(m.content)?m.content:[]).filter((b:any)=>b.type==='image_url');
-  if(openRouter&&!reviewBackup){body.provider=deepseekRouting(images.length>0);init={...init,body:JSON.stringify(body)};}
+  if(openRouter&&!reviewBackup&&!directorRecovery){body.provider=deepseekRouting(images.length>0);init={...init,body:JSON.stringify(body)};}
   if(source&&images.length){const bytes=await readFile(source);assert.ok(images.some((b:any)=>hash(Buffer.from(b.image_url.url.split(',')[1],'base64'))===hash(bytes)),'Actual candidate missing from outbound request');for(const b of images)delivered.add(b.image_url.url.split(',')[1]);evidence=store.mediaSupplied(ctx,bytes,{runId,model:modelName,modality:'image',coverage:'complete frame'});}
   await store.executeOperation(ctx,{operationId:op,provider,requestHash:hash(Buffer.from(String(init?.body))),estimateMicros:openRouter?Math.ceil(Buffer.byteLength(String(init?.body))*.3+4096*1.2):0},async()=>{
    const started=Date.now();response=await fetch(input,{...init,signal:AbortSignal.timeout(120000)});
@@ -67,7 +69,7 @@ async function worker(ctx:WorkerLease, reviewer:boolean, openRouter = false){
   },error=>`${String(error).replaceAll(key,'[REDACTED]')}\n${openRouter?'Open https://openrouter.ai/settings/keys and verify this key; check https://openrouter.ai/activity for the request. Credentials: OPENROUTER_API_KEY in '+secretsPath:'Open https://build.nvidia.com/moonshotai/kimi-k3 and check availability. Credentials: NVIDIA_API_KEY in '+secretsPath}`, AbortSignal.timeout(180000));return response;
  };
  const transport=openRouter?chatCompletionsTransport('https://openrouter.ai',send):nimTransport(send);
- const model=new NimModel({model:modelName,apiKey:key,maxRetries:0,maxTokens:openRouter?4096:(repair===3?4096:8192),temperature:openRouter?1:(repair===3?0:1),disableStreaming:true,useResponsesApi:false,modelKwargs:openRouter?{tool_choice:'required',reasoning:{effort:'medium'},provider:reviewBackup?{...deepseekProviders,order:['sail-research/fp4'],only:['sail-research/fp4'],allow_fallbacks:false}:deepseekProviders}:{reasoning_effort:repair===3?'high':'max',tool_choice:'required',...(repair===3?{seed:0}:{})},configuration:{baseURL:openRouter?'https://openrouter.ai/api/v1':'https://integrate.api.nvidia.com/v1',fetch:transport}});
+ const model=new NimModel({model:modelName,apiKey:key,maxRetries:0,maxTokens:openRouter?4096:(repair===3?4096:8192),temperature:openRouter?1:(repair===3?0:1),disableStreaming:true,useResponsesApi:false,modelKwargs:openRouter?{tool_choice:'required',reasoning:{effort:'medium'},provider:directorRecovery?{...deepseekProviders,order:['decart/fp4'],only:['decart/fp4'],allow_fallbacks:false}:reviewBackup?{...deepseekProviders,order:['sail-research/fp4'],only:['sail-research/fp4'],allow_fallbacks:false}:deepseekProviders}:{reasoning_effort:repair===3?'high':'max',tool_choice:'required',...(repair===3?{seed:0}:{})},configuration:{baseURL:openRouter?'https://openrouter.ai/api/v1':'https://integrate.api.nvidia.com/v1',fetch:transport}});
  const inspect=tool(async(_input,runtime)=>{source=join(mount,reviewer?'references/candidate.webp':'drafts/candidate.webp');const bytes=await readFile(source);return inspectionResult(bytes,`Inspect the complete actual image. SHA256: ${hash(bytes)}. Next call ${reviewer?'submit_review':'finish_inspection'} with detailed findings.`,(runtime as any).toolCall?.id ?? (runtime as any).toolCallId);},{name:'inspect_candidate',description:'View the actual assigned candidate image.',schema:z.object({}).strict()});
  const finishInspection=tool(({findings})=>{assert.ok(evidence&&findings.trim().length>=20,'Actual inspection required');return {evidence_reference:evidence};},{name:'finish_inspection',description:'Record detailed findings after viewing the image; receive evidence reference.',schema:z.object({findings:z.string().min(20).max(10000)}).strict()});
  const reviewFinish=tool(result=>{assert.ok(evidence,'REVIEW_INSPECTION_REQUIRED');return store.submitReview(ctx,{...result,evidence_references:[evidence]});},{name:'submit_review',description:'End independent review with findings and defects; no director approval.',schema:z.object({verdict:z.enum(['PASS','CHANGES_REQUESTED','INCONCLUSIVE']),findings:z.string().min(20),defects:z.array(z.object({criterion:z.string(),region:z.string(),evidence:z.string()}).strict())}).strict(),returnDirect:true});
@@ -140,6 +142,25 @@ async function main(){
  store.operator('phase5','pause',1,{id:'end-test-pause',actor:'trusted-producer',reason:'End isolated trial; no production approval or resume'});
  const report={status:'PHASE5_LIVE_PASSED',root,receipts,wire,allowance:store.allowance('phase5'),candidates:authors.map(id=>store.version(store.ticket(id).candidate_id)),no_director_approvals:true,saved_production_paused:true,reliability:'Four bounded workers completed; provider corruption cannot be declared permanently fixed.'};await writeFile(join(root,'report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({status:report.status,root,workers:receipts.length,allowance:report.allowance}));store.close();
 }
+async function directorRecoveryMain(){
+ assert.ok(openRouterRecovery,'EXISTING_ISOLATED_ROOT_REQUIRED');
+ assert.equal(JSON.parse(await readFile(join(import.meta.dirname,'output/phase5/authorized-run.json'),'utf8')).root,root);
+ await writeFile(join(root,'director-decart-recovery-execution.json'),JSON.stringify({authorization:'Director approved 6 turns and one Decart recovery',candidate_unchanged:true,budget_usd:5}),{flag:'wx'});
+ store=new StudioProduction(root);assert.equal(store.project('phase5').allowance,5000000);
+ const t=store.ticket('packet-review-0');assert.equal(t.status,'BLOCKED');assert.equal(t.max_turns,4);
+ const evidence=join(root,'sail-rejected-request-evidence.json');await writeFile(evidence,JSON.stringify({source:'https://openrouter.ai/workspaces/default/logs',request_id:'gen-1791406012-s1nZHWf9o6Xxl9xb7s9R',provider:'Sail Research',status:400,reason:'model does not support image input',billing_cost:null,billing_api_result:'Generation not found; reservation retained',observed_by:'active host operator using logged-in OpenRouter upstream log'}));
+ const principal=provisionLocalOperator(root);
+ const command=signLocalOperator(root,{id:'director-six-turn-decart-recovery',principal,project_id:'phase5',action:'extend_limits' as const,ticket_id:t.id,expected_revision:t.revision,max_turns:6,reason:'User explicitly approved six turns and one Decart recovery on the same candidate and original $5 ledger',recover_rejected_operation:{operation_id:'6f277016-9813-4555-b5b5-a9d92f4bbe82',request_id:'gen-1791406012-s1nZHWf9o6Xxl9xb7s9R',evidence_reference:evidence}});
+ const authorization=store.authorizeLimits(command);await writeFile(join(root,'director-review-recovery-authorization.json'),JSON.stringify({command,result:authorization},null,2));
+ store.operator('phase5','resume',0,{id:'director-decart-resume',actor:principal,reason:'One explicitly authorized Decart recovery; saved production never resumed'});
+ const ctx=store.claim(t.id,'director-recovered-reviewer',300000);assert.equal(ctx.attemptId,t.attempt_id);
+ await worker(ctx,true,true);
+ assert.ok(['packet-author-a','packet-author-b'].every(id=>store.ticket(id).status==='AWAITING_APPROVAL'));
+ store.operator('phase5','pause',1,{id:'director-recovery-end',actor:'trusted-producer',reason:'Phase 5 isolated test finished; saved production remains paused'});
+ const allReceipts=[];for(const id of ['packet-author-a','packet-author-b','packet-review-0','packet-review-1']){const ticket=store.ticket(id);allReceipts.push(JSON.parse(await readFile(join(root,'assignments',id,ticket.attempt_id,'worker-receipt.json'),'utf8')));}
+ const report={status:'PHASE5_OPENROUTER_LIVE_PASSED',root,receipts:allReceipts,wire,allowance:store.allowance('phase5'),candidates:['packet-author-a','packet-author-b'].map(id=>store.version(store.ticket(id).candidate_id)),no_images_regenerated:true,no_director_approvals:true,saved_production_paused:true,primary:'decart/fp4',text_backup:'sail-research/fp4',image_backup:null,recovery_authorization:authorization,unknown_reservations_retained:true};
+ await writeFile(join(root,'openrouter-final-report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({status:report.status,workers:allReceipts.length,allowance:report.allowance}));store.close();
+}
 async function reviewBackupMain(){
  assert.ok(openRouterRecovery,'EXISTING_ISOLATED_ROOT_REQUIRED');
  assert.equal(JSON.parse(await readFile(join(import.meta.dirname,'output/phase5/authorized-run.json'),'utf8')).root,root);
@@ -192,4 +213,4 @@ async function openRouterMain(){
  const report={status:'PHASE5_OPENROUTER_LIVE_PASSED',root,receipts,wire,allowance:store.allowance('phase5'),candidates:authors.map(id=>store.version(store.ticket(id).candidate_id)),unknown_probe_reservation_retained:true,no_images_regenerated:true,no_director_approvals:true,saved_production_paused:true,scope:'Concurrent author publication and independent reviews using retained generation receipts; original two Muse generations and exhausted NIM diagnostics preserved'};
  await writeFile(join(root,routedRecovery?(packetFix?'openrouter-packet-report.json':mediaFix?'openrouter-media-report.json':'openrouter-routed-report.json'):'openrouter-report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({status:report.status,root,workers:receipts.length,allowance:report.allowance}));store.close();
 }
-if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))(reviewBackup?reviewBackupMain():openRouterRecovery?openRouterMain():main()).catch(async(error:any)=>{await mkdir(root,{recursive:true});await writeFile(join(root,'blocker-'+repair+'-'+Date.now()+'.json'),JSON.stringify({status:'STOPPED',error:error.message,repair_attempt:repair,receipts,wire},null,2));console.error(`STOP: Phase 5 live: ${error.message}\nEvidence: ${root}`);if(store){store.operator('phase5','pause',1,{id:randomUUID(),actor:'trusted-producer',reason:'STOP: live trial failed'});store.close();}process.exitCode=1;});
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))(directorRecovery?directorRecoveryMain():reviewBackup?reviewBackupMain():openRouterRecovery?openRouterMain():main()).catch(async(error:any)=>{await mkdir(root,{recursive:true});await writeFile(join(root,'blocker-'+repair+'-'+Date.now()+'.json'),JSON.stringify({status:'STOPPED',error:error.message,repair_attempt:repair,receipts,wire},null,2));console.error(`STOP: Phase 5 live: ${error.message}\nEvidence: ${root}`);if(store){store.operator('phase5','pause',1,{id:randomUUID(),actor:'trusted-producer',reason:'STOP: live trial failed'});store.close();}process.exitCode=1;});
