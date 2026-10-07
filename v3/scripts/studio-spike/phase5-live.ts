@@ -1,0 +1,126 @@
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
+import { join, dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { tool } from 'langchain';
+import { z } from 'zod';
+import { StudioProduction, type WorkerLease } from '../../lib/studio-production.js';
+import { askActiveAgent } from '../../lib/agent-bridge.js';
+import { publicationTool, productionMiddleware } from './production-tools.js';
+import { workspaceAgent, hash } from './harness.js';
+import { dispatchAssignments } from './dispatch.js';
+import { NimModel } from './nim-model.js';
+import { nimTransport } from './nim-transport.js';
+import { tracing, namedSecret, secretsPath } from './tracing.js';
+import { assertBackgroundDimensions } from './phase2.js';
+const kit='/Users/shaz/Projects/wiggly/v3/public/format-repositories/my-pixar-story-v1';
+const retained=join(import.meta.dirname,'output/phase2/e9be30f5-54ca-4612-8951-56315e7c90bf/candidate-b8dfeaa58674840103a270fa0d9798fa71aa2298c00c7fab952bb58973d7d45b.webp');
+const recovery = process.argv.find(arg=>arg.startsWith('--phase5-recover-root='))?.slice('--phase5-recover-root='.length);
+const repair = Number(process.argv.find(arg=>arg.startsWith('--repair='))?.slice(9) ?? (recovery?2:1));
+assert.ok([1,2,3].includes(repair), 'At most three distinct repair attempts');
+const root=recovery?join(import.meta.dirname,'output/phase5',recovery):join(import.meta.dirname,'output/phase5',randomUUID()), exec=promisify(execFile);
+assert.ok(!recovery || /^[a-f0-9-]{36}$/.test(recovery), 'Invalid isolated recovery ID');
+const criteria='Empty stylized 3D family kitchen background, usable 16:9 landscape, believable counter/sink/stove placement, clear central floor space for character staging. No people, animals, human figures or faces anywhere, captions, logos or watermarks. Invented test scene, not a memoir location.';
+const receipts:any[]=[], wire:any[]=[];let store:StudioProduction;
+async function worker(ctx:WorkerLease, reviewer:boolean){
+ const mount=dirname(store.draftDirectory(ctx)),runId=randomUUID(),name=reviewer?'independent-review':'background-author';
+ for(const dir of ['references','versions',`skills/${name}`])await mkdir(join(mount,dir),{recursive:true});
+ const direction=reviewer?'Read /references/packet.json. Inspect the actual image using inspect_candidate, then submit_review with detailed findings and observable defects with coarse regions.':`${criteria} Read /references/recipe.md. Author your own complete prompt, generate_background once, inspect_candidate, finish_inspection with detailed visual findings, then submit_candidate with /drafts/candidate.webp and the evidence reference returned by finish_inspection. ${ctx.ticketId==='author-a'?'Soft morning lighting.':'Cozy evening lighting with warm practical lights.'}`;
+ await writeFile(join(mount,`skills/${name}/SKILL.md`),`---\nname: ${name}\ndescription: Complete this isolated Phase 5 assignment.\n---\n${direction}\n`);
+ await copyFile(join(kit,'background-prompter.md'),join(mount,'references/recipe.md'));
+ if(recovery&&!reviewer) await copyFile(join(mount,'generation-prompt.json'),join(mount,'references/prior-generation.json'));
+ if(reviewer){const packet=store.reviewPacket(ctx.ticketId);await copyFile(packet.candidate_path,join(mount,'references/candidate.webp'));await writeFile(join(mount,'references/packet.json'),JSON.stringify(packet));}
+ const key=await namedSecret('NVIDIA_API_KEY'),{client,tracer,failures}=await tracing();
+ let evidence:string|undefined,source:string|undefined,generated=false;const usage:any[]=[],delivered=new Set<string>();
+ const transport=nimTransport(async(input,init)=>{
+  const body=JSON.parse(String(init?.body)),op=randomUUID();let response!:Response;
+  const images=body.messages.flatMap((m:any)=>Array.isArray(m.content)?m.content:[]).filter((b:any)=>b.type==='image_url');
+  if(source&&images.length){const bytes=await readFile(source);assert.ok(images.some((b:any)=>hash(Buffer.from(b.image_url.url.split(',')[1],'base64'))===hash(bytes)),'Actual candidate missing from outbound request');for(const b of images)delivered.add(b.image_url.url.split(',')[1]);evidence=store.mediaSupplied(ctx,bytes,{runId,model:'moonshotai/kimi-k3',modality:'image',coverage:'complete frame'});}
+  await store.executeOperation(ctx,{operationId:op,provider:'nvidia-nim',requestHash:hash(Buffer.from(String(init?.body))),estimateMicros:0},async()=>{
+   const started=Date.now();response=await fetch(input,init);
+   if(!response.ok)throw new Error(`NIM HTTP ${response.status}: ${(await response.text()).replaceAll(key,'[REDACTED]').slice(0,500)}`);
+   const result=await response.clone().json();usage.push(result.usage);await writeFile(join(mount,`nim-response-${op}.json`),JSON.stringify(result));
+   const message=result.choices?.[0]?.message,findingCall=message?.tool_calls?.find((c:any)=>['finish_inspection','submit_review'].includes(c.function?.name));
+   const findings=findingCall?JSON.parse(findingCall.function.arguments).findings:message?.content;
+   if(evidence&&typeof findings==='string'&&findings.trim().length>=20)store.inspectionCompleted(ctx,evidence,findings);
+   wire.push({ticket:ctx.ticketId,provider:'nvidia-nim',operation_id:op,started,ended:Date.now()});
+   return {completed:{result:{artifactReferences:[],receiptReference:join(mount,`nim-response-${op}.json`)},actualAllowanceMicros:0,providerUsage:result.usage,includedCredits:{basis:'NVIDIA free prototype endpoint'}}};
+  },error=>`${String(error).replaceAll(key,'[REDACTED]')}\nOpen https://build.nvidia.com/moonshotai/kimi-k3 → Sign in → Playground / Generate API Key. Check availability; add NVIDIA_API_KEY=<your-key> to ${secretsPath}.`,AbortSignal.timeout(180000));return response;
+ });
+ const model=new NimModel({model:'moonshotai/kimi-k3',apiKey:key,maxRetries:0,maxTokens:repair===3?4096:8192,temperature:repair===3?0:1,disableStreaming:true,useResponsesApi:false,modelKwargs:{reasoning_effort:repair===3?'high':'max',tool_choice:'required',...(repair===3?{seed:0}:{})},configuration:{baseURL:'https://integrate.api.nvidia.com/v1',fetch:transport}});
+ const inspect=tool(async()=>{source=join(mount,reviewer?'references/candidate.webp':'drafts/candidate.webp');const bytes=await readFile(source);return [{type:'text',text:`Inspect the complete actual image. SHA256: ${hash(bytes)}. Next call ${reviewer?'submit_review':'finish_inspection'} with detailed findings.`},{type:'image',mimeType:'image/webp',data:bytes.toString('base64')}];},{name:'inspect_candidate',description:'View the actual assigned candidate image.',schema:z.object({}).strict()});
+ const finishInspection=tool(({findings})=>{assert.ok(evidence&&findings.trim().length>=20,'Actual inspection required');return {evidence_reference:evidence};},{name:'finish_inspection',description:'Record detailed findings after viewing the image; receive evidence reference.',schema:z.object({findings:z.string().min(20).max(10000)}).strict()});
+ const reviewFinish=tool(result=>{assert.ok(evidence,'REVIEW_INSPECTION_REQUIRED');return store.submitReview(ctx,{...result,evidence_references:[evidence]});},{name:'submit_review',description:'End independent review with findings and defects; no director approval.',schema:z.object({verdict:z.enum(['PASS','CHANGES_REQUESTED','INCONCLUSIVE']),findings:z.string().min(20),defects:z.array(z.object({criterion:z.string(),region:z.string(),evidence:z.string()}).strict())}).strict(),returnDirect:true});
+ const generate=tool(async({prompt})=>{
+  assert.ok(!generated,'One generation per assignment');generated=true;
+  const providers=await import(`${kit}/runtime/providers.mjs`),meta=await namedSecret('META_API_KEY');
+  const planning={locationId:'phase5-kitchen',artifacts:[{key:'backgroundCandidates:phase5-kitchen',valid:true,selection:0,content:{files:[{path:retained}]}}]};
+  const request=providers.requestDescriptor(planning,{operation:'backgroundAngle',estimatedCostUsd:.01,parameters:{prompt}});assert.equal(request.n,1);assert.equal(new URL(request.endpoint).origin,'https://api.meta.ai');
+  const {endpoint,images:refs,...body}=request,images=await Promise.all(refs.map(async(file:any)=>({image_url:`data:image/webp;base64,${(await readFile(file.path)).toString('base64')}`})));
+  const serialized=JSON.stringify({...body,images}),operationId=randomUUID(),path=join(mount,'drafts/candidate.webp');
+  await writeFile(join(mount,'generation-prompt.json'),JSON.stringify({prompt,operation_id:operationId,authored_by:ctx.workerId,reference_sha256:hash(await readFile(retained))}));
+  await store.executeOperation(ctx,{operationId,provider:'meta-muse',requestHash:hash(Buffer.from(serialized)),estimateMicros:10000},async()=>{
+   const started=Date.now(),response=await fetch(endpoint,{method:'POST',headers:{Authorization:`Bearer ${meta}`,'Content-Type':'application/json'},body:serialized,signal:AbortSignal.timeout(180000),redirect:'error'});
+   if(!response.ok)throw new Error(`Muse HTTP ${response.status}: ${(await response.text()).replaceAll(meta,'[REDACTED]').slice(0,500)}`);
+   const result=await response.json();await writeFile(join(mount,'muse-response.json'),JSON.stringify(result));assert.ok(result.data?.length===1&&result.data[0].b64_json,'Exact base64 image required');
+   await writeFile(path,Buffer.from(result.data[0].b64_json,'base64'),{flag:'wx'});
+   const {stdout}=await exec('ffprobe',['-v','error','-select_streams','v:0','-show_entries','stream=width,height','-of','json',path]);assertBackgroundDimensions(JSON.parse(stdout).streams[0]);
+   wire.push({ticket:ctx.ticketId,provider:'meta-muse',operation_id:operationId,started,ended:Date.now()});
+   return {completed:{result:{artifactReferences:[path],receiptReference:join(mount,'muse-response.json')}}};
+  },error=>`${String(error).replaceAll(meta,'[REDACTED]')}\n${providers.remediation('meta-muse',secretsPath)}`,AbortSignal.timeout(180000));
+  return {draft_path:'/drafts/candidate.webp',sha256:hash(await readFile(path))};
+ },{name:'generate_background',description:'Generate one Muse candidate from your authored prompt; one authorized call.',schema:z.object({prompt:z.string().min(50).max(5000)}).strict()});
+ const agent=workspaceAgent(model,mount,'openai:moonshotai/kimi-k3',ctx.workerId,reviewer?[inspect,reviewFinish]:[...(recovery?[]:[generate]),inspect,finishInspection,publicationTool(store,ctx)],'Operate only this assignment. Load its skill. Inspect actual bytes. No shell, delegation, substitute providers or director approval.',[productionMiddleware(store,ctx)]);
+ const started=Date.now();
+ try{
+  await askActiveAgent(reviewer?'Independently review the exact candidate in the supplied packet.':recovery?'Recover the already generated /drafts/candidate.webp: load the skill and /references/prior-generation.json, inspect_candidate, finish_inspection and submit_candidate. Generation is not exposed or authorized again.':'Create the background according to your skill. One image call is authorized within the isolated $5 test allowance.',{operatingAgent:prompt=>agent.invoke({messages:[{role:'user',content:prompt}]},{runId,callbacks:[tracer],recursionLimit:40,signal:AbortSignal.timeout(240000),metadata:{phase:5,ticket:ctx.ticketId,production:false,repair_attempt:repair,reasoning_effort:repair===3?'high':'max'}})});
+  assert.equal(store.ticket(ctx.ticketId).status,'SUBMITTED','Worker did not submit');await client.awaitPendingTraceBatches();assert.deepEqual(failures,[]);
+  const trace=await client.readRun(runId,{loadChildRuns:true});for(const media of delivered)assert.ok(!JSON.stringify(trace).includes(media),'Media leaked into LangSmith');
+  const receipt={ticket:ctx.ticketId,run_id:runId,elapsed_ms:Date.now()-started,usage,trace_url:await client.getRunUrl({run:trace}),submitted:true};receipts.push(receipt);await writeFile(join(mount,'worker-receipt.json'),JSON.stringify(receipt,null,2));
+ }catch(error:any){const causes:string[]=[];for(let e=error;e;e=e.cause)causes.push(String(e.message).replaceAll(key,'[REDACTED]'));const message=causes.join(' → ');await writeFile(join(mount,'worker-blocker-'+repair+'.json'),JSON.stringify({ticket:ctx.ticketId,run_id:runId,error:message}));throw new Error(message);}
+}
+export async function admitLiveTrial(output:string,runRoot:string,attempt:number,recover:boolean){
+ assert.ok([1,2,3].includes(attempt),'At most three distinct repair attempts');
+ const admission=join(output,'authorized-run.json');
+ if(!recover) await writeFile(admission,JSON.stringify({root:runRoot,allowance_usd:5}),{flag:'wx'});
+ else assert.equal(JSON.parse(await readFile(admission,'utf8')).root,runRoot,'Recovery must use the one authorized allowance ledger');
+ await writeFile(join(runRoot,`diagnostic-${attempt}-execution.json`),JSON.stringify({repair:attempt,started_at:Date.now()}),{flag:'wx'});
+}
+async function main(){
+ await mkdir(root,{recursive:true});
+ await admitLiveTrial(join(import.meta.dirname,'output/phase5'),root,repair,!!recovery);
+ await Promise.all(['NVIDIA_API_KEY','META_API_KEY','LANGSMITH_API_KEY'].map(namedSecret));
+ assert.equal(hash(await readFile(retained)),'b8dfeaa58674840103a270fa0d9798fa71aa2298c00c7fab952bb58973d7d45b');
+ store=new StudioProduction(root);if(!recovery)store.createProject('phase5',5000000);store.configureConcurrency('phase5',2,{'meta-muse':1,'nvidia-nim':1},{'nvidia-nim':repair===3?15000:6000});store.operator('phase5','resume',0,{id:recovery?'diagnostic-'+repair+'-resume-'+randomUUID():'isolated-resume',actor:'director-authorized-phase5',reason:'Explicit Phase 5 test authorization; saved production stays paused'});
+ if(!recovery)for(const id of ['author-a','author-b'])store.createTicket(id,'phase5','background-author',{},2500000,'AUTHOR',{maxTurns:8,maxAttempts:1});
+ await writeFile(join(root,recovery?'diagnostic-'+repair+'-authorization.json':'authorization.json'),JSON.stringify({paid_test_allowance_usd:5,planned_muse_estimate_usd:.02,nvidia_expected_cost_usd:0,verified_charges_usd:null,reliability_repair_attempt:repair,no_automatic_retries:true,production_paused:true},null,2));
+ if(recovery){
+  // HTTP 429 is an explicit refusal at the free endpoint, not an unknown paid generation.
+  const { DatabaseSync }=await import('node:sqlite');const db=new DatabaseSync(join(root,'studio.sqlite'));
+  const failed=db.prepare("SELECT * FROM operations WHERE provider='nvidia-nim' AND state='FAILED'").all() as any[];db.close();
+  for(const op of failed){assert.match(op.diagnostic,/NIM HTTP 429/);store.settleFailedOperation(op.id,0);}
+  for(const id of ['author-a','author-b']){
+   const t=store.ticket(id);assert.ok(['WORKING','BLOCKED'].includes(t.status));assert.ok(await readFile(join(root,'assignments',id,t.attempt_id,'drafts/candidate.webp')));
+   // Restart fresh bounded inspection assignments; preserve failed attempts/history and reuse bytes.
+   const fresh='recovered-'+id;let existing:any;try{existing=store.ticket(fresh);}catch(error:any){if(error.message!=='TICKET_NOT_FOUND')throw error;}
+   if(!existing)store.createTicket(fresh,'phase5','background-author',{},0,'AUTHOR',{maxTurns:8,maxAttempts:1});
+   const ctx=existing?.status==='WORKING'&&existing.lease_until>Date.now()?{ticketId:fresh,workerId:existing.worker_id,token:existing.token,attemptId:existing.attempt_id}:store.claim(fresh,fresh,300000),mount=dirname(store.draftDirectory(ctx));await mkdir(join(mount,'references'),{recursive:true});
+   await copyFile(join(root,'assignments',id,t.attempt_id,'drafts/candidate.webp'),join(mount,'drafts/candidate.webp'));
+   await copyFile(join(root,'assignments',id,t.attempt_id,'generation-prompt.json'),join(mount,'generation-prompt.json'));
+  }
+  const contexts=['recovered-author-a','recovered-author-b'].map(id=>{const t=store.ticket(id);return {ticketId:id,workerId:t.worker_id,token:t.token,attemptId:t.attempt_id};});
+  // These already claimed assignments still execute together while the provider gate serializes requests.
+  const results=await Promise.allSettled(contexts.map(async ctx=>{try{await worker(ctx,false);}catch(error){store.operator('phase5','pause',1,{id:randomUUID(),actor:'trusted-producer',reason:'Diagnostic worker failed'});throw error;}}));
+  const failure=results.find(r=>r.status==='rejected'&&!String(r.reason?.message).includes('PROJECT_PAUSED'))??results.find(r=>r.status==='rejected');if(failure?.status==='rejected')throw failure.reason;
+ }else await dispatchAssignments(store,'phase5',['author-a','author-b'],ctx=>worker(ctx,false));
+ const authors=recovery?['recovered-author-a','recovered-author-b']:['author-a','author-b'];
+ for(const [author,reviewer]of [[authors[0],'review-a'],[authors[1],'review-b']])store.startReview(author,reviewer,'independent-reviewer',{criteria:[criteria],modality:'image',coverage:'complete frame'},0,{maxTurns:4,maxAttempts:1});
+ await dispatchAssignments(store,'phase5',['review-a','review-b'],ctx=>worker(ctx,true));
+ assert.ok(authors.every(id=>store.ticket(id).status==='AWAITING_APPROVAL'),'Both positive trial backgrounds must independently pass');
+ store.operator('phase5','pause',1,{id:'end-test-pause',actor:'trusted-producer',reason:'End isolated trial; no production approval or resume'});
+ const report={status:'PHASE5_LIVE_PASSED',root,receipts,wire,allowance:store.allowance('phase5'),candidates:authors.map(id=>store.version(store.ticket(id).candidate_id)),no_director_approvals:true,saved_production_paused:true,reliability:'Four bounded workers completed; provider corruption cannot be declared permanently fixed.'};await writeFile(join(root,'report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({status:report.status,root,workers:receipts.length,allowance:report.allowance}));store.close();
+}
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(async(error:any)=>{await mkdir(root,{recursive:true});await writeFile(join(root,'blocker-'+repair+'-'+Date.now()+'.json'),JSON.stringify({status:'STOPPED',error:error.message,repair_attempt:repair,receipts,wire},null,2));console.error(`STOP: Phase 5 live: ${error.message}\nEvidence: ${root}`);if(store){store.operator('phase5','pause',1,{id:randomUUID(),actor:'trusted-producer',reason:'STOP: live trial failed'});store.close();}process.exitCode=1;});

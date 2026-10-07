@@ -1,6 +1,6 @@
 # Wiggly Agent Studio — Architecture Specification v5
 
-**Status:** Phases 1–4 completed in isolation. The director authorized Phase 4 after the successful Phase 3 goal. SQL safety and assignment lifecycle checks pass; full worker checkpoint recovery and production adoption remain pending. Implementation delegated to OpenAI Codex. The original $5 allowance remains the M0 test allowance; Phases 3–4 used free isolated mock tests. Full studio production remains paused.
+**Status:** Phases 1–4 completed in isolation. Phase 5 local concurrency checks pass, but the live acceptance gate stopped after three distinct NVIDIA/Kimi diagnostic configurations failed. Phase 5 is incomplete and awaits the director’s provider decision. Fresh paid-test allowance: $5; estimated Muse consumption: $0.02, verified charges unknown. Full studio production remains paused.
 **Objective:** Build an agent-operated animation studio with shared materials, autonomous specialists, independent review, and clear director control.
 
 ---
@@ -121,7 +121,7 @@ Reject stale candidates, outdated inputs, unauthorized callers, and conflicting 
 
 For the prototype, approval may use the existing operator interface. A new dashboard or budget button is not a prerequisite.
 
-**Default:** retain existing approval requirements. Automatic approval requires an explicitly authorized format policy. Future policies may batch review around character/style direction, storyboard/animatic, narration performance, and final film rather than requiring a separate interaction for every intermediate asset.
+**Director-authorized policy (October 7, 2026):** the director approves character/style direction, storyboard/animatic, narration performance, and the final film. Intermediate backgrounds, props, individual shots, and technical audio preparation may proceed after deterministic validation and independent review pass. Changes contradicting approved direction return to the director. Activate this policy through explicit format criteria during Phase 6 integration; Phase 5 fixtures confer no production approvals or cutover authority.
 
 ---
 
@@ -286,7 +286,7 @@ The paths below refer to the existing `v3/public/format-repositories/my-pixar-st
 | 5 — Concurrent dispatch | Run two independent assignments under shared allowance and provider limits. | M2 concurrency tests pass. |
 | 6 — Film integration | Connect proven assignments to format recipes, composition, and director review. | Preview/export/share parity and the affected film flow pass their checks. |
 
-Current checkpoint (October 7, 2026): Phases 1–4 are complete. M0 proved TypeScript Deep Agents authorship, actual image inspection, and independent positive/negative review. Phase 3 adds isolated SQLite safety and six named child-process SIGKILL checks. Phase 4 adds rejection→repair→independent review→exact-version director approval, authenticated local operator commands, stale/conflicting decision rejection, idempotent delivery, restart while awaiting approval, and separate attempt/strike/turn limits with authorized extensions. All 41 checks pass (14 new Phase 4 checks). Native middleware enforces turn limits before model invocation; telemetry callbacks are not safety gates. Evidence is in `docs/proofs/studio-phase1-harness.json`, `docs/proofs/studio-phase2-suitability.json`, `docs/proofs/studio-phase3-safety.json`, and `docs/proofs/studio-phase4-lifecycle.json`. All 313 saved production files remain unchanged and paused. The new core is not routed to production. Phase 4 uses explicit mock artifacts and test operator decisions, not creative acceptance of a real film. NVIDIA response reliability and full LangGraph checkpoint recovery remain unresolved. Stop at the Phase 4 gate; Phase 5 is not authorized.
+Current checkpoint (October 7, 2026): Phases 1–4 are complete. M0 proved TypeScript Deep Agents authorship, actual image inspection, and independent positive/negative review. Phase 3 adds isolated SQLite safety and six named child-process SIGKILL checks. Phase 4 adds rejection→repair→independent review→exact-version director approval, authenticated local operator commands, stale/conflicting decision rejection, idempotent delivery, restart while awaiting approval, and separate attempt/strike/turn limits with authorized extensions. All 41 checks pass (14 new Phase 4 checks). Native middleware enforces turn limits before model invocation; telemetry callbacks are not safety gates. Evidence is in `docs/proofs/studio-phase1-harness.json`, `docs/proofs/studio-phase2-suitability.json`, `docs/proofs/studio-phase3-safety.json`, and `docs/proofs/studio-phase4-lifecycle.json`. All 313 saved production files remain unchanged and paused. The new core is not routed to production. Phase 4 uses explicit mock artifacts and test operator decisions, not creative acceptance of a real film. NVIDIA response reliability and full LangGraph checkpoint recovery remain unresolved. Phase 5 was subsequently authorized with a fresh $5 paid-test allowance and a three-distinct-repair-attempt escalation rule for inference reliability. Phase 5 passes 13 local concurrency checks (54 total). Its live gate stopped after NVIDIA HTTP 429, a garbled response, and an empty required-tool response across three distinct configurations. The malformed-response guard worked, but inference reliability is not fixed. Two generated images are retained without regeneration. Evidence: `docs/proofs/studio-phase5-concurrency.json`. Phase 5 is incomplete; Phase 6 and production cutover are not authorized.
 
 Commit and push each clean completed phase after its checks pass. Track the current phase, deliverable, evidence, blockers, and next gate. Phase checkpoints do not expand authorization or resume production.
 
@@ -301,11 +301,11 @@ Commit and push each clean completed phase after its checks pass. Track the curr
 
 ## 6. Explicit defaults
 
-- M0 was authorized with a $5 test allowance and 2-day timebox. The director subsequently authorized Phase 3 after the successful Phase 2 goal and Phase 4 after the successful Phase 3 goal; Phases 3–4 use free isolated mock tests. Phase 5, migration, and production resume require later authorization. Implementation is delegated to OpenAI Codex. Full studio production remains paused.
+- M0 was authorized with a $5 test allowance and 2-day timebox. The director subsequently authorized Phase 3 after the successful Phase 2 goal and Phase 4 after the successful Phase 3 goal; Phases 3–4 use free isolated mock tests. Phase 5 was subsequently authorized with a fresh $5 paid-test allowance. Phase 6, migration, and production resume require later authorization. Implementation is delegated to OpenAI Codex. Full studio production remains paused.
 - Director decision, October 7, 2026: use TypeScript Deep Agents with `moonshotai/kimi-k3` through NVIDIA NIM for the isolated M0 spike. Saved production remains unchanged.
 - TypeScript Deep Agents is the primary candidate; the spike determines whether it passes or fails to Python.
 - SQLite owns production state; LangGraph owns recoverable worker execution.
-- Existing approval policies remain active until the director changes them.
+- The director authorized four major creative approval checkpoints; intermediate automatic acceptance requires the explicit format policy and verification gates during Phase 6 integration.
 - Credentials come only from the canonical repo-root `secrets.env`, loaded in memory.
 - Existing validators, format boundaries, host-agent authoring, and renderer parity remain authoritative.
 - **Further architecture changes must address a demonstrated test failure or production requirement.**

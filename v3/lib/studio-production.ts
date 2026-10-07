@@ -2,6 +2,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createHash, randomUUID } from "node:crypto";
 import { constants, mkdirSync, readFileSync, writeFileSync, openSync, closeSync, fsyncSync, linkSync, unlinkSync, realpathSync, fstatSync } from "node:fs";
 import { join, resolve, dirname, relative, isAbsolute } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { authenticateOperator, commandJSON, type SignedOperatorCommand, type OperatorPayload } from "./studio-operator.js";
 
 export type WorkerLease = { ticketId: string; workerId: string; token: number; attemptId: string };
@@ -32,7 +33,7 @@ export class StudioProduction {
     mkdirSync(root, { recursive: true }); this.root = realpathSync(root);
     this.#db = new DatabaseSync(join(this.root, "studio.sqlite"));
     this.#db.exec("PRAGMA busy_timeout=5000");
-    requireThat([0, 1, 2].includes(this.#get("PRAGMA user_version")!.user_version), "UNSUPPORTED_STUDIO_SCHEMA");
+    requireThat([0, 1, 2, 3, 4].includes(this.#get("PRAGMA user_version")!.user_version), "UNSUPPORTED_STUDIO_SCHEMA");
     this.#db.exec(`PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;
       CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY, paused INTEGER NOT NULL DEFAULT 1 CHECK(paused IN (0,1)), allowance INTEGER NOT NULL CHECK(allowance>=0)) STRICT;
       CREATE TABLE IF NOT EXISTS operator_decisions(id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), actor TEXT NOT NULL, action TEXT NOT NULL, value INTEGER NOT NULL, reason TEXT NOT NULL, at INTEGER NOT NULL) STRICT;
@@ -62,6 +63,19 @@ export class StudioProduction {
           INSERT INTO assignment_claims SELECT id,attempt_id,token,worker_id FROM tickets WHERE attempt_id IS NOT NULL AND worker_id IS NOT NULL;
           PRAGMA user_version=2;`);
       }
+    });
+    this.#tx(() => {
+      if (this.#get("PRAGMA user_version")!.user_version < 3) {
+        this.#db.exec(`ALTER TABLE projects ADD COLUMN max_workers INTEGER NOT NULL DEFAULT 8 CHECK(max_workers>0);
+          CREATE TABLE provider_limits(provider TEXT PRIMARY KEY,max_inflight INTEGER NOT NULL CHECK(max_inflight>0)) STRICT;
+          CREATE INDEX operations_provider ON operations(provider,state);
+          PRAGMA user_version=3;`);
+      }
+    });
+    this.#tx(() => {
+      if (this.#get("PRAGMA user_version")!.user_version < 4) this.#db.exec(`ALTER TABLE provider_limits ADD COLUMN min_interval_ms INTEGER NOT NULL DEFAULT 0 CHECK(min_interval_ms>=0);
+        ALTER TABLE provider_limits ADD COLUMN next_allowed_at INTEGER NOT NULL DEFAULT 0;
+        PRAGMA user_version=4;`);
     });
     for (const dir of ["assignments", "versions", "publication-staging"]) { mkdirSync(join(this.root, dir), { recursive: true }); requireThat(realpathSync(join(this.root, dir)) === join(this.root, dir), "WORKSPACE_SYMLINK"); }
   }
@@ -107,6 +121,20 @@ export class StudioProduction {
     requireThat(Object.values(cap).every(n => Number.isSafeInteger(n) && n > 0), "INVALID_TICKET_LIMITS");
     this.#run("INSERT INTO tickets(id,project_id,role,kind,status,inputs,allowance,max_attempts,max_strikes,max_turns) VALUES (?,?,?,?,'READY',?,?,?,?,?)", ticketId, projectId, role, kind, inputsJSON(inputs), allowanceMicros, cap.maxAttempts, cap.maxStrikes, cap.maxTurns);
   }
+  // Trusted producer configuration, never a worker tool. Limits apply across processes.
+  configureConcurrency(projectId: string, maxWorkers: number, providers: Record<string, number>, intervals: Record<string, number> = {}) {
+    requireThat(Number.isSafeInteger(maxWorkers) && maxWorkers > 0, "INVALID_WORKER_LIMIT");
+    for (const [provider, cap] of Object.entries(providers)) { id(provider); requireThat(Number.isSafeInteger(cap) && cap > 0, "INVALID_PROVIDER_LIMIT"); }
+    for (const [provider, ms] of Object.entries(intervals)) requireThat(provider in providers && Number.isSafeInteger(ms) && ms >= 0, "INVALID_PROVIDER_INTERVAL");
+    this.#tx(() => { this.project(projectId); this.#run("UPDATE projects SET max_workers=? WHERE id=?", maxWorkers, projectId);
+      for (const [provider, cap] of Object.entries(providers)) this.#run("INSERT INTO provider_limits(provider,max_inflight,min_interval_ms) VALUES (?,?,?) ON CONFLICT(provider) DO UPDATE SET max_inflight=excluded.max_inflight,min_interval_ms=excluded.min_interval_ms", provider, cap, intervals[provider] ?? 0);
+    });
+  }
+  providerCapacity(provider: string) {
+    const policy = this.#get("SELECT * FROM provider_limits WHERE provider=?", provider), limit = policy?.max_inflight ?? 1;
+    const used = this.#get("SELECT COUNT(*) AS used FROM operations WHERE provider=? AND (state IN ('SUBMITTING','SUBMITTED','UNKNOWN') OR (state='FAILED' AND settled_at IS NULL))", provider)!.used;
+    return { limit, used, nextAllowedAt: policy?.next_allowed_at ?? 0 };
+  }
   #currentInputs(ticket: Row) { for (const [name, version] of Object.entries(JSON.parse(ticket.inputs))) requireThat(this.#get("SELECT version FROM input_heads WHERE project_id=? AND name=?", ticket.project_id, name)?.version === version, "STALE_INPUTS"); }
   #lease(ctx: WorkerLease, submittedReplay = false) {
     const t = this.ticket(ctx.ticketId);
@@ -119,6 +147,8 @@ export class StudioProduction {
     const result = this.#tx(() => {
       const t = this.ticket(ticketId); requireThat(!this.project(t.project_id).paused, "PROJECT_PAUSED"); this.#currentInputs(t);
       requireThat(t.status === "READY" || (t.status === "WORKING" && t.lease_until <= this.now()), "TICKET_ALREADY_CLAIMED");
+      const active = this.#get("SELECT COUNT(*) AS used FROM tickets WHERE project_id=? AND status='WORKING' AND lease_until>? AND id<>?", t.project_id, this.now(), ticketId)!.used;
+      requireThat(active < this.project(t.project_id).max_workers, "WORKER_CAPACITY_BUSY");
       requireThat(!this.#get("SELECT id FROM operations WHERE ticket_id=? AND state IN ('SUBMITTING','UNKNOWN')", ticketId), "UNCERTAIN_OPERATION");
       const review = this.#get("SELECT * FROM reviews WHERE reviewer_ticket=?", ticketId);
       if (review) requireThat(!this.#get("SELECT worker_id FROM assignment_claims WHERE ticket_id=? AND attempt_id=? AND worker_id=?", review.author_ticket, this.version(review.version_id).attempt_id, workerId), "AUTHOR_CANNOT_REVIEW_OWN_WORK");
@@ -309,7 +339,10 @@ export class StudioProduction {
     }); this.kill("after_intent"); return result;
   }
   startOperation(ctx: WorkerLease, operationId: string) {
-    this.#tx(() => { this.#lease(ctx); const op = this.operation(operationId); requireThat(op.ticket_id === ctx.ticketId && op.attempt_id === ctx.attemptId && op.token === ctx.token && op.state === "INTENT", "RECONCILE_INSTEAD_OF_RESUBMIT"); this.#run("UPDATE operations SET state='SUBMITTING' WHERE id=?", operationId); }); this.kill("after_dispatch_before_call");
+    this.#tx(() => { this.#lease(ctx); const op = this.operation(operationId); requireThat(op.ticket_id === ctx.ticketId && op.attempt_id === ctx.attemptId && op.token === ctx.token && op.state === "INTENT", "RECONCILE_INSTEAD_OF_RESUBMIT"); const capacity = this.providerCapacity(op.provider); requireThat(capacity.used < capacity.limit && this.now() >= capacity.nextAllowedAt, "PROVIDER_CAPACITY_BUSY");
+      this.#run("UPDATE provider_limits SET next_allowed_at=?+min_interval_ms WHERE provider=?", this.now(), op.provider);
+      const t = this.ticket(ctx.ticketId); for (const cap of [this.allowance(t.project_id), this.allowance(t.project_id, t.id)]) requireThat(cap.used <= cap.limit, "ALLOWANCE_EXCEEDED");
+      this.#run("UPDATE operations SET state='SUBMITTING' WHERE id=?", operationId); }); this.kill("after_dispatch_before_call");
   }
   // Called by trusted provider transport, even if its old worker expired: never lose a paid receipt.
   recordRequestId(operationId: string, requestId: string) {
@@ -339,8 +372,14 @@ export class StudioProduction {
       this.#run("UPDATE operations SET state='COMPLETED',settled_at=?,allowance_used=?,allowance_basis=?,result=?,provider_usage=?,included_credits=?,verified_charge=? WHERE id=?", this.now(), used, receipt.actualAllowanceMicros === undefined ? "ESTIMATE" : "REPORTED_ALLOWANCE", result, usage, credits, charge, operationId); return this.operation(operationId);
     });
   }
-  async executeOperation(ctx: WorkerLease, request: Parameters<StudioProduction["prepareOperation"]>[1], submit: (operationId: string) => Promise<{ requestId?: string; completed?: Parameters<StudioProduction["completeOperation"]>[1] }>, diagnostic: (error: unknown) => string) {
-    this.prepareOperation(ctx, request); this.startOperation(ctx, request.operationId);
+  async executeOperation(ctx: WorkerLease, request: Parameters<StudioProduction["prepareOperation"]>[1], submit: (operationId: string) => Promise<{ requestId?: string; completed?: Parameters<StudioProduction["completeOperation"]>[1] }>, diagnostic: (error: unknown) => string, signal?: AbortSignal) {
+    this.prepareOperation(ctx, request);
+    // Waiting for a local slot is not retrying an external request. Each wake rechecks the lease/pause.
+    for (;;) {
+      signal?.throwIfAborted();
+      try { this.startOperation(ctx, request.operationId); break; }
+      catch (error: any) { if (error.message !== "PROVIDER_CAPACITY_BUSY" || !signal) throw error; await delay(20, undefined, { signal }); }
+    }
     try {
       const response = await submit(request.operationId); this.kill("after_submit_before_request_id");
       requireThat(response.requestId || response.completed, "PROVIDER_RECEIPT_REQUIRED");

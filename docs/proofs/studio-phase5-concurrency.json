@@ -1,0 +1,141 @@
+{
+  "date": "2026-10-07",
+  "phase": 5,
+  "status": "LOCAL_CONCURRENCY_PASSED_LIVE_GATE_STOPPED",
+  "goal_complete": false,
+  "authorization": "Director explicitly began Phase 5 goal loop, authorized a fresh $5 paid-test allowance, authorized investigation with loud escalation after three distinct failed repair attempts, and approved four major creative checkpoints.",
+  "checks": {
+    "typecheck": "PASS",
+    "phase5_tests": 13,
+    "previous_tests": 41,
+    "total_tests": 54,
+    "cross_process_worker_admission": "PASS",
+    "cross_process_shared_budget_reservations": "PASS",
+    "cross_process_provider_slots_and_restart": "PASS",
+    "bounded_dispatch_independent_publication": "PASS",
+    "unknown_operations_retain_provider_slots": "PASS",
+    "durable_provider_pacing": "PASS",
+    "pause_stops_new_calls": "PASS",
+    "budget_overrun_prevents_already_reserved_dispatch": "PASS",
+    "named_sqlite_lock_contention_barrier": "PASS",
+    "first_error_preserved_when_other_worker_pauses": "PASS",
+    "malformed_required_tool_truncation_and_invalid_calls_rejected_without_retry": "PASS",
+    "persistent_live_allowance_and_three_diagnostic_admission": "PASS"
+  },
+  "implementation": [
+    "v3/lib/studio-production.ts",
+    "v3/scripts/studio-spike/dispatch.ts",
+    "v3/scripts/studio-spike/nim-transport.ts"
+  ],
+  "live_run_root": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6",
+  "diagnostics": [
+    {
+      "attempt": 1,
+      "configuration": {
+        "reasoning_effort": "max",
+        "max_tokens": 16384,
+        "temperature": 1,
+        "nvidia_concurrency": 2
+      },
+      "result": "NVIDIA HTTP 429 stopped the batch. Two Muse images completed and were retained. No duplicate image calls."
+    },
+    {
+      "attempt": 2,
+      "configuration": {
+        "reasoning_effort": "max",
+        "max_tokens": 8192,
+        "temperature": 1,
+        "nvidia_concurrency": 1,
+        "min_interval_ms": 6000
+      },
+      "result": "HTTP 200 garbled output, finish_reason=stop, no required tool. New guard rejected it and paused the batch."
+    },
+    {
+      "attempt": 3,
+      "configuration": {
+        "reasoning_effort": "high",
+        "max_tokens": 4096,
+        "temperature": 0,
+        "seed": 0,
+        "nvidia_concurrency": 1,
+        "min_interval_ms": 15000
+      },
+      "result": "HTTP 200 empty content, finish_reason=stop, no required tool. New guard rejected it. Escalated to director and stopped all live trials."
+    }
+  ],
+  "local_recovery_friction": [
+    "A recovery CLI flag initially collided with an imported Phase 2 CLI parser; Phase 5 uses its own flag. No provider calls occurred during this setup failure.",
+    "Worker admission correctly refused a replacement while the previous worker lease remained live. Recovery respects admission and reuses owned draft bytes; setup failure made no provider call."
+  ],
+  "live_operations": {
+    "muse_completed": 2,
+    "nvidia_completed": 18,
+    "nvidia_rate_limited": 1,
+    "nvidia_unsent_intents": 1,
+    "completed_response_receipts_include_invalid_outputs": true
+  },
+  "allowance": {
+    "authorized_usd": 5,
+    "estimated_muse_consumption_usd": 0.02,
+    "verified_charges_usd": null,
+    "nvidia_expected_cost_usd": 0,
+    "nvidia_basis": "NVIDIA free prototype endpoint; no invented per-token tariff.",
+    "remaining_estimated_allowance_usd": 4.98,
+    "nvidia_429": "Explicit refusal at the free endpoint was reconciled to zero allowance consumption; verified billing remains unknown."
+  },
+  "images": [
+    {
+      "path": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6/assignments/author-a/223d6926-9c43-4729-9766-a9675e13beed/drafts/candidate.webp",
+      "sha256": "293175c4a4ced67cf149e976bf6a42d56d66b34bccf16c63597ae53d5c616df6",
+      "bytes": 317568
+    },
+    {
+      "path": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6/assignments/author-b/0fdb36fb-95f2-4436-a2db-3d6ce4435167/drafts/candidate.webp",
+      "sha256": "0fa92275d57535fe889b8989978f739087e37426e4eeecc6f7854df035a4ec2e",
+      "bytes": 360010
+    },
+    {
+      "path": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6/assignments/recovered-author-a/564061ec-9ccb-4e0e-b72e-0a52a24f75f6/drafts/candidate.webp",
+      "sha256": "293175c4a4ced67cf149e976bf6a42d56d66b34bccf16c63597ae53d5c616df6",
+      "bytes": 317568
+    },
+    {
+      "path": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6/assignments/recovered-author-b/462afca9-b743-4908-aaa2-5476f4484965/drafts/candidate.webp",
+      "sha256": "0fa92275d57535fe889b8989978f739087e37426e4eeecc6f7854df035a4ec2e",
+      "bytes": 360010
+    }
+  ],
+  "live_publication_and_review_complete": false,
+  "no_director_approvals": true,
+  "production_baseline": {
+    "files_verified": 313,
+    "all_unchanged": true,
+    "manifest_sha256": "9d857f03119e18cb74d4368d843228395fc4d9cd30807f80ed06aac6318e0d26",
+    "saved_production_paused": true,
+    "isolated_test_paused": true,
+    "migration_started": false
+  },
+  "approval_policy": {
+    "authorized": true,
+    "director_checkpoints": [
+      "character/style direction",
+      "storyboard/animatic",
+      "narration performance",
+      "final film"
+    ],
+    "intermediate_assets": "Proceed after deterministic validation and independent review pass. Changes contradicting approved direction return to director.",
+    "activation": "Explicit format integration in Phase 6; no automatic acceptance or production approvals granted by Phase 5 test."
+  },
+  "limitations": [
+    "NVIDIA/Kimi response reliability is NOT fixed. A successful response between failures is not proof of resolution.",
+    "Local concurrency safety passed; live Phase 5 acceptance is incomplete and requires a director decision about inference reliability.",
+    "Durable LangGraph checkpoint recovery remains unproven; this recovery restarted fresh bounded workers over retained files and SQL receipts.",
+    "No production routing, renderer changes, migration, resume, or Phase 6 implementation."
+  ],
+  "sources": [
+    "https://docs.api.nvidia.com/nim/reference/moonshotai-kimi-k3-infer",
+    "https://build.nvidia.com/moonshotai/kimi-k3"
+  ],
+  "complexity_review": "Native SQLite transactions and count-based provider slots, stdlib timers, bounded in-process producer batch; no ORM, external queue, daemon, dashboard, new dependencies or tracing platform.",
+  "live_guard": "One authorized run/allowance ledger; each diagnostic configuration has a persistent exclusive execution record. A new workspace cannot silently reset the $5 allowance or repeat exhausted diagnostics."
+}

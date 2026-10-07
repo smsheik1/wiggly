@@ -123,8 +123,8 @@ test("NIM adapter preserves reasoning across tool turns and delivers actual tool
 
 test("NIM does not accept missing reasoning when nonzero reasoning usage is reported", async () => {
   const { nimTransport } = await import("./nim-transport.js");
-  const send: typeof fetch = async () => new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: null, tool_calls: [{ id: "one" }] } }], usage: { completion_tokens_details: { reasoning_tokens: 1 } } }));
-  await assert.rejects(nimTransport(send)("https://integrate.api.nvidia.com/v1/chat/completions", { body: JSON.stringify({ messages: [] }) }), /omitted reasoning/);
+  const send: typeof fetch = async () => new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: null, tool_calls: [{ id: "one", type: "function", function: { name: "inspect", arguments: "{}" } }] } }], usage: { completion_tokens_details: { reasoning_tokens: 1 } } }));
+  await assert.rejects(nimTransport(send)("https://integrate.api.nvidia.com/v1/chat/completions", { body: JSON.stringify({ messages: [], tools: [{ type: "function", function: { name: "inspect" } }] }) }), /omitted reasoning/);
 });
 
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-// Isolated, sequential, non-streaming spike. Durable history recovery belongs to M1.
+// One transport per worker, sequential within that worker. Durable history recovery remains a gate.
 // ChatOpenAI 1.6.2 receives reasoning_content but drops it when serializing history.
 export function nimTransport(send: typeof fetch = fetch): typeof fetch {
   const history: any[] = [];
@@ -20,7 +20,15 @@ export function nimTransport(send: typeof fetch = fetch): typeof fetch {
     const response = await send(input, { ...init, body: JSON.stringify(body) });
     if (response.ok) {
       const result = await response.clone().json();
-      const message = result.choices?.[0]?.message;
+      const choice = result.choices?.[0], message = choice?.message;
+      assert.ok(message?.role === "assistant", "NIM_MALFORMED_RESPONSE: missing assistant message");
+      assert.notEqual(choice.finish_reason, "length", "NIM_TRUNCATED_RESPONSE: stop; do not repair partial tool calls");
+      if (body.tool_choice === "required" && body.tools?.length) assert.ok(message.tool_calls?.length, "NIM_REQUIRED_TOOL_MISSING: provider returned no tool; stop before graph acceptance");
+      for (const call of message.tool_calls ?? []) {
+        assert.ok(typeof call.id === "string" && call.id && call.type === "function" && body.tools?.some((t: any) => t.function?.name === call.function?.name), "NIM_INVALID_TOOL_CALL");
+        assert.ok(typeof call.function.arguments === "string", "NIM_INVALID_TOOL_ARGUMENTS");
+        const args = JSON.parse(call.function.arguments); assert.ok(args && typeof args === "object" && !Array.isArray(args), "NIM_INVALID_TOOL_ARGUMENTS");
+      }
       if (message?.tool_calls?.length) {
         assert.ok(typeof message.reasoning_content === "string" || result.usage?.completion_tokens_details?.reasoning_tokens === 0, "NIM omitted reasoning despite nonzero/unknown reasoning usage");
         history.push(message);
