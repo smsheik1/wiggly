@@ -17,6 +17,10 @@ export function redact(value: any): any {
     const bytes = Buffer.from(value.slice(value.indexOf(",") + 1), "base64");
     return { media_omitted: true, sha256: createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length };
   }
+  if (value && typeof value === "object" && value.type === "image" && typeof value.data === "string") {
+    const bytes = Buffer.from(value.data, "base64");
+    return { ...value, data: { media_omitted: true, sha256: createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length } };
+  }
   if (Array.isArray(value)) return value.map(redact);
   if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, child]) => [
     key, /^(apiKey|api_key|authorization|x-api-key|x-goog-api-key)$/i.test(key) ? "[REDACTED]" : redact(child),

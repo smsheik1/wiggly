@@ -15,7 +15,7 @@ const model = new ScriptedModel([
   () => call("submit_probe", { quadrants: ["mock", "mock", "mock", "mock"], skill_marker: "QUADRANT-EVIDENCE-731" }),
 ]);
 const { client, failures, tracer } = await tracing();
-const { agent } = createProbe(model, root, "openai:gpt-5.6-sol");
+const { agent } = createProbe(model, root, "openai:isolated-scripted-model");
 const id = randomUUID();
 await agent.invoke({ messages: [{ role: "user", content: "Isolated scripted harness trace test; no real model inference or production approval." }] }, {
   runId: id, callbacks: [tracer], recursionLimit: 16,
@@ -28,7 +28,7 @@ const allRuns = (r: any): any[] => [r, ...(r.child_runs ?? []).flatMap(allRuns)]
 const children = allRuns(run);
 assert.ok(children.some(r => r.run_type === "tool"));
 assert.ok(children.some(r => r.run_type === "llm"));
-assert.ok(!JSON.stringify(run).includes("base64,"), "Media bytes leaked into trace");
+assert.ok(!JSON.stringify(run).includes("base64,") && !JSON.stringify(run).includes("iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB"), "Media bytes leaked into trace");
 const url = await client.getRunUrl({ run });
 const result = { run_id: id, url, child_run_count: children.length - 1, has_tools: true, has_model_nodes: true, media_payloads_removed: true, real_model_inference: false, verified_provider_charge_usd: 0 };
 await writeFile(join(import.meta.dirname, "output/trace-check.json"), JSON.stringify(result, null, 2) + "\n");

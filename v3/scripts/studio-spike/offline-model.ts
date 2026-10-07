@@ -4,7 +4,7 @@ import { AIMessage, BaseMessage } from "@langchain/core/messages";
 
 // Explicit isolated mock: proves harness mechanics, never creative understanding.
 export class ScriptedModel extends BaseChatModel {
-  modelName = "gpt-5.6-sol";
+  modelName = "isolated-scripted-model";
   calls: BaseMessage[][] = [];
   toolNames: string[] = [];
   constructor(private script: ((messages: BaseMessage[]) => AIMessage)[]) { super({}); }

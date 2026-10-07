@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { NimModel } from "./nim-model.js";
 import { nimTransport } from "./nim-transport.js";
 import { createProbe, prepareWorkspace, hash } from "./harness.js";
-import { namedSecret, tracing, secretsPath } from "./tracing.js";
+import { namedSecret, tracing, secretsPath, redact } from "./tracing.js";
 
 // Inspection only: no creative generation or headless authoring bypasses the host bridge.
 async function main() {
@@ -24,9 +24,21 @@ async function main() {
   const fixture = await readFile(join(import.meta.dirname, "probe.png"));
   const fixtureHash = hash(fixture);
   await prepareWorkspace(root, fixture);
-  const model = new NimModel({ model: modelName, apiKey, maxRetries: 0, maxTokens: 4096, streaming: false, disableStreaming: true, useResponsesApi: false, temperature: 1, modelKwargs: { reasoning_effort: "low" }, configuration: { baseURL: "https://integrate.api.nvidia.com/v1", fetch: nimTransport() } });
-  const { agent, submissions } = createProbe(model, root, `openai:${modelName}`);
   const events: any[] = [], usage: any[] = [];
+  const transport = nimTransport(async (input, init) => {
+    const request = JSON.parse(String(init?.body));
+    const media = request.messages.flatMap((m: any) => Array.isArray(m.content) ? m.content : []).filter((b: any) => b.type === "image_url");
+    if (media.some((b: any) => b.image_url.url === `data:image/png;base64,${fixture.toString("base64")}`)) events.push({ status: "MEDIA_SUPPLIED", artifact_sha256: fixtureHash });
+    events.push({ status: "PROVIDER_REQUEST_SENT", request_sha256: hash(Buffer.from(String(init?.body))), model: request.model });
+    await writeFile(join(root, "transport.json"), JSON.stringify(events, null, 2) + "\n");
+    const response = await fetch(input, init);
+    events.push({ status: "PROVIDER_HTTP_RESPONSE", http_status: response.status });
+    if (response.ok) await writeFile(join(root, `provider-response-${events.filter(e => e.status === "PROVIDER_HTTP_RESPONSE").length}.json`), JSON.stringify(redact(await response.clone().json()), null, 2) + "\n");
+    await writeFile(join(root, "transport.json"), JSON.stringify(events, null, 2) + "\n");
+    return response;
+  });
+  const model = new NimModel({ model: modelName, apiKey, maxRetries: 0, maxTokens: 4096, streaming: false, disableStreaming: true, useResponsesApi: false, temperature: 1, modelKwargs: { reasoning_effort: "high", tool_choice: "required" }, configuration: { baseURL: "https://integrate.api.nvidia.com/v1", fetch: transport } });
+  const { agent, submissions } = createProbe(model, root, `openai:${modelName}`);
   let calls = 0, imageTurn = false;
   const callbacks = {
     name: "phase1-inspection-evidence", raiseError: true,
@@ -57,7 +69,8 @@ async function main() {
     assert.ok(events.some(e => e.status === "MODEL_RESPONSE_RECEIVED"));
     await readFile(join(root, "drafts/observations.txt"));
     const trace = await client.readRun(id, { loadChildRuns: true });
-    assert.ok(!JSON.stringify(trace).includes("base64,"));
+    assert.ok(!JSON.stringify(trace).includes("base64,") && !JSON.stringify(trace).includes(fixture.toString("base64")), "Media bytes leaked into LangSmith trace");
+    assert.ok(events.some(e => e.status === "MEDIA_SUPPLIED"), "No receipt for actual image bytes in a provider request");
     const url = await client.getRunUrl({ run: trace });
     const reported = null; // Trial endpoint has no verified per-token tariff; never invent spend.
     const report = { ...intent, status: "COMPLETE", calls, elapsed_ms: Date.now() - start, submission, usage, estimated_cost_from_reported_tokens_usd: reported, verified_charge_usd: null, events, url, observations: await readFile(join(root, "drafts/observations.txt"), "utf8") };

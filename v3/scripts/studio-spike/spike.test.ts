@@ -32,7 +32,7 @@ test("native skills and image tool blocks reach the next model turn; submit ends
       return call("submit_probe", { quadrants: ["mock", "mock", "mock", "mock"], skill_marker: "QUADRANT-EVIDENCE-731" });
     },
   ]);
-  const { agent, submissions } = createProbe(model, root, "openai:gpt-5.6-sol");
+  const { agent, submissions } = createProbe(model, root, "openai:isolated-scripted-model");
   await agent.invoke({ messages: [{ role: "user", content: "Complete the inspection probe." }] }, { recursionLimit: 16 });
   assert.equal(model.calls.length, 3);
   assert.equal(submissions.length, 1);
@@ -48,7 +48,7 @@ test("native permissions deny protected writes, edits, and deletes while permitt
     () => call("write_file", { file_path: "/drafts/notes.txt", content: "permitted" }),
     done,
   ]);
-  const { agent } = createProbe(model, root, "openai:gpt-5.6-sol");
+  const { agent } = createProbe(model, root, "openai:isolated-scripted-model");
   const result = await agent.invoke({ messages: [{ role: "user", content: "Isolated permission test." }] }, { recursionLimit: 20 });
   assert.equal(await readFile(join(root, "versions/locked.txt"), "utf8"), "LOCKED");
   await assert.rejects(readFile(join(root, "versions/new.txt")));
@@ -70,7 +70,7 @@ test("native mount roots reject traversal and symlink aliases into protected ver
       return done();
     },
   ]);
-  const { agent } = createProbe(model, root, "openai:gpt-5.6-sol");
+  const { agent } = createProbe(model, root, "openai:isolated-scripted-model");
   await agent.invoke({ messages: [{ role: "user", content: "Isolated path test." }] }, { recursionLimit: 20 });
   assert.equal(await readFile(join(root, "versions/locked.txt"), "utf8"), "LOCKED");
 }));
@@ -82,6 +82,9 @@ test("trace hygiene removes image bytes and credential values without losing tex
   assert.equal(value.apiKey, "[REDACTED]");
   assert.equal(value.nested[0].authorization, "[REDACTED]");
   assert.ok(!JSON.stringify(value).includes("YWJj"));
+  const native = redact({ type: "image", mimeType: "image/png", data: png.toString("base64") });
+  assert.equal(native.data.bytes, png.length);
+  assert.ok(!JSON.stringify(native).includes(png.toString("base64")));
 });
 
 // Explicit local mock endpoint: exercises the real ChatOpenAI serializer, not inference.
@@ -91,8 +94,11 @@ test("NIM adapter preserves reasoning across tool turns and delivers actual tool
   let requests = 0;
   const send: typeof fetch = async (_input, init) => {
     const body = JSON.parse(String(init?.body));
-    for (const message of body.messages.filter((m: any) => m.role === "assistant"))
-      assert.equal(message.reasoning_content, `inspection-${message.tool_calls[0].id}`);
+    assert.equal(body.reasoning_effort, "high");
+    assert.equal(body.tool_choice, "required");
+    const assistants = body.messages.filter((m: any) => m.role === "assistant");
+    assistants.forEach((message: any, index: number) => assert.equal(message.reasoning_content, index === 1 ? undefined : `inspection-${index + 1}`));
+    for (const message of body.messages.filter((m: any) => m.role === "tool")) assert.equal(typeof message.content, "string");
     const steps = [
       ["read_file", { file_path: "/skills/inspection-probe/SKILL.md" }],
       ["read_file", { file_path: "/references/probe.png" }],
@@ -104,12 +110,19 @@ test("NIM adapter preserves reasoning across tool turns and delivers actual tool
       assert.ok(media.some((b: any) => b.type === "image_url" && b.image_url.url.endsWith(png.toString("base64"))));
     }
     assert.ok(requests < steps.length, "Model called after submission");
-    const [name, args] = steps[requests++], id = String(requests);
-    return new Response(JSON.stringify({ id: `mock-${id}`, object: "chat.completion", created: 0, model: "moonshotai/kimi-k3", choices: [{ index: 0, finish_reason: "tool_calls", message: { role: "assistant", content: "", reasoning_content: `inspection-${id}`, tool_calls: [{ id, type: "function", function: { name, arguments: JSON.stringify(args) } }] } }], usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 } }), { headers: { "content-type": "application/json" } });
+    const [name, args] = steps[requests++], id = requests <= 2 ? "read_file:0" : String(requests);
+    return new Response(JSON.stringify({ id: `mock-${requests}`, object: "chat.completion", created: 0, model: "moonshotai/kimi-k3", choices: [{ index: 0, finish_reason: "tool_calls", message: { role: "assistant", content: "", ...(requests === 2 ? {} : { reasoning_content: `inspection-${requests}` }), tool_calls: [{ id, type: "function", function: { name, arguments: JSON.stringify(args) } }] } }], usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20, completion_tokens_details: { reasoning_tokens: requests === 2 ? 0 : 1 } } }), { headers: { "content-type": "application/json" } });
   };
-  const model = new NimModel({ model: "moonshotai/kimi-k3", apiKey: "isolated-dummy", maxRetries: 0, disableStreaming: true, useResponsesApi: false, configuration: { baseURL: "https://integrate.api.nvidia.com/v1", fetch: nimTransport(send) } });
+  const model = new NimModel({ model: "moonshotai/kimi-k3", apiKey: "isolated-dummy", maxRetries: 0, disableStreaming: true, useResponsesApi: false, modelKwargs: { reasoning_effort: "high", tool_choice: "required" }, configuration: { baseURL: "https://integrate.api.nvidia.com/v1", fetch: nimTransport(send) } });
   const { agent, submissions } = createProbe(model, root, "openai:moonshotai/kimi-k3");
   try { await agent.invoke({ messages: [{ role: "user", content: "Isolated adapter fixture." }] }, { recursionLimit: 20 }); } catch (error: any) { while (error.cause) error = error.cause; throw error; }
   assert.equal(requests, 4);
   assert.equal(submissions.length, 1);
 }));
+
+
+test("NIM does not accept missing reasoning when nonzero reasoning usage is reported", async () => {
+  const { nimTransport } = await import("./nim-transport.js");
+  const send: typeof fetch = async () => new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: null, tool_calls: [{ id: "one" }] } }], usage: { completion_tokens_details: { reasoning_tokens: 1 } } }));
+  await assert.rejects(nimTransport(send)("https://integrate.api.nvidia.com/v1/chat/completions", { body: JSON.stringify({ messages: [] }) }), /omitted reasoning/);
+});

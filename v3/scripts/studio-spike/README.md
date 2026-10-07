@@ -66,7 +66,24 @@ persisted graph messages. A local mock endpoint tests the real serializer and co
 skill/read-image/write/submit sequence. It is non-streaming and sequential; its
 reasoning cache is not a durable recovery solution for M1.
 
-Five local tests and typecheck pass. The first live trial authenticated successfully
-and loaded the skill (2,699 input / 93 output tokens reported). Its second model call
-failed with a wrapped connection error. No automatic retry occurred. Image perception
-and live termination remain blocked pending diagnosis and a deliberate new trial.
+Six local tests and typecheck pass. The verified live configuration uses high
+reasoning and required tool calling, with temperature 1, at most 4,096 output tokens
+per call and eight model turns. Kimi completed the full native Deep Agents probe in
+four turns / 19.595 seconds: skill load, actual image read, draft observations, submit.
+It correctly identified red/blue/green/yellow and the skill-only marker. Receipts bind
+the actual provider image bytes and successful findings to the fixture hash. LangSmith
+readback shows four model nodes and the four tool calls without image bytes.
+
+The investigation used five deliberately recorded trials. Earlier trials found empty
+or garbled low-reasoning continuations and an adapter bug: Kimi sometimes omits
+`reasoning_content` on a tool-call response with explicitly zero reasoning tokens.
+Preserve that complete response; require reasoning when usage is nonzero or unknown.
+Tool results must be strings and repeated tool IDs must not overwrite earlier history.
+The fifth trial passed; no further live trials are authorized by the current local cap.
+The five $1 holds are conservative internal allowance controls, not $5 of NVIDIA spend.
+Tokens are reported; provider charges and a per-token tariff remain unverified.
+
+See `docs/proofs/studio-phase1-harness.json` in the repository for the committed
+Phase 1 evidence, live trace URL, trial summaries, usage, and remaining limits.
+Phase 2 and full production remain unstarted/paused. This success establishes harness
+capabilities on a fixture, not production reliability or animation quality.
