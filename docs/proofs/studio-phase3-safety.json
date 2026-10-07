@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-07",
+  "phase": 3,
+  "status": "PHASE_3_PASSED",
+  "authorization": "Director instructed: if Phase 2 goal completed successfully, begin Phase 3; otherwise do not. Phase 2 goal completed successfully with diagnosed limitations.",
+  "scope": "Isolated production safety core; no production cutover, Phase 4, or complete M1 claim.",
+  "implementation": [
+    "v3/lib/studio-production.ts",
+    "v3/scripts/studio-spike/production-tools.ts"
+  ],
+  "runtime": {
+    "node": "26.8.1",
+    "sqlite": "3.53.4",
+    "dependency_additions": 0
+  },
+  "checks": {
+    "typecheck": "PASS",
+    "phase3_tests": 19,
+    "existing_harness_tests": 8,
+    "total_tests": 27,
+    "two_process_exclusive_claim": "PASS",
+    "durable_pause_and_stale_worker_fencing": "PASS",
+    "actual_transmitted_bytes_inspection_binding": "PASS",
+    "changed_draft_wrong_owner_and_reviewer_publication_rejection": "PASS",
+    "consumed_input_staleness_and_unrelated_input_preservation": "PASS",
+    "immutable_publication_replay_corruption_and_pause_at_commit": "PASS",
+    "atomic_ticket_and_project_caps": "PASS",
+    "reservation_replay_and_operation_identity_conflict": "PASS",
+    "one_time_settlement_billing_credits_and_overruns": "PASS",
+    "provider_failure_no_retry_and_uncertain_reservation": "PASS",
+    "late_known_receipt_reconciliation_while_paused": "PASS",
+    "native_deep_agents_bound_submission_and_termination": "PASS"
+  },
+  "named_sigkill_tests": {
+    "after_intent": "PASS",
+    "after_dispatch_before_call": "PASS",
+    "after_submit_before_request_id": "PASS",
+    "after_request_id": "PASS",
+    "after_publish_before_record": "PASS",
+    "after_publication_commit": "PASS"
+  },
+  "safety_policy": {
+    "unknown_submission": "Hold allowance, block potentially duplicate calls, require reconciliation.",
+    "known_request": "Record ID immediately; reconcile original request using actual provider capabilities. No assumed queue API.",
+    "publication": "Snapshot exact inspected bytes; persisted intent, non-overwriting content-addressed link, fsync, fenced final commit; reuse or verify replay.",
+    "pause": "Durable SQL flag blocks new worker actions. Already committed external operations remain in flight; trusted receipts and settlements still record.",
+    "operator": "Trusted control-plane APIs with auditable decisions; existing interface authentication is a Phase 4 integration requirement.",
+    "billing": "Integer micro-USD allowances; actual consumption or labeled estimates separate from provider usage, included credits, and verified charges.",
+    "workers": "Bound publication tool only; no SQL, operator, or inspection-attestation tools exposed."
+  },
+  "production_baseline": {
+    "files_verified": 313,
+    "all_unchanged": true,
+    "manifest_sha256": "9d857f03119e18cb74d4368d843228395fc4d9cd30807f80ed06aac6318e0d26",
+    "production_paused": true,
+    "migration_started": false
+  },
+  "phase3_external_api_calls": 0,
+  "phase3_provider_spend_usd": 0,
+  "remaining_gates": [
+    "Phase 4 full rejection/repair/review/exact-version director approval, stale approval and idempotent decisions, authenticated operator integration, bounded attempts/escalation and authorized extensions.",
+    "Full LangGraph checkpoint recovery; current tests prove SQL and artifact recovery only.",
+    "Phase 5 bounded concurrent production under provider limits.",
+    "Phase 6 film integration and verified migration/cutover; existing renderer and production runtime retained.",
+    "NVIDIA garbled-response reliability issue from Phase 2 remains unresolved; no provider substitution.",
+    "Crash tests use explicit isolated mocks and real SIGKILL, not live provider failures or hardware power loss."
+  ],
+  "complexity_review": "Ponytail self-review: native SQLite, constraints and transactions; no ORM, new dependencies, queues, observability platform, dashboard, or generic workflow framework."
+}

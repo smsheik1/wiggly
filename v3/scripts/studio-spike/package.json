@@ -3,11 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --import tsx --test spike.test.ts",
+    "test": "node --import tsx --test spike.test.ts phase3.test.ts",
     "check": "tsc",
     "trace": "node --import tsx trace-check.ts",
     "live": "node --import tsx live.ts",
-    "phase2": "node --import tsx phase2.ts"
+    "phase2": "node --import tsx phase2.ts",
+    "test:phase3": "node --import tsx --test phase3.test.ts"
   },
   "dependencies": {
     "@langchain/core": "1.2.14",

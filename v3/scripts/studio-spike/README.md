@@ -135,3 +135,80 @@ All 313 paused production files match the baseline. See
 failed attempts, and limitations. Retain TypeScript; Python would not resolve
 a corrupt inference-provider response. M1 and production adoption require their
 own gates, including durable recovery and a reliable inference path.
+
+## Phase 3: isolated production safety core
+
+The director authorized Phase 3 after the successful Phase 2 goal. No production
+cutover is authorized. The implementation is `v3/lib/studio-production.ts`; the
+Deep Agents publication binding is `production-tools.ts`.
+
+Run `npm run check` and `npm run test:phase3` (or `npm test` for all 27 checks).
+This uses Node's built-in SQLite and requires Node 22.13+; the verified environment
+is Node 26.8.1 / SQLite 3.53.4. No dependencies, providers, credentials, dashboard,
+renderer, or external queue were added. Official references: [Node SQLite](https://nodejs.org/api/sqlite.html)
+and [SQLite transactions](https://www.sqlite.org/lang_transaction.html).
+
+Each explicitly provisioned workspace owns `studio.sqlite`, `assignments/`, and
+`versions/`. A new project starts paused. SQLite is the sole ticket authority;
+LangGraph still owns only worker execution. `BEGIN IMMEDIATE`, foreign keys,
+WAL, and FULL synchronization protect mutations. No run opens saved production.
+
+Producer/control-plane methods are trusted APIs, not worker tools. Operator
+pause/resume and project allowance increases require an explicit decision record
+and reject conflicting replays. Authentication through the existing operator
+interface belongs to Phase 4; an actor string by itself is not authentication.
+Input heads come from the trusted producer. Ticket input snapshots and immutable
+version dependencies preserve exact consumed references.
+
+Claims fence expired workers with an increasing token. A lease reclaim preserves
+the attempt and draft workspace; a new creative attempt is a later repair action.
+Paused projects block claims, heartbeats, operation starts, and publication. A
+provider dispatch already committed before pause is in flight; its receipt and
+settlement can still be recorded. This is the safe-boundary meaning of pause.
+
+The publication tool accepts only `draft_path` and `evidence_references`; the
+producer binds the ticket/worker/token/attempt. It denies traversal and symlinks,
+requires completed inspection of exact transmitted bytes, and rejects reviewer
+assignments. Publication snapshots the inspected bytes, persists its intent,
+fsyncs a staged file, links it into content-addressed storage without overwrite,
+fsyncs the directory, then rechecks lease, pause, inputs, evidence, and published
+hash before committing the version and SUBMITTED ticket. Replay verifies the same
+intent and bytes. Filesystem permissions at mode 0400 are extra protection;
+worker backend restrictions enforce the write boundary.
+
+Only trusted transport callbacks call `mediaSupplied` with the bytes actually
+included in the model request and `inspectionCompleted` after a successful response
+with findings. The model cannot manufacture these records through a tool. The
+Phase 3 tests use explicitly marked mock findings; Phase 2 remains the real visual
+perception evidence. SQL stores hashes and references, not media payloads.
+
+Provider execution commits intent plus reservation before dispatch. Requests have
+an operation ID and a separately computed request hash; the adapter must hash its
+exact serialized request and use that ID for provider idempotency only where
+supported. INTENT can resume without another reservation. SUBMITTING/UNKNOWN
+requires reconciliation and blocks duplicate calls. A known request ID is recorded
+immediately and returned for reconciliation; no queue or polling API is assumed.
+Muse remains the verified synchronous integration from Phase 2. The normalized
+completion receipt contains artifact/receipt references rather than API media bytes.
+
+Amounts are integer micro-USD allowance consumption, separate from provider usage,
+included subscription credits, and verified charges. Unknown outcomes retain their
+reservation. Completion settles once, using reported allowance consumption when
+available or the explicitly labeled estimate; invoice charges stay unknown unless
+verified. Overruns are recorded and block further spend. Failure blocks the ticket;
+release requires confirmed non-billing or explicit billing reconciliation. No
+provider error triggers retry, fallback, or automatic redispatch. Adapters supply
+the existing provider-specific remediation and redact secrets before persistence.
+
+Six child-process SIGKILL tests use named points: `after_intent`,
+`after_dispatch_before_call`, `after_submit_before_request_id`, `after_request_id`,
+`after_publish_before_record`, and `after_publication_commit`. The mock provider
+writes an isolated receipt so tests can prove zero or one submission after restart.
+These are process-crash tests, not live billable failures or power-loss tests.
+
+Phase 3 passes 19 safety checks plus the existing eight checks. All 313 saved
+production files remain unchanged. See `docs/proofs/studio-phase3-safety.json`.
+Full repair/review/director approval, authorization endpoints, attempt escalation,
+LangGraph checkpoint recovery, concurrent production, and migration remain later
+gates. The Phase 2 NVIDIA response reliability issue is still unresolved. Stop at
+Phase 3; do not automatically begin Phase 4 or resume production.
