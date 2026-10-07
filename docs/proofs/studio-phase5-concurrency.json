@@ -1,14 +1,14 @@
 {
   "date": "2026-10-07",
   "phase": 5,
-  "status": "LOCAL_CONCURRENCY_AND_DEEPSEEK_CAPABILITY_PASSED_LIVE_RATE_LIMITED",
+  "status": "LOCAL_SAFETY_PASSED_TWO_LIVE_AUTHORS_ONE_REVIEW_PASSED_SECOND_REVIEW_PROVIDER_BLOCKED",
   "goal_complete": false,
   "authorization": "Director explicitly began Phase 5 goal loop, authorized a fresh $5 paid-test allowance, authorized investigation with loud escalation after three distinct failed repair attempts, and approved four major creative checkpoints.",
   "checks": {
     "typecheck": "PASS",
-    "phase5_tests": 14,
+    "phase5_tests": 18,
     "previous_tests": 41,
-    "total_tests": 55,
+    "total_tests": 59,
     "cross_process_worker_admission": "PASS",
     "cross_process_shared_budget_reservations": "PASS",
     "cross_process_provider_slots_and_restart": "PASS",
@@ -128,11 +128,12 @@
     "activation": "Explicit format integration in Phase 6; no automatic acceptance or production approvals granted by Phase 5 test."
   },
   "limitations": [
-    "NVIDIA/Kimi response reliability is NOT fixed. A successful response between failures is not proof of resolution.",
-    "Local concurrency safety passed; live Phase 5 acceptance is incomplete and requires a director decision about inference reliability.",
-    "Durable LangGraph checkpoint recovery remains unproven; this recovery restarted fresh bounded workers over retained files and SQL receipts.",
-    "No production routing, renderer changes, migration, resume, or Phase 6 implementation.",
-    "DeepSeek tool/vision capability now passes; concurrent live publication/review still stopped by OpenRouter upstream 429. No automatic alternate endpoint or model used; reservations and provider slots retained."
+    "Full live acceptance remains incomplete: the second independent image review is blocked.",
+    "NIM/Kimi inference reliability remains unresolved after three distinct diagnostics.",
+    "LangGraph checkpoint recovery remains unproven; recovery uses retained SQL assignments and artifacts.",
+    "Sail Research is a text-only backup; no verified image backup exists.",
+    "Unknown billed calls retain their original reservations; reported usage is not an invoice.",
+    "Production remains paused; no migration or Phase 6."
   ],
   "sources": [
     "https://docs.api.nvidia.com/nim/reference/moonshotai-kimi-k3-infer",
@@ -198,5 +199,66 @@
     "writing_policy": "Based on a true story: faithful compression and everyday embellishment permitted while preserving meaning, relationships and important events. Every night explicitly accepted for family viewing ritual.",
     "production_activation": false,
     "existing_literal_quote_and_contract_validators_unchanged": true
+  },
+  "latest_live_checkpoint": {
+    "tickets": [
+      {
+        "id": "packet-author-a",
+        "status": "REVIEWING",
+        "candidate_id": "cbd0f8b6-aa39-441f-bfff-8c33738a90f2",
+        "blocked_reason": null,
+        "max_turns": 8
+      },
+      {
+        "id": "packet-author-b",
+        "status": "AWAITING_APPROVAL",
+        "candidate_id": "8c167e4a-80dc-4c4f-9120-107e27d911b6",
+        "blocked_reason": null,
+        "max_turns": 8
+      },
+      {
+        "id": "packet-review-0",
+        "status": "BLOCKED",
+        "candidate_id": null,
+        "blocked_reason": null,
+        "max_turns": 4
+      },
+      {
+        "id": "packet-review-1",
+        "status": "SUBMITTED",
+        "candidate_id": null,
+        "blocked_reason": null,
+        "max_turns": 4
+      }
+    ],
+    "routing": {
+      "primary": "decart/fp4",
+      "text_backup": "sail-research/fp4",
+      "image_backup": null,
+      "reason": "Sail HTTP 400 explicitly rejects image input"
+    },
+    "author_publications": 2,
+    "independent_reviews_passed": 1,
+    "remaining_review": "packet-review-0",
+    "openrouter_reported_allowance_micros": 17539,
+    "unsettled_reservation_micros": 898761,
+    "project_allowance_micros": 5000000,
+    "verified_charges": null,
+    "project_paused": true,
+    "fixes": [
+      "Inspection tool now returns image as native multimodal message, avoiding oversized-text eviction",
+      "Worker review packet maps the immutable version to its actual read-only workspace reference",
+      "Recovery verifies an existing read-only reference instead of overwriting it",
+      "Provider request ID recorded before fenced inspection updates",
+      "Text-only backup excluded from image requests"
+    ],
+    "failures": [
+      "Decart reviewer returned mostly newlines with finish_reason=length; guard rejected it",
+      "Sail backup passed text tool calling but rejected image input with HTTP 400"
+    ],
+    "remaining_gate": "Complete the second exact-version independent image review without widening configured turn/attempt limits",
+    "no_nim_fourth_attempt": true,
+    "no_images_regenerated": true,
+    "no_phase6": true
   }
 }

@@ -1,6 +1,6 @@
 # Wiggly Agent Studio — Architecture Specification v5
 
-**Status:** Phases 1–4 completed in isolation. Phase 5 passes 55 local checks and a four-turn DeepSeek V4.1 Flash tool/image capability probe. Its resumed concurrent live run stopped on OpenRouter/Ionstream HTTP 429 before both publications and independent reviews completed. The original $5 allowance is preserved, including uncertain-call reservations. Full studio production remains paused.
+**Status:** Phases 1–4 completed in isolation. Phase 5 passes 59 local checks, two concurrent live author publications, and one independent image review. Its second review remains incomplete after malformed Decart output and Sail Research rejecting image input. Decart is the primary; Sail is a text-only backup. The original $5 allowance and uncertain-call reservations are preserved. Full studio production remains paused.
 **Objective:** Build an agent-operated animation studio with shared materials, autonomous specialists, independent review, and clear director control.
 
 ---
@@ -315,3 +315,7 @@ Commit and push each clean completed phase after its checks pass. Track the curr
 The director authorized paid OpenRouter use only for the remaining existing Phase 5 $5 allowance. DeepSeek V4.1 Flash passed native Deep Agents tool execution, actual quadrant-image inspection, draft writing and bounded submission with a linked LangSmith trace. The concurrent author/reviewer run reuses both retained Muse backgrounds and the original SQL budget. It stopped on Ionstream upstream shared-pool HTTP 429; Phase 5 is incomplete. Unknown calls retain reservations and provider slots. No fourth NIM diagnostic, image regeneration, automatic endpoint/model fallback, migration or production resume occurred. See `docs/proofs/studio-phase5-concurrency.json`.
 
 The director selected Kimi K3 for the writer role after preferring its script over Muse Spark Contributor. DeepSeek V4.1 Flash is the execution/inspection candidate, pending the live gate. Writing is based on a true story: faithful compression and everyday embellishment are allowed while preserving meaning, relationships and important events; “every night” is explicitly accepted as shorthand for the family viewing ritual. This choice does not activate a production writer or silently change the existing quote/contract validators. Production format integration must reflect this policy deliberately.
+
+### Phase 5 media and routing checkpoint — October 7, 2026
+
+Live testing exposed and fixed oversized inspection-result eviction and host paths leaking into scoped review packets. Both retained backgrounds were inspected and published concurrently. One exact-version independent review passed; the other remains blocked after malformed primary output and a backup endpoint that rejects images. Sail is now excluded from image routes. Completed usage is reconciled from actual receipts; unknown calls retain reservations. See `docs/proofs/studio-phase5-concurrency.json`. Phase 5 is incomplete; Phase 6 and production resume have not started.

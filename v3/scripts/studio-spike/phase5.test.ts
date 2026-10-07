@@ -172,3 +172,42 @@ test("director-authorized DeepSeek routing uses only tested primary and backup p
   assert.equal(deepseekProviders.require_parameters, true);
   assert.deepEqual(deepseekProviders.max_price, { prompt: .3, completion: 1.2 });
 });
+
+
+test("large candidate images remain multimodal instead of becoming offloaded text", async () => {
+  const { inspectionResult } = await import("./phase5-live.js");
+  const { ScriptedModel, call } = await import("./offline-model.js");
+  const { workspaceAgent } = await import("./harness.js");
+  const { tool } = await import("langchain");
+  const { z } = await import("zod");
+  const root=mkdtempSync(join(tmpdir(),"inspection-media-")),bytes=Buffer.alloc(360010,7);
+  try {const inspect=tool((_input,runtime)=>inspectionResult(bytes,"Inspect exact candidate bytes",(runtime as any).toolCall.id),{name:"inspect_candidate",description:"Inspect image",schema:z.object({})});
+    const finish=tool(()=>"complete",{name:"finish",description:"Finish",schema:z.object({}),returnDirect:true});
+    const model=new ScriptedModel([()=>call("inspect_candidate",{}),messages=>{
+      const blocks=messages.at(-1)?.content;assert.ok(Array.isArray(blocks));
+      const image=blocks.find((b:any)=>b.type==="image_url") as any;assert.ok(image);
+      assert.equal(hash(Buffer.from(image.image_url.url.split(",")[1],"base64")),hash(bytes));
+      assert.ok(!JSON.stringify(messages).includes("large_tool_results"));return call("finish",{});
+    }]);
+    await workspaceAgent(model,root,"openai:isolated-scripted-model","media-regression",[inspect,finish],"Isolated mock image delivery test").invoke({messages:[{role:"user",content:"inspect"}]});
+    assert.equal(model.calls.length,2);
+  }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+
+test("review packet maps host paths into worker workspace without changing version identity", async () => {
+ const { workerReviewPacket }=await import("./phase5-live.js");
+ const packet={candidate_path:"/host/private/versions/hash",candidate_version_id:"version",content_hash:"hash",exact_inputs:{script:"approved-script"},criteria:["empty kitchen"]};
+ const mounted=workerReviewPacket(packet);
+ assert.equal(mounted.candidate_path,"/references/candidate.webp");
+ const {candidate_path:originalPath,...identity}=packet;const {candidate_path:mountedPath,...mountedIdentity}=mounted;
+ assert.deepEqual(mountedIdentity,identity);assert.equal(packet.candidate_path,originalPath);
+});
+
+
+test("image requests exclude the text-only Sail backup", async()=>{
+ const {deepseekRouting}=await import("./phase5-live.js");
+ assert.deepEqual(deepseekRouting(false).only,["decart/fp4","sail-research/fp4"]);
+ assert.deepEqual(deepseekRouting(true).only,["decart/fp4"]);
+ assert.equal(deepseekRouting(true).allow_fallbacks,false);
+});
