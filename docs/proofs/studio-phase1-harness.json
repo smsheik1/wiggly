@@ -1,7 +1,7 @@
 {
   "phase": 1,
-  "status": "LOCAL_CHECKPOINT_LIVE_MODEL_SELECTION_PENDING",
-  "date": "2026-10-06",
+  "status": "NIM_LIVE_TRIAL_BLOCKED",
+  "date": "2026-10-07",
   "production": {
     "paused": true,
     "baseline_file_count": 313,
@@ -17,14 +17,15 @@
   "checks": {
     "typecheck": "passed",
     "offline_tests": {
-      "passed": 4,
+      "passed": 5,
       "failed": 0
     },
     "native_skill_discovery": "passed_structural",
     "image_tool_results": "passed_transport_not_live_perception",
     "draft_only_permissions": "passed_write_edit_delete_traversal_symlink",
     "submission_termination": "passed_returnDirect_no_further_model_turn",
-    "trace_payload_hygiene": "passed"
+    "trace_payload_hygiene": "passed",
+    "nim_serialization": "passed_mock_reasoning_history_and_actual_image_bytes"
   },
   "langsmith": {
     "run_id": "141f6cce-ea52-4c20-8c55-b9868fcaa198",
@@ -40,12 +41,18 @@
     "m0_total_authorized_allowance_usd": 5,
     "paid_model_requests": 0,
     "image_generation_requests": 0,
-    "estimated_model_consumption_usd": 0,
-    "live_trial_reservations_usd": 0,
-    "langsmith_account_billing": "not_verified"
+    "estimated_model_consumption_usd": null,
+    "live_trial_reservations_usd": 1,
+    "langsmith_account_billing": "not_verified",
+    "nim_reported_tokens": {
+      "input": 2699,
+      "output": 93
+    },
+    "nim_verified_charge_usd": null,
+    "nim_trial_id": "f97ab76c-3c47-40fc-8a79-c66231073dd3"
   },
   "pending": {
-    "live_model": "Awaiting selection of configured Gemini for isolated trial or provision of OpenAI API access for pinned gpt-5.6-sol. Production model is unchanged.",
+    "live_model": "Director selected NVIDIA NIM moonshotai/kimi-k3; key authenticated and first skill-read turn completed. Second call failed with wrapped connection error; no retry.",
     "actual_image_understanding": "Not yet tested",
     "live_token_accounting": "Not yet tested"
   },
@@ -65,6 +72,6 @@
     "https://docs.langchain.com/oss/javascript/deepagents/permissions",
     "https://docs.langchain.com/oss/javascript/deepagents/multimodal",
     "https://docs.langchain.com/oss/javascript/deepagents/skills",
-    "https://developers.openai.com/api/docs/models/gpt-5.6-sol"
+    "https://docs.api.nvidia.com/nim/reference/moonshotai-kimi-k3"
   ]
 }

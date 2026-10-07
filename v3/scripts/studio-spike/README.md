@@ -17,11 +17,10 @@ model/tool nodes and removal of image payloads. It calls no inference provider.
 
 ## Live perception check
 
-The existing production worker is `gpt-5.6-sol`; its model is not changed by this
-spike. The optional live runner uses the already configured `gemini-3.8-flash`
-only after the director chooses it for this trial:
+The director selected TypeScript Deep Agents with `moonshotai/kimi-k3` through
+NVIDIA NIM on October 7, 2026. Production configuration remains unchanged.
 
-`npm run live -- --gemini-authorized`
+`npm run live`
 
 It inspects the included four-color PNG, writes observed colors in its draft
 workspace, and calls `submit_probe`. The skill contains a marker not provided
@@ -31,13 +30,13 @@ production media; no Muse image generation occurs in Phase 1.
 
 The runner loads only named keys from `/Users/shaz/Projects/wiggly/secrets.env`
 in memory. It never copies credentials to this directory. LangSmith requires
-`LANGSMITH_API_KEY`; the Gemini trial additionally requires `GEMINI_API_KEY`.
+`LANGSMITH_API_KEY`; the NIM trial additionally requires `NVIDIA_API_KEY`.
 
-Each live trial reserves $1 of the $5 total M0 estimated allowance before model
+Each live trial conservatively holds $1 of the existing $5 M0 allowance before model
 execution, with eight model calls maximum, bounded input/output, no provider
 retries, and a three-minute invocation limit. Unknown outcomes retain the
-reservation; another trial is intentional and never automatic. Usage-derived
-cost estimates are not invoices. This sequential trial bookkeeping is not the
+reservation; another trial is intentional and never automatic. The hold is an allowance control, not a claimed charge. The NVIDIA prototype endpoint
+is advertised as free; report tokens and leave unverified charges/tariffs unknown. This sequential trial bookkeeping is not the
 M1 transactional allowance implementation.
 
 Outputs and detailed receipts live in the ignored `output/` directory. Formal
@@ -57,3 +56,17 @@ required host-agent bridge for creative work.
   advisory. Do not deploy this spike as an untrusted-input service. Reassess
   the upstream fix before production adoption; do not downgrade the harness
   automatically to satisfy an audit recommendation.
+
+## NIM compatibility and current result
+
+The pinned ChatOpenAI adapter drops reasoning history on outbound requests and
+cannot send vision inside Chat Completions tool messages. The isolated NIM adapter
+preserves reasoning and transports actual tool images as user media without changing
+persisted graph messages. A local mock endpoint tests the real serializer and complete
+skill/read-image/write/submit sequence. It is non-streaming and sequential; its
+reasoning cache is not a durable recovery solution for M1.
+
+Five local tests and typecheck pass. The first live trial authenticated successfully
+and loaded the skill (2,699 input / 93 output tokens reported). Its second model call
+failed with a wrapped connection error. No automatic retry occurred. Image perception
+and live termination remain blocked pending diagnosis and a deliberate new trial.

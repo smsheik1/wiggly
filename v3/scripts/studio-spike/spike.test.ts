@@ -83,3 +83,33 @@ test("trace hygiene removes image bytes and credential values without losing tex
   assert.equal(value.nested[0].authorization, "[REDACTED]");
   assert.ok(!JSON.stringify(value).includes("YWJj"));
 });
+
+// Explicit local mock endpoint: exercises the real ChatOpenAI serializer, not inference.
+test("NIM adapter preserves reasoning across tool turns and delivers actual tool image bytes", async () => workspace(async root => {
+  const { NimModel } = await import("./nim-model.js");
+  const { nimTransport } = await import("./nim-transport.js");
+  let requests = 0;
+  const send: typeof fetch = async (_input, init) => {
+    const body = JSON.parse(String(init?.body));
+    for (const message of body.messages.filter((m: any) => m.role === "assistant"))
+      assert.equal(message.reasoning_content, `inspection-${message.tool_calls[0].id}`);
+    const steps = [
+      ["read_file", { file_path: "/skills/inspection-probe/SKILL.md" }],
+      ["read_file", { file_path: "/references/probe.png" }],
+      ["write_file", { file_path: "/drafts/observations.txt", content: "mock observations" }],
+      ["submit_probe", { quadrants: ["mock", "mock", "mock", "mock"], skill_marker: "QUADRANT-EVIDENCE-731" }],
+    ];
+    if (requests >= 2) {
+      const media = body.messages.filter((m: any) => m.role === "user").flatMap((m: any) => Array.isArray(m.content) ? m.content : []);
+      assert.ok(media.some((b: any) => b.type === "image_url" && b.image_url.url.endsWith(png.toString("base64"))));
+    }
+    assert.ok(requests < steps.length, "Model called after submission");
+    const [name, args] = steps[requests++], id = String(requests);
+    return new Response(JSON.stringify({ id: `mock-${id}`, object: "chat.completion", created: 0, model: "moonshotai/kimi-k3", choices: [{ index: 0, finish_reason: "tool_calls", message: { role: "assistant", content: "", reasoning_content: `inspection-${id}`, tool_calls: [{ id, type: "function", function: { name, arguments: JSON.stringify(args) } }] } }], usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 } }), { headers: { "content-type": "application/json" } });
+  };
+  const model = new NimModel({ model: "moonshotai/kimi-k3", apiKey: "isolated-dummy", maxRetries: 0, disableStreaming: true, useResponsesApi: false, configuration: { baseURL: "https://integrate.api.nvidia.com/v1", fetch: nimTransport(send) } });
+  const { agent, submissions } = createProbe(model, root, "openai:moonshotai/kimi-k3");
+  try { await agent.invoke({ messages: [{ role: "user", content: "Isolated adapter fixture." }] }, { recursionLimit: 20 }); } catch (error: any) { while (error.cause) error = error.cause; throw error; }
+  assert.equal(requests, 4);
+  assert.equal(submissions.length, 1);
+}));

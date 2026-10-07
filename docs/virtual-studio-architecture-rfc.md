@@ -300,6 +300,7 @@ Commit and push each clean completed phase after its checks pass. Track the curr
 ## 6. Explicit defaults
 
 - This spec authorizes the Milestone 0 harness capability spike ($5 test budget, 2-day timebox); implementation is delegated to OpenAI Codex. Full studio production remains paused.
+- Director decision, October 7, 2026: use TypeScript Deep Agents with `moonshotai/kimi-k3` through NVIDIA NIM for the isolated M0 spike. Saved production remains unchanged.
 - TypeScript Deep Agents is the primary candidate; the spike determines whether it passes or fails to Python.
 - SQLite owns production state; LangGraph owns recoverable worker execution.
 - Existing approval policies remain active until the director changes them.
