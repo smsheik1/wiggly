@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 
 // One transport per worker, sequential within that worker. Durable history recovery remains a gate.
 // ChatOpenAI 1.6.2 receives reasoning_content but drops it when serializing history.
-export function nimTransport(send: typeof fetch = fetch): typeof fetch {
+export function chatCompletionsTransport(origin: string, send: typeof fetch = fetch, requireReasoning = false): typeof fetch {
   const history: any[] = [];
   return async (input, init) => {
-    assert.equal(new URL(String(input)).origin, "https://integrate.api.nvidia.com");
+    assert.equal(new URL(String(input)).origin, origin);
     const body = JSON.parse(String(init?.body));
     assert.ok(!body.stream, "NIM spike requires non-streaming reasoning preservation");
     let assistantIndex = 0;
@@ -30,10 +30,14 @@ export function nimTransport(send: typeof fetch = fetch): typeof fetch {
         const args = JSON.parse(call.function.arguments); assert.ok(args && typeof args === "object" && !Array.isArray(args), "NIM_INVALID_TOOL_ARGUMENTS");
       }
       if (message?.tool_calls?.length) {
-        assert.ok(typeof message.reasoning_content === "string" || result.usage?.completion_tokens_details?.reasoning_tokens === 0, "NIM omitted reasoning despite nonzero/unknown reasoning usage");
+        if (requireReasoning) assert.ok(typeof message.reasoning_content === "string" || result.usage?.completion_tokens_details?.reasoning_tokens === 0, "NIM omitted reasoning despite nonzero/unknown reasoning usage");
         history.push(message);
       }
     }
     return response;
   };
+}
+
+export function nimTransport(send: typeof fetch = fetch): typeof fetch {
+  return chatCompletionsTransport("https://integrate.api.nvidia.com", send, true);
 }

@@ -1,6 +1,6 @@
 # Wiggly Agent Studio — Architecture Specification v5
 
-**Status:** Phases 1–4 completed in isolation. Phase 5 local concurrency checks pass, but the live acceptance gate stopped after three distinct NVIDIA/Kimi diagnostic configurations failed. Phase 5 is incomplete and awaits the director’s provider decision. Fresh paid-test allowance: $5; estimated Muse consumption: $0.02, verified charges unknown. Full studio production remains paused.
+**Status:** Phases 1–4 completed in isolation. Phase 5 passes 55 local checks and a four-turn DeepSeek V4.1 Flash tool/image capability probe. Its resumed concurrent live run stopped on OpenRouter/Ionstream HTTP 429 before both publications and independent reviews completed. The original $5 allowance is preserved, including uncertain-call reservations. Full studio production remains paused.
 **Objective:** Build an agent-operated animation studio with shared materials, autonomous specialists, independent review, and clear director control.
 
 ---
@@ -309,3 +309,9 @@ Commit and push each clean completed phase after its checks pass. Track the curr
 - Credentials come only from the canonical repo-root `secrets.env`, loaded in memory.
 - Existing validators, format boundaries, host-agent authoring, and renderer parity remain authoritative.
 - **Further architecture changes must address a demonstrated test failure or production requirement.**
+
+### Phase 5 provider checkpoint — October 7, 2026
+
+The director authorized paid OpenRouter use only for the remaining existing Phase 5 $5 allowance. DeepSeek V4.1 Flash passed native Deep Agents tool execution, actual quadrant-image inspection, draft writing and bounded submission with a linked LangSmith trace. The concurrent author/reviewer run reuses both retained Muse backgrounds and the original SQL budget. It stopped on Ionstream upstream shared-pool HTTP 429; Phase 5 is incomplete. Unknown calls retain reservations and provider slots. No fourth NIM diagnostic, image regeneration, automatic endpoint/model fallback, migration or production resume occurred. See `docs/proofs/studio-phase5-concurrency.json`.
+
+The director selected Kimi K3 for the writer role after preferring its script over Muse Spark Contributor. DeepSeek V4.1 Flash is the execution/inspection candidate, pending the live gate. Writing is based on a true story: faithful compression and everyday embellishment are allowed while preserving meaning, relationships and important events; “every night” is explicitly accepted as shorthand for the family viewing ritual. This choice does not activate a production writer or silently change the existing quote/contract validators. Production format integration must reflect this policy deliberately.

@@ -1,14 +1,14 @@
 {
   "date": "2026-10-07",
   "phase": 5,
-  "status": "LOCAL_CONCURRENCY_PASSED_LIVE_GATE_STOPPED",
+  "status": "LOCAL_CONCURRENCY_AND_DEEPSEEK_CAPABILITY_PASSED_LIVE_RATE_LIMITED",
   "goal_complete": false,
   "authorization": "Director explicitly began Phase 5 goal loop, authorized a fresh $5 paid-test allowance, authorized investigation with loud escalation after three distinct failed repair attempts, and approved four major creative checkpoints.",
   "checks": {
     "typecheck": "PASS",
-    "phase5_tests": 13,
+    "phase5_tests": 14,
     "previous_tests": 41,
-    "total_tests": 54,
+    "total_tests": 55,
     "cross_process_worker_admission": "PASS",
     "cross_process_shared_budget_reservations": "PASS",
     "cross_process_provider_slots_and_restart": "PASS",
@@ -20,7 +20,8 @@
     "named_sqlite_lock_contention_barrier": "PASS",
     "first_error_preserved_when_other_worker_pauses": "PASS",
     "malformed_required_tool_truncation_and_invalid_calls_rejected_without_retry": "PASS",
-    "persistent_live_allowance_and_three_diagnostic_admission": "PASS"
+    "persistent_live_allowance_and_three_diagnostic_admission": "PASS",
+    "openrouter_reasoning_history_and_required_tool_guard": "PASS"
   },
   "implementation": [
     "v3/lib/studio-production.ts",
@@ -130,12 +131,72 @@
     "NVIDIA/Kimi response reliability is NOT fixed. A successful response between failures is not proof of resolution.",
     "Local concurrency safety passed; live Phase 5 acceptance is incomplete and requires a director decision about inference reliability.",
     "Durable LangGraph checkpoint recovery remains unproven; this recovery restarted fresh bounded workers over retained files and SQL receipts.",
-    "No production routing, renderer changes, migration, resume, or Phase 6 implementation."
+    "No production routing, renderer changes, migration, resume, or Phase 6 implementation.",
+    "DeepSeek tool/vision capability now passes; concurrent live publication/review still stopped by OpenRouter upstream 429. No automatic alternate endpoint or model used; reservations and provider slots retained."
   ],
   "sources": [
     "https://docs.api.nvidia.com/nim/reference/moonshotai-kimi-k3-infer",
     "https://build.nvidia.com/moonshotai/kimi-k3"
   ],
   "complexity_review": "Native SQLite transactions and count-based provider slots, stdlib timers, bounded in-process producer batch; no ORM, external queue, daemon, dashboard, new dependencies or tracing platform.",
-  "live_guard": "One authorized run/allowance ledger; each diagnostic configuration has a persistent exclusive execution record. A new workspace cannot silently reset the $5 allowance or repeat exhausted diagnostics."
+  "live_guard": "One authorized run/allowance ledger; each diagnostic configuration has a persistent exclusive execution record. A new workspace cannot silently reset the $5 allowance or repeat exhausted diagnostics.",
+  "openrouter_resume": {
+    "authorized": "Director approved use of remaining existing $5 allowance for Phase 5 OpenRouter calls; no new budget granted",
+    "model": "deepseek/deepseek-v4.1-flash",
+    "capability_probe": {
+      "status": "PASS",
+      "calls": 4,
+      "artifact_sha256": "5defbf005193f316590586b5a8f327e87ab6e4516c4140729e669bfc171a3151",
+      "quadrants": [
+        "red",
+        "blue",
+        "green",
+        "yellow"
+      ],
+      "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/6ad4759b-8ca4-43c4-82fd-a0b5fa34189f?poll=true",
+      "reported_cost_usd": 0.001228977
+    },
+    "initial_probe": "Connection error with inadequate original cause logging; also selected mock fixture incorrectly. No capability pass claimed. Corrected fixture to canonical 64x64 quadrant PNG and improved diagnostic capture. Unknown billing retains $0.75 reservation.",
+    "live_result": "STOPPED_HTTP_429",
+    "provider": "Ionstream",
+    "limit_source": "upstream_provider_shared_pool",
+    "project_paused": true,
+    "budget_reset": false,
+    "images_regenerated": false,
+    "author_and_review_gate_complete": false,
+    "completed_openrouter_allowance_micros": 4800,
+    "unsettled_reservation_micros": 902737,
+    "tickets": [
+      {
+        "id": "openrouter-probe-unknown",
+        "status": "BLOCKED",
+        "candidate_id": null
+      },
+      {
+        "id": "openrouter-probe-passed",
+        "status": "SUBMITTED",
+        "candidate_id": "524b73fa-3618-422c-a8c3-28363831cf82"
+      },
+      {
+        "id": "deepseek-author-a",
+        "status": "WORKING",
+        "candidate_id": null
+      },
+      {
+        "id": "deepseek-author-b",
+        "status": "BLOCKED",
+        "candidate_id": null
+      }
+    ],
+    "evidence_file": "v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6/openrouter-state-audit.json",
+    "exhausted_nim_diagnostics_preserved": true
+  },
+  "director_model_decision": {
+    "writer": "moonshotai/kimi-k3",
+    "basis": "Director preferred Kimi script over Muse Spark 1.3 Contributor in same-answer writing comparison; Grok 4.7 and 4.6 timed out, writing quality unjudged",
+    "execution_candidate": "deepseek/deepseek-v4.1-flash",
+    "writing_policy": "Based on a true story: faithful compression and everyday embellishment permitted while preserving meaning, relationships and important events. Every night explicitly accepted for family viewing ritual.",
+    "production_activation": false,
+    "existing_literal_quote_and_contract_validators_unchanged": true
+  }
 }

@@ -144,3 +144,21 @@ test("live admission cannot reset the shared allowance or repeat an exhausted di
   await admitLiveTrial(root, root, 2, true); await admitLiveTrial(root, root, 3, true);
   await assert.rejects(admitLiveTrial(root, root, 4, true), /three distinct/);
 }));
+
+test('OpenRouter preserves native reasoning details and rejects malformed tools without retries', async () => {
+  const { chatCompletionsTransport } = await import('./nim-transport.js');
+  const message={role:'assistant',content:null,reasoning_details:[{type:'reasoning.text',text:'Explicit mock reasoning'}],tool_calls:[{id:'call-one',type:'function',function:{name:'inspect',arguments:'{}'}}]};
+  const tools=[{type:'function',function:{name:'inspect'}}];let calls=0;
+  const transport=chatCompletionsTransport('https://openrouter.ai',async(_input,init)=>{
+    const body=JSON.parse(String(init?.body));calls++;
+    if(calls===2)assert.deepEqual(body.messages[0],message);
+    return new Response(JSON.stringify({choices:[{finish_reason:'tool_calls',message}]}));
+  });
+  await transport('https://openrouter.ai/api/v1/chat/completions',{body:JSON.stringify({messages:[],tools,tool_choice:'required'})});
+  await transport('https://openrouter.ai/api/v1/chat/completions',{body:JSON.stringify({messages:[{role:'assistant',tool_calls:message.tool_calls}],tools,tool_choice:'required'})});
+  assert.equal(calls,2);await assert.rejects(transport('https://unapproved.example/api',{body:'{}'}));assert.equal(calls,2);
+  for(const choice of [{finish_reason:'stop',message:{role:'assistant',content:'tool command as text'}},{finish_reason:'length',message}]){
+    let requests=0;const invalid=chatCompletionsTransport('https://openrouter.ai',async()=>{requests++;return new Response(JSON.stringify({choices:[choice]}));});
+    await assert.rejects(invalid('https://openrouter.ai/api/v1/chat/completions',{body:JSON.stringify({messages:[],tools,tool_choice:'required'})}));assert.equal(requests,1);
+  }
+});
