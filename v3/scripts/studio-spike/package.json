@@ -6,7 +6,8 @@
     "test": "node --import tsx --test spike.test.ts",
     "check": "tsc",
     "trace": "node --import tsx trace-check.ts",
-    "live": "node --import tsx live.ts"
+    "live": "node --import tsx live.ts",
+    "phase2": "node --import tsx phase2.ts"
   },
   "dependencies": {
     "@langchain/core": "1.2.14",

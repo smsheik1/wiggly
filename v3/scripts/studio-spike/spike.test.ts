@@ -126,3 +126,21 @@ test("NIM does not accept missing reasoning when nonzero reasoning usage is repo
   const send: typeof fetch = async () => new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: null, tool_calls: [{ id: "one" }] } }], usage: { completion_tokens_details: { reasoning_tokens: 1 } } }));
   await assert.rejects(nimTransport(send)("https://integrate.api.nvidia.com/v1/chat/completions", { body: JSON.stringify({ messages: [] }) }), /omitted reasoning/);
 });
+
+
+test("author bridge explicitly runs the bound operating worker and propagates its failure", async () => {
+  const { askActiveAgent } = await import("../../lib/agent-bridge.js");
+  let calls = 0;
+  const outcome = await askActiveAgent("isolated assignment", { operatingAgent: async prompt => { calls++; assert.equal(prompt, "isolated assignment"); return { authored: true }; } });
+  assert.deepEqual(outcome, { authored: true }); assert.equal(calls, 1);
+  await assert.rejects(askActiveAgent("isolated failure", { operatingAgent: async () => { throw new Error("BOUND_WORKER_STOP"); } }), /BOUND_WORKER_STOP/);
+});
+
+
+test("background dimensions accept provider-normalized 16:9 sizes and reject unusable framing", async () => {
+  const { assertBackgroundDimensions } = await import("./phase2.js");
+  assertBackgroundDimensions({ width: 1536, height: 864 });
+  assertBackgroundDimensions({ width: 2048, height: 1152 });
+  assert.throws(() => assertBackgroundDimensions({ width: 1024, height: 1024 }));
+  assert.throws(() => assertBackgroundDimensions({ width: 160, height: 90 }));
+});

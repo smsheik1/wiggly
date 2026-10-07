@@ -286,7 +286,7 @@ The paths below refer to the existing `v3/public/format-repositories/my-pixar-st
 | 5 — Concurrent dispatch | Run two independent assignments under shared allowance and provider limits. | M2 concurrency tests pass. |
 | 6 — Film integration | Connect proven assignments to format recipes, composition, and director review. | Preview/export/share parity and the affected film flow pass their checks. |
 
-Current checkpoint (October 7, 2026): Phase 1 capabilities are verified with TypeScript Deep Agents and NVIDIA NIM `moonshotai/kimi-k3`. The successful fixture trial used four model turns and 19.595 seconds; six local checks pass. Evidence and trial limitations are in `docs/proofs/studio-phase1-harness.json`. Phase 2 has not started and saved production remains paused.
+Current checkpoint (October 7, 2026): Phases 1 and 2 are complete. TypeScript Deep Agents authored, inspected, and submitted an actual Muse kitchen candidate; independent review accepted it and rejected a blind figure-containing fixture. Eight local checks and typecheck pass. Keep TypeScript: the required harness capabilities passed. This was a recovered partial generation batch, and one NVIDIA review response was garbled; inference reliability and durable recovery remain unresolved before production adoption. Evidence is in `docs/proofs/studio-phase1-harness.json` and `docs/proofs/studio-phase2-suitability.json`. All 313 saved production files remain unchanged and paused. Stop at the M0 gate; Phase 3/M1 has not started.
 
 Commit and push each clean completed phase after its checks pass. Track the current phase, deliverable, evidence, blockers, and next gate. Phase checkpoints do not expand authorization or resume production.
 

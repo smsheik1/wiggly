@@ -1,0 +1,132 @@
+{
+  "date": "2026-10-07",
+  "phase": 2,
+  "status": "M0_ASSIGNMENT_PASSED_WITH_DIAGNOSED_LIMITATIONS",
+  "suitability": "Retain TypeScript Deep Agents. Required author/reviewer capabilities passed; NVIDIA model reliability and durable recovery remain unresolved before production adoption. Python would not fix a corrupt provider response.",
+  "run_root": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase2/e9be30f5-54ca-4612-8951-56315e7c90bf",
+  "candidate": {
+    "path": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase2/e9be30f5-54ca-4612-8951-56315e7c90bf/candidate-b8dfeaa58674840103a270fa0d9798fa71aa2298c00c7fab952bb58973d7d45b.webp",
+    "sha256": "b8dfeaa58674840103a270fa0d9798fa71aa2298c00c7fab952bb58973d7d45b",
+    "prompt": "Empty stylized 3D animated feature-film background plate, warm family kitchen at soft morning, 16:9 widescreen. Camera: eye-level wide master shot from the dining side of the room, slight three-quarter view, capturing the full kitchen wall and generous open central floor space kept completely clear for later character staging.\n\nRoom geography: along the back wall, left to right \u2014 a tall cream refrigerator with a small child's scribbled crayon drawing (lopsided sun, floating blue sky strip, color outside the lines) held by two magnets; then a farmhouse sink under a wide window with simple gingham half-curtains, dishes neatly stacked on a drying rack beside it; then a four-burner stove with a kettle and a range hood above; then butcher-block counter running to the right corner with a fruit bowl of apples. Upper wooden cabinets flank the window, a few mugs on open hooks. A pencil-drawn growth-chart mark column penciled faintly on the doorframe trim at far right, no readable text.\n\nForeground/middle: large unobstructed warm-toned wood floor area in the center of frame, a round braided rug pushed near the sink, a small wooden kitchen table with two chairs tucked at the far left edge of frame, mostly out of shot. Background details: potted herbs on the windowsill, folded tea towel over the oven handle, soft shadows grounded and consistent.\n\nPalette and lighting: warm honey, cream and sage-green palette with one subdued terracotta accent only (the kettle); soft golden morning sunlight streaming in from the window at left, gentle volumetric light, soft ambient bounce, cozy quiet atmosphere.\n\nStyle: high-end feature-animation production CG, hand-crafted stylized shapes, believable materials, cohesive perspective and proportions, clean composition with clear sightlines. Strictly no people, no animals, no human figures or faces anywhere including artwork or reflections, no readable text, labels, captions, logos or watermarks. An invented generic family home, not a real location.",
+    "findings": "Direct byte-level inspection of /drafts/generated-0.webp confirms the retained draft satisfies the brief: (1) empty warm stylized 3D family kitchen in 16:9 with believable room geography \u2014 cream refrigerator at left with a child's crayon drawing (lopsided sun and blue scribble) held by magnets, farmhouse sink under a wide window with gingham curtains and potted herbs on the sill, dish drying rack, sage-green stove with range hood and a terracotta kettle, butcher-block counter with fruit bowl, wooden upper cabinets, and three mugs on hooks; (2) folded tea towel on the oven handle and faint growth-chart tick marks on the doorframe trim at far right as specified; (3) large unobstructed warm wood central floor with a round braided rug near the sink, leaving clear staging space; small table with chairs tucked at far-left edge, mostly out of frame; (4) soft golden morning light from the window with gentle volumetric glow and grounded soft shadows; palette is honey/cream/sage with a single subtle terracotta accent. Compliance check: no people, animals, human figures or faces (the fridge drawing contains only a sun and abstract scribbles \u2014 no faces), no readable text, captions, logos or watermarks. Coherent perspective and proportions throughout. Only one draft exists because, per the recorded diagnosis, the exact-size 16:9 validator stopped persistence after the first valid image; the requested 3-image batch could not be retained. Submitting the single valid retained draft with the exact prior prompt; no new generation performed or authorized.",
+    "status": "CANDIDATE_NOT_DIRECTOR_APPROVED"
+  },
+  "negative_fixture": {
+    "path": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase2/e9be30f5-54ca-4612-8951-56315e7c90bf/negative-fixture/drafts/generated-0.webp",
+    "sha256": "e6af8c8ae8dd9f3b22f59d8f04d4443266d0ffe005f866a65b65cd55d266839d",
+    "width": 2048,
+    "height": 1152
+  },
+  "author": {
+    "id": "3a161b4a-3c5a-4c3c-ab8f-c640d2bb67ed",
+    "role": "background-author",
+    "model": "moonshotai/kimi-k3",
+    "turns": 4,
+    "elapsed_ms": 52176,
+    "url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/3a161b4a-3c5a-4c3c-ab8f-c640d2bb67ed?poll=true",
+    "input_tokens": 16458,
+    "output_tokens": 1267,
+    "raw_media_absent_from_trace": true
+  },
+  "author_total_turns_including_interrupted_generation": 7,
+  "reviews": [
+    {
+      "verdict": "PASS",
+      "candidate_sha256": "b8dfeaa58674840103a270fa0d9798fa71aa2298c00c7fab952bb58973d7d45b",
+      "findings": "Inspected the actual candidate.webp bytes against the packet criteria. The image is an aspect-correct 16:9, warm, stylized 3D family kitchen interior. Room geography is believable and readable: retro refrigerator at left, farmhouse sink centered under a morning-lit window with checkered curtains, continuous counter runs, gas stove with range hood and kettle at right, and wood cabinetry above/below. The center foreground holds clear, unobstructed wooden floor space (with only a low braided rug) suitable for character staging. Lighting is soft, warm morning light entering through the window. No people, animals, or human figures appear anywhere. The only artwork is a child's crayon drawing magnetized to the fridge (sun, blue and green scribbles) containing no faces. A height/growth chart with measure marks on the right wall is functional wall decoration, not a caption, logo, or watermark. No captions, logos, or watermarks observed in any region. All stated criteria are satisfied with no observable defects. REVIEWER-INDEPENDENT-512",
+      "defects": [],
+      "worker": {
+        "id": "55efca4f-0e61-401f-bbd6-4014b7cdd0e2",
+        "role": "independent-background-reviewer",
+        "model": "moonshotai/kimi-k3",
+        "turns": 3,
+        "elapsed_ms": 34427,
+        "url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/55efca4f-0e61-401f-bbd6-4014b7cdd0e2?poll=true",
+        "input_tokens": 12638,
+        "output_tokens": 739,
+        "raw_media_absent_from_trace": true
+      }
+    },
+    {
+      "verdict": "CHANGES_REQUESTED",
+      "candidate_sha256": "e6af8c8ae8dd9f3b22f59d8f04d4443266d0ffe005f866a65b65cd55d266839d",
+      "findings": "Direct inspection of the full frame shows a warm, stylized 3D kitchen with believable geography (fridge left, sink under window center-left, stove/range-hood right, readable counters, soft morning window light, wood floor with rug). However, the criteria explicitly require an EMPTY background with no people or human figures and clear central floor space for later character staging. A fully rendered adult male human figure (curly hair, beard, cream sweater, brown pants, shoes) stands in the exact center of the frame, occupying the central floor staging area. This is an objective, disqualifying violation regardless of filename or producer claims. The fridge drawing (sun and scribbles) contains no faces, and no captions, logos, or watermarks are visible; those criteria pass. Reviewer marker: REVIEWER-INDEPENDENT-512.",
+      "defects": [
+        {
+          "criterion": "No people, animals, human figures",
+          "region": "Center of frame, full vertical mid-band",
+          "evidence": "A complete adult male human figure with face, curly hair, beard, cream sweater, brown pants and shoes stands in the central floor area, directly contradicting the empty-background requirement."
+        },
+        {
+          "criterion": "Clear central floor space for later character staging",
+          "region": "Central floor, between rug and stove",
+          "evidence": "The central staging floor is occupied by the standing character, so the space is not clear for later character placement."
+        }
+      ],
+      "worker": {
+        "id": "ee52a4a7-6490-4f69-8a58-4bb13517c714",
+        "role": "independent-background-reviewer",
+        "model": "moonshotai/kimi-k3",
+        "turns": 3,
+        "elapsed_ms": 23894,
+        "url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/ee52a4a7-6490-4f69-8a58-4bb13517c714?poll=true",
+        "input_tokens": 12652,
+        "output_tokens": 697,
+        "raw_media_absent_from_trace": true
+      }
+    }
+  ],
+  "failed_attempts": [
+    {
+      "role": "author",
+      "run_id": "b435b043-1287-483d-a908-9f690de902ad",
+      "turns": 3,
+      "cause": "Local validator incorrectly required width 1536; Muse returned valid 2048x1152. Fixed usable-16:9 check with regression test. Recovered first retained draft without another generation.",
+      "retained_images": 1,
+      "batch_images_requested": 3,
+      "lost_returned_images": 2
+    },
+    {
+      "role": "reviewer",
+      "run_id": "3600d703-9040-42dd-8ddb-e34460406481",
+      "turns": 1,
+      "elapsed_ms": 6793,
+      "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/3600d703-9040-42dd-8ddb-e34460406481?poll=true",
+      "cause": "Provider returned garbled text and no tool call. No image inspection or verdict. Preserved evidence and ran one explicitly announced diagnostic review of the same candidate.",
+      "automatic_retry": false
+    }
+  ],
+  "allowance": {
+    "authorized_total_m0_usd": 5,
+    "estimated_muse_consumption_usd": 0.04,
+    "muse_calls": 2,
+    "muse_requested_images": 4,
+    "nim_expected_usd": 0,
+    "verified_charges_usd": null,
+    "price_source": "https://dev.meta.ai/models/muse-image",
+    "nim_source": "https://build.nvidia.com/moonshotai/kimi-k3",
+    "phase1_holds": "Five $1 controls were not invoice charges; reconciled against free prototype endpoint.",
+    "tokens_including_failed_attempts": {
+      "input": 54508,
+      "output": 3573
+    }
+  },
+  "verification": {
+    "typecheck": "PASS",
+    "local_tests": 8,
+    "real_langsmith_trace_readbacks": 3,
+    "production_files_unchanged": 313,
+    "production_paused": true,
+    "director_approved": false,
+    "m1_started": false
+  },
+  "limitations": [
+    "This was a recovered partial author batch, not an uninterrupted three-candidate selection trial.",
+    "Garbled NVIDIA responses remain an unresolved inference-provider reliability issue. Neither acceptance nor fallback is inferred from them.",
+    "No checkpointer: checkpoint growth and durable multimodal recovery are not proved.",
+    "Host bridge and provider request builder were reused from the canonical working kit; the kit is still untracked in the primary checkout. The spike depends on that existing local kit.",
+    "Eight-author/four-reviewer turn targets passed on successful runs; full uninterrupted end-to-end three-minute latency was not proved.",
+    "Transitive braces DoS advisory remains; isolated trusted-input spike only.",
+    "M0 is not proof of leases, transactional budget enforcement, production publication, durable pause, stale approvals, or concurrent execution."
+  ]
+}

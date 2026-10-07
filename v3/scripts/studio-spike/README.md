@@ -1,4 +1,4 @@
-# Studio Phase 1 harness spike
+# Studio M0 harness spike
 
 Isolated TypeScript Deep Agents capability tests. This is not a new Format,
 production scheduler, renderer, or migration. The saved Memoir production stays paused.
@@ -85,5 +85,53 @@ Tokens are reported; provider charges and a per-token tariff remain unverified.
 
 See `docs/proofs/studio-phase1-harness.json` in the repository for the committed
 Phase 1 evidence, live trace URL, trial summaries, usage, and remaining limits.
-Phase 2 and full production remain unstarted/paused. This success establishes harness
-capabilities on a fixture, not production reliability or animation quality.
+Phase 1 establishes fixture capabilities. Phase 2 results follow; full production stays paused.
+
+
+## Phase 2: author and independent review
+
+`npm run phase2` creates a separate test workspace. A Deep Agents author loads
+the existing background recipe, authors a complete prompt through an explicitly
+bound operating worker in `v3/lib/agent-bridge.ts`, uses the existing Muse request
+builder, inspects actual images, and submits an exact-byte candidate. A fresh
+reviewer receives only the producer packet and candidate bytes. A generated
+figure-containing edit is reviewed under the same criteria as a negative test.
+No production approvals, checkpoints, scheduler, or renderer are invoked.
+
+The runner depends on the canonical working kit at
+`/Users/shaz/Projects/wiggly/v3/public/format-repositories/my-pixar-story-v1`
+and loads only `META_API_KEY`, `NVIDIA_API_KEY`, and `LANGSMITH_API_KEY` from the
+canonical secrets file. It requests three author images ($0.03 estimated) and
+one deliberate negative edit ($0.01 estimated). NVIDIA prototype inference is
+advertised as free. Neither estimated consumption nor internal holds are verified
+invoice charges. This is sequential spike bookkeeping, not transactional M1 safety.
+
+Phase 2 passed with diagnosed limitations: the empty kitchen received PASS and
+the figure-containing fixture received CHANGES_REQUESTED with specific visual
+evidence. Successful author recovery took four turns / 52.176 seconds; both
+reviewers took three turns / 34.427 and 23.894 seconds. The interrupted author's
+three earlier turns bring total author turns to seven.
+
+The initial Muse response returned a usable 2048x1152 image rather than the exact
+requested width. A too-strict local assertion stopped persistence after one of
+three returned images. The dimension guardrail was fixed and tested; the existing
+draft was recovered without regeneration. Two returned images were lost, and
+this is not evidence of uninterrupted three-candidate selection. Future calls
+persist the raw response before decoding or validating individual images.
+
+The initial reviewer received garbled NVIDIA output and made no tool call. That
+attempt was preserved and rejected as incomplete. One explicitly announced
+diagnostic review passed. There is no automatic retry or provider substitution.
+An intentional continuation can use `--recover-root=<isolated-run-root>`; adding
+`--review-existing` skips author execution and verifies the saved candidate hash.
+These are operator recovery aids for this spike, not replay-safe M1 workflows.
+Never rerun a partially completed trial blindly. Existing operation intents refuse
+a second image submission rather than risk duplicate provider work.
+
+Eight local tests and typecheck pass. Actual LangSmith readbacks of the three
+successful worker traces contain linked model/tool nodes and no raw media bytes.
+All 313 paused production files match the baseline. See
+`docs/proofs/studio-phase2-suitability.json` for verdicts, hashes, traces, usage,
+failed attempts, and limitations. Retain TypeScript; Python would not resolve
+a corrupt inference-provider response. M1 and production adoption require their
+own gates, including durable recovery and a reliable inference path.

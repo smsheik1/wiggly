@@ -28,16 +28,6 @@ This is a capability fixture, not animation production or approval.
 }
 
 export function createProbe(model: BaseChatModel, root: string, profileKey: string) {
-  registerHarnessProfile(profileKey, {
-    excludedTools: ["task", "execute"],
-    generalPurposeSubagent: { enabled: false },
-  });
-  const mount = (dir: string) => new FilesystemBackend({ rootDir: join(root, dir), virtualMode: true });
-  // Native mount roots reject symlinks escaping drafts, including aliases into versions.
-  const backend = new CompositeBackend(new FilesystemBackend({ rootDir: root, virtualMode: true }), {
-    "/drafts/": mount("drafts"), "/references/": mount("references"),
-    "/versions/": mount("versions"), "/skills/": mount("skills"),
-  });
   const submissions: unknown[] = [];
   const submit = tool(async ({ quadrants, skill_marker }) => {
     const bytes = await readFile(join(root, "references/probe.png"));
@@ -49,15 +39,29 @@ export function createProbe(model: BaseChatModel, root: string, profileKey: stri
     schema: z.object({ quadrants: z.array(z.string()).length(4), skill_marker: z.string() }),
     returnDirect: true,
   });
-  const agent = createDeepAgent({
-    model, backend, name: "wiggly-phase1-probe", skills: ["/skills/"], tools: [submit],
+  const agent = workspaceAgent(model, root, profileKey, "wiggly-phase1-probe", [submit], "Complete only the Phase 1 inspection probe. Load the relevant skill, inspect the actual image, write observations in drafts, then submit_probe. Never approve or generate media. No delegation.");
+  return { agent, submissions };
+}
+
+export function workspaceAgent(model: BaseChatModel, root: string, profileKey: string, name: string, tools: any[], systemPrompt: string) {
+  registerHarnessProfile(profileKey, {
+    excludedTools: ["task", "execute"],
+    generalPurposeSubagent: { enabled: false },
+  });
+  const mount = (dir: string) => new FilesystemBackend({ rootDir: join(root, dir), virtualMode: true });
+  // Native mount roots reject symlinks escaping drafts, including aliases into versions.
+  const backend = new CompositeBackend(new FilesystemBackend({ rootDir: root, virtualMode: true }), {
+    "/drafts/": mount("drafts"), "/references/": mount("references"),
+    "/versions/": mount("versions"), "/skills/": mount("skills"),
+  });
+  return createDeepAgent({
+    model, backend, name, skills: ["/skills/"], tools,
     permissions: [
       { operations: ["read"], paths: ["/drafts/**", "/references/**", "/versions/**", "/skills/**"], mode: "allow" },
       { operations: ["read"], paths: ["/**"], mode: "deny" },
       { operations: ["write"], paths: ["/drafts/**"], mode: "allow" },
       { operations: ["write"], paths: ["/**"], mode: "deny" },
     ],
-    systemPrompt: "Complete only the Phase 1 inspection probe. Load the relevant skill, inspect the actual image, write observations in drafts, then submit_probe. Never approve or generate media. No delegation.",
+    systemPrompt,
   });
-  return { agent, submissions, backend };
 }
