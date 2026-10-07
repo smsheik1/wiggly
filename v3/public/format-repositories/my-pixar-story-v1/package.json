@@ -1,0 +1,35 @@
+{
+  "name": "@wiggly/my-pixar-story-format",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "check": "node runner.mjs check",
+    "test": "node --test tests/*.test.mjs",
+    "smoke": "node kit-smoke.mjs",
+    "pack:kit": "node pack.mjs",
+    "eval": "node runner.mjs eval",
+    "eval:holdout": "node runner.mjs eval --split holdout",
+    "build:renderer": "node build-renderer.mjs",
+    "regression": "node --test tests/supervised-regression.test.mjs"
+  },
+  "dependencies": {
+    "@langchain/core": "1.1.48",
+    "@langchain/langgraph": "1.4.18",
+    "@langchain/langgraph-checkpoint-sqlite": "1.0.4",
+    "@remotion/bundler": "4.0.532",
+    "@remotion/media": "4.0.532",
+    "@remotion/player": "4.0.532",
+    "@remotion/renderer": "4.0.532",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "remotion": "4.0.532",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "tailwindcss": "4.1.14"
+  }
+}

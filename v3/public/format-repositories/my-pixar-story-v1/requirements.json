@@ -1,0 +1,122 @@
+{
+  "node": ">=22",
+  "dependencies": "npm ci using package-lock.json; SQLite native addon may require platform build tools if no prebuilt binary exists",
+  "localTools": [
+    "ffprobe",
+    "ffmpeg",
+    "tar"
+  ],
+  "credentials": {
+    "canonicalFile": "operator repo-root secrets.env (ignored/symlink); pass its absolute path with --secrets",
+    "cartesia": "CARTESIA_API_KEY",
+    "meta-muse": "META_API_KEY",
+    "replicate": "REPLICATE_API_TOKEN (video)",
+    "elevenlabs": "ELEVENLABS_API_KEY (optional generated music/effects)",
+    "gemini": "GEMINI_API_KEY (selected local Codex audio/video perception; separately billed)"
+  },
+  "hostAgent": {
+    "author": "actual bound host worker or trusted runTask(task,{worker,callTool}) host integration",
+    "reviewer": "Independent actual-media advisory worker plus explicit human media confirmation in default supervised mode; deliberately selected qualified mode additionally needs formal qualification and speaker tools",
+    "missingCapability": "inconclusive; never fabricate review",
+    "backgroundOwner": "plain-language scene direction and outcome check; distinct from technical prompter",
+    "backgroundPrompter": "separate worker using background-prompter.md; cannot self-review or human-approve",
+    "shotPlanner": "Sam authors shot intentions before backgrounds, then confirms staging against approved references; four exact 15-second beat timelines",
+    "compositionWriter": "single-frame reference-bound scene prompt; independent reviewer needs actual image perception",
+    "videoEngineer": "Observable frame-bound motion; independent actual full-video reviewer and exact human spending authorization",
+    "soundDesigner": "explicit narration-only plan for core v1; optional instrumental piano/effects with rights/provenance",
+    "filmEditor": "approved trim/mix plan, natural-rate narration; one official local assembler",
+    "visualQualification": "actual human-labelled held-out image/video anatomy, identity and continuity examples, actual independent worker predictions",
+    "compute": "current chat host for creative/reviewer workers; selected Gemini 3.8 Flash API for local Codex listening/video observations",
+    "audioQualification": "separate genuinely human-labelled held-out audio, full listening, STT and speaker comparison; model/tool profile bound to Ava",
+    "permissions": "runtime-enforced format broker and submission allowlists; ambient host shell/filesystem/tools require host enforcement",
+    "finalFilm": "Distinct Vera visual and Ava audio review with full coverage, then explicit human audiovisual confirmation; qualified-mode reports additional",
+    "localCodex": {
+      "model": "gpt-5.6-sol (explicit operator choice)",
+      "runtime": "Installed signed-in Codex CLI; documented experimental app-server dynamic tools (verified with 0.153.0)",
+      "commands": "crew-start, crew-refresh, work-codex, drive-codex",
+      "cost": "Worker turns consume the signed-in account limits; no separate model API key required for ChatGPT login",
+      "implemented": "Durable role threads and partial startup receipts, scoped native image delivery, explicit model/profile/requalification, durable dispatch results, bounded dispatch",
+      "missing": "calibrated speaker similarity and real reviewer qualification",
+      "modalityLimitationSource": "https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations",
+      "mediaReview": {
+        "model": "gemini-3.8-flash",
+        "tools": [
+          "listenAudio",
+          "watchVideo"
+        ],
+        "calls": "explicit --review-calls 0–32 per invocation, default 0; no automatic fallback/retry",
+        "profile": "static min(source FPS,4) video (operator-selected), high resolution; original audio/separate mono 48kHz PCM from video",
+        "qualification": "Unqualified advisory in supervised v1; mandatory direct perception plus human confirmation. Formal held-out qualification remains required for qualified mode.",
+        "estimate": "Positive --review-cost-usd in supervised mode; project-wide reserved-estimate ceiling plus call cap"
+      },
+      "transcription": {
+        "model": "ink-whisper",
+        "api": "POST https://api.cartesia.ai/stt",
+        "apiVersion": "2026-08-14",
+        "key": "CARTESIA_API_KEY from canonical --secrets",
+        "calls": "explicit --transcription-calls 0–32 per invocation, default 0",
+        "scriptHints": false,
+        "language": "canonical recorded-source or verified existing-clone ISO language",
+        "receipts": "exact task/hash/worker/language/profile; completed results recover offline; unknown outcomes stop without retry",
+        "qualification": "not production-qualified; independent of Gemini listening and speaker measurement",
+        "estimate": "Positive --transcription-cost-usd in supervised mode; project-wide reserved-estimate ceiling plus call cap"
+      }
+    },
+    "questionnaireReviewer": "Sage checks existing answers/facts/relationships/ages/locations; human ANSWERS LOCK before writing, no storytelling grade",
+    "characterPromptEngineer": "Cleo uses locked script/cast/photos plus supporting answers; bound recipe/prompt receives independent Sage review and human approval before three Muse candidates"
+  },
+  "storage": "per-run embedded SQLite checkpoints and immutable local assets/receipts; retain directory as a unit",
+  "approval": "real human deliverable approvals; exact paid-request authorization or explicit bounded operation allowance",
+  "notRequired": [
+    "ComfyUI",
+    "local AI models",
+    "Antigravity SDK",
+    "Wiggly application checkout",
+    "cloud database"
+  ],
+  "pending": [
+    "actual perceptual-worker qualification and labeled corpus",
+    "real end-to-end film quality proof (excluded)",
+    "app presentation/integration"
+  ],
+  "renderer": {
+    "composition": "RemotionAdScene → AdRenderSurface → memoir-film",
+    "packaged": "compiled Remotion bundle + hash inventory",
+    "browser": "Chrome Headless Shell (Remotion setup) or MEMOIR_BROWSER_EXECUTABLE",
+    "license": "Remotion license requirements apply: https://www.remotion.dev/license",
+    "audio": "FFmpeg natural-rate mixing; ffprobe/FFmpeg technical inspection",
+    "preview": "localhost Remotion Player; exact shared scene and audio; no approvals changed"
+  },
+  "providerReadiness": {
+    "command": "check-provider --provider <service> --secrets /absolute/operator-repo/secrets.env",
+    "scope": "authenticated GET metadata only; never generation, billing proof, approval or state mutation",
+    "remaining": "inference permissions, funds and account-specific cost estimates require further verification"
+  },
+  "chatDelivery": {
+    "command": "present --run /absolute/run",
+    "scope": "exact version-bound reviewed deliverable and four separate narration players; failed/stale/tampered work blocked",
+    "humanDecision": "actual user event through respond; no fabricated approval",
+    "defects": "status/work repairNotices and drive-codex DEFECT FOUND; localized findings/repair/status, failed media remains outside passing delivery"
+  },
+  "supportedRelease": "macOS local Codex; additional OS/hosts unverified",
+  "reviewPolicy": {
+    "default": "supervised",
+    "legacy": "qualified; no silent migration",
+    "humanMedia": "one actual passing human-confirmed finding per criterion",
+    "profileChange": "supervised reviewer bindings pinned after media approval"
+  },
+  "budget": "$0 initial provider ceiling; human set-budget/increase; conservative authorized estimates for generation/review/STT, not invoices",
+  "videoGeneration": {
+    "newProjects": {
+      "provider": "replicate",
+      "model": "bytedance/seedance-2.0-mini",
+      "resolution": "480p",
+      "aspectRatio": "16:9",
+      "expectedSourceRaster": "864×496",
+      "audio": false
+    },
+    "legacy": "missing productionProfile retains Seedance 2.0/1080p; no silent migration",
+    "approval": "exact human request approval for every new Mini generation/repair",
+    "documentation": "https://replicate.com/bytedance/seedance-2.0-mini/api/schema"
+  }
+}

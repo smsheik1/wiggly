@@ -10,10 +10,13 @@ export type OperatorDecision = { id: string; actor: string; reason: string };
 export type InputVersions = Record<string, string>;
 export type KillPoint = "after_intent" | "after_dispatch_before_call" | "after_submit_before_request_id" | "after_request_id" | "after_publish_before_record" | "after_publication_commit";
 export type TicketLimits = { maxAttempts: number; maxStrikes: number; maxTurns: number };
-export type DirectorDecision = OperatorPayload & { action: "decide"; ticket_id: string; candidate_version_id: string; content_hash: string; expected_revision: number; decision: "APPROVE" | "REJECT"; feedback?: string };
+export type DirectorDecision = OperatorPayload & { action: "decide"; ticket_id: string; candidate_version_id: string; content_hash: string; expected_revision: number; decision: "APPROVE" | "REJECT"; selection?: number; feedback?: string };
 export type LimitExtension = OperatorPayload & { action: "extend_limits"; ticket_id: string; expected_revision: number; reason: string; max_attempts?: number; max_strikes?: number; max_turns?: number; allowance_micros?: number; recover_rejected_operation?: { operation_id: string; request_id: string; evidence_reference: string } };
+export const memoirReviewModality = (kind: string) => ["candidates", "sheet", "backgroundCandidates", "backgroundAngle", "keyframe"].includes(kind) ? "image" : ["voiceSample", "audition", "narration", "music", "effect"].includes(kind) ? "audio" : kind === "video" ? "video" : kind === "film" ? "audiovisual" : "text";
+export const memoirFilmReviewCriteria = { video: ["technical", "story", "visual-continuity", "motion", "safety", "provenance"], audio: ["narration", "mix", "safety", "provenance"] };
+export const memoirReviewCoverage = "complete candidate and every referenced media item";
 export type ReviewDirection = { criteria: string[]; modality: string; coverage: string };
-export type ReviewVerdict = { verdict: "PASS" | "CHANGES_REQUESTED" | "INCONCLUSIVE"; findings: string; defects: { criterion: string; region: string; evidence: string }[]; evidence_references: string[] };
+export type ReviewVerdict = { verdict: "PASS" | "CHANGES_REQUESTED" | "INCONCLUSIVE"; findings: string; defects: { criterion: string; region: string; evidence: string }[]; evidence_references: string[]; direction_compatible?: boolean };
 type Row = Record<string, any>;
 const sha = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const requireThat = (condition: unknown, code: string): void => { if (!condition) throw new Error(code); };
@@ -33,7 +36,7 @@ export class StudioProduction {
     mkdirSync(root, { recursive: true }); this.root = realpathSync(root);
     this.#db = new DatabaseSync(join(this.root, "studio.sqlite"));
     this.#db.exec("PRAGMA busy_timeout=5000");
-    requireThat([0, 1, 2, 3, 4].includes(this.#get("PRAGMA user_version")!.user_version), "UNSUPPORTED_STUDIO_SCHEMA");
+    requireThat([0, 1, 2, 3, 4, 5].includes(this.#get("PRAGMA user_version")!.user_version), "UNSUPPORTED_STUDIO_SCHEMA");
     this.#db.exec(`PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;
       CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY, paused INTEGER NOT NULL DEFAULT 1 CHECK(paused IN (0,1)), allowance INTEGER NOT NULL CHECK(allowance>=0)) STRICT;
       CREATE TABLE IF NOT EXISTS operator_decisions(id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), actor TEXT NOT NULL, action TEXT NOT NULL, value INTEGER NOT NULL, reason TEXT NOT NULL, at INTEGER NOT NULL) STRICT;
@@ -77,6 +80,15 @@ export class StudioProduction {
         ALTER TABLE provider_limits ADD COLUMN next_allowed_at INTEGER NOT NULL DEFAULT 0;
         PRAGMA user_version=4;`);
     });
+    this.#tx(() => {
+      if (this.#get("PRAGMA user_version")!.user_version < 5) this.#db.exec(`
+        ALTER TABLE versions ADD COLUMN validation_hash TEXT;
+        ALTER TABLE reviews ADD COLUMN direction_compatible INTEGER CHECK(direction_compatible IN (0,1));
+        CREATE TABLE format_policies(project_id TEXT PRIMARY KEY REFERENCES projects(id),policy TEXT NOT NULL,authorization TEXT NOT NULL) STRICT;
+        CREATE TABLE format_assignments(ticket_id TEXT PRIMARY KEY REFERENCES tickets(id),kind TEXT NOT NULL,checkpoint TEXT,criteria TEXT NOT NULL,packet TEXT NOT NULL,selection INTEGER) STRICT;
+        CREATE TABLE policy_acceptances(version_id TEXT PRIMARY KEY REFERENCES versions(id),policy TEXT NOT NULL,validation TEXT NOT NULL,at INTEGER NOT NULL) STRICT;
+        PRAGMA user_version=5;`);
+    });
     for (const dir of ["assignments", "versions", "publication-staging"]) { mkdirSync(join(this.root, dir), { recursive: true }); requireThat(realpathSync(join(this.root, dir)) === join(this.root, dir), "WORKSPACE_SYMLINK"); }
   }
   close() { this.#db.close(); }
@@ -110,7 +122,7 @@ export class StudioProduction {
     inputsJSON({ [name]: version });
     this.#tx(() => {
       const local = this.#get("SELECT * FROM versions WHERE id=?", version);
-      if (local) requireThat(this.ticket(local.ticket_id).project_id === projectId && this.#get("SELECT id FROM director_commands WHERE project_id=? AND action='decide' AND json_extract(result,'$.candidate_version_id')=? AND json_extract(result,'$.status')='APPROVED'", projectId, version), "UNAPPROVED_INPUT_VERSION");
+      if (local) requireThat(this.ticket(local.ticket_id).project_id === projectId && (this.#get("SELECT id FROM director_commands WHERE project_id=? AND action='decide' AND json_extract(result,'$.candidate_version_id')=? AND json_extract(result,'$.status')='APPROVED'", projectId, version) || this.#get("SELECT version_id FROM policy_acceptances WHERE version_id=?", version)), "UNAPPROVED_INPUT_VERSION");
       // Opaque external version IDs remain a trusted producer/import boundary; no legacy migration here.
       this.#run("INSERT INTO input_heads VALUES (?,?,?) ON CONFLICT(project_id,name) DO UPDATE SET version=excluded.version", projectId, name, version);
     });
@@ -135,7 +147,17 @@ export class StudioProduction {
     const used = this.#get("SELECT COUNT(*) AS used FROM operations WHERE provider=? AND (state IN ('SUBMITTING','SUBMITTED','UNKNOWN') OR (state='FAILED' AND settled_at IS NULL))", provider)!.used;
     return { limit, used, nextAllowedAt: policy?.next_allowed_at ?? 0 };
   }
-  #currentInputs(ticket: Row) { for (const [name, version] of Object.entries(JSON.parse(ticket.inputs))) requireThat(this.#get("SELECT version FROM input_heads WHERE project_id=? AND name=?", ticket.project_id, name)?.version === version, "STALE_INPUTS"); }
+  assertCurrentInputs(projectId: string, inputs: InputVersions) { this.#currentInputs({ project_id: projectId, inputs: inputsJSON(inputs) }); }
+  #currentInputs(ticket: Row) {
+    const binding = ticket.id ? this.memoirAssignment(ticket.id) : undefined;
+    const ownKey = binding ? JSON.parse(binding.packet).asset_key?.replaceAll(":", "__") : undefined;
+    for (const [name, version] of Object.entries(JSON.parse(ticket.inputs))) {
+      // An approved revision may keep its previous output as immutable reference history.
+      // Before publication/approval the prior head remains strictly fenced like every input.
+      if (ticket.status === "APPROVED" && name === ownKey) continue;
+      requireThat(this.#get("SELECT version FROM input_heads WHERE project_id=? AND name=?", ticket.project_id, name)?.version === version, "STALE_INPUTS");
+    }
+  }
   #lease(ctx: WorkerLease, submittedReplay = false) {
     const t = this.ticket(ctx.ticketId);
     requireThat(t.worker_id === ctx.workerId && t.token === ctx.token && t.attempt_id === ctx.attemptId && t.lease_until > this.now(), "STALE_WORKER");
@@ -183,9 +205,15 @@ export class StudioProduction {
     return this.#tx(() => {
       const author = this.ticket(authorTicket); requireThat(author.kind === "AUTHOR" && author.status === "SUBMITTED", "AUTHOR_NOT_SUBMITTED");
       requireThat(!this.project(author.project_id).paused, "PROJECT_PAUSED"); this.#currentInputs(author);
+      const binding = this.memoirAssignment(authorTicket);
+      if (binding) {
+        const filmCriteria = binding.kind === "film" ? memoirFilmReviewCriteria[direction.modality as "video" | "audio"] : undefined;
+        requireThat(json(direction.criteria) === (binding.kind === "film" ? json(filmCriteria ?? []) : binding.criteria) && (binding.kind === "film" ? !!filmCriteria : direction.modality === memoirReviewModality(binding.kind)) && direction.coverage === memoirReviewCoverage, "FORMAT_REVIEW_SCOPE_REQUIRED");
+        if (binding.kind === "film") requireThat(!this.#get("SELECT id FROM reviews WHERE author_ticket=? AND version_id=? AND verdict='PASS' AND json_extract(packet,'$.modality')=?", author.id, author.candidate_id, direction.modality), "FILM_MODALITY_ALREADY_REVIEWED");
+      }
       const candidate = this.version(author.candidate_id); this.#verifyVersion(candidate);
       this.createTicket(reviewerTicket, author.project_id, role, JSON.parse(author.inputs), allowanceMicros, "REVIEWER", limits);
-      const packet = { project_id: author.project_id, ticket_id: authorTicket, candidate_version_id: candidate.id, content_hash: candidate.content_hash, candidate_path: candidate.path, exact_inputs: JSON.parse(candidate.inputs), criteria: direction.criteria, modality: direction.modality, coverage: direction.coverage, director_approved: false };
+      const packet = { project_id: author.project_id, ticket_id: authorTicket, candidate_version_id: candidate.id, content_hash: candidate.content_hash, candidate_path: candidate.path, exact_inputs: JSON.parse(candidate.inputs), ...(binding ? { assignment: { kind: binding.kind, outcome: JSON.parse(binding.packet).outcome ?? null, selectors: JSON.parse(binding.packet).selectors ?? {} } } : {}), criteria: direction.criteria, modality: direction.modality, coverage: direction.coverage, director_approved: false };
       const reviewId = randomUUID();
       this.#run("UPDATE tickets SET status='REVIEWING',revision=revision+1 WHERE id=?", authorTicket);
       this.#run("INSERT INTO reviews(id,author_ticket,reviewer_ticket,version_id,author_revision,packet,state) VALUES (?,?,?,?,?,?,'OPEN')", reviewId, authorTicket, reviewerTicket, candidate.id, author.revision + 1, json(packet));
@@ -200,6 +228,7 @@ export class StudioProduction {
   }
   submitReview(ctx: WorkerLease, result: ReviewVerdict) {
     requireThat(["PASS", "CHANGES_REQUESTED", "INCONCLUSIVE"].includes(result.verdict) && result.findings.trim().length >= 20 && result.findings.length <= 20000, "INVALID_REVIEW_VERDICT");
+    requireThat(result.direction_compatible === undefined || typeof result.direction_compatible === "boolean", "INVALID_DIRECTION_COMPATIBILITY");
     requireThat(Array.isArray(result.defects) && result.defects.every(d => d.criterion.trim() && d.region.trim() && d.evidence.trim()), "REVIEW_DEFECT_EVIDENCE_REQUIRED");
     requireThat(result.verdict !== "PASS" || result.defects.length === 0, "PASS_CANNOT_HAVE_DEFECTS");
     requireThat(result.verdict !== "CHANGES_REQUESTED" || result.defects.length > 0, "DEFECTS_REQUIRED");
@@ -207,7 +236,7 @@ export class StudioProduction {
       const reviewer = this.#lease(ctx, true); requireThat(reviewer.kind === "REVIEWER", "REVIEWER_ASSIGNMENT_REQUIRED");
       const review = this.#get("SELECT * FROM reviews WHERE reviewer_ticket=?", ctx.ticketId); requireThat(review, "REVIEW_NOT_FOUND");
       const evidence = json([...result.evidence_references].sort()), defects = json(result.defects);
-      if (review!.state === "FINISHED") { requireThat(review!.verdict === result.verdict && review!.findings === result.findings && review!.defects === defects && review!.evidence === evidence, "REVIEW_REPLAY_CONFLICT"); return { review_id: review!.id, verdict: review!.verdict, candidate_version_id: review!.version_id }; }
+      if (review!.state === "FINISHED") { requireThat(review!.verdict === result.verdict && review!.findings === result.findings && review!.defects === defects && review!.evidence === evidence && review!.direction_compatible === (result.direction_compatible === undefined ? null : Number(result.direction_compatible)), "REVIEW_REPLAY_CONFLICT"); return { review_id: review!.id, verdict: review!.verdict, candidate_version_id: review!.version_id }; }
       const author = this.#reviewCurrent(review!), version = this.version(review!.version_id), packet = JSON.parse(review!.packet);
       requireThat(!this.#get("SELECT worker_id FROM assignment_claims WHERE ticket_id=? AND attempt_id=? AND worker_id=?", author.id, version.attempt_id, ctx.workerId), "AUTHOR_CANNOT_REVIEW_OWN_WORK");
       if (result.verdict !== "INCONCLUSIVE") {
@@ -215,9 +244,15 @@ export class StudioProduction {
         for (const evidenceId of result.evidence_references) { const e = this.#get("SELECT * FROM inspections WHERE id=?", evidenceId)!; requireThat(e.coverage === packet.coverage && e.modality === packet.modality, "REVIEW_COVERAGE_MISMATCH"); }
       }
       let status = "AWAITING_APPROVAL", reason: string | null = null, from: string | null = null;
+      if (result.verdict === "PASS" && this.memoirAssignment(author.id)?.kind === "film") {
+        const other = packet.modality === "video" ? "audio" : "video";
+        const previous = this.#get("SELECT r.id,t.worker_id FROM reviews r JOIN tickets t ON t.id=r.reviewer_ticket WHERE r.author_ticket=? AND r.version_id=? AND r.verdict='PASS' AND json_extract(r.packet,'$.modality')=?", author.id, version.id, other);
+        if (previous) requireThat(previous.worker_id !== ctx.workerId, "FILM_REVIEWERS_MUST_DIFFER");
+        else status = "SUBMITTED";
+      }
       if (result.verdict === "CHANGES_REQUESTED") { const strikes = author.strike_count + 1; this.#run("UPDATE tickets SET strike_count=? WHERE id=?", strikes, author.id); status = strikes >= author.max_strikes ? "BLOCKED" : "CHANGES_REQUESTED"; if (status === "BLOCKED") { reason = "REPEATED_FAILURE"; from = "CHANGES_REQUESTED"; } }
       if (result.verdict === "INCONCLUSIVE") { status = "BLOCKED"; reason = "REVIEW_INCONCLUSIVE"; from = "SUBMITTED"; }
-      this.#run("UPDATE reviews SET state='FINISHED',verdict=?,findings=?,defects=?,evidence=? WHERE id=?", result.verdict, result.findings, defects, evidence, review!.id);
+      this.#run("UPDATE reviews SET state='FINISHED',verdict=?,findings=?,defects=?,evidence=?,direction_compatible=? WHERE id=?", result.verdict, result.findings, defects, evidence, result.direction_compatible === undefined ? null : Number(result.direction_compatible), review!.id);
       this.#run("UPDATE tickets SET status=?,feedback=?,blocked_reason=?,blocked_from=?,revision=revision+1 WHERE id=?", status, result.findings, reason, from, author.id);
       this.#run("UPDATE tickets SET status='SUBMITTED',revision=revision+1 WHERE id=?", ctx.ticketId);
       return { review_id: review!.id, verdict: result.verdict, candidate_version_id: version.id };
@@ -233,8 +268,78 @@ export class StudioProduction {
       this.#run("UPDATE tickets SET status='READY',inputs=?,worker_id=NULL,attempt_id=NULL,lease_until=NULL,token=token+1,revision=revision+1 WHERE id=?", inputs, ticketId); return this.ticket(ticketId);
     });
   }
+  /** Trusted producer API only: workers cannot activate policies or accept versions. */
+  activateMemoirPolicy(command: SignedOperatorCommand<OperatorPayload & { action: "activate_memoir_policy"; source_inputs?: unknown }>) {
+    const p = authenticateOperator(this.root, command); id(p.id);
+    requireThat(p.action === "activate_memoir_policy", "INVALID_FORMAT_POLICY");
+    const authorization = commandJSON(p);
+    return this.#tx(() => {
+      this.project(p.project_id);
+      const previous = this.#get("SELECT * FROM format_policies WHERE project_id=?", p.project_id);
+      if (previous) { requireThat(previous.authorization === authorization, "FORMAT_POLICY_ALREADY_ACTIVATED"); return; }
+      this.#run("INSERT INTO format_policies VALUES (?,'memoir-v1-four-checkpoints',?)", p.project_id, authorization);
+    });
+  }
+  createMemoirTicket(ticketId: string, projectId: string, role: string, inputs: InputVersions, allowanceMicros: number, kind: string, criteria: string[], packet: unknown) {
+    return this.#tx(() => { this.createTicket(ticketId, projectId, role, inputs, allowanceMicros); this.#bindMemoirAssignment(ticketId, kind, criteria, packet); return this.ticket(ticketId); });
+  }
+  bindMemoirAssignment(ticketId: string, kind: string, criteria: string[], packet: unknown = {}) { return this.#tx(() => this.#bindMemoirAssignment(ticketId, kind, criteria, packet)); }
+  #bindMemoirAssignment(ticketId: string, kind: string, criteria: string[], packet: unknown) {
+    const checkpoints: Record<string, string> = { answers: "storyboard", voiceSample: "narration_performance", clone: "narration_performance", script: "storyboard", roster: "character_style", candidates: "character_style", sheet: "character_style", shotIntentions: "storyboard", shots: "storyboard", narration: "narration_performance", audition: "narration_performance", film: "final_film" };
+    const automatic = ["backgrounds", "backgroundBrief", "backgroundPrompt", "backgroundCandidates", "backgroundAngleBrief", "backgroundAnglePrompt", "backgroundAngle", "keyframePrompt", "keyframe", "videoPrompt", "video", "soundPlan", "music", "effect", "editPlan", "videoPlan", "characterPrompt", "sheetPrompt"];
+    requireThat(kind in checkpoints || automatic.includes(kind), "UNKNOWN_MEMOIR_ASSIGNMENT");
+    requireThat(criteria.length > 0 && criteria.every(c => c.trim()), "REVIEW_CRITERIA_REQUIRED");
+    {
+      const t = this.ticket(ticketId); requireThat(t.kind === "AUTHOR" && t.status === "READY", "FORMAT_BINDING_REQUIRES_READY_AUTHOR");
+      requireThat(this.#get("SELECT project_id FROM format_policies WHERE project_id=?", t.project_id), "FORMAT_POLICY_NOT_AUTHORIZED");
+      this.#run("INSERT INTO format_assignments(ticket_id,kind,checkpoint,criteria,packet) VALUES (?,?,?,?,?)", ticketId, kind, checkpoints[kind] ?? null, json(criteria), json(packet));
+    }
+  }
+  memoirPolicy(projectId: string) { const row = this.#get("SELECT * FROM format_policies WHERE project_id=?", projectId); requireThat(row, "FORMAT_POLICY_NOT_AUTHORIZED"); return JSON.parse(row!.authorization); }
+  acceptedVersion(projectId: string, versionId: string) {
+    return this.#tx(() => {
+      const seen = new Set<string>();
+      const verify = (candidate: string): Row => {
+        requireThat(!seen.has(candidate), "CYCLIC_ASSET_DEPENDENCY"); seen.add(candidate);
+        const v = this.version(candidate), t = this.ticket(v.ticket_id);
+        requireThat(t.project_id === projectId && t.status === "APPROVED" && t.candidate_id === v.id, "ACCEPTED_VERSION_REQUIRED");
+        this.#currentInputs(t); this.#verifyVersion(v);
+        requireThat(!this.memoirAssignment(t.id) || v.validation_hash === v.content_hash, "FORMAT_VALIDATION_REQUIRED");
+        requireThat(this.#get("SELECT version_id FROM policy_acceptances WHERE version_id=?", v.id) || this.#get("SELECT id FROM director_commands WHERE project_id=? AND action='decide' AND json_extract(result,'$.candidate_version_id')=? AND json_extract(result,'$.status')='APPROVED'", projectId, v.id), "ACCEPTANCE_PROVENANCE_REQUIRED");
+        for (const parent of Object.values(JSON.parse(v.inputs)) as string[]) if (this.#get("SELECT id FROM versions WHERE id=?", parent)) verify(parent);
+        seen.delete(candidate); return v;
+      };
+      return verify(versionId);
+    });
+  }
+  memoirAssignment(ticketId: string) { return this.#get("SELECT * FROM format_assignments WHERE ticket_id=?", ticketId); }
+  acceptMemoirIntermediate(ticketId: string, validate: (bytes: Buffer, kind: string) => { validator: string; artifact_hash: string }) {
+    return this.#tx(() => {
+      const t = this.ticket(ticketId), assignment = this.memoirAssignment(ticketId);
+      requireThat(assignment && assignment.checkpoint === null, "DIRECTOR_CHECKPOINT_REQUIRED");
+      requireThat(!this.project(t.project_id).paused, "PROJECT_PAUSED"); this.#currentInputs(t);
+      const v = this.version(t.candidate_id); this.#verifyVersion(v);
+      const previous = this.#get("SELECT * FROM policy_acceptances WHERE version_id=?", v.id);
+      if (previous) { requireThat(t.status === "APPROVED", "POLICY_ACCEPTANCE_CONFLICT"); return previous; }
+      requireThat(t.status === "AWAITING_APPROVAL", "NOT_AWAITING_APPROVAL");
+      const review = this.#get("SELECT * FROM reviews WHERE author_ticket=? AND version_id=? AND state='FINISHED' AND verdict='PASS'", t.id, v.id);
+      requireThat(review && review.direction_compatible === 1, "DIRECTION_COMPATIBILITY_REQUIRED");
+      requireThat(json(JSON.parse(review!.packet).criteria) === assignment!.criteria, "FORMAT_REVIEW_CRITERIA_MISMATCH");
+      const validation = validate(readFileSync(v.path), assignment!.kind);
+      requireThat(validation.validator.trim() && validation.artifact_hash === v.content_hash, "VALIDATION_HASH_MISMATCH");
+      this.#currentInputs(t); this.#verifyVersion(v);
+      this.#run("INSERT INTO policy_acceptances VALUES (?,'memoir-v1-four-checkpoints',?,?)", v.id, json(validation), this.now());
+      this.#run("UPDATE tickets SET status='APPROVED',revision=revision+1 WHERE id=?", t.id);
+      return this.#get("SELECT * FROM policy_acceptances WHERE version_id=?", v.id)!;
+    });
+  }
   approvalCard(ticketId: string) {
     return this.#tx(() => { const t = this.ticket(ticketId); requireThat(t.status === "AWAITING_APPROVAL", "NOT_AWAITING_APPROVAL"); this.#currentInputs(t); const v = this.version(t.candidate_id); this.#verifyVersion(v); return { project_id: t.project_id, ticket_id: t.id, candidate_version_id: v.id, content_hash: v.content_hash, expected_revision: t.revision }; });
+  }
+  memoirDirectorQueue(projectId: string) {
+    this.project(projectId);
+    const tickets = this.#db.prepare("SELECT t.id,f.checkpoint,f.kind FROM tickets t JOIN format_assignments f ON f.ticket_id=t.id WHERE t.project_id=? AND t.status='AWAITING_APPROVAL' ORDER BY f.checkpoint,t.id").all(projectId) as Row[];
+    return tickets.map(t => ({ checkpoint: t.checkpoint ?? "direction_exception", kind: t.kind, ...this.approvalCard(t.id) }));
   }
   #commandReplay(payload: OperatorPayload, serialized: string) { const previous = this.#get("SELECT * FROM director_commands WHERE id=?", payload.id); if (!previous) return; requireThat(previous.payload_hash === sha(Buffer.from(serialized)) && previous.principal === payload.principal, "CONFLICTING_DIRECTOR_COMMAND"); return JSON.parse(previous.result); }
   #saveCommand(command: SignedOperatorCommand<OperatorPayload & { ticket_id: string }>, serialized: string, result: unknown) {
@@ -250,10 +355,21 @@ export class StudioProduction {
       requireThat(t.project_id === p.project_id && t.status === "AWAITING_APPROVAL" && t.revision === p.expected_revision && t.candidate_id === p.candidate_version_id, "STALE_DIRECTOR_DECISION");
       this.#currentInputs(t); const v = this.version(p.candidate_version_id); this.#verifyVersion(v); requireThat(v.content_hash === p.content_hash, "STALE_DIRECTOR_DECISION");
       requireThat(this.#get("SELECT id FROM reviews WHERE author_ticket=? AND version_id=? AND state='FINISHED' AND verdict='PASS'", t.id, v.id), "INDEPENDENT_PASS_REQUIRED");
+      const binding = this.memoirAssignment(t.id);
+      if (binding) requireThat(v.validation_hash === v.content_hash, "FORMAT_VALIDATION_REQUIRED");
+      if (binding?.kind === "film") {
+        const passes = this.#db.prepare("SELECT DISTINCT json_extract(r.packet,'$.modality') AS modality,t.worker_id FROM reviews r JOIN tickets t ON t.id=r.reviewer_ticket WHERE r.author_ticket=? AND r.version_id=? AND r.verdict='PASS'").all(t.id, v.id) as Row[];
+        requireThat(passes.some(a => a.modality === "video" && passes.some(b => b.modality === "audio" && b.worker_id !== a.worker_id)), "SEPARATE_FILM_REVIEWS_REQUIRED");
+      }
+      if (binding?.kind === "candidates" && p.decision === "APPROVE") {
+        const files = JSON.parse(readFileSync(v.path, "utf8")).files;
+        requireThat(Number.isSafeInteger(p.selection) && p.selection! >= 0 && p.selection! < files.length, "EXPLICIT_CHARACTER_SELECTION_REQUIRED");
+        this.#run("UPDATE format_assignments SET selection=? WHERE ticket_id=?", p.selection!, t.id);
+      } else requireThat(p.selection === undefined, "SELECTION_NOT_APPLICABLE");
       const strikes = t.strike_count + (p.decision === "REJECT" ? 1 : 0), status = p.decision === "APPROVE" ? "APPROVED" : strikes >= t.max_strikes ? "BLOCKED" : "CHANGES_REQUESTED";
       const changed = this.#run("UPDATE tickets SET status=?,strike_count=?,feedback=?,blocked_reason=?,blocked_from=?,revision=revision+1 WHERE id=? AND status='AWAITING_APPROVAL' AND revision=? AND candidate_id=?", status, strikes, p.feedback ?? t.feedback, status === "BLOCKED" ? "REPEATED_FAILURE" : null, status === "BLOCKED" ? "CHANGES_REQUESTED" : null, t.id, p.expected_revision, p.candidate_version_id);
       requireThat(changed.changes === 1, "STALE_DIRECTOR_DECISION");
-      const result = { decision_id: p.id, ticket_id: t.id, candidate_version_id: v.id, content_hash: v.content_hash, status, revision: t.revision + 1 };
+      const result = { decision_id: p.id, ticket_id: t.id, candidate_version_id: v.id, content_hash: v.content_hash, status, revision: t.revision + 1, ...(p.selection === undefined ? {} : { selection: p.selection }) };
       this.#saveCommand(command, serialized, result); return result;
     });
   }
@@ -306,10 +422,17 @@ export class StudioProduction {
     const t = this.ticket(ctx.ticketId);
     for (const evidenceId of evidenceIds) { const e = this.#get("SELECT * FROM inspections WHERE id=?", evidenceId); requireThat(e?.ticket_id === ctx.ticketId && e.attempt_id === ctx.attemptId && e.role === t.role && e.status === "INSPECTION_COMPLETED" && e.content_hash === contentHash, "INVALID_INSPECTION_EVIDENCE"); }
   }
-  publish(ctx: WorkerLease, request: { draft_path: string; evidence_references: string[] }) {
+  /** Trusted provider/import adapter only. Workers never receive arbitrary-path publication. */
+  pinMedia(ctx: WorkerLease, bytes: Buffer, extension: string) {
+    this.#lease(ctx); requireThat(/^\.(png|jpg|jpeg|webp|wav|mp3|m4a|flac|ogg|mp4|mov)$/.test(extension), "UNSUPPORTED_MEDIA_EXTENSION");
+    const content_hash = sha(bytes), path = join(this.root, "versions", content_hash + extension);
+    this.#publishBytes(path, bytes); this.#lease(ctx); return { path, sha256: content_hash, bytes: bytes.length };
+  }
+  readDraft(ctx: WorkerLease, draftPath: string) { this.#lease(ctx); return this.#draftBytes(ctx, draftPath); }
+  publish(ctx: WorkerLease, request: { draft_path: string; evidence_references: string[]; validated_hash?: string }) {
     let bytes: Buffer, intent: Row;
     this.#tx(() => {
-      const t = this.#lease(ctx, true); requireThat(t.kind === "AUTHOR", "AUTHOR_ASSIGNMENT_REQUIRED"); bytes = this.#draftBytes(ctx, request.draft_path); const contentHash = sha(bytes); this.#evidence(ctx, request.evidence_references, contentHash);
+      const t = this.#lease(ctx, true); requireThat(t.kind === "AUTHOR", "AUTHOR_ASSIGNMENT_REQUIRED"); bytes = this.#draftBytes(ctx, request.draft_path); const contentHash = sha(bytes); requireThat(!this.memoirAssignment(t.id) || request.validated_hash === contentHash, "FORMAT_VALIDATION_REQUIRED"); requireThat(request.validated_hash === undefined || request.validated_hash === contentHash, "DRAFT_CHANGED_AFTER_VALIDATION"); this.#evidence(ctx, request.evidence_references, contentHash);
       const evidence = json([...request.evidence_references].sort());
       const previous = this.#get("SELECT * FROM publication_intents WHERE ticket_id=? AND attempt_id=?", ctx.ticketId, ctx.attemptId);
       if (previous) { requireThat(previous.content_hash === contentHash && previous.inputs === t.inputs && previous.evidence === evidence, "PUBLICATION_REPLAY_CONFLICT"); intent = previous; }
@@ -321,7 +444,7 @@ export class StudioProduction {
       this.#lease(ctx, true); this.#evidence(ctx, request.evidence_references, intent!.content_hash);
       requireThat(realpathSync(path) === path && sha(readFileSync(path)) === intent!.content_hash, "PUBLISHED_BYTES_CORRUPT");
       const previous = this.#get("SELECT * FROM versions WHERE id=?", intent!.version_id); if (previous) return previous;
-      this.#run("INSERT INTO versions VALUES (?,?,?,?,?,?,?,?)", intent!.version_id, ctx.ticketId, ctx.attemptId, intent!.content_hash, path, intent!.inputs, intent!.evidence, this.now());
+      this.#run("INSERT INTO versions(id,ticket_id,attempt_id,content_hash,path,inputs,evidence,published_at,validation_hash) VALUES (?,?,?,?,?,?,?,?,?)", intent!.version_id, ctx.ticketId, ctx.attemptId, intent!.content_hash, path, intent!.inputs, intent!.evidence, this.now(), request.validated_hash ?? null);
       this.#run("UPDATE publication_intents SET state='COMMITTED' WHERE version_id=?", intent!.version_id);
       this.#run("UPDATE tickets SET status='SUBMITTED',candidate_id=?,revision=revision+1 WHERE id=?", intent!.version_id, ctx.ticketId);
       return this.version(intent!.version_id);

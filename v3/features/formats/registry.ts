@@ -14,11 +14,14 @@ import { staticPackageFormatModule } from "./static-package";
 import { talkingFishNewsFormatModule } from "./talking-fish-news";
 import { legoMusicVideoFormatModule } from "./lego-music-video";
 
+import { memoirFilmFormatModule } from "./memoir-film";
+
 export type AnyAdFormatModule = AdFormatModule<string, any>;
 
 export const createFormatRegistry = <TModules extends Record<string, AnyAdFormatModule>>(modules: TModules) => modules;
 
 export const formatRegistry = createFormatRegistry({
+  "memoir-film": memoirFilmFormatModule,
   visualizer: visualizerFormatModule,
   meme: memeFormatModule,
   "were-sorry": wereSorryFormatModule,

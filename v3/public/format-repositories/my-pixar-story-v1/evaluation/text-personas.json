@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "id": "grounded-writing-personas-v1",
+  "caseCount": 14,
+  "scope": "Proposed semantic text cases only; no human-labelled gold, no holdout qualification and no production approval.",
+  "cases": [
+    {
+      "id": "text-01",
+      "group": "thin-tom",
+      "split": "calibration",
+      "kind": "script-facts",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "I drove my old car to work. It was mine.",
+        "draft": "That old car was mine. It made the drive feel different."
+      },
+      "label": {
+        "criterion": "facts",
+        "status": "pass",
+        "evidence": "Faithful paraphrase; no fear or age is required.",
+        "location": "draft or proposed follow-up",
+        "repair": "",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-02",
+      "group": "thin-tom",
+      "split": "calibration",
+      "kind": "script-facts",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "I drove my old car to work. It was mine.",
+        "draft": "I feared losing my job every morning."
+      },
+      "label": {
+        "criterion": "facts",
+        "status": "fail",
+        "evidence": "The source supplies no fear or threatened job loss.",
+        "location": "draft or proposed follow-up",
+        "repair": "Remove the invented fear; use the supplied ownership meaning.",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-03",
+      "group": "scientist-child",
+      "split": "calibration",
+      "kind": "script-facts",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "At eight I wanted to be a scientist. I did not know why. Mom got excited and seemed proud.",
+        "draft": "Mom\u2019s smile made my little dream feel real."
+      },
+      "label": {
+        "criterion": "facts",
+        "status": "pass",
+        "evidence": "A smile faithfully expresses the supplied encouragement.",
+        "location": "draft or proposed follow-up",
+        "repair": "",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-04",
+      "group": "scientist-child",
+      "split": "calibration",
+      "kind": "script-facts",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "At eight I wanted to be a scientist. I did not know why. Mom got excited and seemed proud.",
+        "draft": "Mom promised to buy me a laboratory."
+      },
+      "label": {
+        "criterion": "facts",
+        "status": "fail",
+        "evidence": "The draft invents a promise.",
+        "location": "draft or proposed follow-up",
+        "repair": "Remove the promise and express the sourced excitement.",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-05",
+      "group": "scientist-child",
+      "split": "calibration",
+      "kind": "script-facts",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "At eight I wanted to be a scientist. I did not know why.",
+        "draft": "I wanted to cure Mom\u2019s illness."
+      },
+      "label": {
+        "criterion": "facts",
+        "status": "fail",
+        "evidence": "The draft invents illness and a motive while removing uncertainty.",
+        "location": "draft or proposed follow-up",
+        "repair": "Preserve the uncertain reason; remove illness and the invented motive.",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-06",
+      "group": "gap-gina",
+      "split": "calibration",
+      "kind": "script-facts",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "I learned to bake with my mother when I was little.",
+        "draft": "At exactly seven I learned to bake with Mom."
+      },
+      "label": {
+        "criterion": "facts",
+        "status": "fail",
+        "evidence": "No factual age seven was supplied.",
+        "location": "draft or proposed follow-up",
+        "repair": "Use when I was little, or an already approved age clarification.",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-07",
+      "group": "gap-gina",
+      "split": "calibration",
+      "kind": "script-facts",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "At seven I learned to bake with Mom. At twenty I opened a shop.",
+        "draft": "At twenty I opened my shop. I still remembered learning beside Mom at seven."
+      },
+      "label": {
+        "criterion": "facts",
+        "status": "pass",
+        "evidence": "The ages are sourced; chronological order is optional.",
+        "location": "draft or proposed follow-up",
+        "repair": "",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-08",
+      "group": "nonna-june",
+      "split": "calibration",
+      "kind": "script-facts",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "My grandmother helped me bake. We called her Nonna.",
+        "draft": "Nonna helped me bake."
+      },
+      "label": {
+        "criterion": "facts",
+        "status": "pass",
+        "evidence": "The nickname is explicitly linked to the grandmother.",
+        "location": "draft or proposed follow-up",
+        "repair": "",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-09",
+      "group": "nonna-june",
+      "split": "calibration",
+      "kind": "script-facts",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "My grandmother helped me bake. We called her Nonna.",
+        "draft": "My sister Nonna helped me bake."
+      },
+      "label": {
+        "criterion": "facts",
+        "status": "fail",
+        "evidence": "The same name does not justify changing the relationship.",
+        "location": "draft or proposed follow-up",
+        "repair": "Restore grandmother or the grounded nickname without the incorrect relationship.",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-10",
+      "group": "quote-parent",
+      "split": "calibration",
+      "kind": "script-facts",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "Dad said, \"You can try again.\"",
+        "draft": "Dad encouraged me to try again."
+      },
+      "label": {
+        "criterion": "facts",
+        "status": "pass",
+        "evidence": "Faithful paraphrase does not claim verbatim speech.",
+        "location": "draft or proposed follow-up",
+        "repair": "",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-11",
+      "group": "gap-gina",
+      "split": "calibration",
+      "kind": "answers-completeness",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "I learned to bake with Mom. We sold rolls to neighbors.",
+        "draft": {
+          "commonSenseChecks": []
+        },
+        "optionalFields": [
+          "romantic incident",
+          "fear",
+          "cost",
+          "exact childhood age"
+        ]
+      },
+      "label": {
+        "criterion": "completeness",
+        "status": "pass",
+        "evidence": "A usable simple memory need not fill every optional invitation.",
+        "location": "draft or proposed follow-up",
+        "repair": "",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-12",
+      "group": "thin-tom",
+      "split": "calibration",
+      "kind": "answers-completeness",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "I drove my old car to work. It was mine.",
+        "draft": {
+          "commonSenseChecks": [
+            {
+              "finding": "No fear supplied. Intake blocked.",
+              "resolution": "Tell me what you were afraid of before writing can begin."
+            }
+          ]
+        }
+      },
+      "label": {
+        "criterion": "completeness",
+        "status": "fail",
+        "evidence": "A missing fear is not an essential factual gap.",
+        "location": "draft or proposed follow-up",
+        "repair": "Remove the blocker and write from the supplied memory.",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-13",
+      "group": "gap-gina-uncertain",
+      "split": "calibration",
+      "kind": "answers-completeness",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "She told him about it. That changed everything.",
+        "draft": {
+          "commonSenseChecks": [
+            {
+              "finding": "The central people, event and consequence are unclear.",
+              "resolution": "Who were she and him, and what happened?"
+            }
+          ]
+        }
+      },
+      "label": {
+        "criterion": "completeness",
+        "status": "pass",
+        "evidence": "A focused follow-up is needed to understand the central memory.",
+        "location": "draft or proposed follow-up",
+        "repair": "",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    },
+    {
+      "id": "text-14",
+      "group": "gap-gina-uncertain",
+      "split": "calibration",
+      "kind": "script-facts",
+      "origin": "invented product-policy scenario; proposed labels need human confirmation",
+      "input": {
+        "source": "I cannot remember whether it was Mom or my aunt who taught me to bake.",
+        "draft": "Mom taught me to bake."
+      },
+      "label": {
+        "criterion": "facts",
+        "status": "fail",
+        "evidence": "The draft turns an explicitly uncertain identity into a fact.",
+        "location": "draft or proposed follow-up",
+        "repair": "Keep the uncertainty or use a truthful non-specific relationship description.",
+        "authority": "agent-provisional",
+        "confirmed": false
+      }
+    }
+  ]
+}

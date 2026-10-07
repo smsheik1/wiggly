@@ -4,7 +4,7 @@ import type { ThreeDBreakdownStorySubject } from "../formats/three-d-breakdown/s
 export const AD_SCENE_VERSION = 1 as const;
 
 export type AdFormatId = "visualizer" | "meme" | "were-sorry" | "video-meme" | "jingle" | "text-message" | "brainrot" | "reviews" | "motion-story" | "three-d-breakdown";
-export type RenderableAdFormatId = AdFormatId | "static-package" | "talking-fish-news" | "lego-music-video";
+export type RenderableAdFormatId = AdFormatId | "memoir-film" | "static-package" | "talking-fish-news" | "lego-music-video";
 
 export type HeadlineType =
   | "painful_moment"
@@ -632,4 +632,11 @@ export type AdScene =
   | MotionStoryAdScene
   | ThreeDBreakdownAdScene;
 
-export type RenderableAdScene = AdScene | StaticPackageAdScene | TalkingFishNewsProofScene | LegoMusicVideoAdScene;
+export type MemoirFilmAdScene = AdSceneBase<
+  "memoir-film", AdSceneStyleBase, {
+    preset: "memoir-film"; durationMs: 60000; fps: 30; manifestDigest: string;
+    clips: Array<{ id: string; src: string; startFrame: number; durationFrames: number; sourceOffsetSeconds: number }>;
+  }
+>;
+
+export type RenderableAdScene = MemoirFilmAdScene | AdScene | StaticPackageAdScene | TalkingFishNewsProofScene | LegoMusicVideoAdScene;

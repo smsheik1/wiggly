@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "scope": "deterministic binding and routing regression; not actual media perception or qualification",
+  "provenance": "Invented personas and planted protocol observations only; no human adjudication, model outputs or real media labels",
+  "cases": [
+    {
+      "id": "usable-alex",
+      "persona": "Alex (invented adult)",
+      "kind": "review",
+      "criterion": "anatomy",
+      "status": "pass",
+      "perception": "direct-image",
+      "expected": "human",
+      "evidence": "ISOLATED all checks passing control"
+    },
+    {
+      "id": "alex-third-hand",
+      "persona": "Alex (invented adult)",
+      "kind": "review",
+      "criterion": "anatomy",
+      "status": "fail",
+      "perception": "direct-image",
+      "expected": "repair",
+      "evidence": "ISOLATED scripted observation: third hand at steering wheel",
+      "repair": "Keep two attached arms and both hand contacts"
+    },
+    {
+      "id": "alex-prop-contact",
+      "persona": "Alex (invented adult)",
+      "kind": "review",
+      "criterion": "staging",
+      "status": "fail",
+      "perception": "direct-image",
+      "expected": "repair",
+      "evidence": "ISOLATED scripted observation: floating hand beside bicycle",
+      "repair": "Place the hand against the handlebar"
+    },
+    {
+      "id": "mia-age-swap",
+      "persona": "Mia (invented child), substituted for Alex",
+      "kind": "binding",
+      "mutation": "age",
+      "expected": "blocked"
+    },
+    {
+      "id": "rowan-identity-swap",
+      "persona": "Rowan (invented adult), substituted for Alex",
+      "kind": "binding",
+      "mutation": "identity",
+      "expected": "blocked"
+    },
+    {
+      "id": "wrong-reference-order",
+      "persona": "Alex (invented adult)",
+      "kind": "binding",
+      "mutation": "order",
+      "expected": "blocked"
+    },
+    {
+      "id": "stale-reference",
+      "persona": "Alex (invented adult)",
+      "kind": "binding",
+      "mutation": "hash",
+      "expected": "blocked"
+    },
+    {
+      "id": "changed-geography",
+      "persona": "Alex (invented adult)",
+      "kind": "review",
+      "criterion": "setting-continuity",
+      "status": "fail",
+      "perception": "direct-image",
+      "expected": "repair",
+      "evidence": "ISOLATED scripted observation: doorway moves to wrong wall",
+      "repair": "Restore the approved room geography"
+    },
+    {
+      "id": "malformed-text",
+      "persona": "Alex (invented adult)",
+      "kind": "review",
+      "criterion": "scene-fit",
+      "status": "fail",
+      "perception": "direct-image",
+      "expected": "repair",
+      "evidence": "ISOLATED scripted observation: meaningless letters on a story-critical sign",
+      "repair": "Make the intended sign readable or stage it out with approved intent"
+    },
+    {
+      "id": "unavailable-perception",
+      "persona": "Alex (invented adult)",
+      "kind": "review",
+      "criterion": "anatomy",
+      "status": "inconclusive",
+      "perception": "unavailable",
+      "expected": "escalate",
+      "evidence": "ISOLATED tool unavailable"
+    }
+  ]
+}

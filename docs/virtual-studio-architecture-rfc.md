@@ -1,6 +1,6 @@
 # Wiggly Agent Studio — Architecture Specification v5
 
-**Status:** Phases 1–5 completed in isolation. Phase 5 passes 61 checks and two concurrent author publications with exact-version independent reviews. The director authorized one review recovery and six total turns without resetting the candidate, attempt, or $5 budget. Decart is the primary; Sail is a text-only backup. Full studio production remains paused. Phase 6, migration, and production resume have not started.
+**Status:** Phases 1–6 completed in isolation. Phase 6 connects native Deep Agents assignments and independent review to SQLite-authoritative Memoir Film validation, director checkpoints and official rendering. Full studio production remains paused; migration and production resume have not occurred.
 **Objective:** Build an agent-operated animation studio with shared materials, autonomous specialists, independent review, and clear director control.
 
 ---
@@ -327,3 +327,22 @@ Phase 5 is complete in isolation: 61 tests and typecheck pass; two live author r
 The original $5 ledger accounts for $0.937001 including $0.898761 held for unresolved billing, $0.018240 OpenRouter-reported allowance consumption rounded per request, and $0.02 estimated Muse consumption. $4.062999 remains. These are allowance records, not verified invoice charges. No images were regenerated and all 313 saved production files match their baseline, with no new files. The isolated test and saved production remain paused. No director approvals were issued in the test.
 
 Decart is the primary execution/inspection route; Sail is a tested text-only backup and is excluded from image requests. NIM/Kimi reliability remains unresolved after three diagnostics. Full LangGraph checkpoint recovery and production integration remain later work. Phase 6, migration, and production resume have not started. Requirement-by-requirement evidence and linked LangSmith traces are in `docs/proofs/studio-phase5-concurrency.json`.
+
+## Phase 6 completion — October 7, 2026
+
+The opt-in SQL Memoir adapter now reuses the existing Format recipes, skills, validators,
+media inspection and official passive renderer. It preserves four director checkpoint
+groups, exact-version intermediate acceptance and separate visual/audio final reviews.
+Immutable media, scoped input keys and recursive version checks protect publication.
+
+Two isolated synthetic scenarios produced complete 60-second exports and portable Player
+bundles; actual frames, trims, browser controls and scene/export identity were checked.
+The live Deep Agents editor published in seven turns; independent text review passed in
+ten total turns after authorized extensions. Fixes bind trusted inspection receipts and
+include the requested revision outcome in the review packet. Combined reported usage
+was $0.014838156, within the $0.10 authorized cap. Production's 313 files remain unchanged.
+
+Public `/s` integration, actual creative audiovisual acceptance, full checkpoint replay
+and production cutover are not proved by this checkpoint. No migration or resume is
+authorized by completion. Earlier status paragraphs describe historical checkpoints.
+Evidence and explicit limitations: `docs/proofs/studio-phase6-film-integration.json`.

@@ -1,0 +1,136 @@
+{
+  "status": "PHASE6_ISOLATED_INTEGRATION_PASS",
+  "date": "2026-10-07",
+  "production_paused": true,
+  "migration_performed": false,
+  "implementation": {
+    "harness": "TypeScript Deep Agents + LangGraph",
+    "authority": "SQLite schema 5",
+    "format": "Memoir Film 2.0.0 opt-in adapter",
+    "rendering": "official passive AdRenderSurface, complete scene, export and portable Player bundle",
+    "observability": "LangSmith linked author/reviewer traces"
+  },
+  "live": {
+    "status": "LIVE_TEXT_AUTHOR_REVIEW_PASS",
+    "model": "deepseek/deepseek-v4.1-flash",
+    "provider": "decart/fp4",
+    "allowance": {
+      "limit": 97334,
+      "used": 12186,
+      "remaining": 85148,
+      "overrunMicros": 0
+    },
+    "original_trial_used_micros": 2666,
+    "combined_phase6_used_micros": 14852,
+    "receipts": [
+      {
+        "ticket": "phase6-live-editor",
+        "run_id": "cd9db2e3-ae97-49ae-872c-3da1960a02a5",
+        "responses": [
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-editor/872144c1-23c8-4408-8a1e-0d09039c469a/response-301d2378-910b-40c4-bcea-9d0d88ded721.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-editor/872144c1-23c8-4408-8a1e-0d09039c469a/response-b8770343-8039-4398-a232-16b5b8958441.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-editor/872144c1-23c8-4408-8a1e-0d09039c469a/response-ebed8a6f-3e0a-4e5d-889a-352f424e49db.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-editor/872144c1-23c8-4408-8a1e-0d09039c469a/response-73ba1887-156a-40d5-a062-b7479db66d9c.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-editor/872144c1-23c8-4408-8a1e-0d09039c469a/response-6283c294-8f1a-44cb-9133-a70e20442f0e.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-editor/872144c1-23c8-4408-8a1e-0d09039c469a/response-e81ce4d0-900f-4b40-9cfc-aaad5b404554.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-editor/872144c1-23c8-4408-8a1e-0d09039c469a/response-cd6edf2a-6d43-4d69-8794-ba0d613beed9.json"
+        ],
+        "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/cd9db2e3-ae97-49ae-872c-3da1960a02a5?poll=true"
+      },
+      {
+        "ticket": "phase6-live-review",
+        "run_id": "06949ee0-460e-45af-a8be-ace231999d0c",
+        "responses": [
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-review/24079fb5-379e-4bf9-8ac8-1478ae13c933/response-28f7d33b-ff1f-4449-8de9-47a2ec9c4f59.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-review/24079fb5-379e-4bf9-8ac8-1478ae13c933/response-8248fb2d-bae9-4b53-9ac0-5d626dcbe85e.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-review/24079fb5-379e-4bf9-8ac8-1478ae13c933/response-6d47a627-0286-4b9e-9c9c-62cc609874c1.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-review/24079fb5-379e-4bf9-8ac8-1478ae13c933/response-c274b469-7482-4905-83a5-af2a4d36137e.json"
+        ],
+        "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/06949ee0-460e-45af-a8be-ace231999d0c?poll=true"
+      },
+      {
+        "ticket": "phase6-live-review",
+        "run_id": "5196fd3a-4c5f-449d-916d-0dcf9f64983b",
+        "responses": [
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-review/24079fb5-379e-4bf9-8ac8-1478ae13c933/response-df09042b-a458-48b2-a2d5-6bde05a274df.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-review/24079fb5-379e-4bf9-8ac8-1478ae13c933/response-dcd95500-36da-42d2-89a3-f7bc8e9f3f65.json"
+        ],
+        "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/5196fd3a-4c5f-449d-916d-0dcf9f64983b?poll=true"
+      },
+      {
+        "ticket": "phase6-live-review",
+        "run_id": "32362aa0-4ea4-4310-bccd-38b1ac09c9de",
+        "responses": [
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-review/24079fb5-379e-4bf9-8ac8-1478ae13c933/response-97ff3d3f-ec8e-4564-9217-8bc581d15b77.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-review/24079fb5-379e-4bf9-8ac8-1478ae13c933/response-7108c668-6c42-4d9b-b3b6-a78d2f81ffbb.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-review/24079fb5-379e-4bf9-8ac8-1478ae13c933/response-16810a23-514a-4781-af2b-e599ad8f172b.json",
+          "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818/assignments/phase6-live-review/24079fb5-379e-4bf9-8ac8-1478ae13c933/response-c09ddc6f-a74b-486a-b506-682953e2655d.json"
+        ],
+        "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/32362aa0-4ea4-4310-bccd-38b1ac09c9de?poll=true"
+      }
+    ],
+    "candidate_version_id": "6498a90b-7870-4d40-9879-09a2dc078388",
+    "candidate_hash": "a38a1865e6cc340574b0ed54519442e31c5e010bc22859d6183690aed4e6bdf3",
+    "new_media_calls": 0,
+    "director_approved": false
+  },
+  "validation": {
+    "studio_checks": 76,
+    "legacy_format_checks": 238,
+    "typechecks": [
+      "studio harness",
+      "v3 app"
+    ],
+    "renderer_contracts": true,
+    "browser": [
+      "Player play/pause and mute",
+      "source trim .5 seconds",
+      "16:9 dimensions and no overflow"
+    ],
+    "full_exports": {
+      "scenarios": [
+        "parent",
+        "grandparent"
+      ],
+      "duration_seconds": 60,
+      "resolution": "1920x1080",
+      "fps": 30,
+      "actual_clip_frames_checked": 16
+    },
+    "fixtures": "Explicit static color video and sine audio; scripted author, mock media reviews and mock director decisions. Not creative film acceptance."
+  },
+  "regressions": [
+    "runtime-bound inspection receipts",
+    "review packet includes requested outcome",
+    "exact scoped asset keys",
+    "approved revision retains immutable predecessor history while changed upstream inputs reject",
+    "separate visual/audio reviewers",
+    "explicit character selection",
+    "draft mutation invalidates validation"
+  ],
+  "usage": {
+    "phase6_allowance_consumption_micros": 14852,
+    "phase6_provider_reported_usd": 0.014838156,
+    "verified_invoice_charge": null,
+    "authorized_cap_micros": 100000,
+    "original_5_dollar_remaining_micros": 4048147,
+    "phase5_unknown_reservations_micros": 898761
+  },
+  "preservation": {
+    "files": 313,
+    "unchanged": true,
+    "none_added": true,
+    "baseline_sha256": "9d857f03119e18cb74d4368d843228395fc4d9cd30807f80ed06aac6318e0d26",
+    "production_resumed": false
+  },
+  "archive_sha256": "bb325df5475617628394527945b215de6d92334fb5459ddfeea289530d7a8724",
+  "local_artifacts": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase6/proof-1791410206818",
+  "limitations": [
+    "Public /s upload/integration is not implemented; sharing proof covers portable official Player bundle.",
+    "Live gate proves text edit/review/policy acceptance; media perception quality and actual creative film approval remain unproven.",
+    "Live candidate accepted, not promoted into saved production. Revision head promotion is covered by isolated regression tests.",
+    "Full LangGraph checkpoint replay and NVIDIA reliability remain unproven.",
+    "Dependency inputs are explicit recipe inputs; minimal semantic invalidation across all stages is not claimed."
+  ],
+  "fresh_agent_review": "Read-only fresh-agent documented setup/test proof and correctness review; no external calls."
+}

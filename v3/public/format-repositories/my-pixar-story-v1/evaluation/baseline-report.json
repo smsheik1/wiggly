@@ -1,0 +1,830 @@
+{
+  "schemaVersion": 1,
+  "datasetId": "memoir-starter-v1",
+  "datasetDigest": "fd60ad0733afa465439c48893095fc83820126954ce67eb949d0244e0d92fa1b",
+  "split": "all",
+  "cases": 22,
+  "evaluatedAt": "2026-10-01T23:04:14.665Z",
+  "apiCalls": 0,
+  "credentialsRead": false,
+  "productionApproval": false,
+  "productionStateMutated": false,
+  "metrics": {
+    "duration": {
+      "cases": 14,
+      "expectedDefects": 2,
+      "flaggedDefects": 2,
+      "missedDefects": 0,
+      "falseApprovals": 0,
+      "incorrectRejections": 0,
+      "unresolved": 0,
+      "scopedMatches": 14
+    },
+    "composition": {
+      "cases": 2,
+      "expectedDefects": 2,
+      "flaggedDefects": 2,
+      "missedDefects": 0,
+      "falseApprovals": 0,
+      "incorrectRejections": 0,
+      "unresolved": 0,
+      "scopedMatches": 2
+    },
+    "review-evidence": {
+      "cases": 2,
+      "expectedDefects": 2,
+      "flaggedDefects": 2,
+      "missedDefects": 0,
+      "falseApprovals": 0,
+      "incorrectRejections": 0,
+      "unresolved": 0,
+      "scopedMatches": 2
+    },
+    "anatomy": {
+      "cases": 1,
+      "expectedDefects": 1,
+      "flaggedDefects": 0,
+      "missedDefects": 1,
+      "falseApprovals": 0,
+      "incorrectRejections": 0,
+      "unresolved": 1,
+      "scopedMatches": 0
+    },
+    "structure": {
+      "cases": 2,
+      "expectedDefects": 0,
+      "flaggedDefects": 0,
+      "missedDefects": 0,
+      "falseApprovals": 0,
+      "incorrectRejections": 0,
+      "unresolved": 0,
+      "scopedMatches": 2
+    },
+    "voice-match": {
+      "cases": 1,
+      "expectedDefects": 0,
+      "flaggedDefects": 0,
+      "missedDefects": 0,
+      "falseApprovals": 0,
+      "incorrectRejections": 0,
+      "unresolved": 1,
+      "scopedMatches": 1
+    }
+  },
+  "results": [
+    {
+      "caseId": "eminem-pixar-v1-raw-audio-1",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 8.4 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 1",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "eminem-pixar-v1-raw-audio-1",
+        "inputDigest": "18697805fa545626bffc22a81940b7e83b276a872e5febcc1ad0b941f2ff3a03",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 8.4s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "eminem-pixar-v1-raw-audio-2",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 6.08 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 2",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "eminem-pixar-v1-raw-audio-2",
+        "inputDigest": "1e2296224468850419d35c1da04c02f195b35b61b8a34b700ec405bd898164dd",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 6.08s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "eminem-pixar-v1-raw-audio-3",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 6.0 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 3",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "eminem-pixar-v1-raw-audio-3",
+        "inputDigest": "6561b38ebac6bfd6ef1d3d4d91ba6e3fb44d360318be66553a1916a3c6cc5e29",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 6s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "eminem-pixar-v1-raw-audio-4",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 7.0 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 4",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "eminem-pixar-v1-raw-audio-4",
+        "inputDigest": "fceaa5fa6f90d3d8cf592a06d84985aa7a8476ac9e87523fa3a05d33f345dc90",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 7s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "eminem-pixar-v1-raw-audio-5",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 6.56 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 5",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "eminem-pixar-v1-raw-audio-5",
+        "inputDigest": "0a111261e9108677b429e3cee1220cc59130e0edcfc714702379adc015c7488c",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 6.56s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "eminem-pixar-v1-fitted-audio-1",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 12.4 seconds. Compared to the explicit v2 15-second maximum only; this does not judge the original legacy run.",
+        "location": "whole fitted stem 1",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "eminem-pixar-v1-fitted-audio-1",
+        "inputDigest": "f79d9a226f20dcadebc1951009f9579279f8c04238acd87e7895f2efb454bd90",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 12.4s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "eminem-pixar-v1-fitted-audio-2",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 12.4 seconds. Compared to the explicit v2 15-second maximum only; this does not judge the original legacy run.",
+        "location": "whole fitted stem 2",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "eminem-pixar-v1-fitted-audio-2",
+        "inputDigest": "62379d63571f2673f402121af5ab4d679cba51b5c85bf35423a2ab3075f210e1",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 12.4s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "eminem-pixar-v1-composition-v2",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "expected": {
+        "criterion": "composition",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "Saved legacy manifest contains five 20-second scenes and totalDurationSeconds 100. It is incompatible with the explicit new v2 contract, not proof its old contract was defective.",
+        "location": "scenes and totalDurationSeconds",
+        "repair": "Author a new four-beat script for v2; never silently migrate the legacy run."
+      },
+      "prediction": {
+        "caseId": "eminem-pixar-v1-composition-v2",
+        "inputDigest": "8835da9f0fc6a9489dfdfab0dbe87480ac7ca5c76eecda2352f990a141ca0137",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "composition",
+          "status": "fail",
+          "evidence": "5 beats, durations [20,20,20,20,20], total 100; explicit target is 4 × 15 = 60.",
+          "location": "manifest timeline",
+          "repair": "Create a separately approved script satisfying the target; never silently migrate legacy state."
+        },
+        "basis": {
+          "mode": "direct-structured-text",
+          "mediaVerified": false,
+          "scope": "composition"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "eminem-pixar-v1-review-evidence",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "expected": {
+        "criterion": "review-evidence",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "This saved approval lacks per-criterion localized checks and a declared direct-perception basis required for v2. A historical approved token is not a usable v2 evaluation label.",
+        "location": "state.json reviews[0]",
+        "repair": "Obtain a new directly perceived, criterion-specific review without promoting legacy approvals."
+      },
+      "prediction": {
+        "caseId": "eminem-pixar-v1-review-evidence",
+        "inputDigest": "44d3d091c155cfb03cdbd2c4fb208fa511d83efb057cb4ee8873359a1f104940",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "review-evidence",
+          "status": "fail",
+          "evidence": "Review lacks a complete valid evidence/perception/repair contract; an approval token is not sufficient.",
+          "location": "review record",
+          "repair": "Obtain a qualified reviewer with one localized finding per required criterion."
+        },
+        "basis": {
+          "mode": "direct-structured-text",
+          "mediaVerified": false,
+          "scope": "review-evidence"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "steve-jobs-pixar-v1-raw-audio-1",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 12.0 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 1",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "steve-jobs-pixar-v1-raw-audio-1",
+        "inputDigest": "987a5d1e8b99645ffbf8445e69fe7299b21c5d4102f5b65cc68360fdd07d6d73",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 12s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "steve-jobs-pixar-v1-raw-audio-2",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 13.12 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 2",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "steve-jobs-pixar-v1-raw-audio-2",
+        "inputDigest": "bd5a9d4739428832ff9b3ebb9aab4be67fcf0ae87744f9234ea2e1b89d2b83d7",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 13.12s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "steve-jobs-pixar-v1-raw-audio-3",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 12.8 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 3",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "steve-jobs-pixar-v1-raw-audio-3",
+        "inputDigest": "69dbf1c490b51a617e87be8a9c0cfb74fdad4d58478b66cb7eb24ef9819e607d",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 12.8s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "steve-jobs-pixar-v1-raw-audio-4",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 8.56 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 4",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "steve-jobs-pixar-v1-raw-audio-4",
+        "inputDigest": "954c5fe03b340c448c0e0b33335db9cdd3884cad937bfc27958ec8d04151673c",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 8.56s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "steve-jobs-pixar-v1-raw-audio-5",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "expected": {
+        "criterion": "duration",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 12.0 seconds, within the explicit v2 15-second maximum. This is a timing-only label; sound/voice quality is not assessed.",
+        "location": "whole audio stem 5",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "steve-jobs-pixar-v1-raw-audio-5",
+        "inputDigest": "8a6011395b4fdcbab1b06aad6304f747f6140c199ee95ffe055fd308b874b6ec",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "pass",
+          "evidence": "Saved measurement snapshot duration 12s; maximum 15s.",
+          "location": "whole stem",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "steve-jobs-pixar-v1-fitted-audio-1",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "expected": {
+        "criterion": "duration",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 15.041678 seconds. Compared to the explicit v2 15-second maximum only; this does not judge the original legacy run.",
+        "location": "whole fitted stem 1",
+        "repair": "Return affected text/timing to the writer; preserve natural speed and every spoken word."
+      },
+      "prediction": {
+        "caseId": "steve-jobs-pixar-v1-fitted-audio-1",
+        "inputDigest": "780c62d4f3aa770aed1c337c8e5da8af75e44131d20e33e06e6872ab7e67d6e3",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "fail",
+          "evidence": "Saved measurement snapshot duration 15.041678s; maximum 15s.",
+          "location": "whole stem",
+          "repair": "Return affected copy/timing to the writer; never speed narration up or truncate words."
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "steve-jobs-pixar-v1-fitted-audio-2",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "expected": {
+        "criterion": "duration",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "ffprobe measured 15.041678 seconds. Compared to the explicit v2 15-second maximum only; this does not judge the original legacy run.",
+        "location": "whole fitted stem 2",
+        "repair": "Return affected text/timing to the writer; preserve natural speed and every spoken word."
+      },
+      "prediction": {
+        "caseId": "steve-jobs-pixar-v1-fitted-audio-2",
+        "inputDigest": "6a7401d591fb49b67b27d64a236c8f7bb4aa8a1e2fd28ed7ebdab06bf56b779b",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "duration",
+          "status": "fail",
+          "evidence": "Saved measurement snapshot duration 15.041678s; maximum 15s.",
+          "location": "whole stem",
+          "repair": "Return affected copy/timing to the writer; never speed narration up or truncate words."
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "duration"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "steve-jobs-pixar-v1-composition-v2",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "expected": {
+        "criterion": "composition",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "Saved legacy manifest contains five 20-second scenes and totalDurationSeconds 100. It is incompatible with the explicit new v2 contract, not proof its old contract was defective.",
+        "location": "scenes and totalDurationSeconds",
+        "repair": "Author a new four-beat script for v2; never silently migrate the legacy run."
+      },
+      "prediction": {
+        "caseId": "steve-jobs-pixar-v1-composition-v2",
+        "inputDigest": "1f4f4ad4b63941e4852d210e6d4b5a394e97b49723921ac86f94e0bee8ed5ff8",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "composition",
+          "status": "fail",
+          "evidence": "5 beats, durations [20,20,20,20,20], total 100; explicit target is 4 × 15 = 60.",
+          "location": "manifest timeline",
+          "repair": "Create a separately approved script satisfying the target; never silently migrate legacy state."
+        },
+        "basis": {
+          "mode": "direct-structured-text",
+          "mediaVerified": false,
+          "scope": "composition"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "steve-jobs-pixar-v1-review-evidence",
+      "group": "steve-legacy",
+      "split": "holdout",
+      "expected": {
+        "criterion": "review-evidence",
+        "status": "fail",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "This saved approval lacks per-criterion localized checks and a declared direct-perception basis required for v2. A historical approved token is not a usable v2 evaluation label.",
+        "location": "state.json reviews[0]",
+        "repair": "Obtain a new directly perceived, criterion-specific review without promoting legacy approvals."
+      },
+      "prediction": {
+        "caseId": "steve-jobs-pixar-v1-review-evidence",
+        "inputDigest": "5be0057972348c219bc5bbd0f6410d189ddb1e31792d98773ea2c21d39e48714",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "review-evidence",
+          "status": "fail",
+          "evidence": "Review lacks a complete valid evidence/perception/repair contract; an approval token is not sufficient.",
+          "location": "review record",
+          "repair": "Obtain a qualified reviewer with one localized finding per required criterion."
+        },
+        "basis": {
+          "mode": "direct-structured-text",
+          "mediaVerified": false,
+          "scope": "review-evidence"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "eminem-driving-extra-hand",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "expected": {
+        "criterion": "anatomy",
+        "status": "fail",
+        "authority": "direct-frame-inspection",
+        "confirmed": true,
+        "evidence": "Directly inspected source frame at t=5.0s: hand on upper steering-wheel rim, a separate microphone-holding hand, and another hand at lower wheel rim, all belonging to the single driver. Matches the defect discussed with the user.",
+        "location": "t=5.0s, steering wheel and microphone",
+        "repair": "Regenerate only under an authorized technical-repair allowance; simplify hand/prop action and re-inspect."
+      },
+      "prediction": {
+        "caseId": "eminem-driving-extra-hand",
+        "inputDigest": "c9787a721d6eaaab52ebb4838932429df0345bc306c83346b110b0208dea3a69",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "anatomy",
+          "status": "inconclusive",
+          "evidence": "File/metadata verification cannot detect extra limbs. A qualified video/frame reviewer must inspect actual media and provide localized evidence.",
+          "location": "whole artifact",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "anatomy"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "grandma-host-script-v1",
+      "group": "grandma-proof",
+      "split": "calibration",
+      "expected": {
+        "criterion": "structure",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "Actual host-authored acceptance draft has four ordered 15-second beat declarations with narration, emotional purposes and cited questionnaire sources. Structural pass only; source person and human approvals were isolated fixtures.",
+        "location": "beats 1–4",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "grandma-host-script-v1",
+        "inputDigest": "4b1948afd8f5f3fc1577cdba89de6b9197ad1a36f464cdbca6e307cff8164467",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "structure",
+          "status": "pass",
+          "evidence": "Four ordered 15-second beats with narration, emotional purpose and source citations satisfy the script schema.",
+          "location": "beats 1–4",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "direct-structured-text",
+          "mediaVerified": false,
+          "scope": "structure"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "grandma-host-script-v2",
+      "group": "grandma-proof",
+      "split": "calibration",
+      "expected": {
+        "criterion": "structure",
+        "status": "pass",
+        "authority": "objective",
+        "confirmed": true,
+        "evidence": "Actual host-authored acceptance draft has four ordered 15-second beat declarations with narration, emotional purposes and cited questionnaire sources. Structural pass only; source person and human approvals were isolated fixtures.",
+        "location": "beats 1–4",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "grandma-host-script-v2",
+        "inputDigest": "4a2824927e49816ff36c4697b2702193ab3e5858db0e9cf7ae05269302a747b6",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "structure",
+          "status": "pass",
+          "evidence": "Four ordered 15-second beats with narration, emotional purpose and source citations satisfy the script schema.",
+          "location": "beats 1–4",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "direct-structured-text",
+          "mediaVerified": false,
+          "scope": "structure"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    },
+    {
+      "caseId": "eminem-voice-likeness-unresolved",
+      "group": "eminem-legacy",
+      "split": "calibration",
+      "expected": {
+        "criterion": "voice-match",
+        "status": "inconclusive",
+        "authority": "capability-audit",
+        "confirmed": true,
+        "evidence": "No genuine storyteller sample/consent with a matching measured comparison was supplied for this evaluator task. Existing audio alone cannot establish voice likeness.",
+        "location": "whole stem",
+        "repair": ""
+      },
+      "prediction": {
+        "caseId": "eminem-voice-likeness-unresolved",
+        "inputDigest": "9de5aa9f06c94df36d4841484ca7d93bc01ef4a919cdf2104f4d27d9b9e8bb5a",
+        "evaluator": "local-rules-1",
+        "check": {
+          "criterion": "voice-match",
+          "status": "inconclusive",
+          "evidence": "No qualified direct listening and calibrated speaker comparison against the genuine reference sample are available.",
+          "location": "whole artifact",
+          "repair": ""
+        },
+        "basis": {
+          "mode": "snapshot-or-unavailable",
+          "mediaVerified": false,
+          "scope": "voice-match"
+        },
+        "measurements": null,
+        "productionApproval": false
+      },
+      "scored": true
+    }
+  ],
+  "qualification": {
+    "semanticScriptJudge": false,
+    "voiceJudge": false,
+    "anatomyJudge": false,
+    "reason": "Small scoped dataset; no calibrated live judge, held-out anatomy defect or human semantic labels. Do not activate automatic model-based production acceptance."
+  }
+}

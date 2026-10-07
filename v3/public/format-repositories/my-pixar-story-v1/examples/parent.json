@@ -1,0 +1,10 @@
+{
+  "subject": {"fullName":"Alex Rivera","preferredName":"Alex","recipientName":"Mia","relationshipToRecipient":"parent"},
+  "answers": {
+    "scene1Childhood":{"memory":"I learned to fix bicycles with my dad in our Ohio garage. We laughed when the bell fell off."},
+    "scene2TeenFreedom":{"memory":"My first ride alone ended with a flat tire. Dad came to help, without lecturing."},
+    "scene3LeapOfFaith":{"memory":"Years later I opened a tiny bike shop. I was scared, but Dad helped paint the sign."},
+    "scene4Romance":{"memory":"Your mom brought coffee on opening day. We ate sandwiches on the floor."},
+    "scene5LegacyFinale":{"memory":"Mia, now I hold your bicycle steady. Falling is okay. We can always try again together."}
+  }
+}

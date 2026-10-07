@@ -1,0 +1,3 @@
+Read SKILL.md before operating this Format. Use runner.mjs as the only v2 workflow entry point. Do not use a sibling app checkout, legacy runner, or old state.json. Do not invent approvals or media-review evidence.
+
+Crew procedure files live in crew/<name>/SKILL.md; independent reviewer rubrics live in evaluation/rubrics; studio.json selects defaults and narrows the role permission ceiling; orchestrator-voice.md defines human communication. The runtime loads and snapshots them for new projects. Do not bypass these task packets with current editable files or copy reviewer procedures into author skills. Historical projects remain on their compatible path.

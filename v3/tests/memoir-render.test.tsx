@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {AdRenderSurface} from '../features/render/AdRenderSurface';
+import {RenderAssetProvider} from '../features/render/RenderAssetContext';
+import {validateMemoirFilmScene} from '../features/formats/memoir-film';
+import {getAdSceneDimensions,getAdSceneDurationInFrames} from '../remotion-entry/Root';
+import type {MemoirFilmAdScene} from '../features/scene/types';
+import {execFileSync} from 'node:child_process';
+import {resolve} from 'node:path';
+const manifest={clips:[{id:'first',durationSeconds:1},{id:'second',durationSeconds:59}],edit:{clips:[{sourceOffsetSeconds:1},{sourceOffsetSeconds:0}]}};
+// The archived renderer has its own locked runtime; keep it isolated from app React/Remotion.
+const scene=JSON.parse(execFileSync(process.execPath,['--input-type=module','-e',`import {compositionScene} from './runtime/remotion.mjs'; console.log(JSON.stringify(compositionScene(${JSON.stringify(manifest)},['/first.mp4','/second.mp4'],'/mix.wav')));`],{cwd:resolve('public/format-repositories/my-pixar-story-v1'),encoding:'utf8'})) as MemoirFilmAdScene;
+assert.equal(validateMemoirFilmScene(scene).valid,true);
+assert.deepEqual(getAdSceneDimensions(scene),{width:1920,height:1080});assert.equal(getAdSceneDurationInFrames(scene,30),1800);
+const render=(t:number)=>renderToStaticMarkup(<RenderAssetProvider Image={()=>null} Video={props=><span data-src={props.src} data-offset={props.sourceOffsetSeconds} data-time={props.clipTimeSeconds}/> }><AdRenderSurface scene={scene} timeSeconds={t}/></RenderAssetProvider>);
+assert.match(render(0),/data-src="\/first.mp4" data-offset="1" data-time="1"/);
+assert.match(render(1),/data-src="\/second.mp4"/);assert.doesNotMatch(render(1),/first.mp4/);
+const gap=structuredClone(scene);gap.layout.clips[1].startFrame=31;assert.equal(validateMemoirFilmScene(gap).valid,false);
+const silent=structuredClone(scene);silent.audio={status:'none',transcript:'',captions:[]};assert.equal(validateMemoirFilmScene(silent).valid,false);
+console.log('memoir render contract/parity tests passed');

@@ -324,3 +324,79 @@ All 313 saved production files still match the baseline, and both saved producti
 the isolated trial remain paused. See `docs/proofs/studio-phase5-concurrency.json`.
 The director authorized four major creative approval checkpoints; their explicit format
 policy will be integrated during Phase 6, not applied to these test artifacts.
+
+## Phase 6 — opt-in SQL Memoir integration
+
+The director authorized Phase 6 in this chat. Real saved production remains paused;
+there is no migration, public upload, or cutover. This integration is a host-operated
+API, not a replacement for the historical package's legacy runner.
+
+From this directory, with Node 22.13+ and FFmpeg/ffprobe installed:
+
+```sh
+npm ci
+npm run phase6:setup
+npm run test:phase6
+npm run phase6:proof
+```
+
+Setup verifies `format-packages/memoir-v2.0.0.tgz` SHA-256, extracts only its official
+renderer, installs the Format's locked dependencies, and runs its free packaged smoke.
+The proof uses two different example inputs, scripted local operating agents, static
+color clips, sine tones, and clearly labeled mock review/director decisions. It makes
+zero provider calls. It renders actual 60-second films and exercises the final
+approval gate and portable share bundle. These fixtures prove integration and
+technical behavior, not story, voice, motion, or creative acceptance. Inspect the
+printed localhost previews, exported files and `output/phase6/proof-*/proof.json`;
+Ctrl-C closes their servers. Never point these commands at saved production.
+
+`memoir-format.ts` is the trusted producer entry point: explicitly activate the signed
+format policy; create assignments from exact accepted input heads; run the bounded
+native Deep Agents author; start/run an independent review; accept eligible intermediate
+work or present the exact-version director card. Four director groups are character/style,
+storyboard, narration performance, and final film. Candidate choices require an explicit
+index. Workers receive scoped filesystem mounts and bound tools only. Caller-supplied
+inspection/provider tools are trusted adapters and must enforce the declared role's
+capabilities, budget, lease and actual-media coverage. `packet.tools` documents the
+role profile; it does not authorize arbitrary tools supplied by an untrusted caller.
+
+Media receipts must reference bytes pinned through the trusted `store.pinMedia` adapter
+before author inspection. No arbitrary-path pin tool is exposed to workers. Validation
+rejects draft paths in media contracts. JSON publication binds the runtime's completed
+inspection receipt; model-written receipt labels cannot confer evidence.
+
+`renderMemoirFilm` reuses the official passive renderer and measured technical gate.
+`finalizeMemoirFilm` requires an exact accepted final-film version, verifies its scene,
+renderer and consumed inputs, and writes an approved export plus a portable official
+Player bundle. Preview and portable share use that Player's `RemotionAdScene` /
+`AdRenderSurface`; MP4 uses the same renderer and full scene. Uploading this portable
+bundle, or wiring Memoir into public `/s`, is a later explicit product integration;
+no public link is created here.
+
+The archived v2.0.0 renderer stays byte-identical. SQL adapter changes to validators
+are source additions and record their own source digest; the archive hash does not
+claim those additions were present in the original package. Existing legacy tests
+continue to protect the historical coordinator.
+
+The authorized isolated live test and one recovery completed successfully within the
+original $0.10 cap. The first attempt rejected an invented inspection reference;
+submission now binds trusted runtime receipts. The recovery author published in seven
+turns. Review exposed a missing requested outcome in its briefing; the corrected packet
+passed in ten total turns after director-authorized extensions to six, then twelve.
+The same candidate, attempt, history and budget were preserved throughout. Combined
+reported usage was $0.014838156; conservative allowance consumption was $0.014852.
+This proves live text editing and independent review, not creative audiovisual quality
+or full LangGraph checkpoint replay. Both isolated projects remain paused. Further
+paid trials require authorization.
+
+After a free full proof, run `node --import tsx phase6-render-check.ts <printed-root>`
+to inspect actual MP4 frames across every clip and compare portable-share scene/export
+bytes. The app renderer guardrail is `cd ../../; node --import tsx tests/memoir-render.test.tsx`.
+The archived renderer runs in its own locked dependency process; do not import its
+Remotion runtime into the app process, which has a separate existing version.
+
+Final-film review preserves the existing separate audiovisual requirement: call
+`startMemoirReview(..., allowance, "video")`, complete its independent review, then
+`startMemoirReview(..., allowance, "audio")` with a different worker identity.
+A visual-only pass does not produce a director approval card. Unavailable perception
+must return INCONCLUSIVE; technical metadata cannot substitute for seeing/hearing.

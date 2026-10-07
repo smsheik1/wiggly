@@ -7,18 +7,20 @@ import { z } from "zod";
 import { StudioProduction, type WorkerLease } from "../../lib/studio-production.js";
 
 /** Producer binds the lease; the model supplies only draft selection and evidence pointers. */
-export function publicationTool(store: StudioProduction, ctx: WorkerLease) {
-  return tool(({ draft_path, evidence_references }) => {
+export function publicationTool(store: StudioProduction, ctx: WorkerLease, validate?: (bytes: Buffer) => Promise<string>, evidenceReferences?: () => string[]) {
+  return tool(async ({ draft_path, evidence_references }) => {
     if (!draft_path.startsWith("/drafts/")) throw new Error("DRAFT_PATH_REQUIRED");
-    return store.publish(ctx, { draft_path: draft_path.slice("/drafts/".length), evidence_references });
-  }, { name: "submit_candidate", description: "Publish your inspected exact draft candidate and end this author run. This is not director approval.", schema: z.object({ draft_path: z.string(), evidence_references: z.array(z.string()).min(1) }).strict(), returnDirect: true });
+    const relative = draft_path.slice("/drafts/".length);
+    const validated_hash = validate ? await validate(store.readDraft(ctx, relative)) : undefined;
+    return store.publish(ctx, { draft_path: relative, evidence_references: evidenceReferences ? evidenceReferences() : evidence_references ?? [], validated_hash });
+  }, { name: "submit_candidate", description: "Publish your inspected exact draft candidate and end this author run. This is not director approval.", schema: z.object({ draft_path: z.string(), evidence_references: z.array(z.string()).optional() }).strict(), returnDirect: true });
 }
 
 /** A separate reviewer run receives only its producer packet and this finishing tool. */
-export function reviewTool(store: StudioProduction, ctx: WorkerLease) {
-  return tool(result => store.submitReview(ctx, result), {
+export function reviewTool(store: StudioProduction, ctx: WorkerLease, evidenceReferences?: () => string[]) {
+  return tool(result => store.submitReview(ctx, { ...result, evidence_references: evidenceReferences ? evidenceReferences() : result.evidence_references ?? [] }), {
     name: "submit_review", description: "Finish independent review with findings and inspection evidence. Does not confer director approval.",
-    schema: z.object({ verdict: z.enum(["PASS", "CHANGES_REQUESTED", "INCONCLUSIVE"]), findings: z.string().min(20), defects: z.array(z.object({ criterion: z.string().min(1), region: z.string().min(1), evidence: z.string().min(1) }).strict()), evidence_references: z.array(z.string()) }).strict(), returnDirect: true,
+    schema: z.object({ verdict: z.enum(["PASS", "CHANGES_REQUESTED", "INCONCLUSIVE"]), findings: z.string().min(20), defects: z.array(z.object({ criterion: z.string().min(1), region: z.string().min(1), evidence: z.string().min(1) }).strict()), evidence_references: z.array(z.string()).optional(), direction_compatible: z.boolean().optional() }).strict(), returnDirect: true,
   });
 }
 

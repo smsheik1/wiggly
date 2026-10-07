@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "inputSchema": "node runner.mjs schema inputs",
+  "artifactSchemas": "node runner.mjs schema <kind>",
+  "eventSchema": "node runner.mjs schema event",
+  "beats": [
+    {
+      "beat": 1,
+      "start": 0,
+      "end": 15
+    },
+    {
+      "beat": 2,
+      "start": 15,
+      "end": 30
+    },
+    {
+      "beat": 3,
+      "start": 30,
+      "end": 45
+    },
+    {
+      "beat": 4,
+      "start": 45,
+      "end": 60
+    }
+  ],
+  "audio": "revision 3+: four exact 15.0s windows containing natural-speed narration plus recorded silence-only tails; originals retained; overlong speech returns to script revision; legacy stems unchanged",
+  "target": "60-second 16:9 cinematic 3D animated memoir, own voice; piano optional for core v1",
+  "renderer": "One shared RemotionAdScene → AdRenderSurface → memoir-film composition for local Player preview and export; FFmpeg audio mixing and inspection only",
+  "clipTiming": "variable short clips cover each approved shot exactly; four 15-second beats remain fixed; no speed changes",
+  "output": "60s 1920x1080 30fps H.264/AAC; Mini 480p source footage is scaled, not native HD detail; film review/human approval and private finalized.json",
+  "composition": {
+    "durationFrames": 1800,
+    "fps": 30,
+    "width": 1920,
+    "height": 1080,
+    "clipTiming": "integer startFrame/durationFrames; sourceOffsetSeconds on 30fps grid; speed unchanged",
+    "audio": "one mixed approved track shared by preview/export"
+  },
+  "intakeConfirmationSchema": "node runner.mjs schema intake-confirmation",
+  "earlyLockName": "narration lock (audioLocked compatibility export)",
+  "reviewPolicy": "new supervised; old qualified; actual media human confirmation required in supervised",
+  "answersSchema": "node runner.mjs schema answers",
+  "characterPromptSchema": "node runner.mjs schema characterPrompt",
+  "videoSource": "new Mini 480p 16:9 I2V uses 864×496 source raster; own generated audio disabled/discarded; legacy saved profiles unchanged",
+  "sound": "explicit reviewed/human-approved narration-only decision may omit music/effects; requested assets require their locks"
+}

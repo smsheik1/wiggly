@@ -1,0 +1,58 @@
+{
+  "subject": {
+    "fullName": "Arthur Pendelton",
+    "preferredName": "Artie",
+    "recipientName": "Lily",
+    "relationshipToRecipient": "grandparent",
+    "referencePhotoUrls": [
+      "https://assets.wiggly.internal/photos/artie1.jpg"
+    ],
+    "gender": "male",
+    "keyPhysicalTraits": {
+      "gender": "male",
+      "ageBracket": "70s+",
+      "hairColor": "grey",
+      "hairStyle": "short",
+      "eyeColor": "hazel",
+      "glasses": true,
+      "facialHair": "mustache",
+      "signatureTraits": [
+        "friendly crinkles around eyes",
+        "trim gray mustache"
+      ]
+    }
+  },
+  "answers": {
+    "scene1Childhood": {
+      "partnerInCrime": "my mischievous golden retriever Rusty",
+      "sillyTrouble": "launching baking soda rockets that landed in Mrs. Gable's prized petunia bed",
+      "weirdObsession": "drawing elaborate superhero blueprints in my spiral notebook"
+    },
+    "scene2TeenFreedom": {
+      "freedomMachine": "a rattle-trap sky blue 1974 Volkswagen Beetle",
+      "secretTeenIdentity": "drumming in a terribly loud garage rock band called The Sparks"
+    },
+    "scene3LeapOfFaith": {
+      "riskOrAdventure": "moving across the country with two suitcases and sixty dollars to open my clock workshop",
+      "triumphMoment": "the day the town square church bell chimed after I spent all night fixing its gears"
+    },
+    "scene4Romance": {
+      "howWeMet": "we both reached for the very same vintage jazz record at Murray's Music Shop",
+      "awkwardDateMoment": "dropping my ice cream cone straight onto my shoes on our first boardwalk walk",
+      "theMomentIKnew": "when she laughed until tears came out and offered me half her cone"
+    },
+    "scene5LegacyFinale": {
+      "whatIWishKidsUnderstood": "every gray hair was earned having the absolute time of my life with your mother and you kids",
+      "timeMachineMessageToChildSelf": "don't hurry growing up so fast little buddy, the quiet ordinary days are the magical ones"
+    }
+  },
+  "audio": {
+    "narrationMode": "parent_clone",
+    "voiceCapture": {
+      "source": "browser_record",
+      "audioUrl": "https://assets.wiggly.internal/recordings/sample.mp3",
+      "durationSeconds": 15
+    }
+  },
+  "tone": "heartwarming_tearjerker"
+}
