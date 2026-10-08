@@ -188,6 +188,15 @@ export class StudioProduction {
   #block(ticketId: string, reason: string, from: string) {
     this.#run("UPDATE tickets SET status='BLOCKED',blocked_reason=?,blocked_from=?,revision=revision+1 WHERE id=?", reason, from, ticketId);
   }
+  requestClarification(ctx: WorkerLease, question: string, previewPath: string) {
+    return this.#tx(() => {
+      this.#lease(ctx);
+      requireThat(question.trim() && previewPath.trim(), "CLARIFICATION_REQUIRED");
+      this.#block(ctx.ticketId, "DIRECTOR_CLARIFICATION", "WORKING");
+      this.#run("UPDATE tickets SET feedback=? WHERE id=?", json({ question, preview_path: previewPath }), ctx.ticketId);
+      return this.ticket(ctx.ticketId);
+    });
+  }
   beginTurn(ctx: WorkerLease, turnId: string) {
     id(turnId);
     const result = this.#tx(() => {

@@ -150,3 +150,31 @@ test('pause repair can reference only an immutable rejected version from its own
   const rejected=f.store.rejectedVersion(version.id,'author');assert.equal(rejected.content_hash,version.content_hash);assert.equal(JSON.parse(rejected.rejection!.defects)[0].criterion,'duration');assert.throws(()=>f.store.rejectedVersion(version.id,'foreign-author'),/REJECTED_REPAIR_SOURCE_REQUIRED/);
  }finally{f.close();}
 });
+
+
+test('agent receives actual photo and terminates with labelled clarification, without publication',async()=>{
+ const f=fixture();try{
+  const {hash}=await import('./harness.js'),{readFileSync}=await import('node:fs');
+  const bytes=Buffer.from('EXPLICIT MOCK PHOTO'),path=join(f.store.draftDirectory(f.ctx),'photo.jpg');writeFileSync(path,bytes);let calls=0;
+  const worker=rehearsalWorker(f.store,f.ctx,{key:'EXPLICIT_MOCK_KEY',referencePhotos:[{id:'upload',path,sha256:hash(bytes),width:400,height:300,mime:'image/jpeg'}],fetcher:async(_url,init)=>{
+   const body=JSON.parse(String(init?.body));calls++;
+   if(calls===1)return reply('inspect_reference_photo',{photo_id:'upload'});
+   assert.ok(body.messages.some((m:any)=>Array.isArray(m.content)&&m.content.some((c:any)=>c.type==='image_url'&&c.image_url.url.endsWith(bytes.toString('base64')))));
+   return reply('ask_reference_identities',{photo_id:'upload',people:[{label:'A',description:'Left person',region:{x:10,y:20,width:100,height:200}},{label:'B',description:'Right person',region:{x:200,y:20,width:100,height:200}}]});
+  }});
+  const agent=workspaceAgent(worker.model,dirname(f.store.draftDirectory(f.ctx)),'mock-photo-intake','mock-photo-intake',worker.tools,'Explicit isolated intake test',[productionMiddleware(f.store,f.ctx)]);
+  const result=await agent.invoke({messages:[{role:'user',content:'Inspect uploaded reference.'}]});
+  assert.equal(calls,2);assert.equal(f.store.ticket('author').status,'BLOCKED');assert.equal(f.store.ticket('author').blocked_reason,'DIRECTOR_CLARIFICATION');const final=JSON.parse(String(result.messages.at(-1)!.content));assert.equal(final.generation_allowed,false);assert.match(final.question,/A, B/);
+  const svg=readFileSync(final.preview_path,'utf8');assert.ok(svg.includes(bytes.toString('base64')));assert.ok(svg.includes('>A</text>'));assert.ok(svg.includes('>B</text>'));
+  await assert.rejects((worker.tools.find(t=>t.name==='inspect_candidate')! as any).invoke({draft_path:'/drafts/candidate.json'}),/REFERENCE_IDENTIFICATION_REQUIRED/);
+ }finally{f.close();}
+});
+
+test('reference tools reject unseen, foreign, changed or out-of-bounds photos',async()=>{
+ const f=fixture();try{
+  const {referenceIntakeTools}=await import('./reference-intake.js'),{hash}=await import('./harness.js');const bytes=Buffer.from('MOCK'),path=join(f.store.draftDirectory(f.ctx),'photo.jpg');writeFileSync(path,bytes);
+  const [inspect,clarify]=referenceIntakeTools([{id:'upload',path,sha256:hash(bytes),width:100,height:100,mime:'image/jpeg'}],f.store.draftDirectory(f.ctx));
+  const input={photo_id:'upload',people:[{label:'A',description:'Person',region:{x:90,y:0,width:20,height:50}}]};
+  await assert.rejects(clarify.invoke(input),/INSPECTION_REQUIRED/);await inspect.invoke({photo_id:'upload'});await assert.rejects(clarify.invoke(input),/OUTSIDE_PHOTO/);await assert.rejects(inspect.invoke({photo_id:'foreign'}),/NOT_IN_ASSIGNMENT/);writeFileSync(path,'CHANGED');await assert.rejects(inspect.invoke({photo_id:'upload'}),/PHOTO_CHANGED/);
+ }finally{f.close();}
+});

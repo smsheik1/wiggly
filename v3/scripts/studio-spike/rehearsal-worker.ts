@@ -7,11 +7,12 @@ import { StudioProduction, type WorkerLease } from "../../lib/studio-production.
 import { NimModel } from "./nim-model.js";
 import { chatCompletionsTransport } from "./nim-transport.js";
 import { hash } from "./harness.js";
+import { referenceIntakeTools, type ReferencePhoto } from "./reference-intake.js";
 import { secretsPath } from "./tracing.js";
 
 /** The producer supplies the already-authorized key/lease and actual-media inspection adapter. */
 export function rehearsalWorker(store: StudioProduction, ctx: WorkerLease, options: {
-  key: string; fetcher?: typeof fetch;
+  key: string; fetcher?: typeof fetch; referencePhotos?: ReferencePhoto[];
   inspectMedia?: (candidate: any) => Promise<any[]>;
 }) {
   const reviewer = store.ticket(ctx.ticketId).kind === "REVIEWER", packet = reviewer ? store.reviewPacket(ctx.ticketId) : null;
@@ -48,6 +49,7 @@ export function rehearsalWorker(store: StudioProduction, ctx: WorkerLease, optio
   const inspect = tool(async ({ draft_path }: any) => {
     try {
       evidence = undefined; inspected = undefined; mediaResults = [];
+      if (!reviewer && photos.length) throw new Error("REFERENCE_IDENTIFICATION_REQUIRED");
       if (!reviewer && !draft_path) throw new Error("DRAFT_PATH_REQUIRED");
       const bytes = reviewer ? readFileSync(packet.candidate_path) : store.readDraft(ctx, draft_path!.replace(/^\/drafts\//, ""));
       if (reviewer && hash(bytes) !== packet.content_hash) throw new Error("REVIEW_CANDIDATE_CHANGED");
@@ -66,7 +68,9 @@ export function rehearsalWorker(store: StudioProduction, ctx: WorkerLease, optio
     if (!inspected || !evidence) throw new Error("ACTUAL_CONTRACT_INSPECTION_REQUIRED");
     return { evidence_reference: evidence, findings };
   }, { name: "finish_inspection", description: "Record concrete findings after inspecting the exact draft and actual media, then submit the candidate.", schema: z.object({ findings: z.string().min(20) }).strict() });
-  return { model, tools: reviewer ? [inspect] : [inspect, finish], evidenceReferences: () => evidence ? [evidence] : [], receipts, runId };
+  const photos: ReferencePhoto[] = options.referencePhotos ?? JSON.parse(store.memoirAssignment(ctx.ticketId)?.packet ?? "{}").reference_photos ?? [];
+  const intake = !reviewer && photos.length ? referenceIntakeTools(photos, store.draftDirectory(ctx), (question, preview) => store.requestClarification(ctx, question, preview)) : [];
+  return { model, tools: reviewer ? [inspect] : [...intake, inspect, finish], evidenceReferences: () => evidence ? [evidence] : [], receipts, runId };
 }
 
 /** Every distinct referenced source/window file needs inspection. */
