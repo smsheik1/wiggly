@@ -1,0 +1,28 @@
+{
+  "status": "PREPARED_AWAITING_NEW_BATCH_ALLOWANCE",
+  "phase": "Live rehearsal story and narration",
+  "paid_calls": 0,
+  "contracts": "PASS",
+  "studio_tests": 91,
+  "typecheck": "PASS",
+  "saved_production_files_unchanged": 313,
+  "maximum_requested_allowance_usd": 2,
+  "initial_cartesia_characters": 1075,
+  "initial_cartesia_overage_estimate_usd": 0.08,
+  "cash_charge": "UNKNOWN; subscription credits may cover synthesis",
+  "fixes": [
+    "Use complete official instruction snapshot in SQL validation projection",
+    "Retain accepted existing-voice provenance and language",
+    "Bind every distinct referenced media file to exact perception hash",
+    "Bind model-call usage and finishing evidence to runtime instead of model-supplied receipt IDs"
+  ],
+  "production_audio_generated": false,
+  "director_approval": "PENDING",
+  "remaining": [
+    "Explicit production allowance",
+    "Independent reviews",
+    "Audition approval",
+    "Four narration beats and actual audio inspections",
+    "Exact narration director approval"
+  ]
+}

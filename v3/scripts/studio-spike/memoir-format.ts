@@ -14,12 +14,13 @@ export const memoirModels = { writer: "moonshotai/kimi-k3", execution: "deepseek
 /** Reuse the installed official Format. Never apply events to its legacy coordinator. */
 export async function loadMemoirFormat(kit: string) {
   const load = (name: string) => import(pathToFileURL(join(kit, "runtime", `${name}.mjs`)).href);
-  const [contracts, studio, media, remotion, workflow, assemble] = await Promise.all([load("contracts"), load("studio"), load("media"), load("remotion"), load("workflow"), load("assemble")]);
+  const [contracts, studio, media, remotion, workflow, assemble, instructions] = await Promise.all([load("contracts"), load("studio"), load("media"), load("remotion"), load("workflow"), load("assemble"), load("instructions")]);
   if (contracts.VERSION !== "2.0.0") throw new Error("UNSUPPORTED_MEMOIR_FORMAT");
   await remotion.verifyRenderer();
   const source_digest = hash(Buffer.concat(["runtime/contracts.mjs", "runtime/workflow.mjs", "runtime/gates.mjs", "runtime/studio.mjs", "runtime/media.mjs", "runtime/remotion.mjs", "runtime/assemble.mjs", "studio.json"].map(path => readFileSync(join(kit, path)))));
-  const config = JSON.parse(readFileSync(join(kit, "studio.json"), "utf8"));
-  return { kit, contracts, studio, media, remotion, workflow, assemble, config, source_digest };
+  const snapshot = instructions.loadStudio(new URL("./", pathToFileURL(join(kit, "studio.json"))));
+  const config = snapshot.config;
+  return { kit, contracts, studio, media, remotion, workflow, assemble, config, snapshot, source_digest };
 }
 
 /** JSON contracts can reference only trusted immutable media, never a writable draft. */
@@ -57,17 +58,24 @@ export function approvedProjection(format: Format, store: StudioProduction, proj
     return { id: version.id, key: assetKey(name), kind: binding.kind, digest: format.contracts.digest(content), content, valid: true, authoredBy: store.ticket(version.ticket_id).worker_id, sqlAcceptanceVerified: true, selection: binding.selection ?? 0 };
   });
   // This read-only shape exists only to reuse validators; it is never a second workflow record.
-  return { id: projectId, formatVersion: "2.0.0", step, productionProfile: "seedance-mini-480p", reviewMode: "supervised", workflowRevision: 4, gate: "produce", lifecycle: "active", inputs: sourceInputs, studio: { config: format.config }, sqlValidationView: true, feedback: [], artifacts, ...selectors };
+  const clone = artifacts.find(a => a.kind === "clone")?.content;
+  const voiceChoice = clone?.origin?.kind === "existing" ? existingVoiceChoice(clone.origin) : undefined;
+  return { voiceChoice, id: projectId, formatVersion: "2.0.0", step, productionProfile: "seedance-mini-480p", reviewMode: "supervised", workflowRevision: 4, gate: "produce", lifecycle: "active", inputs: sourceInputs, studio: format.snapshot, sqlValidationView: true, feedback: [], artifacts, ...selectors };
 }
-export function createMemoirAssignment(format: Format, store: StudioProduction, options: { id: string; projectId: string; kind: string; role: string; outcome: string; inputs: InputVersions; selectors?: Record<string, string>; allowanceMicros?: number; limits?: Partial<TicketLimits> }) {
+export function createMemoirAssignment(format: Format, store: StudioProduction, options: { id: string; projectId: string; kind: string; role: string; outcome: string; inputs: InputVersions; selectors?: Record<string, string>; allowanceMicros?: number; limits?: Partial<TicketLimits>; existingVoice?: any }) {
   const { id, projectId, kind, role, outcome, inputs } = options;
   for (const [key, value] of Object.entries(options.selectors ?? {})) if (!["characterId", "locationId", "angleId", "shotId", "clipId", "effectId"].includes(key) || !/^[a-z][a-z0-9-]*$/.test(value)) throw new Error("INVALID_MEMOIR_SELECTOR");
   if (!format.contracts.Content[kind] || !format.contracts.criteria[kind] || !outcome.trim()) throw new Error("INVALID_MEMOIR_ASSIGNMENT");
   const projection = approvedProjection(format, store, projectId, inputs, kind, options.selectors);
+  if (options.existingVoice) {
+    if (kind !== "clone") throw new Error("EXISTING_VOICE_SCOPE_DENIED");
+    format.contracts.Content.clone.parse(options.existingVoice);
+    if (options.existingVoice.origin?.kind !== "existing") throw new Error("EXISTING_VOICE_PROVENANCE_REQUIRED");
+  }
   const worker = format.config.agents[role];
   if (!worker) throw new Error("UNKNOWN_MEMOIR_ROLE");
   const skill = readFileSync(join(format.kit, worker.skill), "utf8");
-  store.createMemoirTicket(id, projectId, role, inputs, options.allowanceMicros ?? 0, kind, format.contracts.criteria[kind], { outcome, asset_key: format.workflow.keyFor(projection), selectors: options.selectors ?? {}, skill, skill_sha256: hash(Buffer.from(skill)), skill_name: basename(dirname(worker.skill)), tools: worker.tools, model: role === "script-writer" ? memoirModels.writer : memoirModels.execution, lip_sync: false }, options.limits);
+  store.createMemoirTicket(id, projectId, role, inputs, options.allowanceMicros ?? 0, kind, format.contracts.criteria[kind], { outcome, asset_key: format.workflow.keyFor(projection), selectors: options.selectors ?? {}, skill, skill_sha256: hash(Buffer.from(skill)), skill_name: basename(dirname(worker.skill)), tools: worker.tools, model: role === "script-writer" ? memoirModels.writer : memoirModels.execution, lip_sync: false, ...(options.existingVoice ? { existing_voice: options.existingVoice } : {}) }, options.limits);
   return store.ticket(id);
 }
 export function candidateValidator(format: Format, store: StudioProduction, ticketId: string) {
@@ -76,6 +84,10 @@ export function candidateValidator(format: Format, store: StudioProduction, tick
     if (!binding) throw new Error("MEMOIR_INPUT_BINDING_REQUIRED");
     const packet = JSON.parse(binding.packet), content = format.contracts.Content[binding.kind].parse(JSON.parse(bytes.toString()));
     const projection = approvedProjection(format, store, ticket.project_id, JSON.parse(ticket.inputs), binding.kind, packet.selectors);
+    if (binding.kind === "clone" && packet.existing_voice) {
+      if (format.contracts.digest(content) !== format.contracts.digest(packet.existing_voice)) throw new Error("EXISTING_VOICE_CANDIDATE_CHANGED");
+      projection.voiceChoice = existingVoiceChoice(packet.existing_voice.origin);
+    }
     format.workflow.assertAllowed(projection, binding.kind);
     format.workflow.validateArtifactContent(projection, content, ticket.worker_id);
     await format.media.verifyFiles(projection.artifacts);
@@ -180,4 +192,10 @@ export async function finalizeMemoirFilm(format: Format, store: StudioProduction
   const receipt = { project_id: projectId, candidate_version_id: versionId, content_hash: version.content_hash, media_sha256: film.files[0].sha256, renderer_digest: prepared.rendererDigest, scene_digest: film.sceneDigest, exact_inputs: JSON.parse(version.inputs), director_approved: true, share_mode: "portable-official-player", public_share_uploaded: false };
   writeFileSync(join(prepared.bundle, "approval.json"), JSON.stringify(receipt, null, 2), { flag: "wx", mode: 0o400 });
   return { ...prepared, receipt, export_path: join(prepared.bundle, "film.mp4") };
+}
+
+/** Read-only validation context derived from the producer-bound existing clone provenance. */
+export function existingVoiceChoice(origin: any) {
+  if (origin?.kind !== "existing" || !origin.lookup || !origin.selectionMessage?.trim() || !origin.consentMessage?.trim()) throw new Error("EXISTING_VOICE_PROVENANCE_REQUIRED");
+  return { voiceId: origin.lookup.voiceId, lookup: origin.lookup, reuseWithoutSample: true, selectedBy: { message: origin.selectionMessage, at: origin.lookup.checkedAt }, consentMessage: origin.consentMessage };
 }

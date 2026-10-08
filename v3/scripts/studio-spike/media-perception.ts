@@ -67,7 +67,7 @@ export async function createSQLPerception(options: {
       if (value.requestDigest !== result.requestDigest || !value.evidence.some((e: any) => e.sha256 === file.sha256)) throw new Error("INSPECTION_BINDING_MISMATCH");
       const supplied = value.evidence.map((e: any) => e.id);
       for (const id of supplied) store.inspectionCompleted(ctx, id, JSON.stringify(result.report));
-      const receipt = { ...result, evidence_references: supplied };
+      const receipt = { ...result, file_sha256: file.sha256, evidence_references: supplied };
       writeFileSync(join(directory, `${randomUUID()}-inspection.json`), JSON.stringify(receipt), { mode: 0o600, flag: "wx" });
       return receipt;
       } finally { busy = false; }
