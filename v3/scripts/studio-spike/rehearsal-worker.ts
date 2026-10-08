@@ -44,7 +44,7 @@ export function rehearsalWorker(store: StudioProduction, ctx: WorkerLease, optio
     }, error => `${String(error).replaceAll(options.key, "[REDACTED]")}\nSTOP. Open https://openrouter.ai/workspaces/default/logs?tab=requests; inspect the provider/error row. Check https://openrouter.ai/settings/keys for this key's spending limit and https://openrouter.ai/settings/credits for credits. Canonical OPENROUTER_API_KEY belongs in ${secretsPath}. No retry or provider substitution.`);
     return response;
   };
-  const model = new NimModel({ model: "deepseek/deepseek-v4.1-flash", apiKey: options.key, maxRetries: 0, maxTokens: 8192, temperature: 1, disableStreaming: true, useResponsesApi: false, modelKwargs: { tool_choice: "required", reasoning: { effort: "medium" } }, configuration: { baseURL: "https://openrouter.ai/api/v1", fetch: chatCompletionsTransport("https://openrouter.ai", send) } });
+  const model = new NimModel({ model: "deepseek/deepseek-v4.1-flash", apiKey: options.key, maxRetries: 0, maxTokens: 8192, temperature: 1, disableStreaming: true, useResponsesApi: false, modelKwargs: { tool_choice: "required", reasoning: { effort: "low" } }, configuration: { baseURL: "https://openrouter.ai/api/v1", fetch: chatCompletionsTransport("https://openrouter.ai", send) } });
   const inspect = tool(async ({ draft_path }: any) => {
     try {
       evidence = undefined; inspected = undefined; mediaResults = [];

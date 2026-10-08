@@ -1,5 +1,5 @@
 {
-  "status": "AUDITION_APPROVED_NARRATION_IN_PROGRESS",
+  "status": "NARRATION_GENERATED_REVIEW_TIMEOUT",
   "batch_allowance_usd": 2,
   "audition_seconds": 14,
   "audition_media_sha256": "890f4e3af3891c651b7ab318535b2a53e5f965882fca427ad5654c3e4bd4a4c2",
@@ -30,5 +30,9 @@
   "limitations": [
     "Beat 2 needs a measured timing repair before locking narration",
     "Full narration approval remains pending"
-  ]
+  ],
+  "narration_reviewer_turns": 5,
+  "project_paused": true,
+  "failed_call_reservation_retained": true,
+  "execution_reasoning_correction": "medium to low; local tests pass; live recovery not yet run"
 }

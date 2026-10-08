@@ -22,7 +22,7 @@ test('native bounded agent publishes only runtime-bound completed inspection; ev
   try {
     writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),JSON.stringify({story:'Explicit isolated mock contract'}));
     const worker=rehearsalWorker(f.store,f.ctx,{key:'EXPLICIT_MOCK_KEY',fetcher:async (_url, init)=>{
-      const body=JSON.parse(String(init?.body)); assert.equal(body.provider.allow_fallbacks,false); assert.deepEqual(body.provider.only,['decart/fp4']);
+      const body=JSON.parse(String(init?.body)); assert.equal(body.reasoning.effort,"low"); assert.equal(body.provider.allow_fallbacks,false); assert.deepEqual(body.provider.only,['decart/fp4']);
       calls++; return calls===1?reply('inspect_candidate',{draft_path:'/drafts/candidate.json'}):calls===2?reply('finish_inspection',{findings:'Explicit mock contract was read completely for receipt mechanics.'}):reply('submit_candidate',{draft_path:'/drafts/candidate.json',evidence_references:['invented-by-model']});
     }});
     const agent=workspaceAgent(worker.model,dirname(f.store.draftDirectory(f.ctx)),'explicit-mock','mock-author',[...worker.tools,publicationTool(f.store,f.ctx,undefined,worker.evidenceReferences)],'Explicit isolated protocol test',[productionMiddleware(f.store,f.ctx)]);
