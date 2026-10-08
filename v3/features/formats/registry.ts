@@ -13,6 +13,8 @@ import { wereSorryFormatModule } from "./were-sorry";
 import { staticPackageFormatModule } from "./static-package";
 import { talkingFishNewsFormatModule } from "./talking-fish-news";
 import { legoMusicVideoFormatModule } from "./lego-music-video";
+import { memoirFilmFormatModule } from "./memoir-film";
+import { myPixarStoryFormatModule } from "./my-pixar-story";
 
 import { memoirFilmFormatModule } from "./memoir-film";
 
@@ -35,6 +37,7 @@ export const formatRegistry = createFormatRegistry({
   "static-package": staticPackageFormatModule,
   "talking-fish-news": talkingFishNewsFormatModule,
   "lego-music-video": legoMusicVideoFormatModule,
+  "my-pixar-story": myPixarStoryFormatModule,
 } satisfies Record<RenderableAdFormatId, AnyAdFormatModule>);
 
 export const getFormatModuleFromRegistry = <

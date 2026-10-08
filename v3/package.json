@@ -61,6 +61,7 @@
     "format:three-d": "tsx scripts/three-d-breakdown-format.ts",
     "format:three-d:smoke": "tsx scripts/smoke-three-d-breakdown-format.ts",
     "format:three-d:kit": "node scripts/build-three-d-breakdown-format-kit.mjs",
+    "format:pixar": "tsx scripts/my-pixar-story-format.ts",
     "render-worker": "tsx scripts/render-worker.ts",
     "render-worker:watch": "tsx scripts/render-worker.ts --watch",
     "render-worker:dev": "tsx watch scripts/render-worker.ts --watch",
@@ -100,7 +101,8 @@
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.1.14",
     "zod": "4.3.6",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.14",
+    "@remotion/player": "^4.0.473"
   },
   "devDependencies": {
     "@remotion/cli": "^4.0.473",
