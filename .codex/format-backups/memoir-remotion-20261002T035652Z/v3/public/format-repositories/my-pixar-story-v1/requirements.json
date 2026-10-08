@@ -1,0 +1,43 @@
+{
+  "node": ">=22",
+  "dependencies": "npm ci using package-lock.json; SQLite native addon may require platform build tools if no prebuilt binary exists",
+  "localTools": [
+    "ffprobe",
+    "ffmpeg",
+    "tar"
+  ],
+  "credentials": {
+    "canonicalFile": "operator repo-root secrets.env (ignored/symlink); pass its absolute path with --secrets",
+    "cartesia": "CARTESIA_API_KEY",
+    "meta-muse": "META_API_KEY",
+    "replicate": "REPLICATE_API_TOKEN (video)",
+    "elevenlabs": "ELEVENLABS_API_KEY (optional generated music/effects)"
+  },
+  "hostAgent": {
+    "author": "active host agent or explicitly configured runTask module",
+    "reviewer": "independent worker with actual text/image/audio perception, STT and speaker-similarity tools",
+    "missingCapability": "inconclusive; never fabricate review",
+    "backgroundOwner": "plain-language scene direction and outcome check; distinct from technical prompter",
+    "backgroundPrompter": "separate worker using background-prompter.md; cannot self-review or human-approve",
+    "shotPlanner": "scene-led shot plan with approved location/cast images; four exact 15-second beat timelines",
+    "compositionWriter": "single-frame reference-bound scene prompt; independent reviewer needs actual image perception",
+    "videoEngineer": "observable frame-bound motion; separate independent qualified full-video reviewer",
+    "soundDesigner": "instrumental piano and relevant effects with rights/provenance",
+    "filmEditor": "approved trim/mix plan, natural-rate narration; one official local assembler",
+    "visualQualification": "actual human-labelled held-out image/video anatomy, identity and continuity examples, actual independent worker predictions"
+  },
+  "storage": "per-run embedded SQLite checkpoints and immutable local assets/receipts; retain directory as a unit",
+  "approval": "real human deliverable approvals; exact paid-request authorization or explicit bounded operation allowance",
+  "notRequired": [
+    "ComfyUI",
+    "local AI models",
+    "Antigravity SDK",
+    "Wiggly application checkout",
+    "cloud database"
+  ],
+  "pending": [
+    "actual perceptual-worker qualification and labeled corpus",
+    "real end-to-end film quality proof (excluded)",
+    "app presentation/integration"
+  ]
+}

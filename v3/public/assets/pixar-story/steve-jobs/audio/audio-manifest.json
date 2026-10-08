@@ -1,0 +1,37 @@
+[
+  {
+    "sceneIndex": 1,
+    "title": "Chapter 1: The Wonder Years & Mischief",
+    "script": "Steve Wozniak. We called him Woz. We were two kids who suddenly realized we had our hands on a magic wand. We built these illegal little frequency boxes that fooled the telephone network just so we could call the Vatican at two in the morning. My father taught me that the back of the fence had to be just as beautiful as the front.",
+    "audioUrl": "/assets/pixar-story/steve-jobs/audio/scene-1.wav",
+    "durationSeconds": 20
+  },
+  {
+    "sceneIndex": 2,
+    "title": "Chapter 2: The Freedom Machine",
+    "script": "My first freedom was an old 1966 Volkswagen microbus that smelled like gasoline and cheap incense. The clutch was completely shot—half the time Woz and I had to push it down the driveway just to get the engine to turn over. At school I was an outsider, but late at night I had Bob Dylan spinning on the turntable, studying calligraphy and dreaming.",
+    "audioUrl": "/assets/pixar-story/steve-jobs/audio/scene-2.wav",
+    "durationSeconds": 22.6
+  },
+  {
+    "sceneIndex": 3,
+    "title": "Chapter 3: The Leap of Faith",
+    "script": "Dropping out of college was terrifying. I slept on floors, returned Coke bottles for five cents just to buy food, and walked seven miles in the rain for a warm meal. But then, in my parents' garage, Woz and I hooked up a crude wooden keyboard to an old television set, and the screen flashed. We stood there in the quiet California dusk. We had built a bicycle for the human mind.",
+    "audioUrl": "/assets/pixar-story/steve-jobs/audio/scene-3.wav",
+    "durationSeconds": 26.9
+  },
+  {
+    "sceneIndex": 4,
+    "title": "Chapter 4: The Origin of Us",
+    "script": "October 1989. I was lecturing at Stanford and sitting in the front row was Laurene. I couldn't take my eyes off her. In the parking lot afterwards, the engine running for a big business dinner, I asked myself: 'If tonight was my last night on earth, who would I rather be with?' I turned the keys off, ran through the cold asphalt, and took her to dinner in the snow.",
+    "audioUrl": "/assets/pixar-story/steve-jobs/audio/scene-4.wav",
+    "durationSeconds": 25.3
+  },
+  {
+    "sceneIndex": 5,
+    "title": "Chapter 5: What I Wish You Knew",
+    "script": "Lisa... when you were born, I was so young and terrified that I ran away from being your father. It was the most cowardly thing I ever did. Every curve of glass and line of aluminum was my clumsy attempt to leave something beautiful, but you were the only masterpiece that mattered. Stop running, Steve. The machines fade into museums. Hold on to your daughter. She is your real legacy.",
+    "audioUrl": "/assets/pixar-story/steve-jobs/audio/scene-5.wav",
+    "durationSeconds": 27.4
+  }
+]

@@ -61,7 +61,6 @@
     "format:three-d": "tsx scripts/three-d-breakdown-format.ts",
     "format:three-d:smoke": "tsx scripts/smoke-three-d-breakdown-format.ts",
     "format:three-d:kit": "node scripts/build-three-d-breakdown-format-kit.mjs",
-    "format:pixar": "tsx scripts/my-pixar-story-format.ts",
     "render-worker": "tsx scripts/render-worker.ts",
     "render-worker:watch": "tsx scripts/render-worker.ts --watch",
     "render-worker:dev": "tsx watch scripts/render-worker.ts --watch",

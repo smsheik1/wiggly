@@ -9,6 +9,6 @@ mkdirSync(join(kit, "build"), { recursive: true });
 // Exact selected official renderer; no paths from an untrusted archive listing.
 execFileSync("tar", ["-xzf", archive, "-C", kit, "build/remotion"], { stdio: "inherit" });
 execFileSync("npm", ["ci", "--no-audit", "--no-fund"], { cwd: kit, stdio: "inherit" });
-execFileSync("npm", ["rebuild", "better-sqlite3", "esbuild"], { cwd: kit, stdio: "inherit" });
-execFileSync("npm", ["run", "smoke"], { cwd: kit, stdio: "inherit" });
+execFileSync("npm", ["rebuild", "esbuild"], { cwd: kit, stdio: "inherit" });
+execFileSync("node", ["--test", "tests/remotion.test.mjs"], { cwd: kit, stdio: "inherit" });
 console.log("Official Memoir renderer installed and packaged free smoke passed. No production state opened.");

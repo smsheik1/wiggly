@@ -34,12 +34,12 @@ async function skill(root: string, name: string, body: string) {
 // Thin isolated execution envelope around the existing kit's authoritative request builder.
 // It never invokes or edits its production scheduler/checkpoints.
 async function generate(prompt: string, root: string, reference?: string) {
-  const providers = await import(`${canonicalKit}/runtime/providers.mjs`);
+  const { requestDescriptor, remediation } = await import("../../lib/memoir-policy.js");
   const n = reference ? 1 : 3;
   const planning = { locationId: "spike-kitchen", artifacts: [reference
     ? { key: "backgroundCandidates:spike-kitchen", valid: true, selection: 0, content: { files: [{ path: reference }] } }
     : { key: "backgroundBrief:spike-kitchen", valid: true, content: { references: [] } }] };
-  const request = providers.requestDescriptor(planning, { operation: reference ? "backgroundAngle" : "backgroundCandidates", estimatedCostUsd: n * .01, parameters: { prompt } });
+  const request = requestDescriptor(planning, { operation: reference ? "backgroundAngle" : "backgroundCandidates", estimatedCostUsd: n * .01, parameters: { prompt } });
   assert.equal(request.n, n);
   assert.equal(new URL(request.endpoint).origin, "https://api.meta.ai");
   const key = await namedSecret("META_API_KEY");
@@ -48,7 +48,7 @@ async function generate(prompt: string, root: string, reference?: string) {
   const { endpoint, images: references, ...body } = request;
   const images = await Promise.all(references.map(async (file: any) => ({ image_url: `data:image/webp;base64,${(await readFile(file.path)).toString("base64")}` })));
   const response = await fetch(endpoint, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify({ ...body, ...(images.length ? { images } : {}) }), signal: AbortSignal.timeout(180000), redirect: "error" });
-  if (!response.ok) throw new Error(`Muse HTTP ${response.status}: ${(await response.text()).replaceAll(key, "[REDACTED]").slice(0, 500)}\n${providers.remediation("meta-muse", secretsPath)}`);
+  if (!response.ok) throw new Error(`Muse HTTP ${response.status}: ${(await response.text()).replaceAll(key, "[REDACTED]").slice(0, 500)}\n${remediation("meta-muse", secretsPath)}`);
   const result = await response.json();
   await writeFile(join(root, "provider-response.json"), JSON.stringify(result), { flag: "wx" });
   assert.ok(result.data?.length === n && result.data.every((item: any) => item.b64_json), "Muse must return exact base64 images; no remote fallback");

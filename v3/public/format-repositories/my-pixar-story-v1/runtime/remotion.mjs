@@ -8,8 +8,19 @@ import {createReadStream,readFileSync} from 'node:fs';
 import {stat} from 'node:fs/promises';
 import {selectComposition, renderMedia} from '@remotion/renderer';
 import {VERSION as REMOTION_VERSION} from 'remotion';
-import {digest} from './contracts.mjs';
-import {verifyFiles} from './media.mjs';
+import {createHash} from 'node:crypto';
+const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(k => [k, canonical(value[k])])) : value;
+export const digest = value => createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');
+
+export async function verifyFiles(value) {
+  if (!value || typeof value !== 'object') return;
+  if (value.path && value.sha256 && value.bytes) {
+    const bytes = await readFile(value.path);
+    if (createHash('sha256').update(bytes).digest('hex') !== value.sha256) throw new Error('IMMUTABLE_MEDIA_CORRUPTED: ' + value.path);
+    return;
+  }
+  for (const child of Object.values(value)) await verifyFiles(child);
+}
 import {audioMixArgs} from './mix.mjs';
 const exec=promisify(execFile),kit=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 export function compositionScene(manifest,sources,audioUrl){

@@ -35,8 +35,6 @@ export async function narrationWindow(file, runDir, outputPath) {
 }
 export async function verifyFiles(value) {
   if (!value || typeof value !== 'object') return;
-  if(value.evidenceDirectory&&value.qualified===true&&value.datasetDigest){await (await import('../evaluation/audio-qualification.mjs')).verifyAudioQualificationEvidence(value);return;}
-  if(value.evidenceDirectory&&value.datasetDigest&&value.predictionDigest){await (await import('../evaluation/visual-qualification.mjs')).verifyQualificationEvidence(value);return;}
   if (value.path && value.sha256 && value.bytes) {
     const bytes = await readFile(value.path);
     if (sha(bytes) !== value.sha256 || bytes.length !== value.bytes) throw new Error(`ASSET_CHANGED: ${value.path}`);

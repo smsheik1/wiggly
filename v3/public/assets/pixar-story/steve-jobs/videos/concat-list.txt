@@ -1,0 +1,5 @@
+file '/Users/shaz/Projects/wiggly/v3/public/assets/pixar-story/steve-jobs/videos/scene-1-synced.mp4'
+file '/Users/shaz/Projects/wiggly/v3/public/assets/pixar-story/steve-jobs/videos/scene-2-synced.mp4'
+file '/Users/shaz/Projects/wiggly/v3/public/assets/pixar-story/steve-jobs/videos/scene-3-synced.mp4'
+file '/Users/shaz/Projects/wiggly/v3/public/assets/pixar-story/steve-jobs/videos/scene-4-synced.mp4'
+file '/Users/shaz/Projects/wiggly/v3/public/assets/pixar-story/steve-jobs/videos/scene-5-synced.mp4'

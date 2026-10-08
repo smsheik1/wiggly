@@ -1,0 +1,32 @@
+[
+  {
+    "sceneIndex": 1,
+    "title": "Chapter 1: The Wonder Years",
+    "imageUrl": "/assets/pixar-story/steve-jobs/images/scene-1.jpg",
+    "localPath": "/Users/shaz/Projects/wiggly/v3/public/assets/pixar-story/steve-jobs/images/scene-1.jpg"
+  },
+  {
+    "sceneIndex": 2,
+    "title": "Chapter 2: The Freedom Machine",
+    "imageUrl": "/assets/pixar-story/steve-jobs/images/scene-2.jpg",
+    "localPath": "/Users/shaz/Projects/wiggly/v3/public/assets/pixar-story/steve-jobs/images/scene-2.jpg"
+  },
+  {
+    "sceneIndex": 3,
+    "title": "Chapter 3: The Leap of Faith",
+    "imageUrl": "/assets/pixar-story/steve-jobs/images/scene-3.jpg",
+    "localPath": "/Users/shaz/Projects/wiggly/v3/public/assets/pixar-story/steve-jobs/images/scene-3.jpg"
+  },
+  {
+    "sceneIndex": 4,
+    "title": "Chapter 4: The Origin of Us",
+    "imageUrl": "/assets/pixar-story/steve-jobs/images/scene-4.jpg",
+    "localPath": "/Users/shaz/Projects/wiggly/v3/public/assets/pixar-story/steve-jobs/images/scene-4.jpg"
+  },
+  {
+    "sceneIndex": 5,
+    "title": "Chapter 5: What I Wish You Knew",
+    "imageUrl": "/assets/pixar-story/steve-jobs/images/scene-5.jpg",
+    "localPath": "/Users/shaz/Projects/wiggly/v3/public/assets/pixar-story/steve-jobs/images/scene-5.jpg"
+  }
+]

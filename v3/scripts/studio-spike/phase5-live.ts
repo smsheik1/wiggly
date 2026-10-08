@@ -75,9 +75,10 @@ async function worker(ctx:WorkerLease, reviewer:boolean, openRouter = false){
  const reviewFinish=tool(result=>{assert.ok(evidence,'REVIEW_INSPECTION_REQUIRED');return store.submitReview(ctx,{...result,evidence_references:[evidence]});},{name:'submit_review',description:'End independent review with findings and defects; no director approval.',schema:z.object({verdict:z.enum(['PASS','CHANGES_REQUESTED','INCONCLUSIVE']),findings:z.string().min(20),defects:z.array(z.object({criterion:z.string(),region:z.string(),evidence:z.string()}).strict())}).strict(),returnDirect:true});
  const generate=tool(async({prompt})=>{
   assert.ok(!generated,'One generation per assignment');generated=true;
-  const providers=await import(`${kit}/runtime/providers.mjs`),meta=await namedSecret('META_API_KEY');
+  const { requestDescriptor, remediation } = await import("../../lib/memoir-policy.js");
+  const meta=await namedSecret('META_API_KEY');
   const planning={locationId:'phase5-kitchen',artifacts:[{key:'backgroundCandidates:phase5-kitchen',valid:true,selection:0,content:{files:[{path:retained}]}}]};
-  const request=providers.requestDescriptor(planning,{operation:'backgroundAngle',estimatedCostUsd:.01,parameters:{prompt}});assert.equal(request.n,1);assert.equal(new URL(request.endpoint).origin,'https://api.meta.ai');
+  const request=requestDescriptor(planning,{operation:'backgroundAngle',estimatedCostUsd:.01,parameters:{prompt}});assert.equal(request.n,1);assert.equal(new URL(request.endpoint).origin,'https://api.meta.ai');
   const {endpoint,images:refs,...body}=request,images=await Promise.all(refs.map(async(file:any)=>({image_url:`data:image/webp;base64,${(await readFile(file.path)).toString('base64')}`})));
   const serialized=JSON.stringify({...body,images}),operationId=randomUUID(),path=join(mount,'drafts/candidate.webp');
   await writeFile(join(mount,'generation-prompt.json'),JSON.stringify({prompt,operation_id:operationId,authored_by:ctx.workerId,reference_sha256:hash(await readFile(retained))}));
@@ -89,7 +90,7 @@ async function worker(ctx:WorkerLease, reviewer:boolean, openRouter = false){
    const {stdout}=await exec('ffprobe',['-v','error','-select_streams','v:0','-show_entries','stream=width,height','-of','json',path]);assertBackgroundDimensions(JSON.parse(stdout).streams[0]);
    wire.push({ticket:ctx.ticketId,provider:'meta-muse',operation_id:operationId,started,ended:Date.now()});
    return {completed:{result:{artifactReferences:[path],receiptReference:join(mount,'muse-response.json')}}};
-  },error=>`${String(error).replaceAll(meta,'[REDACTED]')}\n${providers.remediation('meta-muse',secretsPath)}`,AbortSignal.timeout(180000));
+  },error=>`${String(error).replaceAll(meta,'[REDACTED]')}\n${remediation('meta-muse',secretsPath)}`,AbortSignal.timeout(180000));
   return {draft_path:'/drafts/candidate.webp',sha256:hash(await readFile(path))};
  },{name:'generate_background',description:'Generate one Muse candidate from your authored prompt; one authorized call.',schema:z.object({prompt:z.string().min(50).max(5000)}).strict()});
  const agent=workspaceAgent(model,mount,modelName,ctx.workerId,reviewer?[inspect,reviewFinish]:[...(recovery?[]:[generate]),inspect,finishInspection,publicationTool(store,ctx)],'Operate only this assignment. Load its skill. Inspect actual bytes. No shell, delegation, substitute providers or director approval.',[productionMiddleware(store,ctx)]);

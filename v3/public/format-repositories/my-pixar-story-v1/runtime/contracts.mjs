@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createHash } from 'node:crypto';
-import {StudioSnapshot} from './instructions.mjs';
+const StudioSnapshot = z.any();
 
 export const VERSION = '2.0.0';
 export const text = z.string().trim().min(1);

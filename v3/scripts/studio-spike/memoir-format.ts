@@ -7,6 +7,7 @@ import { askActiveAgent } from "../../lib/agent-bridge.js";
 import { StudioProduction, memoirReviewModality, memoirReviewCoverage, memoirFilmReviewCriteria, type InputVersions, type WorkerLease } from "../../lib/studio-production.js";
 import { workspaceAgent, hash } from "./harness.js";
 import { publicationTool, productionMiddleware, reviewTool } from "./production-tools.js";
+import { assetKey, assertAllowed, validateArtifactContent, assemblyManifest } from "../../lib/memoir-policy.js";
 
 export const MEMOIR_PACKAGE_SHA256 = "bb325df5475617628394527945b215de6d92334fb5459ddfeea289530d7a8724";
 export const memoirModels = { writer: "moonshotai/kimi-k3", execution: "deepseek/deepseek-v4.1-flash", imageProvider: "decart/fp4", textBackup: "sail-research/fp4" } as const;
@@ -14,12 +15,12 @@ export const memoirModels = { writer: "moonshotai/kimi-k3", execution: "deepseek
 /** Reuse the installed official Format. Never apply events to its legacy coordinator. */
 export async function loadMemoirFormat(kit: string) {
   const load = (name: string) => import(pathToFileURL(join(kit, "runtime", `${name}.mjs`)).href);
-  const [contracts, studio, media, remotion, workflow, assemble] = await Promise.all([load("contracts"), load("studio"), load("media"), load("remotion"), load("workflow"), load("assemble")]);
+  const [contracts, media, remotion, assemble] = await Promise.all([load("contracts"), load("media"), load("remotion"), load("assemble")]);
   if (contracts.VERSION !== "2.0.0") throw new Error("UNSUPPORTED_MEMOIR_FORMAT");
   await remotion.verifyRenderer();
-  const source_digest = hash(Buffer.concat(["runtime/contracts.mjs", "runtime/workflow.mjs", "runtime/gates.mjs", "runtime/studio.mjs", "runtime/media.mjs", "runtime/remotion.mjs", "runtime/assemble.mjs", "studio.json"].map(path => readFileSync(join(kit, path)))));
+  const source_digest = hash(Buffer.concat(["runtime/contracts.mjs", "runtime/media.mjs", "runtime/remotion.mjs", "runtime/assemble.mjs", "studio.json"].map(path => readFileSync(join(kit, path)))));
   const config = JSON.parse(readFileSync(join(kit, "studio.json"), "utf8"));
-  return { kit, contracts, studio, media, remotion, workflow, assemble, config, source_digest };
+  return { kit, contracts, media, remotion, assemble, config, source_digest };
 }
 
 /** JSON contracts can reference only trusted immutable media, never a writable draft. */
@@ -67,7 +68,7 @@ export function createMemoirAssignment(format: Format, store: StudioProduction, 
   const worker = format.config.agents[role];
   if (!worker) throw new Error("UNKNOWN_MEMOIR_ROLE");
   const skill = readFileSync(join(format.kit, worker.skill), "utf8");
-  store.createMemoirTicket(id, projectId, role, inputs, options.allowanceMicros ?? 0, kind, format.contracts.criteria[kind], { outcome, asset_key: format.workflow.keyFor(projection), selectors: options.selectors ?? {}, skill, skill_sha256: hash(Buffer.from(skill)), skill_name: basename(dirname(worker.skill)), tools: worker.tools, model: role === "script-writer" ? memoirModels.writer : memoirModels.execution, lip_sync: false });
+  store.createMemoirTicket(id, projectId, role, inputs, options.allowanceMicros ?? 0, kind, format.contracts.criteria[kind], { outcome, asset_key: assetKey(kind, options.selectors ?? {}), selectors: options.selectors ?? {}, skill, skill_sha256: hash(Buffer.from(skill)), skill_name: basename(dirname(worker.skill)), tools: worker.tools, model: role === "script-writer" ? memoirModels.writer : memoirModels.execution, lip_sync: false });
   return store.ticket(id);
 }
 export function candidateValidator(format: Format, store: StudioProduction, ticketId: string) {
@@ -76,8 +77,8 @@ export function candidateValidator(format: Format, store: StudioProduction, tick
     if (!binding) throw new Error("MEMOIR_INPUT_BINDING_REQUIRED");
     const packet = JSON.parse(binding.packet), content = format.contracts.Content[binding.kind].parse(JSON.parse(bytes.toString()));
     const projection = approvedProjection(format, store, ticket.project_id, JSON.parse(ticket.inputs), binding.kind, packet.selectors);
-    format.workflow.assertAllowed(projection, binding.kind);
-    format.workflow.validateArtifactContent(projection, content, ticket.worker_id);
+    assertAllowed(projection, binding.kind);
+    validateArtifactContent(format, projection, content, ticket.worker_id);
     await format.media.verifyFiles(projection.artifacts);
     await format.media.verifyFiles(content);
     requirePinnedMedia(store, content);
@@ -111,8 +112,9 @@ export async function runMemoirAuthor(format: Format, store: StudioProduction, c
 
 export async function prepareMemoirComposition(format: Format, store: StudioProduction, projectId: string, inputs: InputVersions, destination: string) {
   const projection = approvedProjection(format, store, projectId, inputs, "film");
-  format.workflow.assertAllowed(projection, "film");
-  const manifest = format.studio.assemblyManifest(projection);
+  assertAllowed(projection, "film");
+  const rendererDigest = await format.remotion.rendererIdentity?.()?.rendererDigest ?? "unknown";
+  const manifest = assemblyManifest(projection, rendererDigest);
   await format.media.verifyFiles(manifest);
   const prepared = await format.remotion.prepareComposition(manifest, destination);
   // Preparation can outlive an operator edit. Recheck authoritative inputs before exposing output.
@@ -158,7 +160,12 @@ export async function renderMemoirFilm(format: Format, store: StudioProduction, 
   let leaseError: unknown;
   const heartbeat = setInterval(() => { try { store.heartbeat(ctx, 120000); } catch (error) { leaseError = error; } }, 30000);
   let result: any;
-  try { result = await format.assemble.renderFilm(projection, directory); if (leaseError) throw leaseError; store.heartbeat(ctx, 120000); } finally { clearInterval(heartbeat); }
+  try { 
+    const rendererDigest = await format.remotion.rendererIdentity?.()?.rendererDigest ?? "unknown";
+    const manifest = assemblyManifest(projection, rendererDigest);
+    result = await format.assemble.render(manifest, directory); 
+    if (leaseError) throw leaseError; store.heartbeat(ctx, 120000); 
+  } finally { clearInterval(heartbeat); }
   const pin = async (file: any) => ({ ...file, ...store.pinMedia(ctx, readFileSync(file.path), extname(file.path)) });
   result.files = await Promise.all(result.files.map(pin)); result.contactSheet = await pin(result.contactSheet);
   const bytes = Buffer.from(JSON.stringify(result)); await candidateValidator(format, store, ctx.ticketId)(bytes);
