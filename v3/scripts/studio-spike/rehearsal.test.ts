@@ -8,7 +8,8 @@ import { StudioProduction } from "../../lib/studio-production.js";
 import { hash } from "./harness.js";
 import { createSQLPerception } from "./media-perception.js";
 import { executeAuthorizedMedia } from "./media-transport.js";
-import { assertCapability } from "./rehearsal-capability.js";
+import { Client } from "langsmith";
+import { assertCapability, traceCapability } from "./rehearsal-capability.js";
 import { assertPreserved, directoryHashes, prepareRehearsal } from "./rehearsal.js";
 import { redact } from "./tracing.js";
 const kit = resolve("../../public/format-repositories/my-pixar-story-v1");
@@ -97,4 +98,14 @@ test("preparation rejects child names and symlinked destinations before writing 
     const separate = join(root, "separate"); mkdirSync(separate); writeFileSync(join(separate, "preparation-started.json"), "already started");
     await assert.rejects(prepareRehearsal({ root: separate, source, kit, preferredScript: "unused", authoredScript: "unused" }), /ALREADY_PREPARED_NO_RESET/);
   } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("capability tracing is explicitly enabled and records saved receipts without another perception call", async () => {
+  const uploads: any[] = [];
+  const client = new Client({ apiKey: "EXPLICIT_ISOLATED_MOCK", autoBatchTracing: false, callerOptions: { maxRetries: 0 }, fetchImplementation: async () => { throw new Error("No network in this isolated test"); } });
+  client.createRun = async value => { uploads.push(value); };
+  client.updateRun = async (_id, value) => { uploads.push(value); };
+  const id = "11111111-1111-4111-8111-111111111111"; let localReads = 0;
+  const result = await traceCapability(client, "image", id, async () => { localReads++; return { saved_receipt: true }; }, true)({ modality: "image", media_hash: "0".repeat(64) });
+  await client.awaitPendingTraceBatches(); assert.equal(localReads, 1); assert.deepEqual(result, { saved_receipt: true }); assert.ok(uploads.length > 0); assert.ok(uploads.some(p => p.id === id && p.extra.metadata.recovered_after_execution === true));
 });

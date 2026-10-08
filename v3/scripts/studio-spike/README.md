@@ -444,3 +444,15 @@ checks, not that a real film has been produced or creatively accepted.
 
 Focused checks: `node --import tsx --test rehearsal.test.ts phase6.test.ts` and
 `npm run check`. All provider tests use injected isolated mock transports.
+
+The first live capability batch passed all three declared held-out checks and
+used $0.008190 in reported-token allowance against its authorized $0.20 cap.
+Actual invoice charges remain unknown. Initial trace lookup returned HTTP 404:
+the new `traceable` wrapper had omitted explicit `tracingEnabled: true`.
+The flag is fixed with an isolated SDK regression. `recover-traces` uploaded
+saved results under clearly labelled post-execution recovery traces, verified
+those links, and made no additional perception requests. The original failure
+receipt is retained. See `docs/proofs/memoir-live-rehearsal-capability.json`.
+The rehearsal remains paused; remaining capability allowance does not authorize
+production generation. These simple probes prove transport and observations,
+not flawless creative judgment, exact timing perception, or cinematic quality.

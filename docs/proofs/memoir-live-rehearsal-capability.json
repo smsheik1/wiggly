@@ -1,0 +1,70 @@
+{
+  "status": "PASS_WITH_TRACE_RECOVERY",
+  "paid_batch_authorization": "Explicit user approval: Approve the $0.20 capability batch",
+  "provider": "Gemini gemini-3.8-flash",
+  "perception_calls": 3,
+  "additional_perception_calls": 0,
+  "declared_capability_checks": "PASS; spatial layout, motion direction, spoken phrase",
+  "allowance": {
+    "limit": 200000,
+    "used": 8190,
+    "remaining": 191810,
+    "overrunMicros": 0
+  },
+  "token_based_allowance_usd": 0.00819,
+  "verified_invoice_charges": null,
+  "paused": true,
+  "production_generation_calls": 0,
+  "saved_files_preserved": 313,
+  "trace_recovery": {
+    "original_failure": "LANGSMITH_HTTP_404: traceable wrapper did not explicitly enable tracing",
+    "fix": "Explicit tracingEnabled=true, protected by an isolated SDK regression",
+    "traces_recorded_after_execution": true,
+    "original_failure_receipt_preserved": true
+  },
+  "records": [
+    {
+      "kind": "image",
+      "run_id": "3f8a8564-d719-4d6f-9ef4-b299a898a3ab",
+      "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/3d677187-b62e-4f55-b8c7-6e198c9fe410/r/3f8a8564-d719-4d6f-9ef4-b299a898a3ab?poll=true",
+      "elapsed_ms": 6251,
+      "summary": "The media is a static image evenly divided vertically into two solid color fields: pure red on the left half and pure blue on the right half. There is no temporal motion, text, or audio.",
+      "inspection_coverage": {
+        "profile": "complete supplied media; video sampled at 4 FPS",
+        "all_source_frames_proven": false
+      },
+      "evidence_references": [
+        "36820246-dc6f-4505-a635-c0f0bbe99654"
+      ]
+    },
+    {
+      "kind": "video",
+      "run_id": "f388a575-c37d-4abc-8a64-d6c2b2d83aca",
+      "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/3d677187-b62e-4f55-b8c7-6e198c9fe410/r/f388a575-c37d-4abc-8a64-d6c2b2d83aca?poll=true",
+      "elapsed_ms": 26563,
+      "summary": "The 4-second video displays a solid blue square on a plain white canvas at 320x180 resolution. Vertically, the square remains centered throughout the video. Spatially and temporally, it begins stationary on the left side from 00:00.000 to 00:01.750. Between 00:01.750 and 00:02.000, there is an abrupt rightward jump of roughly 90 pixels. From 00:02.000 through 00:03.750, the square moves steadily to the right across the center and into the right half of the frame. There is no audio track and no spoken words are present.",
+      "inspection_coverage": {
+        "profile": "complete supplied media; video sampled at 4 FPS",
+        "all_source_frames_proven": false
+      },
+      "evidence_references": [
+        "c0b9e28f-8261-4530-acf6-4314495d1f76"
+      ]
+    },
+    {
+      "kind": "audio",
+      "run_id": "9fffe241-ff3d-4ac6-b943-87f429fe3c02",
+      "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/3d677187-b62e-4f55-b8c7-6e198c9fe410/r/9fffe241-ff3d-4ac6-b943-87f429fe3c02?poll=true",
+      "elapsed_ms": 6572,
+      "summary": "The audio features a clear, natural-sounding male voice speaking the sentence: 'The copper kettle is beside the window.' No acoustic defects, distortion, or background noise are present.",
+      "inspection_coverage": {
+        "profile": "complete supplied media; video sampled at 4 FPS",
+        "all_source_frames_proven": false
+      },
+      "evidence_references": [
+        "51bdae6e-0482-40b2-8534-4a4a256f2cf3"
+      ]
+    }
+  ],
+  "limits": "This proves the configured media workflow and declared simple observations, not cinematic-quality judgment, calibrated timeline accuracy or flawless perception. Real production still needs independent review and director approval."
+}

@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 import { execFile } from "node:child_process";
 import { promisify, parseArgs } from "node:util";
 import { randomUUID } from "node:crypto";
+import type { Client } from "langsmith";
 import { traceable } from "langsmith/traceable";
 import { StudioProduction } from "../../lib/studio-production.js";
 import { provisionLocalOperator, signLocalOperator } from "../../lib/studio-operator.js";
@@ -12,6 +13,9 @@ import { capabilityQuote, rehearsalProject, assertPreserved } from "./rehearsal.
 import { hash } from "./harness.js";
 import { tracing } from "./tracing.js";
 const exec = promisify(execFile);
+export function traceCapability(client: Client, kind: string, runId: string, invoke: (input: { modality: string; media_hash: string }) => Promise<any>, recovery = false) {
+  return traceable(invoke, { id: runId, client, tracingEnabled: true, project_name: "wiggly-memoir-rehearsal", name: recovery ? `saved-capability-receipt-${kind}` : `capability-${kind}`, run_type: "tool", metadata: { production: false, modality: kind, recovered_after_execution: recovery, perception_repeated: false } });
+}
 export function assertCapability(kind: string, result: any) {
   if (!result.report?.perceptible || !result.report?.fullMediaInspected || !result.evidence_references?.length) throw new Error("PERCEPTION_INCONCLUSIVE");
   const text = [result.report.summary, ...result.report.observations.map((o: any) => o.finding)].join(" ").toLowerCase().replace(/[^a-z0-9]+/g, " ");
@@ -57,12 +61,14 @@ export async function runCapability(root: string, kit: string, authorizationPath
     const tools = await createSQLPerception({ kit, store, ctx, files: Object.values(fixtures), criteria: ["Describe visible spatial relationships, temporal motion, and any actual spoken words. Do not infer from filenames or invent unavailable perception."], maxCalls: quote.max_calls, estimateMicros: quote.estimate_micros_per_call });
     for (const kind of ["image", "video", "audio"] as const) {
       store.heartbeat(ctx, 300000); const runId = randomUUID(), start = Date.now();
-      const invoke = traceable(async (_input: { modality: string; media_hash: string }) => tools.inspect(kind, fixtures[kind].sha256), { id: runId, client: traces.client, project_name: "wiggly-memoir-rehearsal", name: `capability-${kind}`, run_type: "tool", metadata: { production: false, modality: kind } });
+      const invoke = traceCapability(traces.client, kind, runId, async () => tools.inspect(kind, fixtures[kind].sha256));
       const result = await invoke({ modality: kind, media_hash: fixtures[kind].sha256 });
       records.push({ kind, run_id: runId, elapsed_ms: Date.now() - start, result });
       assertCapability(kind, result);
     }
     await traces.client.awaitPendingTraceBatches(); if (traces.failures.length) throw new Error("LANGSMITH_TRACE_UPLOAD_FAILED");
+    // Give asynchronous ingestion time before the single verification read; no failed API read is retried.
+    await new Promise(resolve => setTimeout(resolve, 3000));
     for (const record of records) record.trace_url = await traces.client.getRunUrl({ run: await traces.client.readRun(record.run_id) });
   } catch (error) { errorText = String(error); throw error; }
   finally {
@@ -72,9 +78,29 @@ export async function runCapability(root: string, kit: string, authorizationPath
   }
   return { status: "PASS", modalities: records.map(r => r.kind), root };
 }
+export async function recoverCapabilityTraces(root: string) {
+  const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8")); assertPreserved(manifest.source, manifest.saved_production_hashes);
+  const proof = JSON.parse(readFileSync(join(root, "capability-proof.json"), "utf8"));
+  if (proof.status !== "BLOCKED" || proof.diagnostic !== "Error: LANGSMITH_HTTP_404" || proof.records.length !== 3) throw new Error("EXACT_TRACE_RECOVERY_REQUIRED");
+  const target = join(root, "capability-trace-recovery.json"); if (existsSync(target)) throw new Error("TRACE_RECOVERY_ALREADY_RECORDED");
+  const store = new StudioProduction(root);
+  try {
+    if (store.project(rehearsalProject).paused !== 1 || JSON.stringify(store.allowance(rehearsalProject)) !== JSON.stringify(proof.allowance)) throw new Error("TRACE_RECOVERY_STATE_CHANGED");
+    const fixtures = JSON.parse(readFileSync(join(root, "capability-fixtures/fixtures.json"), "utf8")), traces = await tracing();
+    for (const record of proof.records) {
+      assertCapability(record.kind, record.result);
+      await traceCapability(traces.client, record.kind, record.run_id, async () => record.result, true)({ modality: record.kind, media_hash: fixtures[record.kind].sha256 });
+    }
+    await traces.client.awaitPendingTraceBatches(); if (traces.failures.length) throw new Error("LANGSMITH_TRACE_UPLOAD_FAILED");
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    for (const record of proof.records) record.trace_url = await traces.client.getRunUrl({ run: await traces.client.readRun(record.run_id) });
+    writeFileSync(target, JSON.stringify({ status: "PASS_WITH_TRACE_RECOVERY", original_diagnostic: proof.diagnostic, traces_recorded_after_execution: true, additional_perception_calls: 0, records: proof.records, allowance: store.allowance(rehearsalProject), paused: true, verified_invoice_charges: null }, null, 2), { mode: 0o600, flag: "wx" });
+    return { status: "PASS_WITH_TRACE_RECOVERY", additional_perception_calls: 0, paused: true };
+  } finally { store.close(); assertPreserved(manifest.source, manifest.saved_production_hashes); }
+}
 if (process.argv[1] && resolve(process.argv[1]) === import.meta.filename) {
   const { values, positionals } = parseArgs({ allowPositionals: true, options: { root: { type: "string" }, kit: { type: "string" }, authorization: { type: "string" } } });
   if (!values.root || !values.kit) throw new Error("Use prepare or run with --root --kit; run also needs --authorization.");
-  const result = positionals[0] === "prepare" ? await prepareCapability(resolve(values.root), resolve(values.kit)) : positionals[0] === "run" && values.authorization ? await runCapability(resolve(values.root), resolve(values.kit), resolve(values.authorization)) : (() => { throw new Error("NO_PAID_CALL_WITHOUT_AUTHORIZATION"); })();
+  const result = positionals[0] === "recover-traces" ? await recoverCapabilityTraces(resolve(values.root)) : positionals[0] === "prepare" ? await prepareCapability(resolve(values.root), resolve(values.kit)) : positionals[0] === "run" && values.authorization ? await runCapability(resolve(values.root), resolve(values.kit), resolve(values.authorization)) : (() => { throw new Error("NO_PAID_CALL_WITHOUT_AUTHORIZATION"); })();
   console.log(JSON.stringify(result, null, 2));
 }
