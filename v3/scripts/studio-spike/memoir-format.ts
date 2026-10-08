@@ -84,6 +84,13 @@ export function candidateValidator(format: Format, store: StudioProduction, tick
     if (!binding) throw new Error("MEMOIR_INPUT_BINDING_REQUIRED");
     const packet = JSON.parse(binding.packet), content = format.contracts.Content[binding.kind].parse(JSON.parse(bytes.toString()));
     const projection = approvedProjection(format, store, ticket.project_id, JSON.parse(ticket.inputs), binding.kind, packet.selectors);
+    if (binding.kind === "narration" && content.audioEdits?.length) {
+      const parentIds = new Set(content.audioEdits.map((e: any) => e.parentArtifactId));
+      if (parentIds.size !== 1) throw new Error("REPAIR_PARENT_MISMATCH");
+      const parent = store.rejectedVersion([...parentIds][0] as string, ticketId), previous = JSON.parse(readFileSync(parent.path, "utf8"));
+      Object.assign(projection, { gate: "author", sequence: 0, jobs: [], history: [], reviewDisagreements: 0 });
+      projection.artifacts.push({ id: parent.id, key: "narration", kind: "narration", digest: format.contracts.digest(previous), content: previous, valid: true, review: { decision: "rejected", checks: JSON.parse(parent.rejection!.defects).map((d: any) => ({ ...d, status: "fail" })) } } as any);
+    }
     if (binding.kind === "clone" && packet.existing_voice) {
       if (format.contracts.digest(content) !== format.contracts.digest(packet.existing_voice)) throw new Error("EXISTING_VOICE_CANDIDATE_CHANGED");
       projection.voiceChoice = existingVoiceChoice(packet.existing_voice.origin);

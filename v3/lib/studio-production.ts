@@ -312,6 +312,12 @@ export class StudioProduction {
       return verify(versionId);
     });
   }
+  rejectedVersion(versionId: string, ticketId: string): Row {
+    const v = this.version(versionId); this.#verifyVersion(v);
+    const rejection = this.#get("SELECT findings,defects FROM reviews WHERE author_ticket=? AND version_id=? AND state='FINISHED' AND verdict='CHANGES_REQUESTED'", ticketId, versionId);
+    requireThat(v.ticket_id === ticketId && rejection, "REJECTED_REPAIR_SOURCE_REQUIRED");
+    return { ...v, rejection };
+  }
   memoirAssignment(ticketId: string) { return this.#get("SELECT * FROM format_assignments WHERE ticket_id=?", ticketId); }
   acceptMemoirIntermediate(ticketId: string, validate: (bytes: Buffer, kind: string) => { validator: string; artifact_hash: string }) {
     return this.#tx(() => {

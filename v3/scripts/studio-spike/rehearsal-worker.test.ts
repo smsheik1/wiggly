@@ -7,9 +7,9 @@ import { StudioProduction } from '../../lib/studio-production.js';
 import { rehearsalWorker } from './rehearsal-worker.js';
 import { workspaceAgent } from './harness.js';
 import { productionMiddleware, publicationTool } from './production-tools.js';
-function fixture() {
+function fixture(allowance=100000) {
   const root = mkdtempSync(join(tmpdir(), 'wiggly-explicit-rehearsal-worker-mock-')), store = new StudioProduction(root);
-  store.createProject('mock', 100000); store.operator('mock','resume',0,{id:'resume',actor:'isolated-test',reason:'No real provider or creative acceptance'});
+  store.createProject('mock', allowance); store.operator('mock','resume',0,{id:'resume',actor:'isolated-test',reason:'No real provider or creative acceptance'});
   store.createTicket('author','mock','test-author',{},100000,'AUTHOR',{maxTurns:12});
   const ctx = store.claim('author','mock-author',300000);
   return { store,ctx,close(){store.close();rmSync(root,{recursive:true,force:true});} };
@@ -117,5 +117,36 @@ test('authenticated settled-failure recovery retains attempt and turn limits and
   const ctx=f.store.claim('author',f.ctx.workerId,300000);assert.equal(ctx.attemptId,f.ctx.attemptId);assert.ok(ctx.token>f.ctx.token);assert.equal(f.store.ticket('author').max_turns,12);
   f.store.beginTurn(ctx,'continued-turn');assert.equal(f.store.ticket('author').attempt_count,1);
   assert.throws(()=>f.store.heartbeat(f.ctx,300000),/STALE/);
+ }finally{f.close();}
+});
+
+
+test('direct Gemini binds audio bytes and approved script to its verdict; missing coverage cannot pass',async()=>{
+ const {directAudioReview}=await import('./gemini-audio-review.js'),{hash}=await import('./harness.js');
+ for(const incomplete of [false,true]){
+  const f=fixture(1000000);try{
+   const audio=Buffer.from('EXPLICIT ISOLATED MOCK AUDIO'),file={...f.store.pinMedia(f.ctx,audio,'.wav'),durationSeconds:15};
+   const candidate=Buffer.from(JSON.stringify({files:[file],transcripts:['EXPLICIT APPROVED MOCK WORDS']}));writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),candidate);
+   const e=f.store.mediaSupplied(f.ctx,candidate,{runId:'mock',model:'mock',modality:'text',coverage:'mock'});f.store.inspectionCompleted(f.ctx,e,'Explicit mock author candidate inspection before independent review.');f.store.publish(f.ctx,{draft_path:'candidate.json',evidence_references:[e]});
+   f.store.startReview('author','review','audio-reviewer',{criteria:['transcript','duration'],modality:'audio',coverage:'complete candidate and every referenced media item'},500000,{maxTurns:12});const ctx=f.store.claim('review','independent-gemini',300000);let calls=0;
+   const run=()=>directAudioReview(f.store,ctx,{key:'EXPLICIT_MOCK_KEY',references:{script:'EXPLICIT APPROVED MOCK WORDS'},fetcher:async(url,init)=>{
+    calls++;assert.equal(String(url),'https://generativelanguage.googleapis.com/v1beta/interactions');const body=JSON.parse(String(init?.body));assert.ok(body.input[0].text.includes('EXPLICIT APPROVED MOCK WORDS'));assert.ok(body.input[0].text.includes('200 ms'));assert.equal(Buffer.from(body.input.find((p:any)=>p.type==='audio').data,'base64').toString(),audio.toString());
+    const report={verdict:'PASS',findings:'Explicit isolated mock review finds approved words and timing compliant.',direction_compatible:true,defects:[],coverage:[{sha256:hash(audio),perceptible:true,complete:!incomplete,findings:'Explicit isolated complete audio inspection for regression testing.',heard_words:'EXPLICIT APPROVED MOCK WORDS'}]};
+    return new Response(JSON.stringify({model:'gemini-3.8-flash',status:'completed',usage:{total_input_tokens:100,total_output_tokens:100},steps:[{type:'model_output',content:[{type:'text',text:JSON.stringify(report)}]}]}),{headers:{'Content-Type':'application/json'}});
+   }});
+   if(incomplete){await assert.rejects(run(),/COVERAGE_INCONCLUSIVE/);assert.notEqual(f.store.ticket('author').status,'AWAITING_APPROVAL');}else{const result=await run();assert.equal(result.report.verdict,'PASS');assert.equal(f.store.ticket('author').status,'AWAITING_APPROVAL');assert.notEqual(f.store.ticket('author').status,'APPROVED');}
+   assert.equal(calls,1);
+  }finally{f.close();}
+ }
+});
+
+test('pause repair can reference only an immutable rejected version from its own author ticket',async()=>{
+ const f=fixture();try{
+  const bytes=Buffer.from(JSON.stringify({explicitMock:'repair source'}));writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),bytes);
+  const e=f.store.mediaSupplied(f.ctx,bytes,{runId:'mock',model:'mock',modality:'text',coverage:'complete'});f.store.inspectionCompleted(f.ctx,e,'Explicit isolated source contract inspection for repair provenance.');const version=f.store.publish(f.ctx,{draft_path:'candidate.json',evidence_references:[e]});
+  assert.throws(()=>f.store.rejectedVersion(version.id,'author'),/REJECTED_REPAIR_SOURCE_REQUIRED/);
+  f.store.startReview('author','review','mock-reviewer',{criteria:['duration'],modality:'text',coverage:'complete'});const ctx=f.store.claim('review','independent',300000);
+  const inspected=f.store.mediaSupplied(ctx,bytes,{runId:'review',model:'mock',modality:'text',coverage:'complete'});f.store.inspectionCompleted(ctx,inspected,'Explicit mock measured duration defect in the original candidate.');f.store.submitReview(ctx,{verdict:'CHANGES_REQUESTED',findings:'Explicit mock requires a localized timing correction before approval.',defects:[{criterion:'duration',region:'beat 2',evidence:'EXPLICIT MOCK measured duration exceeds target'}],evidence_references:[inspected],direction_compatible:false});
+  const rejected=f.store.rejectedVersion(version.id,'author');assert.equal(rejected.content_hash,version.content_hash);assert.equal(JSON.parse(rejected.rejection!.defects)[0].criterion,'duration');assert.throws(()=>f.store.rejectedVersion(version.id,'foreign-author'),/REJECTED_REPAIR_SOURCE_REQUIRED/);
  }finally{f.close();}
 });

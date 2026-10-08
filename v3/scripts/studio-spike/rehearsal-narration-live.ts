@@ -5,11 +5,12 @@ import {StudioProduction,type WorkerLease} from '../../lib/studio-production.js'
 import {provisionLocalOperator,signLocalOperator} from '../../lib/studio-operator.js';
 import {hash} from './harness.js';
 import {rehearsalProject,assertPreserved} from './rehearsal.js';
-import {loadMemoirFormat,createMemoirAssignment,startMemoirReview,runMemoirReviewer,runMemoirAuthor,approvedProjection} from './memoir-format.js';
+import {loadMemoirFormat,createMemoirAssignment,startMemoirReview,runMemoirAuthor,approvedProjection} from './memoir-format.js';
 import {rehearsalWorker,referencedMedia} from './rehearsal-worker.js';
 import {executeAuthorizedMedia} from './media-transport.js';
 import {createSQLPerception} from './media-perception.js';
 import {tracing,namedSecret} from './tracing.js';
+import {directAudioReview} from './gemini-audio-review.js';
 
 /** One director-approved four-beat batch, with separate native author/reviewer inspection. */
 export async function runNarration(root:string,kit:string,authorizationPath:string){
@@ -32,7 +33,7 @@ export async function runNarration(root:string,kit:string,authorizationPath:stri
   const candidate=await executeAuthorizedMedia(format,store,ctx,{operationId:'rehearsal-four-beats-generation',provider:'cartesia',estimateMicros:Math.ceil(plan.estimatedCostUsd*1e6),plan,request:providers.requestDescriptor(projection,plan)});
   writeFileSync(join(store.draftDirectory(ctx),'candidate.json'),JSON.stringify(candidate),{flag:'wx',mode:0o600});
   console.log(JSON.stringify({status:'FOUR_BEATS_GENERATED',files:candidate.files,sourceFiles:candidate.sourceFiles}));
-  const traces=await tracing(),key=await namedSecret('OPENROUTER_API_KEY');
+  const traces=await tracing(),key=await namedSecret('OPENROUTER_API_KEY'),geminiKey=await namedSecret('GEMINI_API_KEY');
   async function inspection(lease:WorkerLease,content:any){
    if(format.contracts.digest(content)!==format.contracts.digest(candidate))throw new Error('AUTHORIZED_NARRATION_MEDIA_CHANGED');
    const files=referencedMedia(content),tools=await createSQLPerception({kit,store,ctx:lease,files,criteria:[...format.contracts.criteria.narration,'Inspect actual spoken words; quote audible deviations, missing words and seams with timestamps. Assess pacing and report uncertainty rather than assuming the transcript metadata proves spoken words.'],maxCalls:files.length,estimateMicros:60000});
@@ -43,8 +44,8 @@ export async function runNarration(root:string,kit:string,authorizationPath:stri
   await live(ctx,()=>runMemoirAuthor(format,store,ctx,author.model,author.tools,{callbacks:[traces.tracer],metadata:{batch:quote.id,candidate_kind:'narration',stage:'owner-inspection'}},author.evidenceReferences));
   if(store.ticket(id).status!=='SUBMITTED')throw new Error('NARRATION_AUTHOR_DID_NOT_SUBMIT');
   const reviewerId=id+'-review';startMemoirReview(store,id,reviewerId,quote.ticket_caps_micros.narration_review,undefined,{maxTurns:12,maxAttempts:3});
-  const reviewCtx=store.claim(reviewerId,'independent-narration-reviewer',300000),reviewer=rehearsalWorker(store,reviewCtx,{key,inspectMedia:content=>inspection(reviewCtx,content)});
-  await live(reviewCtx,()=>runMemoirReviewer(format,store,reviewCtx,reviewer.model,reviewer.tools,{callbacks:[traces.tracer],metadata:{batch:quote.id,candidate_kind:'narration',stage:'independent-inspection'}},reviewer.evidenceReferences,'The director recognized and approved the exact prior voice audition. Compare narration with the approved script and dedicated actual-audio inspection findings; speaker similarity to an unavailable original recording is not an automated prerequisite. Required perception must be conclusive.'));
+  const reviewCtx=store.claim(reviewerId,'independent-gemini-audio-reviewer',300000),packet=store.reviewPacket(reviewerId),references=Object.fromEntries(Object.entries(packet.exact_inputs as Record<string,string>).map(([name,v])=>[name,JSON.parse(readFileSync(store.acceptedVersion(rehearsalProject,v).path,'utf8'))]));
+  await live(reviewCtx,()=>directAudioReview(store,reviewCtx,{key:geminiKey,references,traceClient:traces.client}));
   if(store.ticket(id).status!=='AWAITING_APPROVAL')throw new Error('NARRATION_REVIEW_DID_NOT_PASS:'+store.ticket(id).status);
   await traces.client.awaitPendingTraceBatches();if(traces.failures.length)throw new Error('LANGSMITH_TRACE_UPLOAD_FAILED');
   result={card:store.approvalCard(id),files:candidate.files,sourceFiles:candidate.sourceFiles,tailSilenceSeconds:candidate.tailSilenceSeconds};
