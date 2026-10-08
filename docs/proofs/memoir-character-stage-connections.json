@@ -7,7 +7,10 @@
   "tracing": "LangSmith",
   "authorized_character_batch_cap_usd": 2,
   "director_selections_required_before_sheets": true,
-  "checks": {"typecheck": "PASS", "regression_tests": 101},
+  "checks": {
+    "typecheck": "PASS",
+    "regression_tests": 102
+  },
   "observed_failures_and_fixes": [
     {
       "failure": "Native large tool-result eviction replaced custom image results with a filesystem pointer before the model received the bytes.",
@@ -18,6 +21,11 @@
       "failure": "Downstream cast validation could not see the approved clone/audition inherited through narration and incorrectly reported narration was not locked.",
       "fix": "Expand only exact accepted transitive input versions in the read-only validation projection; reject conflicting version bindings.",
       "evidence": "Narration-lock regression and publication of the same unchanged, already inspected live agent draft followed by independent direct image-review PASS."
+    },
+    {
+      "failure": "A character prompt reviewer lacked the approved screenplay and incorrectly rejected an explicitly approved story prop, while correctly catching a source-shirt discrepancy.",
+      "fix": "The shared direct reviewer loads exact accepted input contracts itself; creative repair preserves history and bound attempts.",
+      "evidence": "Independent revised-prompt PASS after the author corrected the observed wardrobe issue. A regression confirms approved story direction reaches direct image review."
     }
   ],
   "limitations": [
