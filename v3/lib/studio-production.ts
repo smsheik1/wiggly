@@ -399,6 +399,23 @@ export class StudioProduction {
       const result = { command_id: p.id, ticket_id: t.id, status, revision: t.revision + 1, limits, ...(recovery ? { recovered_operation_id: recovery.operation_id, billing_reservation_retained: this.operation(recovery.operation_id).settled_at === null } : {}) }; this.#saveCommand(command, serialized, result); return result;
     });
   }
+  /** Resume an operator-authorized, reconciled failure without resetting limits or history. */
+  recoverSettledFailure(command: SignedOperatorCommand<OperatorPayload & { action: "recover_settled_failure"; ticket_id: string; operation_id: string; expected_revision: number; request_id: string; evidence_reference: string; reason: string }>) {
+    const p = authenticateOperator(this.root, command), serialized = commandJSON(p); id(p.id);
+    requireThat(p.action === "recover_settled_failure" && p.reason.trim() && p.request_id.trim() && p.evidence_reference.trim(), "RECOVERY_AUTHORIZATION_REQUIRED");
+    return this.#tx(() => {
+      const previous = this.#commandReplay(p, serialized); if (previous) return previous;
+      const t = this.ticket(p.ticket_id), op = this.operation(p.operation_id);
+      requireThat(t.project_id === p.project_id && t.revision === p.expected_revision, "STALE_RECOVERY");
+      requireThat(t.status === "BLOCKED" && t.blocked_reason === null && op.ticket_id === t.id && op.attempt_id === t.attempt_id && op.state === "FAILED" && op.settled_at !== null, "SETTLED_FAILURE_REQUIRED");
+      requireThat(!op.request_id || op.request_id === p.request_id, "REQUEST_ID_CONFLICT");
+      requireThat(!this.#get("SELECT id FROM operations WHERE ticket_id=? AND (state IN ('SUBMITTING','SUBMITTED','UNKNOWN') OR (state='FAILED' AND settled_at IS NULL))", t.id), "UNCERTAIN_OPERATION");
+      this.#run("UPDATE operations SET request_id=? WHERE id=?", p.request_id, op.id);
+      this.#run("UPDATE tickets SET status='WORKING',lease_until=0,token=token+1,revision=revision+1 WHERE id=?", t.id);
+      const result = { command_id: p.id, ticket_id: t.id, status: "WORKING", attempt_id: t.attempt_id, recovered_operation_id: op.id, evidence_reference: p.evidence_reference };
+      this.#saveCommand(command, serialized, result); return result;
+    });
+  }
   heartbeat(ctx: WorkerLease, leaseMs: number) { requireThat(Number.isSafeInteger(leaseMs) && leaseMs > 0, "INVALID_LEASE_DURATION"); this.#tx(() => { this.#lease(ctx); this.#run("UPDATE tickets SET lease_until=? WHERE id=?", this.now() + leaseMs, ctx.ticketId); }); }
   draftDirectory(ctx: WorkerLease) { id(ctx.ticketId); id(ctx.attemptId); return join(this.root, "assignments", ctx.ticketId, ctx.attemptId, "drafts"); }
   #draftBytes(ctx: WorkerLease, draftPath: string) {

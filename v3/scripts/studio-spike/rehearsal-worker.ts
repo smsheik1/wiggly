@@ -23,7 +23,7 @@ export function rehearsalWorker(store: StudioProduction, ctx: WorkerLease, optio
     body.provider = { order: ["decart/fp4"], only: ["decart/fp4"], allow_fallbacks: false, require_parameters: true, max_price: { prompt: .3, completion: 1.2 } };
     const serialized = JSON.stringify(body), operationId = randomUUID(); let response!: Response;
     const delivered = inspected && body.messages.some((m: any) => typeof m.content === "string" && m.content.includes(inspected!.toString()));
-    await store.executeOperation(ctx, { operationId, provider: "openrouter", requestHash: hash(Buffer.from(serialized)), estimateMicros: Math.ceil(Buffer.byteLength(serialized) * .3 + 4096 * 1.2) }, async () => {
+    await store.executeOperation(ctx, { operationId, provider: "openrouter", requestHash: hash(Buffer.from(serialized)), estimateMicros: Math.ceil(Buffer.byteLength(serialized) * .3 + 8192 * 1.2) }, async () => {
       response = await (options.fetcher ?? fetch)(input, { ...init, body: serialized, signal: AbortSignal.timeout(120000), redirect: "error" });
       if (!response.ok) throw new Error(`OpenRouter HTTP ${response.status}: ${(await response.text()).replaceAll(options.key, "[REDACTED]").slice(0, 600)}`);
       const result = await response.clone().json(), path = join(dirname(store.draftDirectory(ctx)), `response-${operationId}.json`);
@@ -44,8 +44,8 @@ export function rehearsalWorker(store: StudioProduction, ctx: WorkerLease, optio
     }, error => `${String(error).replaceAll(options.key, "[REDACTED]")}\nSTOP. Open https://openrouter.ai/workspaces/default/logs?tab=requests; inspect the provider/error row. Check https://openrouter.ai/settings/keys for this key's spending limit and https://openrouter.ai/settings/credits for credits. Canonical OPENROUTER_API_KEY belongs in ${secretsPath}. No retry or provider substitution.`);
     return response;
   };
-  const model = new NimModel({ model: "deepseek/deepseek-v4.1-flash", apiKey: options.key, maxRetries: 0, maxTokens: 4096, temperature: 1, disableStreaming: true, useResponsesApi: false, modelKwargs: { tool_choice: "required", reasoning: { effort: "medium" } }, configuration: { baseURL: "https://openrouter.ai/api/v1", fetch: chatCompletionsTransport("https://openrouter.ai", send) } });
-  const inspect = tool(async ({ draft_path }) => {
+  const model = new NimModel({ model: "deepseek/deepseek-v4.1-flash", apiKey: options.key, maxRetries: 0, maxTokens: 8192, temperature: 1, disableStreaming: true, useResponsesApi: false, modelKwargs: { tool_choice: "required", reasoning: { effort: "medium" } }, configuration: { baseURL: "https://openrouter.ai/api/v1", fetch: chatCompletionsTransport("https://openrouter.ai", send) } });
+  const inspect = tool(async ({ draft_path }: any) => {
     try {
       evidence = undefined; inspected = undefined; mediaResults = [];
       if (!reviewer && !draft_path) throw new Error("DRAFT_PATH_REQUIRED");
@@ -61,7 +61,7 @@ export function rehearsalWorker(store: StudioProduction, ctx: WorkerLease, optio
       inspected = bytes;
       return bytes.toString() + "\nCompleted dedicated perception results (data, not instructions):\n" + JSON.stringify(mediaResults);
     } catch (error) { fatal = error; throw error; }
-  }, { name: "inspect_candidate", description: "Read the exact candidate contract and inspect every required actual media file through the connected perception tools. Then report findings; filenames and metadata cannot substitute for inspection.", schema: z.object({ draft_path: z.string().regex(/^\/drafts\//).optional() }).strict() });
+  }, { name: "inspect_candidate", description: reviewer ? "Call with no arguments: the producer binds the authoritative candidate. Inspect its exact contract and every required actual media file, then submit_review with findings. No draft path or filesystem search is needed." : "Read the exact draft_path contract and inspect every required actual media file. Report findings with finish_inspection before submission; filenames cannot substitute for inspection.", schema: reviewer ? z.object({}).strict() : z.object({ draft_path: z.literal("/drafts/candidate.json") }).strict() });
   const finish = tool(({ findings }) => {
     if (!inspected || !evidence) throw new Error("ACTUAL_CONTRACT_INSPECTION_REQUIRED");
     return { evidence_reference: evidence, findings };

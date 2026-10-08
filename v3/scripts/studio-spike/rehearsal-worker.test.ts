@@ -70,3 +70,52 @@ test('SQL validation uses the official complete studio snapshot and accepted exi
   const projection=approvedProjection(format,mockStore,'isolated',{},'answers');
   assert.ok(instructions.StudioSnapshot.safeParse(projection.studio).success);
 });
+
+test('independent reviewer receives the signed original questionnaire, not only its candidate',async()=>{
+  const f=fixture();try{
+    const {resolve}=await import('node:path');const {readFileSync}=await import('node:fs');
+    const {loadMemoirFormat,runMemoirReviewer}=await import('./memoir-format.js');const {ScriptedModel,call}=await import('./offline-model.js');
+    const {provisionLocalOperator,signLocalOperator}=await import('../../lib/studio-operator.js');const {hash}=await import('./harness.js');
+    const kit=resolve('../../public/format-repositories/my-pixar-story-v1'),format=await loadMemoirFormat(kit),source=JSON.parse(readFileSync(join(kit,'examples/parent.json'),'utf8'));
+    const principal=provisionLocalOperator(f.store.root);f.store.activateMemoirPolicy(signLocalOperator(f.store.root,{id:'mock-policy',principal,project_id:'mock',action:'activate_memoir_policy',source_inputs:source}));
+    const bytes=Buffer.from(JSON.stringify({explicitMockCandidate:true}));writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),bytes);
+    const evidence=f.store.mediaSupplied(f.ctx,bytes,{runId:'mock',model:'mock',modality:'text',coverage:'mock'});f.store.inspectionCompleted(f.ctx,evidence,'Explicit isolated candidate inspection for source-packet regression.');f.store.publish(f.ctx,{draft_path:'candidate.json',evidence_references:[evidence]});
+    f.store.startReview('author','review','mock-reviewer',{criteria:['source-grounding'],modality:'text',coverage:'complete candidate and every referenced media item'});
+    const ctx=f.store.claim('review','mock-independent',300000),model=new ScriptedModel([messages=>{
+      const briefing=JSON.stringify(messages.map(m=>m.content));
+      assert.ok(briefing.includes('/references/source-inputs.json'));
+      assert.ok(briefing.includes('complete supplied reference inventory'));
+      assert.ok(!briefing.includes('preferred-script.json'));
+      assert.deepEqual(JSON.parse(readFileSync(join(dirname(f.store.draftDirectory(ctx)),'references/source-inputs.json'),'utf8')),source);
+      return call('submit_review',{verdict:'INCONCLUSIVE',findings:'Explicit isolated regression ends without production acceptance.',defects:[]});
+    }]);await runMemoirReviewer(format,f.store,ctx,model,[]);assert.equal(model.calls.length,1);
+  }finally{f.close();}
+});
+
+test('live story and recovery commands reject unbound authorization before credentials, leases or paid calls',async()=>{
+ const {mkdirSync}=await import('node:fs'),{runStory}=await import('./rehearsal-story.js'),{recoverStory}=await import('./rehearsal-story-recovery.js'),{recoverAudition}=await import('./rehearsal-audition-recovery.js'),{runNarration}=await import('./rehearsal-narration-live.js');
+ const root=mkdtempSync(join(tmpdir(),'wiggly-explicit-authorization-mock-'));try{
+  const dir=join(root,'story-narration');mkdirSync(dir);writeFileSync(join(dir,'quote.json'),JSON.stringify({allowance_micros:2000000}));const auth=join(root,'not-authorized.json');writeFileSync(auth,JSON.stringify({quote_sha256:'wrong',allowance_micros:2000000,operator_message:'EXPLICIT MOCK INVALID'}));
+  await assert.rejects(runStory(root,'never-load-this-kit',auth),/EXACT_BATCH_AUTHORIZATION_REQUIRED/);
+  await assert.rejects(recoverStory(root,'never-load-this-kit',auth),/EXACT_REVIEW_RECOVERY_AUTHORIZATION_REQUIRED/);
+  await assert.rejects(recoverAudition(root,'never-load-this-kit',auth),/EXACT_REVIEW_RECOVERY_AUTHORIZATION_REQUIRED/);
+  await assert.rejects(runNarration(root,'never-load-this-kit',auth),/EXACT_AUDITION_APPROVAL_REQUIRED/);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+
+test('authenticated settled-failure recovery retains attempt and turn limits and rejects uncertain billing',async()=>{
+ const f=fixture();try{
+  const {provisionLocalOperator,signLocalOperator}=await import('../../lib/studio-operator.js');
+  const principal=provisionLocalOperator(f.store.root);
+  f.store.beginTurn(f.ctx,'initial-turn');
+  f.store.prepareOperation(f.ctx,{operationId:'failed',provider:'mock',requestHash:'a'.repeat(64),estimateMicros:100});f.store.startOperation(f.ctx,'failed');f.store.failOperation('failed','EXPLICIT MOCK timeout');
+  const payload=()=>({id:'recover',principal,project_id:'mock',action:'recover_settled_failure' as const,ticket_id:'author',operation_id:'failed',expected_revision:f.store.ticket('author').revision,request_id:'mock-terminal-request',evidence_reference:'mock-terminal-receipt',reason:'Explicit isolated mock recovery authority'});
+  assert.throws(()=>f.store.recoverSettledFailure(signLocalOperator(f.store.root,payload())),/SETTLED_FAILURE_REQUIRED/);
+  f.store.settleFailedOperation('failed',25);const command=signLocalOperator(f.store.root,payload());
+  const result=f.store.recoverSettledFailure(command);assert.deepEqual(f.store.recoverSettledFailure(command),result);
+  const ctx=f.store.claim('author',f.ctx.workerId,300000);assert.equal(ctx.attemptId,f.ctx.attemptId);assert.ok(ctx.token>f.ctx.token);assert.equal(f.store.ticket('author').max_turns,12);
+  f.store.beginTurn(ctx,'continued-turn');assert.equal(f.store.ticket('author').attempt_count,1);
+  assert.throws(()=>f.store.heartbeat(f.ctx,300000),/STALE/);
+ }finally{f.close();}
+});

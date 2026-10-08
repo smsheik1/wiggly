@@ -1,0 +1,34 @@
+{
+  "status": "AUDITION_APPROVED_NARRATION_IN_PROGRESS",
+  "batch_allowance_usd": 2,
+  "audition_seconds": 14,
+  "audition_media_sha256": "890f4e3af3891c651b7ab318535b2a53e5f965882fca427ad5654c3e4bd4a4c2",
+  "audition_reviewer_turns": 8,
+  "audition_reviewer_verdict": "PASS",
+  "director_audition_approved": true,
+  "narration_initial_seconds": [
+    15,
+    16.24,
+    15,
+    15
+  ],
+  "narration_review_complete": false,
+  "saved_production_files_preserved": 313,
+  "invoice_charges": null,
+  "checks": {
+    "studio_tests": 94,
+    "typecheck": "PASS",
+    "diff_check": "PASS"
+  },
+  "repairs": [
+    "Authoritative source and exact reference inventory in reviewer briefings",
+    "Required runtime inspection before candidate submission",
+    "Complete official studio snapshot for provider bindings",
+    "Authenticated recovery of reconciled failures preserves attempts, limits, history and candidate",
+    "Reuse successful byte-bound independent audio inspection during timeout recovery"
+  ],
+  "limitations": [
+    "Beat 2 needs a measured timing repair before locking narration",
+    "Full narration approval remains pending"
+  ]
+}
