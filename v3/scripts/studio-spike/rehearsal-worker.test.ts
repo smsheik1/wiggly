@@ -236,3 +236,8 @@ test('batch continuation verifies existing reviewed outputs instead of regenerat
  verifyCompletedCharacter(store,candidate);status='APPROVED';verifyCompletedCharacter(store,candidate);status='BLOCKED';assert.throws(()=>verifyCompletedCharacter(store,candidate),/STATE_CHANGED/);status='APPROVED';writeFileSync(image,'changed');assert.throws(()=>verifyCompletedCharacter(store,candidate),/BYTES_CHANGED/);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+
+test('recovery reuses read-only assignment references and rejects changed briefing',async()=>{
+ const {writeCharacterReference}=await import('./rehearsal-characters.js');const root=mkdtempSync(join(tmpdir(),'wiggly-readonly-reference-mock-'));try{const path=join(root,'reference.json');writeCharacterReference(path,'explicit mock binding');writeCharacterReference(path,'explicit mock binding');assert.throws(()=>writeCharacterReference(path,'changed'),/REFERENCE_CHANGED/);}finally{rmSync(root,{recursive:true,force:true});}
+});
