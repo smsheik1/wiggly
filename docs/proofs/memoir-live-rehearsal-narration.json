@@ -1,5 +1,5 @@
 {
-  "status": "NARRATION_REVIEW_PASSED_AWAITING_DIRECTOR",
+  "status": "NARRATION_DIRECTOR_APPROVED",
   "batch_allowance_usd": 2,
   "audition_seconds": 14,
   "audition_media_sha256": "890f4e3af3891c651b7ab318535b2a53e5f965882fca427ad5654c3e4bd4a4c2",
@@ -32,7 +32,6 @@
     "Verify relocated saved-production backup against all original 313 hashes without moving private files"
   ],
   "limitations": [
-    "Full narration director approval remains pending",
     "Provider allowance consumption is not verified cash charges"
   ],
   "narration_reviewer_turns": 1,
@@ -48,5 +47,6 @@
   "narration_reviewer_verdict": "PASS",
   "allowance_consumption_usd": 0.158626,
   "allowance_includes_prior_capability_batch": true,
-  "saved_production_backup_verified": true
+  "saved_production_backup_verified": true,
+  "director_narration_approved": true
 }
