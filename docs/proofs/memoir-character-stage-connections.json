@@ -1,0 +1,28 @@
+{
+  "status": "CAST_REFERENCE_STAGE_PASSED_CANDIDATE_STAGE_IN_PROGRESS",
+  "date": "2026-10-08",
+  "author": "Deep Agents / DeepSeek V4.1 Flash / Decart",
+  "independent_reviewer": "Gemini 3.8 Flash, direct actual-image input and verdict",
+  "production_authority": "SQLite",
+  "tracing": "LangSmith",
+  "authorized_character_batch_cap_usd": 2,
+  "director_selections_required_before_sheets": true,
+  "checks": {"typecheck": "PASS", "regression_tests": 101},
+  "observed_failures_and_fixes": [
+    {
+      "failure": "Native large tool-result eviction replaced custom image results with a filesystem pointer before the model received the bytes.",
+      "fix": "Deliver bounded actual media through LangGraph multimodal user messages with a small tool acknowledgement; retain native binary offloading/hydration.",
+      "evidence": "Large-photo isolated regression and live cast author's exact-byte completed photo inspections."
+    },
+    {
+      "failure": "Downstream cast validation could not see the approved clone/audition inherited through narration and incorrectly reported narration was not locked.",
+      "fix": "Expand only exact accepted transitive input versions in the read-only validation projection; reject conflicting version bindings.",
+      "evidence": "Narration-lock regression and publication of the same unchanged, already inspected live agent draft followed by independent direct image-review PASS."
+    }
+  ],
+  "limitations": [
+    "Character candidates and sheets are not declared complete by this checkpoint.",
+    "Reported tokens and allowance accounting are not verified invoice charges.",
+    "Private references, crops, model outputs and operator authorizations stay outside Git."
+  ]
+}

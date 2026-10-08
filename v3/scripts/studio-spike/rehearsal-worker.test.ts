@@ -178,3 +178,40 @@ test('reference tools reject unseen, foreign, changed or out-of-bounds photos',a
   await assert.rejects(clarify.invoke(input),/INSPECTION_REQUIRED/);await inspect.invoke({photo_id:'upload'});await assert.rejects(clarify.invoke(input),/OUTSIDE_PHOTO/);await assert.rejects(inspect.invoke({photo_id:'foreign'}),/NOT_IN_ASSIGNMENT/);writeFileSync(path,'CHANGED');await assert.rejects(inspect.invoke({photo_id:'upload'}),/PHOTO_CHANGED/);
  }finally{f.close();}
 });
+
+test('confirmed cast author receives actual bytes and records successful model findings before publication',async()=>{
+ const f=fixture();try{
+  const {hash}=await import('./harness.js');const bytes=Buffer.alloc(300000,65),file={...f.store.pinMedia(f.ctx,bytes,'.jpg'),width:100,height:100};
+  writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),JSON.stringify({characters:[{references:[file]}]}));let calls=0;
+  const worker=rehearsalWorker(f.store,f.ctx,{key:'EXPLICIT_MOCK_KEY',confirmedReferences:[{character_id:'mock-person',direction:'Explicit director mapping, not inferred',file}],fetcher:async(_url,init)=>{
+   calls++;const body=JSON.parse(String(init?.body));
+   if(calls===1)return reply('inspect_cast_references',{});
+   assert.ok(body.messages.some((m:any)=>Array.isArray(m.content)&&m.content.some((c:any)=>c.type==='image_url'&&c.image_url.url.endsWith(bytes.toString('base64')))));
+   return calls===2?reply('record_reference_findings',{observations:[{sha256:hash(bytes),findings:'Explicit isolated mock observed photo finding for transport regression.'}]}):calls===3?reply('inspect_candidate',{draft_path:'/drafts/candidate.json'}):calls===4?reply('finish_inspection',{findings:'Explicit isolated mock contract binds the confirmed observed reference.'}):reply('submit_candidate',{draft_path:'/drafts/candidate.json'});
+  }});
+  const agent=workspaceAgent(worker.model,dirname(f.store.draftDirectory(f.ctx)),'mock-confirmed-cast','mock-confirmed-cast',[...worker.tools,publicationTool(f.store,f.ctx,undefined,worker.evidenceReferences)],'Explicit isolated cast author test',[productionMiddleware(f.store,f.ctx)]);
+  try{await agent.invoke({messages:[{role:'user',content:'Inspect the confirmed reference.'}]});}catch(error:any){let cause=error;while(cause?.cause)cause=cause.cause;throw cause;}assert.equal(calls,5);assert.equal(f.store.ticket('author').status,'SUBMITTED');
+ }finally{f.close();}
+});
+
+test('direct visual reviewer sees candidate and reference bytes and independently issues verdict',async()=>{
+ const f=fixture(1000000);try{
+  const {directMediaReview}=await import('./gemini-audio-review.js'),{hash}=await import('./harness.js');const bytes=Buffer.from('EXPLICIT MOCK IMAGE'),file={...f.store.pinMedia(f.ctx,bytes,'.png'),width:100,height:100};const candidate=Buffer.from(JSON.stringify({files:[file]}));writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),candidate);
+  const e=f.store.mediaSupplied(f.ctx,candidate,{runId:'mock',model:'mock',modality:'text',coverage:'all'});f.store.inspectionCompleted(f.ctx,e,'Explicit isolated candidate inspection before direct visual review.');f.store.publish(f.ctx,{draft_path:'candidate.json',evidence_references:[e]});f.store.startReview('author','review','visual-reviewer',{criteria:['likeness'],modality:'image',coverage:'all'},500000);const ctx=f.store.claim('review','independent',300000);
+  const result=await directMediaReview(f.store,ctx,{key:'EXPLICIT_MOCK_KEY',references:{direction:'Exact director-selected identity'},fetcher:async(_url,init)=>{const body=JSON.parse(String(init?.body));assert.equal(body.input.find((p:any)=>p.type==='image').data,bytes.toString('base64'));return new Response(JSON.stringify({model:'gemini-3.8-flash',status:'completed',usage:{total_input_tokens:100,total_output_tokens:100},steps:[{type:'model_output',content:[{type:'text',text:JSON.stringify({verdict:'PASS',findings:'Explicit isolated visual review inspected the correct exact image.',direction_compatible:true,defects:[],coverage:[{sha256:hash(bytes),perceptible:true,complete:true,findings:'Explicit mock image inspection verifies transport and bindings.'}]})}]}]}),{headers:{'Content-Type':'application/json'}});}});
+  assert.equal(result.report.verdict,'PASS');assert.equal(f.store.ticket('author').status,'AWAITING_APPROVAL');
+ }finally{f.close();}
+});
+
+
+test('SQL validation view carries exact transitive voice/audition inputs into downstream cast checks',async()=>{
+ const {approvedProjection,loadMemoirFormat}=await import('./memoir-format.js'),{resolve}=await import('node:path'),{readFileSync,mkdirSync,realpathSync}=await import('node:fs'),{pathToFileURL}=await import('node:url'),{hash}=await import('./harness.js');const kit=resolve('../../public/format-repositories/my-pixar-story-v1'),format=await loadMemoirFormat(kit),helpers=await import(pathToFileURL(join(kit,'tests/studio-helpers.mjs')).href),p=helpers.renderReady();
+ const root=realpathSync(mkdtempSync(join(tmpdir(),'wiggly-transitive-mock-')));try{
+  if(!p.artifacts.some((a:any)=>a.key==='answers'))p.artifacts.push({key:'answers',content:{inputs:p.inputs,sourceInputDigest:format.contracts.digest(p.inputs),commonSenseChecks:[]}});
+  mkdirSync(join(root,'versions'));const versions=new Map<string,any>();
+  function pin(node:any){if(!node||typeof node!=='object')return;if(node.path&&node.sha256&&node.bytes){const bytes=Buffer.from('EXPLICIT MOCK '+node.sha256),sha256=hash(bytes),path=join(root,'versions',sha256+'.png');writeFileSync(path,bytes);Object.assign(node,{path,sha256,bytes:bytes.length});return;}Object.values(node).forEach(pin);}
+  for(const a of p.artifacts){pin(a.content);const path=join(root,a.key.replaceAll(':','_')+'.json');writeFileSync(path,JSON.stringify(a.content));versions.set(a.key,{id:a.key,ticket_id:a.key,path,inputs:JSON.stringify(a.key==='narration'?{answers:'answers',script:'script',clone:'clone',audition:'audition'}:{})});}
+  const mock={assertCurrentInputs(){},memoirPolicy(){return{source_inputs:p.inputs};},acceptedVersion(_project:string,id:string){return versions.get(id);},memoirAssignment(id:string){return{kind:id,packet:JSON.stringify({asset_key:id})};},ticket(){return{worker_id:'explicit-mock'};},root} as any;
+  const view=approvedProjection(format,mock,'mock',{narration:'narration'},'roster');assert.deepEqual(view.artifacts.map((a:any)=>a.kind).sort(),['answers','audition','clone','narration','script']);format.workflow.assertAllowed(view,'roster');
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

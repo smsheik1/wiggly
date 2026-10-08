@@ -1,6 +1,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tool } from "langchain";
+import { HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { Command } from "@langchain/langgraph";
 import { z } from "zod";
 import { hash } from "./harness.js";
 
@@ -23,12 +25,12 @@ export function referenceIntakeTools(photos: ReferencePhoto[], draftDirectory: s
     if (!Number.isInteger(photo.width) || !Number.isInteger(photo.height) || photo.width <= 0 || photo.height <= 0) throw new Error("REFERENCE_DIMENSIONS_REQUIRED");
     return {photo, bytes};
   };
-  const inspect = tool(({ photo_id }) => {
+  const inspect = tool(({ photo_id }, runtime) => {
     const {photo, bytes} = bytesFor(photo_id); inspected.add(photo_id);
-    return [
+    return photoDelivery([
       {type: "text", text: `Inspect this actual photo (${photo.id}, sha256 ${photo.sha256}, ${photo.width}x${photo.height}). Locate EVERY visible person. Do not guess names, relationships or ages. If identity is unresolved, call ask_reference_identities with letter labels and approximate source-pixel regions. That tool shows the operator a preview and ends this run. Inventory: ${JSON.stringify(photos.map(({id}) => id))}`},
       {type: "image_url", image_url: {url: `data:${photo.mime};base64,${bytes.toString("base64")}`}},
-    ];
+    ], runtime);
   }, {name: "inspect_reference_photo", description: `See actual image bytes to locate people, not filenames. Available photo IDs: ${JSON.stringify(photos.map(p => p.id))}`, schema: z.object({photo_id: z.string()}).strict()});
   const clarify = tool(({ photo_id, people }) => {
     if (!inspected.has(photo_id)) throw new Error("REFERENCE_INSPECTION_REQUIRED");
@@ -47,4 +49,10 @@ export function referenceIntakeTools(photos: ReferencePhoto[], draftDirectory: s
     return result;
   }, {name: "ask_reference_identities", description: "After visually inspecting the photo, label ALL visible people with source-pixel regions. Save a visual preview and ask the director who each person is. Ends the run; this proposal grants no identity, crop or generation approval.", schema: z.object({photo_id:z.string(), people:z.array(person).min(1).max(26)}).strict(), returnDirect:true});
   return [inspect, clarify] as const;
+}
+
+/** Keep actual media in multimodal user content; native text-result eviction must not replace it with a path. */
+export function photoDelivery(blocks:any[], runtime:any) {
+ const id=runtime.toolCallId??runtime.toolCall?.id??"direct-local-inspection";
+ return new Command({update:{messages:[new ToolMessage({name:runtime.toolCall?.name,tool_call_id:id,content:"Actual photo media follows. Inspect its bytes before recording findings."}),new HumanMessage({content:blocks})]}});
 }

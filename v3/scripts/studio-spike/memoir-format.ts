@@ -47,7 +47,18 @@ export function approvedProjection(format: Format, store: StudioProduction, proj
   store.assertCurrentInputs(projectId, inputs);
   const policy = store.memoirPolicy(projectId);
   const sourceInputs = format.contracts.Inputs.parse(policy.source_inputs);
-  const artifacts = Object.entries(inputs).map(([name, versionId]) => {
+  // Official validators need the pinned prerequisites carried by accepted inputs,
+  // including voice/audition behind narration. Never substitute current project heads.
+  const expanded: InputVersions = {};
+  function consume(exact: InputVersions) {
+    for (const [name, versionId] of Object.entries(exact)) {
+      if (expanded[name]) { if (expanded[name] !== versionId) throw new Error("CONFLICTING_TRANSITIVE_INPUT"); continue; }
+      expanded[name] = versionId;
+      consume(JSON.parse(store.acceptedVersion(projectId, versionId).inputs));
+    }
+  }
+  consume(inputs);
+  const artifacts = Object.entries(expanded).map(([name, versionId]) => {
     const version = store.acceptedVersion(projectId, versionId), binding = store.memoirAssignment(version.ticket_id);
     if (assetKey(name).split(":")[0] !== binding?.kind) throw new Error("MEMOIR_INPUT_KEY_MISMATCH");
     if (!binding) throw new Error("MEMOIR_INPUT_BINDING_REQUIRED");
