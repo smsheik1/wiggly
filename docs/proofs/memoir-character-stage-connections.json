@@ -1,5 +1,5 @@
 {
-  "status": "ONE_CHARACTER_CANDIDATE_SET_PASSED_PAUSED_ON_UPSTREAM_429",
+  "status": "CHILD_SELECTED_TEEN_PROMPT_SUBMITTED_REVIEW_BLOCKED",
   "date": "2026-10-08",
   "author": "Deep Agents / DeepSeek V4.1 Flash / Decart",
   "independent_reviewer": "Gemini 3.8 Flash, direct actual-image input and verdict",
@@ -9,7 +9,7 @@
   "director_selections_required_before_sheets": true,
   "checks": {
     "typecheck": "PASS",
-    "regression_tests": 105
+    "regression_tests": 107
   },
   "observed_failures_and_fixes": [
     {
@@ -26,6 +26,16 @@
       "failure": "A character prompt reviewer lacked the approved screenplay and incorrectly rejected an explicitly approved story prop, while correctly catching a source-shirt discrepancy.",
       "fix": "The shared direct reviewer loads exact accepted input contracts itself; creative repair preserves history and bound attempts.",
       "evidence": "Independent revised-prompt PASS after the author corrected the observed wardrobe issue. A regression confirms approved story direction reaches direct image review."
+    },
+    {
+      "failure": "Pinning Decart disabled native same-model failover and stalled otherwise recoverable work.",
+      "fix": "Enable OpenRouter native provider failover under unchanged model, required parameters and price ceiling.",
+      "evidence": "Routing regression and live teen author submission after recovery."
+    },
+    {
+      "failure": "Recovery rewrote a read-only reference and left a terminated local worker lease active.",
+      "fix": "Verify and reuse exact reference bytes; safely release leases without resetting attempt history.",
+      "evidence": "Read-only reference and lease fencing regressions; live author resumed and submitted."
     }
   ],
   "limitations": [
@@ -37,10 +47,10 @@
   "remaining_candidate_sets": 5,
   "operator_selection_pending": false,
   "external_failure": {
-    "provider": "Decart",
-    "http_status": 429,
-    "reason": "upstream_provider_shared_pool / overloaded",
-    "response": "Same-model OpenRouter failover enabled after explicit director policy clarification. Rejected-call recovery retains reservations and history without increasing limits or inventing provider IDs."
+    "provider": "Google Gemini direct API",
+    "http_status": 400,
+    "reason": "prohibited_content; response does not identify the triggering text",
+    "response": "Stopped and paused affected batch; no teen images generated, failed review reservation retained. No claim of a completed independent review."
   },
   "selected_child_candidate": 2,
   "provider_routing_policy": {
