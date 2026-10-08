@@ -15,6 +15,13 @@ function fixture(allowance=100000, inputs:Record<string,string>={}) {
   const ctx = store.claim('author','mock-author',300000);
   return { store,ctx,close(){store.close();rmSync(root,{recursive:true,force:true});} };
 }
+async function mockGemini(step:(body:any,call:number)=>any) {
+ const {createServer}=await import('node:http'),{ChatGoogleGenerativeAI}=await import('@langchain/google-genai');let calls=0;
+ const server=createServer(async(req,res)=>{try{let text='';for await(const chunk of req)text+=chunk;const result=step(JSON.parse(text),++calls);res.setHeader('Content-Type','application/json');res.end(JSON.stringify(result));}catch(e){res.statusCode=500;res.end(JSON.stringify({error:{message:String(e)}}));}});
+ await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));const address=server.address() as any;
+ return {model:new ChatGoogleGenerativeAI({model:'gemini-3.8-flash',apiKey:'EXPLICIT_MOCK_KEY',baseUrl:`http://127.0.0.1:${address.port}`,maxRetries:0,streaming:false,disableStreaming:true}),calls:()=>calls,close:()=>new Promise<void>((resolve,reject)=>server.close(e=>e?reject(e):resolve()))};
+}
+function geminiCall(name:string,args:any){return{candidates:[{content:{role:'model',parts:[{functionCall:{name,args}}]},finishReason:'STOP'}],usageMetadata:{promptTokenCount:100,candidatesTokenCount:100,totalTokenCount:200}};}
 function reply(name: string, args: any, cost = .0001) {
   return new Response(JSON.stringify({ id:'mock-response-'+name, model:'deepseek/deepseek-v4.1-flash', usage:{prompt_tokens:100,completion_tokens:100,total_tokens:200,cost}, choices:[{index:0,finish_reason:'tool_calls',message:{role:'assistant',content:null,tool_calls:[{id:'call-'+name,type:'function',function:{name,arguments:JSON.stringify(args)}}]}}] }),{headers:{'Content-Type':'application/json'}});
 }
@@ -122,22 +129,17 @@ test('authenticated settled-failure recovery retains attempt and turn limits and
 });
 
 
-test('direct Gemini binds audio bytes and approved script to its verdict; missing coverage cannot pass',async()=>{
- const {directAudioReview}=await import('./gemini-audio-review.js'),{hash}=await import('./harness.js');
+test('Gemini LangGraph audio reviewer chooses inspection then its own verdict; incomplete coverage cannot pass',async()=>{
+ const {runGeminiAudioReviewer}=await import('./gemini-reviewer-agent.js'),{hash}=await import('./harness.js');
  for(const incomplete of [false,true]){
-  const f=fixture(1000000);try{
-   const audio=Buffer.from('EXPLICIT ISOLATED MOCK AUDIO'),file={...f.store.pinMedia(f.ctx,audio,'.wav'),durationSeconds:15};
-   const candidate=Buffer.from(JSON.stringify({files:[file],transcripts:['EXPLICIT APPROVED MOCK WORDS']}));writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),candidate);
+  const f=fixture(1000000);let mock:Awaited<ReturnType<typeof mockGemini>>|undefined;try{
+   const audio=Buffer.from('EXPLICIT ISOLATED MOCK AUDIO'),file={...f.store.pinMedia(f.ctx,audio,'.wav'),durationSeconds:15};const candidate=Buffer.from(JSON.stringify({files:[file],transcripts:['EXPLICIT APPROVED MOCK WORDS']}));writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),candidate);
    const e=f.store.mediaSupplied(f.ctx,candidate,{runId:'mock',model:'mock',modality:'text',coverage:'mock'});f.store.inspectionCompleted(f.ctx,e,'Explicit mock author candidate inspection before independent review.');f.store.publish(f.ctx,{draft_path:'candidate.json',evidence_references:[e]});
-   f.store.startReview('author','review','audio-reviewer',{criteria:['transcript','duration'],modality:'audio',coverage:'complete candidate and every referenced media item'},500000,{maxTurns:12});const ctx=f.store.claim('review','independent-gemini',300000);let calls=0;
-   const run=()=>directAudioReview(f.store,ctx,{key:'EXPLICIT_MOCK_KEY',references:{script:'EXPLICIT APPROVED MOCK WORDS'},fetcher:async(url,init)=>{
-    calls++;assert.equal(String(url),'https://generativelanguage.googleapis.com/v1beta/interactions');const body=JSON.parse(String(init?.body));assert.ok(body.input[0].text.includes('EXPLICIT APPROVED MOCK WORDS'));assert.ok(body.input[0].text.includes('200 ms'));assert.equal(Buffer.from(body.input.find((p:any)=>p.type==='audio').data,'base64').toString(),audio.toString());
-    const report={verdict:'PASS',findings:'Explicit isolated mock review finds approved words and timing compliant.',direction_compatible:true,defects:[],coverage:[{sha256:hash(audio),perceptible:true,complete:!incomplete,findings:'Explicit isolated complete audio inspection for regression testing.',heard_words:'EXPLICIT APPROVED MOCK WORDS'}]};
-    return new Response(JSON.stringify({model:'gemini-3.8-flash',status:'completed',usage:{total_input_tokens:100,total_output_tokens:100},steps:[{type:'model_output',content:[{type:'text',text:JSON.stringify(report)}]}]}),{headers:{'Content-Type':'application/json'}});
-   }});
-   if(incomplete){await assert.rejects(run(),/COVERAGE_INCONCLUSIVE/);assert.notEqual(f.store.ticket('author').status,'AWAITING_APPROVAL');}else{const result=await run();assert.equal(result.report.verdict,'PASS');assert.equal(f.store.ticket('author').status,'AWAITING_APPROVAL');assert.notEqual(f.store.ticket('author').status,'APPROVED');}
-   assert.equal(calls,1);
-  }finally{f.close();}
+   f.store.startReview('author','review','audio-reviewer',{criteria:['transcript','duration'],modality:'audio',coverage:'complete candidate and every referenced media item'},500000,{maxTurns:12});const ctx=f.store.claim('review','independent-gemini',300000);
+   mock=await mockGemini((body,n)=>{if(n===1){assert.ok(JSON.stringify(body.tools).includes('inspect_candidate'));return geminiCall('inspect_candidate',{});}assert.equal(n,2);const content=JSON.stringify(body.contents);assert.ok(content.includes('EXPLICIT APPROVED MOCK WORDS'));assert.ok(JSON.stringify(body).includes('200 ms'));assert.ok(content.includes(audio.toString('base64')));return geminiCall('submit_review',{verdict:'PASS',findings:'Explicit isolated mock review finds approved words and timing compliant.',direction_compatible:true,defects:[],coverage:[{sha256:hash(audio),perceptible:true,complete:!incomplete,findings:'Explicit isolated complete audio inspection for regression testing.',heard_words:'EXPLICIT APPROVED MOCK WORDS'}]});});
+   const run=()=>runGeminiAudioReviewer(f.store,ctx,{key:'EXPLICIT_MOCK_KEY',references:{script:'EXPLICIT APPROVED MOCK WORDS'},modelOverride:mock!.model});
+   if(incomplete){await assert.rejects(run());assert.notEqual(f.store.ticket('author').status,'AWAITING_APPROVAL');}else{const result=await run();assert.equal(result.report.verdict,'PASS');assert.equal(f.store.ticket('author').status,'AWAITING_APPROVAL');assert.notEqual(f.store.ticket('author').status,'APPROVED');assert.equal(mock.calls(),2);assert.equal(f.store.allowance('mock').used,900);}
+  }finally{await mock?.close();f.close();}
  }
 });
 
@@ -195,16 +197,15 @@ test('confirmed cast author receives actual bytes and records successful model f
  }finally{f.close();}
 });
 
-test('direct visual reviewer sees candidate and reference bytes and independently issues verdict',async()=>{
- const f=fixture(1000000,{script:'explicit-mock-approved-script'});try{
+test('Gemini LangGraph visual reviewer sees actual bytes and approved story direction before submit_review',async()=>{
+ const f=fixture(1000000,{script:'explicit-mock-approved-script'});let mock:Awaited<ReturnType<typeof mockGemini>>|undefined;try{
   const scriptPath=join(f.store.draftDirectory(f.ctx),'approved-script.json');writeFileSync(scriptPath,JSON.stringify({storyProp:'EXPLICIT APPROVED MOCK STORY PROP'}));f.store.acceptedVersion=(()=>({path:scriptPath})) as any;
-  const {directMediaReview}=await import('./gemini-audio-review.js'),{hash}=await import('./harness.js');const bytes=Buffer.from('EXPLICIT MOCK IMAGE'),file={...f.store.pinMedia(f.ctx,bytes,'.png'),width:100,height:100};const candidate=Buffer.from(JSON.stringify({files:[file]}));writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),candidate);
-  const e=f.store.mediaSupplied(f.ctx,candidate,{runId:'mock',model:'mock',modality:'text',coverage:'all'});f.store.inspectionCompleted(f.ctx,e,'Explicit isolated candidate inspection before direct visual review.');f.store.publish(f.ctx,{draft_path:'candidate.json',evidence_references:[e]});f.store.startReview('author','review','visual-reviewer',{criteria:['likeness'],modality:'image',coverage:'all'},500000);const ctx=f.store.claim('review','independent',300000);
-  const result=await directMediaReview(f.store,ctx,{key:'EXPLICIT_MOCK_KEY',references:{direction:'Exact director-selected identity'},fetcher:async(_url,init)=>{const body=JSON.parse(String(init?.body));assert.equal(body.input.find((p:any)=>p.type==='image').data,bytes.toString('base64'));assert.ok(body.input[0].text.includes('EXPLICIT APPROVED MOCK STORY PROP'));return new Response(JSON.stringify({model:'gemini-3.8-flash',status:'completed',usage:{total_input_tokens:100,total_output_tokens:100},steps:[{type:'model_output',content:[{type:'text',text:JSON.stringify({verdict:'PASS',findings:'Explicit isolated visual review inspected the correct exact image.',direction_compatible:true,defects:[],coverage:[{sha256:hash(bytes),perceptible:true,complete:true,findings:'Explicit mock image inspection verifies transport and bindings.'}]})}]}]}),{headers:{'Content-Type':'application/json'}});}});
-  assert.equal(result.report.verdict,'PASS');assert.equal(f.store.ticket('author').status,'AWAITING_APPROVAL');
- }finally{f.close();}
+  const {runGeminiMediaReviewer}=await import('./gemini-reviewer-agent.js'),{hash}=await import('./harness.js');const bytes=Buffer.alloc(300000,73),file={...f.store.pinMedia(f.ctx,bytes,'.png'),width:100,height:100};const candidate=Buffer.from(JSON.stringify({files:[file]}));writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),candidate);
+  const e=f.store.mediaSupplied(f.ctx,candidate,{runId:'mock',model:'mock',modality:'text',coverage:'all'});f.store.inspectionCompleted(f.ctx,e,'Explicit isolated candidate inspection before independent visual review.');f.store.publish(f.ctx,{draft_path:'candidate.json',evidence_references:[e]});f.store.startReview('author','review','visual-reviewer',{criteria:['likeness'],modality:'image',coverage:'all'},500000);const ctx=f.store.claim('review','independent',300000);
+  mock=await mockGemini((body,n)=>{if(n===1)return geminiCall('inspect_candidate',{});assert.equal(n,2);const content=JSON.stringify(body.contents);assert.ok(content.includes(bytes.toString('base64')));assert.ok(content.includes('EXPLICIT APPROVED MOCK STORY PROP'));return geminiCall('submit_review',{verdict:'PASS',findings:'Explicit isolated visual review inspected the correct exact image.',direction_compatible:true,defects:[],coverage:[{sha256:hash(bytes),perceptible:true,complete:true,findings:'Explicit mock image inspection verifies transport and bindings.'}]});});
+  const result=await runGeminiMediaReviewer(f.store,ctx,{key:'EXPLICIT_MOCK_KEY',references:{direction:'Exact director-selected identity'},modelOverride:mock.model});assert.equal(result.report.verdict,'PASS');assert.equal(f.store.ticket('author').status,'AWAITING_APPROVAL');assert.equal(mock.calls(),2);
+ }finally{await mock?.close();f.close();}
 });
-
 
 test('SQL validation view carries exact transitive voice/audition inputs into downstream cast checks',async()=>{
  const {approvedProjection,loadMemoirFormat}=await import('./memoir-format.js'),{resolve}=await import('node:path'),{readFileSync,mkdirSync,realpathSync}=await import('node:fs'),{pathToFileURL}=await import('node:url'),{hash}=await import('./harness.js');const kit=resolve('../../public/format-repositories/my-pixar-story-v1'),format=await loadMemoirFormat(kit),helpers=await import(pathToFileURL(join(kit,'tests/studio-helpers.mjs')).href),p=helpers.renderReady();
@@ -224,7 +225,7 @@ test('character batch rejects changed authorization before provider keys or paid
 });
 
 
-test('producer can bind an explicit backup route while automatic fallback stays disabled',async()=>{
+test('producer can prefer a backup route while same-model failover retains price ceilings',async()=>{
  const f=fixture();try{let calls=0;const worker=rehearsalWorker(f.store,f.ctx,{key:'EXPLICIT_MOCK_KEY',providerRoute:'parasail/fp8',fetcher:async(_url,init)=>{calls++;const body=JSON.parse(String(init?.body));assert.equal(body.provider.only,undefined);assert.deepEqual(body.provider.order,['parasail/fp8']);assert.equal(body.provider.allow_fallbacks,true);assert.deepEqual(body.provider.max_price,{prompt:.3,completion:1.2});return reply('inspect_candidate',{draft_path:'/drafts/candidate.json'});}});await worker.model.bindTools(worker.tools).invoke('Explicit isolated route binding test');assert.equal(calls,1);}finally{f.close();}
 });
 
@@ -240,4 +241,15 @@ test('batch continuation verifies existing reviewed outputs instead of regenerat
 
 test('recovery reuses read-only assignment references and rejects changed briefing',async()=>{
  const {writeCharacterReference}=await import('./rehearsal-characters.js');const root=mkdtempSync(join(tmpdir(),'wiggly-readonly-reference-mock-'));try{const path=join(root,'reference.json');writeCharacterReference(path,'explicit mock binding');writeCharacterReference(path,'explicit mock binding');assert.throws(()=>writeCharacterReference(path,'changed'),/REFERENCE_CHANGED/);}finally{rmSync(root,{recursive:true,force:true});}
+});
+
+
+test('Gemini reviewer agent enforces turn limits and stops external failures without retries',async()=>{
+ const {runGeminiMediaReviewer}=await import('./gemini-reviewer-agent.js'),{hash}=await import('./harness.js');
+ for(const externalFailure of [false,true]){const f=fixture(1000000);let mock:Awaited<ReturnType<typeof mockGemini>>|undefined;try{
+ const bytes=Buffer.from('EXPLICIT LOCAL IMAGE'),file={...f.store.pinMedia(f.ctx,bytes,'.png'),width:100,height:100},candidate=Buffer.from(JSON.stringify({files:[file]}));writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),candidate);const evidence=f.store.mediaSupplied(f.ctx,candidate,{runId:'mock',model:'mock',modality:'text',coverage:'all'});f.store.inspectionCompleted(f.ctx,evidence,'Explicit isolated author evidence for review enforcement test.');f.store.publish(f.ctx,{draft_path:'candidate.json',evidence_references:[evidence]});
+ f.store.startReview('author','review','reviewer',{criteria:['likeness'],modality:'image',coverage:'all'},500000,{maxTurns:1});const ctx=f.store.claim('review','independent',300000);
+ mock=await mockGemini(()=>{if(externalFailure)throw new Error('EXPLICIT MOCK PROVIDER FAILURE');return geminiCall('inspect_candidate',{});});
+ await assert.rejects(runGeminiMediaReviewer(f.store,ctx,{key:'EXPLICIT_MOCK_KEY',references:{},modelOverride:mock.model}));assert.equal(mock.calls(),1);assert.equal(f.store.ticket('review').status,'BLOCKED');assert.notEqual(f.store.ticket('author').status,'AWAITING_APPROVAL');
+ }finally{await mock?.close();f.close();}}
 });

@@ -6,7 +6,7 @@ import {provisionLocalOperator,signLocalOperator} from '../../lib/studio-operato
 import {hash} from './harness.js';
 import {loadMemoirFormat,createMemoirAssignment,runMemoirAuthor,startMemoirReview,candidateValidator} from './memoir-format.js';
 import {rehearsalWorker} from './rehearsal-worker.js';
-import {directMediaReview} from './gemini-audio-review.js';
+import {runGeminiMediaReviewer} from './gemini-reviewer-agent.js';
 import {tracing,namedSecret} from './tracing.js';
 import {assertPreserved,rehearsalProject} from './rehearsal.js';
 import {z} from 'zod';
@@ -56,7 +56,7 @@ export async function runCharacterRoster(root:string,kit:string) {
   if(content.characters.length!==6)throw new Error('DIRECTOR_CAST_BINDING_CHANGED');
   startMemoirReview(store,ctx.ticketId,'rehearsal-roster-review',120000,undefined,{maxTurns:12,maxAttempts:3});
   const reviewer=store.claim('rehearsal-roster-review','independent-gemini-cast-reviewer',300000);
-  result=await directMediaReview(store,reviewer,{key:await namedSecret('GEMINI_API_KEY'),references:{approvedScript:script,confirmedDirectorDirection:confirmed.map((r:any)=>({id:r.character_id,direction:r.direction})),outcome:packet.outcome},traceClient:traces.client});
+  result=await runGeminiMediaReviewer(store,reviewer,{key:await namedSecret('GEMINI_API_KEY'),references:{approvedScript:script,confirmedDirectorDirection:confirmed.map((r:any)=>({id:r.character_id,direction:r.direction})),outcome:packet.outcome},traceClient:traces.client});
   if(store.ticket(ctx.ticketId).status!=='AWAITING_APPROVAL')throw new Error('ROSTER_REVIEW_DID_NOT_PASS');
   const card=store.approvalCard(ctx.ticketId);await candidateValidator(format,store,ctx.ticketId)(readFileSync(store.version(card.candidate_version_id).path));
   store.directorDecision(signLocalOperator(root,{id:'confirmed-director-cast-bindings',principal,action:'decide',...card,decision:'APPROVE',feedback:'Director explicitly approved these existing references, sibling crop selections and age handling. Exact cast/reference binding verified; no additional design approval conferred.'}));store.setInput(rehearsalProject,'roster',card.candidate_version_id);
@@ -87,7 +87,7 @@ export async function finishCharacterRoster(root:string,kit:string) {
   if(t.lease_until<=Date.now())ctx=store.claim(t.id,t.worker_id,300000);else store.heartbeat(ctx,300000);
   store.publish(ctx,{draft_path:'candidate.json',evidence_references:evidence,validated_hash});
   startMemoirReview(store,t.id,'rehearsal-roster-review',120000,undefined,{maxTurns:12,maxAttempts:3});const reviewer=store.claim('rehearsal-roster-review','independent-gemini-cast-reviewer',300000),traces=await tracing();
-  result=await directMediaReview(store,reviewer,{key:await namedSecret('GEMINI_API_KEY'),references:{approvedScript:script,confirmedDirectorDirection:confirmed.references.map((r:any)=>({id:r.character_id,direction:r.direction})),outcome:JSON.parse(store.memoirAssignment(t.id)!.packet).outcome},traceClient:traces.client});
+  result=await runGeminiMediaReviewer(store,reviewer,{key:await namedSecret('GEMINI_API_KEY'),references:{approvedScript:script,confirmedDirectorDirection:confirmed.references.map((r:any)=>({id:r.character_id,direction:r.direction})),outcome:JSON.parse(store.memoirAssignment(t.id)!.packet).outcome},traceClient:traces.client});
   if(store.ticket(t.id).status!=='AWAITING_APPROVAL')throw new Error('ROSTER_REVIEW_DID_NOT_PASS');
   const card=store.approvalCard(t.id);store.directorDecision(signLocalOperator(root,{id:'confirmed-director-cast-bindings',principal,action:'decide',...card,decision:'APPROVE',feedback:'Director-approved references, crops and age direction; exact binding and separate actual-image review verified. No design selection approval conferred.'}));store.setInput(rehearsalProject,'roster',card.candidate_version_id);
   await traces.client.awaitPendingTraceBatches();if(traces.failures.length)throw new Error('LANGSMITH_TRACE_UPLOAD_FAILED');console.log(JSON.stringify({status:'ROSTER_APPROVED',author:ctx.workerId,reviewer:reviewer.workerId,version:card.candidate_version_id,allowance:store.allowance(rehearsalProject)}));
@@ -100,7 +100,7 @@ export async function runCharacterCandidates(root:string,kit:string, repairTicke
  const dir=join(root,'character-style'),quote=JSON.parse(readFileSync(join(dir,'quote.json'),'utf8')),auth=JSON.parse(readFileSync(join(dir,'authorization.json'),'utf8')),budget=JSON.parse(readFileSync(join(dir,'batch-budget.json'),'utf8'));
  if(auth.quote_sha256!==hash(Buffer.from(JSON.stringify(quote)))||auth.allowance_micros!==budget.allowance_micros||auth.allowance_micros!==2000000)throw new Error('EXACT_CHARACTER_BATCH_AUTHORIZATION_REQUIRED');
  const format=await loadMemoirFormat(kit),providers=await import(pathToFileURL(join(kit,'runtime/providers.mjs')).href),store=new StudioProduction(root),principal=provisionLocalOperator(root),id='rehearsal-roster';let failure:string|undefined;const results:any[]=[];const claimed:any[]=[];
- const marker=join(dir,'candidates-started.json');if(existsSync(marker)&&!(resumeTicket&&store.ticket(resumeTicket).status==='WORKING')&&(!repairTicket||store.ticket(repairTicket).status!=='CHANGES_REQUESTED')){store.close();throw new Error('CANDIDATES_ALREADY_STARTED_NO_AUTOMATIC_RETRY');}
+ const marker=join(dir,'candidates-started.json');if(existsSync(marker)&&!(resumeTicket&&['WORKING','APPROVED'].includes(store.ticket(resumeTicket).status))&&(!repairTicket||store.ticket(repairTicket).status!=='CHANGES_REQUESTED')){store.close();throw new Error('CANDIDATES_ALREADY_STARTED_NO_AUTOMATIC_RETRY');}
  const stageSuffix=resumeTicket?'-continuation-'+store.ticket(resumeTicket).revision:repairTicket?'-creative-repair-'+store.ticket(repairTicket).attempt_count:'';
  const resultsPath=join(dir,'candidate-results.json');if(existsSync(resultsPath))results.push(...JSON.parse(readFileSync(resultsPath,'utf8')));
  try {
@@ -112,7 +112,7 @@ export async function runCharacterCandidates(root:string,kit:string, repairTicke
   const remaining=()=>{const amount=budget.allowance_micros-(store.allowance(rehearsalProject).used-budget.baseline_used_micros);if(amount<=0)throw new Error('CHARACTER_BATCH_CAP_EXHAUSTED');return amount;};
   const baseInputs=Object.fromEntries(['answers','script','narration','roster'].map(k=>[k,store.ticket('rehearsal-'+k).candidate_id]));
   const approvedScript=JSON.parse(readFileSync(store.acceptedVersion(rehearsalProject,baseInputs.script).path,'utf8'));
-  async function review(ticketId:string,photos:any[],references:any){const reviewId=ticketId+'-review-'+store.ticket(ticketId).attempt_count;startMemoirReview(store,ticketId,reviewId,Math.min(120000,remaining()),undefined,{maxTurns:12,maxAttempts:3});const ctx=store.claim(reviewId,'independent-gemini-character-reviewer',300000);const result=await directMediaReview(store,ctx,{key:geminiKey,references:{...references,approvedScript},inspectionFiles:photos.map(p=>p.file),traceClient:traces.client});if(store.ticket(ticketId).status!=='AWAITING_APPROVAL')throw new Error('CHARACTER_REVIEW_REQUIRES_REPAIR:'+ticketId);return result;}
+  async function review(ticketId:string,photos:any[],references:any){const reviewId=ticketId+'-review-'+store.ticket(ticketId).attempt_count;startMemoirReview(store,ticketId,reviewId,Math.min(120000,remaining()),undefined,{maxTurns:12,maxAttempts:3});const ctx=store.claim(reviewId,'independent-gemini-character-reviewer',300000);const result=await runGeminiMediaReviewer(store,ctx,{key:geminiKey,references:{...references,approvedScript},inspectionFiles:photos.map(p=>p.file),traceClient:traces.client});if(store.ticket(ticketId).status!=='AWAITING_APPROVAL')throw new Error('CHARACTER_REVIEW_REQUIRES_REPAIR:'+ticketId);return result;}
   for(const character of roster.characters){
    const completed=results.find(r=>r.character_id===character.id);
    if(completed){verifyCompletedCharacter(store,completed);continue;}

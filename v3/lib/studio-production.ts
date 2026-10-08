@@ -144,7 +144,7 @@ export class StudioProduction {
   }
   providerCapacity(provider: string) {
     const policy = this.#get("SELECT * FROM provider_limits WHERE provider=?", provider), limit = policy?.max_inflight ?? 1;
-    const used = this.#get("SELECT COUNT(*) AS used FROM operations WHERE provider=? AND (state IN ('SUBMITTING','SUBMITTED','UNKNOWN') OR (state='FAILED' AND settled_at IS NULL))", provider)!.used;
+    const used = this.#get("SELECT COUNT(*) AS used FROM operations WHERE provider=? AND (state IN ('SUBMITTING','SUBMITTED','UNKNOWN') OR (state='FAILED' AND settled_at IS NULL AND NOT EXISTS (SELECT 1 FROM director_commands d WHERE d.action='extend_limits' AND json_extract(d.result,'$.recovered_operation_id')=operations.id)))", provider)!.used;
     return { limit, used, nextAllowedAt: policy?.next_allowed_at ?? 0 };
   }
   assertCurrentInputs(projectId: string, inputs: InputVersions) { this.#currentInputs({ project_id: projectId, inputs: inputsJSON(inputs) }); }
@@ -404,7 +404,7 @@ export class StudioProduction {
       if (recovery) {
         const op = this.operation(recovery.operation_id);
         requireThat(t.status === "BLOCKED" && t.blocked_reason === null && op.ticket_id === t.id && op.state === "FAILED" && /HTTP (400|404|429):/.test(op.diagnostic ?? ""), "REJECTED_OPERATION_REQUIRED");
-        requireThat(recovery.evidence_reference.trim() && (recovery.request_id?.trim() || (!op.request_id && /HTTP 429:/.test(op.diagnostic ?? ""))) && (!op.request_id || op.request_id === recovery.request_id), "REJECTION_RECEIPT_REQUIRED");
+        requireThat(recovery.evidence_reference.trim() && (recovery.request_id?.trim() || (!op.request_id && /HTTP (400|404|429):/.test(op.diagnostic ?? ""))) && (!op.request_id || op.request_id === recovery.request_id), "REJECTION_RECEIPT_REQUIRED");
         requireThat(!this.#get("SELECT id FROM operations WHERE ticket_id=? AND state IN ('SUBMITTING','SUBMITTED','UNKNOWN')", t.id), "UNCERTAIN_OPERATION");
         if (recovery.request_id) this.#run("UPDATE operations SET request_id=? WHERE id=?", recovery.request_id, op.id);
         this.#run("UPDATE tickets SET lease_until=0,token=token+1 WHERE id=?", t.id);

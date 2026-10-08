@@ -1,0 +1,34 @@
+{
+  "status": "LOCAL_AGENT_INTEGRATION_VERIFIED_PRODUCTION_PAUSED",
+  "date": "2026-10-08",
+  "implementation": "Gemini-powered Deep Agent compiled as a LangGraph agent, using @langchain/google-genai 2.3.2",
+  "flow": [
+    "Agent chooses inspect_candidate",
+    "Tool delivers exact source/candidate media to that same agent",
+    "Same Gemini agent reasons and chooses submit_review",
+    "Runtime validates coverage, writes bound receipts and submits verdict to SQLite",
+    "returnDirect ends the reviewer run; no director approval conferred"
+  ],
+  "checks": {
+    "regression_tests": 109,
+    "typecheck": "PASS",
+    "sdk_transport": "Actual maintained Gemini SDK exercised against isolated local HTTP mock",
+    "image_delivery": "300 KB image survives tool delivery into the SDK request",
+    "audio_delivery": "Actual audio bytes reach the SDK request",
+    "missing_coverage": "Cannot pass",
+    "turn_limit": "Prevents another provider call",
+    "external_failure": "Stops without transport retry"
+  },
+  "historical_reviews": "Existing successful direct API reviews remain historical records; not relabeled as agent runs.",
+  "live_validation": "New agent path not yet called against production; memoir remains paused.",
+  "diagnostic": {
+    "photo_only_gemini_request": "HTTP 200, completed; actual supplied photo was accepted separately",
+    "full_review_requests": "Two HTTP 400 prohibited_content rejections; exact trigger remains unidentified"
+  },
+  "preserved": [
+    "Existing SQLite tickets, candidate versions, director decisions and billing reservations",
+    "Original model choice",
+    "Canonical secrets source",
+    "Independent review and director approval separation"
+  ]
+}

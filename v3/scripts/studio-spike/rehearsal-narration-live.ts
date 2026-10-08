@@ -10,7 +10,7 @@ import {rehearsalWorker,referencedMedia} from './rehearsal-worker.js';
 import {executeAuthorizedMedia} from './media-transport.js';
 import {createSQLPerception} from './media-perception.js';
 import {tracing,namedSecret} from './tracing.js';
-import {directAudioReview} from './gemini-audio-review.js';
+import {runGeminiAudioReviewer} from './gemini-reviewer-agent.js';
 
 /** One director-approved four-beat batch, with separate native author/reviewer inspection. */
 export async function runNarration(root:string,kit:string,authorizationPath:string){
@@ -45,7 +45,7 @@ export async function runNarration(root:string,kit:string,authorizationPath:stri
   if(store.ticket(id).status!=='SUBMITTED')throw new Error('NARRATION_AUTHOR_DID_NOT_SUBMIT');
   const reviewerId=id+'-review';startMemoirReview(store,id,reviewerId,quote.ticket_caps_micros.narration_review,undefined,{maxTurns:12,maxAttempts:3});
   const reviewCtx=store.claim(reviewerId,'independent-gemini-audio-reviewer',300000),packet=store.reviewPacket(reviewerId),references=Object.fromEntries(Object.entries(packet.exact_inputs as Record<string,string>).map(([name,v])=>[name,JSON.parse(readFileSync(store.acceptedVersion(rehearsalProject,v).path,'utf8'))]));
-  await live(reviewCtx,()=>directAudioReview(store,reviewCtx,{key:geminiKey,references,traceClient:traces.client}));
+  await live(reviewCtx,()=>runGeminiAudioReviewer(store,reviewCtx,{key:geminiKey,references,traceClient:traces.client}));
   if(store.ticket(id).status!=='AWAITING_APPROVAL')throw new Error('NARRATION_REVIEW_DID_NOT_PASS:'+store.ticket(id).status);
   await traces.client.awaitPendingTraceBatches();if(traces.failures.length)throw new Error('LANGSMITH_TRACE_UPLOAD_FAILED');
   result={card:store.approvalCard(id),files:candidate.files,sourceFiles:candidate.sourceFiles,tailSilenceSeconds:candidate.tailSilenceSeconds};

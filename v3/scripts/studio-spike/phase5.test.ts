@@ -236,7 +236,7 @@ test("operator recovery cannot declare a connection error a rejected request",as
  const {provisionLocalOperator,signLocalOperator}=await import('../../lib/studio-operator.js');const principal=provisionLocalOperator(root),ctx=s.claim('a','worker',300000);
  s.prepareOperation(ctx,request('unknown',100));s.startOperation(ctx,'unknown');s.failOperation('unknown','Connection error: submission outcome unknown');
  assert.throws(()=>s.authorizeLimits(signLocalOperator(root,{id:'wrong-recovery',principal,project_id:'p',action:'extend_limits' as const,ticket_id:'a',expected_revision:s.ticket('a').revision,reason:'Explicit isolated mock negative test',max_turns:10,recover_rejected_operation:{operation_id:'unknown',request_id:'invented',evidence_reference:'mock'}})),/REJECTED_OPERATION_REQUIRED/);
- assert.equal(s.ticket('a').status,'BLOCKED');assert.equal(s.operation('unknown').settled_at,null);
+ assert.equal(s.ticket('a').status,'BLOCKED');assert.equal(s.operation('unknown').settled_at,null);assert.equal(s.providerCapacity('mock').used,1);
 }));
 
 
@@ -252,4 +252,12 @@ test("explicit rejected 429 recovery needs no artificial limit increase or inven
 
 test('safe worker exit releases its lease while preserving attempt and turn history',async()=>fixture(async(s)=>{
  const old=s.claim('a','worker',300000);s.beginTurn(old,'turn-1');s.releaseLease(old);assert.throws(()=>s.heartbeat(old,300000),/STALE/);const current=s.claim('a','next-worker',300000);assert.equal(current.attemptId,old.attemptId);s.prepareOperation(current,request('in-flight',100));s.startOperation(current,'in-flight');assert.throws(()=>s.releaseLease(current),/UNCERTAIN_OPERATION/);
+}));
+
+
+test('explicit HTTP 400 rejection without a provider ID can recover with reservation retained',async()=>fixture(async(s,root)=>{
+ const {provisionLocalOperator,signLocalOperator}=await import('../../lib/studio-operator.js');const principal=provisionLocalOperator(root),old=s.claim('a','worker',300000);
+ s.prepareOperation(old,request('rejected-400',100));s.startOperation(old,'rejected-400');s.failOperation('rejected-400','Gemini HTTP 400: explicit mock request rejected before a provider ID');
+ s.authorizeLimits(signLocalOperator(root,{id:'recover-400',principal,project_id:'p',action:'extend_limits' as const,ticket_id:'a',expected_revision:s.ticket('a').revision,reason:'Explicit isolated authenticated recovery',recover_rejected_operation:{operation_id:'rejected-400',evidence_reference:'explicit mock HTTP rejection receipt'}}));
+ assert.equal(s.providerCapacity('mock').used,0);assert.equal(s.operation('rejected-400').request_id,null);assert.equal(s.operation('rejected-400').settled_at,null);assert.equal(s.allowance('p').used,100);assert.equal(s.ticket('a').status,'WORKING');
 }));

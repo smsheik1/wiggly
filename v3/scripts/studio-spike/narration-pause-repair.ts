@@ -5,7 +5,7 @@ import {StudioProduction} from '../../lib/studio-production.js';
 import {provisionLocalOperator,signLocalOperator} from '../../lib/studio-operator.js';
 import {loadMemoirFormat,approvedProjection,candidateValidator,startMemoirReview} from './memoir-format.js';
 import {createSQLPerception} from './media-perception.js';
-import {directAudioReview} from './gemini-audio-review.js';
+import {runGeminiAudioReviewer} from './gemini-reviewer-agent.js';
 import {tracing,namedSecret} from './tracing.js';
 import {hash} from './harness.js';
 import {assertPreserved,rehearsalProject} from './rehearsal.js';
@@ -41,7 +41,7 @@ export async function repairNarration(root:string,kit:string,savedSource?:string
   const previousReviewAllowance=store.allowance(rehearsalProject,'rehearsal-narration-review'),reviewerId='rehearsal-narration-pause-repair-review';
   startMemoirReview(store,id,reviewerId,previousReviewAllowance.remaining,undefined,{maxTurns:12,maxAttempts:3});const reviewCtx=store.claim(reviewerId,'independent-gemini-audio-reviewer',300000),packet=store.reviewPacket(reviewerId),references=Object.fromEntries(Object.entries(packet.exact_inputs as Record<string,string>).map(([name,v])=>[name,JSON.parse(readFileSync(store.acceptedVersion(rehearsalProject,v).path,'utf8'))]));
   const traces=await tracing();let leaseError:unknown;const timer=setInterval(()=>{try{store.heartbeat(reviewCtx,300000);}catch(e){leaseError=e;}},30000);
-  try{result=await directAudioReview(store,reviewCtx,{key:await namedSecret('GEMINI_API_KEY'),references,traceClient:traces.client});}finally{clearInterval(timer);}
+  try{result=await runGeminiAudioReviewer(store,reviewCtx,{key:await namedSecret('GEMINI_API_KEY'),references,traceClient:traces.client});}finally{clearInterval(timer);}
   if(leaseError)throw leaseError;await traces.client.awaitPendingTraceBatches();if(traces.failures.length)throw new Error('LANGSMITH_TRACE_UPLOAD_FAILED');
   result={...result,files:candidate.files,sourceFiles:candidate.sourceFiles,parent_version:parent.id,unchanged_beats:[1,3,4],...(result.report.verdict==='PASS'?{card:store.approvalCard(id)}:{})};
  }catch(error:any){failure=String(error);throw error;}
