@@ -7,7 +7,7 @@ import { askActiveAgent } from "../../lib/agent-bridge.js";
 import { StudioProduction, memoirReviewModality, memoirReviewCoverage, memoirFilmReviewCriteria, type InputVersions, type WorkerLease } from "../../lib/studio-production.js";
 import { workspaceAgent, hash } from "./harness.js";
 import { publicationTool, productionMiddleware, reviewTool } from "./production-tools.js";
-import { assetKey, assertAllowed, validateArtifactContent, assemblyManifest } from "../../lib/memoir-policy.js";
+import { assetKey as policyAssetKey, assertAllowed, validateArtifactContent, assemblyManifest } from "../../lib/memoir-policy.js";
 
 export const MEMOIR_PACKAGE_SHA256 = "bb325df5475617628394527945b215de6d92334fb5459ddfeea289530d7a8724";
 export const memoirModels = { writer: "moonshotai/kimi-k3", execution: "deepseek/deepseek-v4.1-flash", imageProvider: "decart/fp4", textBackup: "sail-research/fp4" } as const;
@@ -68,7 +68,7 @@ export function createMemoirAssignment(format: Format, store: StudioProduction, 
   const worker = format.config.agents[role];
   if (!worker) throw new Error("UNKNOWN_MEMOIR_ROLE");
   const skill = readFileSync(join(format.kit, worker.skill), "utf8");
-  store.createMemoirTicket(id, projectId, role, inputs, options.allowanceMicros ?? 0, kind, format.contracts.criteria[kind], { outcome, asset_key: assetKey(kind, options.selectors ?? {}), selectors: options.selectors ?? {}, skill, skill_sha256: hash(Buffer.from(skill)), skill_name: basename(dirname(worker.skill)), tools: worker.tools, model: role === "script-writer" ? memoirModels.writer : memoirModels.execution, lip_sync: false });
+  store.createMemoirTicket(id, projectId, role, inputs, options.allowanceMicros ?? 0, kind, format.contracts.criteria[kind], { outcome, asset_key: policyAssetKey(kind, options.selectors ?? {}), selectors: options.selectors ?? {}, skill, skill_sha256: hash(Buffer.from(skill)), skill_name: basename(dirname(worker.skill)), tools: worker.tools, model: role === "script-writer" ? memoirModels.writer : memoirModels.execution, lip_sync: false });
   return store.ticket(id);
 }
 export function candidateValidator(format: Format, store: StudioProduction, ticketId: string) {

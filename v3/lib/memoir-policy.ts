@@ -43,6 +43,7 @@ export function requestDescriptor(planning: any, plan: any) {
     const brief = planning.artifacts.find((a: any) => a.key === `${briefKey}:${planning.locationId}`);
     return {
       n: plan.operation === "backgroundAngle" ? 1 : 3,
+      model: "muse-image-1.0",
       endpoint: "https://api.meta.ai/v1/models/muse-image-1.0:generate",
       prompt: plan.parameters.prompt,
       images: brief ? brief.content.references : []
