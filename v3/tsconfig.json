@@ -41,7 +41,6 @@
     ".playwright-cli",
     "output",
     "tmp",
-    "scripts/studio-spike/output/**",
     "features/formats/my-pixar-story",
     "features/scene/createMyPixarStoryScene.ts"
   ]
