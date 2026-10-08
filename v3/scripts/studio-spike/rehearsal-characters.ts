@@ -95,17 +95,18 @@ export async function finishCharacterRoster(root:string,kit:string) {
  finally{store.authenticatedProjectCommand(signLocalOperator(root,{id:'character-roster-validation-pause',principal,project_id:rehearsalProject,action:'pause',value:1,reason:'End exact-draft roster completion'}));writeFileSync(join(dir,'roster-validation-finish-proof.json'),JSON.stringify({status:failure?'BLOCKED':'PASS',diagnostic:failure??null,result,allowance:store.allowance(rehearsalProject),paused:true},null,2),{flag:'wx',mode:0o600});store.close();}
 }
 
-export async function runCharacterCandidates(root:string,kit:string, repairTicket?:string) {
+export async function runCharacterCandidates(root:string,kit:string, repairTicket?:string, resumeTicket?:string) {
  const {approvedProjection,acceptMemoirCandidate}=await import('./memoir-format.js'),{executeAuthorizedMedia}=await import('./media-transport.js'),{pathToFileURL}=await import('node:url');
  const dir=join(root,'character-style'),quote=JSON.parse(readFileSync(join(dir,'quote.json'),'utf8')),auth=JSON.parse(readFileSync(join(dir,'authorization.json'),'utf8')),budget=JSON.parse(readFileSync(join(dir,'batch-budget.json'),'utf8'));
  if(auth.quote_sha256!==hash(Buffer.from(JSON.stringify(quote)))||auth.allowance_micros!==budget.allowance_micros||auth.allowance_micros!==2000000)throw new Error('EXACT_CHARACTER_BATCH_AUTHORIZATION_REQUIRED');
  const format=await loadMemoirFormat(kit),providers=await import(pathToFileURL(join(kit,'runtime/providers.mjs')).href),store=new StudioProduction(root),principal=provisionLocalOperator(root),id='rehearsal-roster';let failure:string|undefined;const results:any[]=[];
- const marker=join(dir,'candidates-started.json');if(existsSync(marker)&&(!repairTicket||store.ticket(repairTicket).status!=='CHANGES_REQUESTED')){store.close();throw new Error('CANDIDATES_ALREADY_STARTED_NO_AUTOMATIC_RETRY');}
- const stageSuffix=repairTicket?'-creative-repair-'+store.ticket(repairTicket).attempt_count:'';
+ const marker=join(dir,'candidates-started.json');if(existsSync(marker)&&!(resumeTicket&&store.ticket(resumeTicket).status==='WORKING')&&(!repairTicket||store.ticket(repairTicket).status!=='CHANGES_REQUESTED')){store.close();throw new Error('CANDIDATES_ALREADY_STARTED_NO_AUTOMATIC_RETRY');}
+ const stageSuffix=resumeTicket?'-continuation-'+store.ticket(resumeTicket).revision:repairTicket?'-creative-repair-'+store.ticket(repairTicket).attempt_count:'';
+ const resultsPath=join(dir,'candidate-results.json');if(existsSync(resultsPath))results.push(...JSON.parse(readFileSync(resultsPath,'utf8')));
  try {
   const rosterVersion=store.acceptedVersion(rehearsalProject,store.ticket(id).candidate_id),roster=JSON.parse(readFileSync(rosterVersion.path,'utf8'));
   const confirmed=JSON.parse(readFileSync(join(dir,'confirmed-references.json'),'utf8'));
-  if(store.project(rehearsalProject).paused!==1)throw new Error('REHEARSAL_MUST_BE_PAUSED');writeFileSync(repairTicket?join(dir,'candidates'+stageSuffix+'-started.json'):marker,JSON.stringify({auth,roster_version:rosterVersion.id,started_at:new Date().toISOString(),repair_ticket:repairTicket??null}),{flag:'wx',mode:0o600});
+  if(store.project(rehearsalProject).paused!==1)throw new Error('REHEARSAL_MUST_BE_PAUSED');writeFileSync(repairTicket||resumeTicket?join(dir,'candidates'+stageSuffix+'-started.json'):marker,JSON.stringify({auth,roster_version:rosterVersion.id,started_at:new Date().toISOString(),repair_ticket:repairTicket??null,resume_ticket:resumeTicket??null}),{flag:'wx',mode:0o600});
   store.authenticatedProjectCommand(signLocalOperator(root,{id:'character-candidates-resume'+stageSuffix,principal,project_id:rehearsalProject,action:'resume',value:0,reason:auth.operator_message}));
   const traces=await tracing(),key=await namedSecret('OPENROUTER_API_KEY'),geminiKey=await namedSecret('GEMINI_API_KEY');
   const remaining=()=>{const amount=budget.allowance_micros-(store.allowance(rehearsalProject).used-budget.baseline_used_micros);if(amount<=0)throw new Error('CHARACTER_BATCH_CAP_EXHAUSTED');return amount;};
@@ -113,6 +114,8 @@ export async function runCharacterCandidates(root:string,kit:string, repairTicke
   const approvedScript=JSON.parse(readFileSync(store.acceptedVersion(rehearsalProject,baseInputs.script).path,'utf8'));
   async function review(ticketId:string,photos:any[],references:any){const reviewId=ticketId+'-review-'+store.ticket(ticketId).attempt_count;startMemoirReview(store,ticketId,reviewId,Math.min(120000,remaining()),undefined,{maxTurns:12,maxAttempts:3});const ctx=store.claim(reviewId,'independent-gemini-character-reviewer',300000);const result=await directMediaReview(store,ctx,{key:geminiKey,references:{...references,approvedScript},inspectionFiles:photos.map(p=>p.file),traceClient:traces.client});if(store.ticket(ticketId).status!=='AWAITING_APPROVAL')throw new Error('CHARACTER_REVIEW_REQUIRES_REPAIR:'+ticketId);return result;}
   for(const character of roster.characters){
+   const completed=results.find(r=>r.character_id===character.id);
+   if(completed){verifyCompletedCharacter(store,completed);continue;}
    const photos=confirmed.references.filter((r:any)=>r.character_id===character.id),promptId='rehearsal-character-prompt-'+character.id;
    const selector={characterId:character.id},recipe=readFileSync(join(kit,'character-prompter.md'),'utf8');
    const template={prompt:'AUTHOR the concrete full-body production CG character design here, grounded in actual photos and director age direction.',characterDigest:format.contracts.digest(character),referenceHashes:character.references.map((f:any)=>f.sha256),recipeSha256:format.workflow.characterPromptRecipeSha256};
@@ -137,4 +140,12 @@ export async function runCharacterCandidates(root:string,kit:string, repairTicke
   await traces.client.awaitPendingTraceBatches();if(traces.failures.length)throw new Error('LANGSMITH_TRACE_UPLOAD_FAILED');
  }catch(e:any){let cause=e;while(cause?.cause)cause=cause.cause;failure=String(cause);throw new Error(failure);}
  finally{store.authenticatedProjectCommand(signLocalOperator(root,{id:'character-candidates-pause'+stageSuffix,principal,project_id:rehearsalProject,action:'pause',value:1,reason:'End bounded candidate batch; sheets require director selections'}));writeFileSync(join(dir,'candidate-batch'+stageSuffix+'-proof.json'),JSON.stringify({status:failure?'BLOCKED':'AWAITING_DIRECTOR_SELECTIONS',diagnostic:failure??null,results,batch_used_or_reserved_micros:store.allowance(rehearsalProject).used-budget.baseline_used_micros,allowance_cap_micros:budget.allowance_micros,paused:true},null,2),{flag:'wx',mode:0o600});store.close();}
+}
+
+/** Continuation reuses exact reviewed outputs; changed state or bytes never trigger regeneration. */
+export function verifyCompletedCharacter(store:StudioProduction,completed:any) {
+ const ticket=store.ticket(completed.card.ticket_id);
+ if(!['AWAITING_APPROVAL','APPROVED'].includes(ticket.status)||ticket.candidate_id!==completed.card.candidate_version_id)throw new Error('COMPLETED_CHARACTER_STATE_CHANGED');
+ const version=store.version(ticket.candidate_id);
+ if(version.content_hash!==completed.card.content_hash||hash(readFileSync(version.path))!==version.content_hash||completed.files.some((f:any)=>hash(readFileSync(f.path))!==f.sha256))throw new Error('COMPLETED_CHARACTER_BYTES_CHANGED');
 }

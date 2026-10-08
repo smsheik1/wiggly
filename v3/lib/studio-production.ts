@@ -11,7 +11,7 @@ export type InputVersions = Record<string, string>;
 export type KillPoint = "after_intent" | "after_dispatch_before_call" | "after_submit_before_request_id" | "after_request_id" | "after_publish_before_record" | "after_publication_commit";
 export type TicketLimits = { maxAttempts: number; maxStrikes: number; maxTurns: number };
 export type DirectorDecision = OperatorPayload & { action: "decide"; ticket_id: string; candidate_version_id: string; content_hash: string; expected_revision: number; decision: "APPROVE" | "REJECT"; selection?: number; feedback?: string };
-export type LimitExtension = OperatorPayload & { action: "extend_limits"; ticket_id: string; expected_revision: number; reason: string; max_attempts?: number; max_strikes?: number; max_turns?: number; allowance_micros?: number; recover_rejected_operation?: { operation_id: string; request_id: string; evidence_reference: string } };
+export type LimitExtension = OperatorPayload & { action: "extend_limits"; ticket_id: string; expected_revision: number; reason: string; max_attempts?: number; max_strikes?: number; max_turns?: number; allowance_micros?: number; recover_rejected_operation?: { operation_id: string; request_id?: string; evidence_reference: string } };
 export const memoirReviewModality = (kind: string) => ["candidates", "sheet", "backgroundCandidates", "backgroundAngle", "keyframe"].includes(kind) ? "image" : ["voiceSample", "audition", "narration", "music", "effect"].includes(kind) ? "audio" : kind === "video" ? "video" : kind === "film" ? "audiovisual" : "text";
 export const memoirFilmReviewCriteria = { video: ["technical", "story", "visual-continuity", "motion", "safety", "provenance"], audio: ["narration", "mix", "safety", "provenance"] };
 export const memoirReviewCoverage = "complete candidate and every referenced media item";
@@ -396,7 +396,7 @@ export class StudioProduction {
       const t = this.ticket(p.ticket_id); requireThat(t.project_id === p.project_id && t.revision === p.expected_revision, "STALE_LIMIT_EXTENSION");
       const limits = { max_attempts: p.max_attempts ?? t.max_attempts, max_strikes: p.max_strikes ?? t.max_strikes, max_turns: p.max_turns ?? t.max_turns, allowance: p.allowance_micros ?? t.allowance };
       for (const [key, value] of Object.entries(limits)) requireThat(Number.isSafeInteger(value) && value >= t[key] && (key === "allowance" ? value >= 0 : value > 0), "LIMITS_CANNOT_DECREASE");
-      requireThat(Object.entries(limits).some(([key, value]) => value > t[key]), "EXTENSION_MUST_INCREASE");
+      requireThat(p.recover_rejected_operation || Object.entries(limits).some(([key, value]) => value > t[key]), "EXTENSION_MUST_INCREASE");
       let status = t.status;
       if (t.status === "BLOCKED" && ((t.blocked_reason === "TURN_LIMIT" && limits.max_turns > t.max_turns) || (t.blocked_reason === "ATTEMPT_LIMIT" && limits.max_attempts > t.attempt_count) || (t.blocked_reason === "REPEATED_FAILURE" && limits.max_strikes > t.strike_count))) status = t.blocked_from;
       // An authenticated operator may recover a definitively rejected request while billing remains reserved.
@@ -404,9 +404,9 @@ export class StudioProduction {
       if (recovery) {
         const op = this.operation(recovery.operation_id);
         requireThat(t.status === "BLOCKED" && t.blocked_reason === null && op.ticket_id === t.id && op.state === "FAILED" && /HTTP (400|404|429):/.test(op.diagnostic ?? ""), "REJECTED_OPERATION_REQUIRED");
-        requireThat(recovery.request_id.trim() && recovery.evidence_reference.trim() && (!op.request_id || op.request_id === recovery.request_id), "REJECTION_RECEIPT_REQUIRED");
+        requireThat(recovery.evidence_reference.trim() && (recovery.request_id?.trim() || (!op.request_id && /HTTP 429:/.test(op.diagnostic ?? ""))) && (!op.request_id || op.request_id === recovery.request_id), "REJECTION_RECEIPT_REQUIRED");
         requireThat(!this.#get("SELECT id FROM operations WHERE ticket_id=? AND state IN ('SUBMITTING','SUBMITTED','UNKNOWN')", t.id), "UNCERTAIN_OPERATION");
-        this.#run("UPDATE operations SET request_id=? WHERE id=?", recovery.request_id, op.id);
+        if (recovery.request_id) this.#run("UPDATE operations SET request_id=? WHERE id=?", recovery.request_id, op.id);
         this.#run("UPDATE tickets SET lease_until=0,token=token+1 WHERE id=?", t.id);
         status = "WORKING"; // claim keeps this attempt and its existing turn history, and fences the old worker.
       }

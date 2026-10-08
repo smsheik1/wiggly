@@ -1,5 +1,5 @@
 {
-  "status": "CAST_REFERENCE_STAGE_PASSED_CANDIDATE_STAGE_IN_PROGRESS",
+  "status": "ONE_CHARACTER_CANDIDATE_SET_PASSED_PAUSED_ON_UPSTREAM_429",
   "date": "2026-10-08",
   "author": "Deep Agents / DeepSeek V4.1 Flash / Decart",
   "independent_reviewer": "Gemini 3.8 Flash, direct actual-image input and verdict",
@@ -9,7 +9,7 @@
   "director_selections_required_before_sheets": true,
   "checks": {
     "typecheck": "PASS",
-    "regression_tests": 102
+    "regression_tests": 105
   },
   "observed_failures_and_fixes": [
     {
@@ -32,5 +32,29 @@
     "Character candidates and sheets are not declared complete by this checkpoint.",
     "Reported tokens and allowance accounting are not verified invoice charges.",
     "Private references, crops, model outputs and operator authorizations stay outside Git."
-  ]
+  ],
+  "completed_candidate_sets": 1,
+  "remaining_candidate_sets": 5,
+  "operator_selection_pending": false,
+  "external_failure": {
+    "provider": "Decart",
+    "http_status": 429,
+    "reason": "upstream_provider_shared_pool / overloaded",
+    "response": "Same-model OpenRouter failover enabled after explicit director policy clarification. Rejected-call recovery retains reservations and history without increasing limits or inventing provider IDs."
+  },
+  "selected_child_candidate": 2,
+  "provider_routing_policy": {
+    "same_model_failover": true,
+    "require_parameters": true,
+    "max_price_per_million": {
+      "input": 0.3,
+      "output": 1.2
+    },
+    "model_substitution": false
+  },
+  "spending_policy": {
+    "image_and_voice": "Authorized within existing caps; no per-call operator spending approval",
+    "video": "Explicit operator spending approval required",
+    "creative_checkpoints": "Retained"
+  }
 }

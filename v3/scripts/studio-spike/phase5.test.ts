@@ -238,3 +238,13 @@ test("operator recovery cannot declare a connection error a rejected request",as
  assert.throws(()=>s.authorizeLimits(signLocalOperator(root,{id:'wrong-recovery',principal,project_id:'p',action:'extend_limits' as const,ticket_id:'a',expected_revision:s.ticket('a').revision,reason:'Explicit isolated mock negative test',max_turns:10,recover_rejected_operation:{operation_id:'unknown',request_id:'invented',evidence_reference:'mock'}})),/REJECTED_OPERATION_REQUIRED/);
  assert.equal(s.ticket('a').status,'BLOCKED');assert.equal(s.operation('unknown').settled_at,null);
 }));
+
+
+test("explicit rejected 429 recovery needs no artificial limit increase or invented provider ID",async()=>fixture(async(s,root)=>{
+ const {provisionLocalOperator,signLocalOperator}=await import('../../lib/studio-operator.js');const principal=provisionLocalOperator(root);
+ s.createTicket('rate-limited','p','author',{},1000,'AUTHOR',{maxTurns:12});const old=s.claim('rate-limited','worker',300000);s.beginTurn(old,'turn-1');
+ s.prepareOperation(old,request('rate-limit',100));s.startOperation(old,'rate-limit');s.failOperation('rate-limit','OpenRouter HTTP 429: upstream provider overloaded');
+ const payload={id:'same-budget-recovery',principal,project_id:'p',action:'extend_limits' as const,ticket_id:'rate-limited',expected_revision:s.ticket('rate-limited').revision,reason:'Explicit isolated recovery with same-model failover',recover_rejected_operation:{operation_id:'rate-limit',evidence_reference:'explicit mock HTTP 429 diagnostic receipt'}};
+ const result=s.authorizeLimits(signLocalOperator(root,payload));assert.equal(result.status,'WORKING');assert.equal(s.ticket('rate-limited').max_turns,12);assert.equal(s.ticket('rate-limited').allowance,1000);assert.equal(s.operation('rate-limit').request_id,null);assert.equal(s.operation('rate-limit').settled_at,null);assert.equal(s.allowance('p').used,100);
+ const current=s.claim('rate-limited','worker',300000);assert.equal(current.attemptId,old.attemptId);assert.throws(()=>s.heartbeat(old,300000),/STALE/);
+}));

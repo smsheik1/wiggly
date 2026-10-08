@@ -12,7 +12,7 @@ import { secretsPath } from "./tracing.js";
 
 /** The producer supplies the already-authorized key/lease and actual-media inspection adapter. */
 export function rehearsalWorker(store: StudioProduction, ctx: WorkerLease, options: {
-  key: string; fetcher?: typeof fetch; referencePhotos?: ReferencePhoto[];
+  key: string; fetcher?: typeof fetch; providerRoute?: "decart/fp4" | "parasail/fp8"; referencePhotos?: ReferencePhoto[];
   confirmedReferences?: { character_id: string; direction: string; file: any }[];
   inspectMedia?: (candidate: any) => Promise<any[]>;
 }) {
@@ -24,7 +24,7 @@ export function rehearsalWorker(store: StudioProduction, ctx: WorkerLease, optio
   const send: typeof fetch = async (input, init) => {
     if (fatal) throw fatal;
     const body = JSON.parse(String(init?.body));
-    body.provider = { order: ["decart/fp4"], only: ["decart/fp4"], allow_fallbacks: false, require_parameters: true, max_price: { prompt: .3, completion: 1.2 } };
+    body.provider = { order: [options.providerRoute ?? "decart/fp4"], allow_fallbacks: true, require_parameters: true, max_price: { prompt: .3, completion: 1.2 } };
     const serialized = JSON.stringify(body), operationId = randomUUID(); let response!: Response;
     const delivered = inspected && body.messages.some((m: any) => typeof m.content === "string" && m.content.includes(inspected!.toString()));
     await store.executeOperation(ctx, { operationId, provider: "openrouter", requestHash: hash(Buffer.from(serialized)), estimateMicros: Math.ceil(Buffer.byteLength(serialized.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g, "[image]")) * .3 + confirmed.length * 8192 * .3 + 8192 * 1.2) }, async () => {
@@ -54,7 +54,7 @@ export function rehearsalWorker(store: StudioProduction, ctx: WorkerLease, optio
       const findings = finding ? JSON.parse(finding.function.arguments).findings : null;
       if (evidence && typeof findings === "string" && findings.trim().length >= 20) store.inspectionCompleted(ctx, evidence, findings);
       return { completed: { result: { artifactReferences: [], receiptReference: path }, actualAllowanceMicros: Math.ceil(result.usage.cost * 1e6), providerUsage: { ...result.usage, provider: result.provider } } };
-    }, error => `${String(error).replaceAll(options.key, "[REDACTED]")}\nSTOP. Open https://openrouter.ai/workspaces/default/logs?tab=requests; inspect the provider/error row. Check https://openrouter.ai/settings/keys for this key's spending limit and https://openrouter.ai/settings/credits for credits. Canonical OPENROUTER_API_KEY belongs in ${secretsPath}. No retry or provider substitution.`);
+    }, error => `${String(error).replaceAll(options.key, "[REDACTED]")}\nSTOP. Open https://openrouter.ai/workspaces/default/logs?tab=requests; inspect the provider/error row. Check https://openrouter.ai/settings/keys for this key's spending limit and https://openrouter.ai/settings/credits for credits. Canonical OPENROUTER_API_KEY belongs in ${secretsPath}. Eligible same-model routes were exhausted. No blind resubmission or model substitution.`);
     return response;
   };
   const model = new NimModel({ model: "deepseek/deepseek-v4.1-flash", apiKey: options.key, maxRetries: 0, maxTokens: 8192, temperature: 1, disableStreaming: true, useResponsesApi: false, modelKwargs: { tool_choice: "required", reasoning: { effort: "low" } }, configuration: { baseURL: "https://openrouter.ai/api/v1", fetch: chatCompletionsTransport("https://openrouter.ai", send) } });

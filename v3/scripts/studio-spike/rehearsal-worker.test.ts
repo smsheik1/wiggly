@@ -23,7 +23,7 @@ test('native bounded agent publishes only runtime-bound completed inspection; ev
   try {
     writeFileSync(join(f.store.draftDirectory(f.ctx),'candidate.json'),JSON.stringify({story:'Explicit isolated mock contract'}));
     const worker=rehearsalWorker(f.store,f.ctx,{key:'EXPLICIT_MOCK_KEY',fetcher:async (_url, init)=>{
-      const body=JSON.parse(String(init?.body)); assert.equal(body.reasoning.effort,"low"); assert.equal(body.provider.allow_fallbacks,false); assert.deepEqual(body.provider.only,['decart/fp4']);
+      const body=JSON.parse(String(init?.body)); assert.equal(body.reasoning.effort,"low"); assert.equal(body.provider.allow_fallbacks,true); assert.equal(body.provider.only,undefined); assert.deepEqual(body.provider.max_price,{prompt:.3,completion:1.2}); assert.equal(body.provider.require_parameters,true); assert.equal(body.model,'deepseek/deepseek-v4.1-flash');
       calls++; return calls===1?reply('inspect_candidate',{draft_path:'/drafts/candidate.json'}):calls===2?reply('finish_inspection',{findings:'Explicit mock contract was read completely for receipt mechanics.'}):reply('submit_candidate',{draft_path:'/drafts/candidate.json',evidence_references:['invented-by-model']});
     }});
     const agent=workspaceAgent(worker.model,dirname(f.store.draftDirectory(f.ctx)),'explicit-mock','mock-author',[...worker.tools,publicationTool(f.store,f.ctx,undefined,worker.evidenceReferences)],'Explicit isolated protocol test',[productionMiddleware(f.store,f.ctx)]);
@@ -46,7 +46,7 @@ test('missing or foreign media findings fail exact candidate coverage',async()=>
     await assert.rejects((worker.tools[0] as any).invoke({draft_path:'/drafts/candidate.json'}),/COVERAGE_MISMATCH/);
   } finally {f.close();}
 });
-test('HTTP failure stops the ticket and never retries or changes provider',async()=>{
+test('exhausted OpenRouter routing stops the ticket without blind transport retries',async()=>{
   const f=fixture();let calls=0;try{
     const worker=rehearsalWorker(f.store,f.ctx,{key:'EXPLICIT_MOCK_KEY',fetcher:async()=>{calls++;return new Response('explicit mock rate limit',{status:429});}});
     await assert.rejects(worker.model.bindTools(worker.tools).invoke('Explicit mock'),(error: any)=>String(error.cause).includes('429'));assert.equal(calls,1);assert.equal(f.store.ticket('author').status,'BLOCKED');
@@ -221,4 +221,18 @@ test('SQL validation view carries exact transitive voice/audition inputs into do
 
 test('character batch rejects changed authorization before provider keys or paid calls',async()=>{
  const {runCharacterRoster,runCharacterCandidates}=await import('./rehearsal-characters.js'),{mkdirSync}=await import('node:fs');const root=mkdtempSync(join(tmpdir(),'wiggly-character-auth-mock-'));try{const dir=join(root,'character-style');mkdirSync(dir);writeFileSync(join(dir,'quote.json'),'{}');writeFileSync(join(dir,'authorization.json'),JSON.stringify({quote_sha256:'wrong',allowance_micros:2000000}));writeFileSync(join(dir,'batch-budget.json'),JSON.stringify({allowance_micros:2000000}));await assert.rejects(runCharacterRoster(root,'never-load-this-kit'),/EXACT_CHARACTER_BATCH_AUTHORIZATION_REQUIRED/);await assert.rejects(runCharacterCandidates(root,'never-load-this-kit'),/EXACT_CHARACTER_BATCH_AUTHORIZATION_REQUIRED/);}finally{rmSync(root,{recursive:true,force:true});}
+});
+
+
+test('producer can bind an explicit backup route while automatic fallback stays disabled',async()=>{
+ const f=fixture();try{let calls=0;const worker=rehearsalWorker(f.store,f.ctx,{key:'EXPLICIT_MOCK_KEY',providerRoute:'parasail/fp8',fetcher:async(_url,init)=>{calls++;const body=JSON.parse(String(init?.body));assert.equal(body.provider.only,undefined);assert.deepEqual(body.provider.order,['parasail/fp8']);assert.equal(body.provider.allow_fallbacks,true);assert.deepEqual(body.provider.max_price,{prompt:.3,completion:1.2});return reply('inspect_candidate',{draft_path:'/drafts/candidate.json'});}});await worker.model.bindTools(worker.tools).invoke('Explicit isolated route binding test');assert.equal(calls,1);}finally{f.close();}
+});
+
+
+test('batch continuation verifies existing reviewed outputs instead of regenerating them',async()=>{
+ const {verifyCompletedCharacter}=await import('./rehearsal-characters.js'),{hash}=await import('./harness.js');const root=mkdtempSync(join(tmpdir(),'wiggly-completed-candidate-mock-'));
+ try{const path=join(root,'candidate.json'),image=join(root,'image.webp'),bytes=Buffer.from('explicit mock candidate'),media=Buffer.from('explicit mock image');writeFileSync(path,bytes);writeFileSync(image,media);
+ const candidate={card:{ticket_id:'a',candidate_version_id:'v',content_hash:hash(bytes)},files:[{path:image,sha256:hash(media)}]};let status='AWAITING_APPROVAL';const store={ticket:()=>({status,candidate_id:'v'}),version:()=>({path,content_hash:hash(bytes)})} as any;
+ verifyCompletedCharacter(store,candidate);status='APPROVED';verifyCompletedCharacter(store,candidate);status='BLOCKED';assert.throws(()=>verifyCompletedCharacter(store,candidate),/STATE_CHANGED/);status='APPROVED';writeFileSync(image,'changed');assert.throws(()=>verifyCompletedCharacter(store,candidate),/BYTES_CHANGED/);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });
