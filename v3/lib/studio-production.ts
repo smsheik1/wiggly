@@ -431,6 +431,14 @@ export class StudioProduction {
       this.#saveCommand(command, serialized, result); return result;
     });
   }
+  /** A worker exiting at a safe boundary relinquishes ownership without resetting its attempt. */
+  releaseLease(ctx: WorkerLease) {
+    this.#tx(() => {
+      this.#lease(ctx);
+      requireThat(!this.#get("SELECT id FROM operations WHERE ticket_id=? AND state IN ('SUBMITTING','SUBMITTED','UNKNOWN')", ctx.ticketId), "UNCERTAIN_OPERATION");
+      this.#run("UPDATE tickets SET lease_until=0,token=token+1,revision=revision+1 WHERE id=?", ctx.ticketId);
+    });
+  }
   heartbeat(ctx: WorkerLease, leaseMs: number) { requireThat(Number.isSafeInteger(leaseMs) && leaseMs > 0, "INVALID_LEASE_DURATION"); this.#tx(() => { this.#lease(ctx); this.#run("UPDATE tickets SET lease_until=? WHERE id=?", this.now() + leaseMs, ctx.ticketId); }); }
   draftDirectory(ctx: WorkerLease) { id(ctx.ticketId); id(ctx.attemptId); return join(this.root, "assignments", ctx.ticketId, ctx.attemptId, "drafts"); }
   #draftBytes(ctx: WorkerLease, draftPath: string) {

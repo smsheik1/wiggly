@@ -248,3 +248,8 @@ test("explicit rejected 429 recovery needs no artificial limit increase or inven
  const result=s.authorizeLimits(signLocalOperator(root,payload));assert.equal(result.status,'WORKING');assert.equal(s.ticket('rate-limited').max_turns,12);assert.equal(s.ticket('rate-limited').allowance,1000);assert.equal(s.operation('rate-limit').request_id,null);assert.equal(s.operation('rate-limit').settled_at,null);assert.equal(s.allowance('p').used,100);
  const current=s.claim('rate-limited','worker',300000);assert.equal(current.attemptId,old.attemptId);assert.throws(()=>s.heartbeat(old,300000),/STALE/);
 }));
+
+
+test('safe worker exit releases its lease while preserving attempt and turn history',async()=>fixture(async(s)=>{
+ const old=s.claim('a','worker',300000);s.beginTurn(old,'turn-1');s.releaseLease(old);assert.throws(()=>s.heartbeat(old,300000),/STALE/);const current=s.claim('a','next-worker',300000);assert.equal(current.attemptId,old.attemptId);s.prepareOperation(current,request('in-flight',100));s.startOperation(current,'in-flight');assert.throws(()=>s.releaseLease(current),/UNCERTAIN_OPERATION/);
+}));
