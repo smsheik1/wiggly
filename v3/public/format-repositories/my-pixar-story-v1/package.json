@@ -1,0 +1,26 @@
+{
+  "name": "@wiggly/my-pixar-story-format",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test tests/remotion.test.mjs",
+    "build:renderer": "node build-renderer.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.532",
+    "@remotion/media": "4.0.532",
+    "@remotion/player": "4.0.532",
+    "@remotion/renderer": "4.0.532",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "remotion": "4.0.532",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "tailwindcss": "4.1.14"
+  }
+}

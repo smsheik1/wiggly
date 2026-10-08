@@ -1,0 +1,549 @@
+{
+  "date": "2026-10-07",
+  "phase": 5,
+  "status": "PHASE5_COMPLETE_IN_ISOLATION",
+  "goal_complete": true,
+  "authorization": "Director explicitly began Phase 5 goal loop, authorized a fresh $5 paid-test allowance, authorized investigation with loud escalation after three distinct failed repair attempts, and approved four major creative checkpoints.",
+  "checks": {
+    "typecheck": "PASS",
+    "phase5_tests": 20,
+    "previous_tests": 41,
+    "total_tests": 61,
+    "cross_process_worker_admission": "PASS",
+    "cross_process_shared_budget_reservations": "PASS",
+    "cross_process_provider_slots_and_restart": "PASS",
+    "bounded_dispatch_independent_publication": "PASS",
+    "unknown_operations_retain_provider_slots": "PASS",
+    "durable_provider_pacing": "PASS",
+    "pause_stops_new_calls": "PASS",
+    "budget_overrun_prevents_already_reserved_dispatch": "PASS",
+    "named_sqlite_lock_contention_barrier": "PASS",
+    "first_error_preserved_when_other_worker_pauses": "PASS",
+    "malformed_required_tool_truncation_and_invalid_calls_rejected_without_retry": "PASS",
+    "persistent_live_allowance_and_three_diagnostic_admission": "PASS",
+    "openrouter_reasoning_history_and_required_tool_guard": "PASS"
+  },
+  "implementation": [
+    "v3/lib/studio-production.ts",
+    "v3/scripts/studio-spike/dispatch.ts",
+    "v3/scripts/studio-spike/nim-transport.ts"
+  ],
+  "live_run_root": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6",
+  "diagnostics": [
+    {
+      "attempt": 1,
+      "configuration": {
+        "reasoning_effort": "max",
+        "max_tokens": 16384,
+        "temperature": 1,
+        "nvidia_concurrency": 2
+      },
+      "result": "NVIDIA HTTP 429 stopped the batch. Two Muse images completed and were retained. No duplicate image calls."
+    },
+    {
+      "attempt": 2,
+      "configuration": {
+        "reasoning_effort": "max",
+        "max_tokens": 8192,
+        "temperature": 1,
+        "nvidia_concurrency": 1,
+        "min_interval_ms": 6000
+      },
+      "result": "HTTP 200 garbled output, finish_reason=stop, no required tool. New guard rejected it and paused the batch."
+    },
+    {
+      "attempt": 3,
+      "configuration": {
+        "reasoning_effort": "high",
+        "max_tokens": 4096,
+        "temperature": 0,
+        "seed": 0,
+        "nvidia_concurrency": 1,
+        "min_interval_ms": 15000
+      },
+      "result": "HTTP 200 empty content, finish_reason=stop, no required tool. New guard rejected it. Escalated to director and stopped all live trials."
+    }
+  ],
+  "local_recovery_friction": [
+    "A recovery CLI flag initially collided with an imported Phase 2 CLI parser; Phase 5 uses its own flag. No provider calls occurred during this setup failure.",
+    "Worker admission correctly refused a replacement while the previous worker lease remained live. Recovery respects admission and reuses owned draft bytes; setup failure made no provider call."
+  ],
+  "live_operations": {
+    "muse_completed": 2,
+    "nvidia_completed": 18,
+    "nvidia_rate_limited": 1,
+    "nvidia_unsent_intents": 1,
+    "completed_response_receipts_include_invalid_outputs": true
+  },
+  "allowance": {
+    "authorized_usd": 5,
+    "estimated_muse_consumption_usd": 0.02,
+    "verified_charges_usd": null,
+    "nvidia_expected_cost_usd": 0,
+    "nvidia_basis": "NVIDIA free prototype endpoint; no invented per-token tariff.",
+    "remaining_estimated_allowance_usd": 4.062999,
+    "nvidia_429": "Explicit refusal at the free endpoint was reconciled to zero allowance consumption; verified billing remains unknown.",
+    "openrouter_reported_allowance_usd": 0.01824,
+    "unknown_reservations_usd": 0.898761,
+    "total_allowance_used_including_reservations_usd": 0.937001
+  },
+  "images": [
+    {
+      "path": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6/assignments/author-a/223d6926-9c43-4729-9766-a9675e13beed/drafts/candidate.webp",
+      "sha256": "293175c4a4ced67cf149e976bf6a42d56d66b34bccf16c63597ae53d5c616df6",
+      "bytes": 317568
+    },
+    {
+      "path": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6/assignments/author-b/0fdb36fb-95f2-4436-a2db-3d6ce4435167/drafts/candidate.webp",
+      "sha256": "0fa92275d57535fe889b8989978f739087e37426e4eeecc6f7854df035a4ec2e",
+      "bytes": 360010
+    },
+    {
+      "path": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6/assignments/recovered-author-a/564061ec-9ccb-4e0e-b72e-0a52a24f75f6/drafts/candidate.webp",
+      "sha256": "293175c4a4ced67cf149e976bf6a42d56d66b34bccf16c63597ae53d5c616df6",
+      "bytes": 317568
+    },
+    {
+      "path": "/Users/shaz/.codex/worktrees/studio-phase1/wiggly/v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6/assignments/recovered-author-b/462afca9-b743-4908-aaa2-5476f4484965/drafts/candidate.webp",
+      "sha256": "0fa92275d57535fe889b8989978f739087e37426e4eeecc6f7854df035a4ec2e",
+      "bytes": 360010
+    }
+  ],
+  "live_publication_and_review_complete": true,
+  "no_director_approvals": true,
+  "production_baseline": {
+    "files_verified": 313,
+    "all_unchanged": true,
+    "manifest_sha256": "9d857f03119e18cb74d4368d843228395fc4d9cd30807f80ed06aac6318e0d26",
+    "saved_production_paused": true,
+    "isolated_test_paused": true,
+    "migration_started": false
+  },
+  "approval_policy": {
+    "authorized": true,
+    "director_checkpoints": [
+      "character/style direction",
+      "storyboard/animatic",
+      "narration performance",
+      "final film"
+    ],
+    "intermediate_assets": "Proceed after deterministic validation and independent review pass. Changes contradicting approved direction return to director.",
+    "activation": "Explicit format integration in Phase 6; no automatic acceptance or production approvals granted by Phase 5 test."
+  },
+  "limitations": [
+    "NIM/Kimi reliability remains unresolved after three distinct diagnostics; no fourth retry was made.",
+    "Sail Research supports tested text tools but rejects images; image inspection uses Decart. No image backup is verified.",
+    "Decart produced a malformed response once; its guard stopped execution, and the director explicitly authorized one recovery. This is a successful bounded trial, not a general reliability guarantee.",
+    "LangGraph checkpoint recovery remains unproven; this recovery preserved SQL ticket/attempt/turn history and retained artifacts.",
+    "Unknown billing retains $0.898761 in allowance reservations; reported OpenRouter usage is not a verified invoice.",
+    "No production cutover, migration, film integration, or Phase 6 work."
+  ],
+  "sources": [
+    "https://docs.api.nvidia.com/nim/reference/moonshotai-kimi-k3-infer",
+    "https://build.nvidia.com/moonshotai/kimi-k3"
+  ],
+  "complexity_review": "Native SQLite transactions and count-based provider slots, stdlib timers, bounded in-process producer batch; no ORM, external queue, daemon, dashboard, new dependencies or tracing platform.",
+  "live_guard": "One authorized run/allowance ledger; each diagnostic configuration has a persistent exclusive execution record. A new workspace cannot silently reset the $5 allowance or repeat exhausted diagnostics.",
+  "openrouter_resume": {
+    "authorized": "Director approved use of remaining existing $5 allowance for Phase 5 OpenRouter calls; no new budget granted",
+    "model": "deepseek/deepseek-v4.1-flash",
+    "capability_probe": {
+      "status": "PASS",
+      "calls": 4,
+      "artifact_sha256": "5defbf005193f316590586b5a8f327e87ab6e4516c4140729e669bfc171a3151",
+      "quadrants": [
+        "red",
+        "blue",
+        "green",
+        "yellow"
+      ],
+      "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/6ad4759b-8ca4-43c4-82fd-a0b5fa34189f?poll=true",
+      "reported_cost_usd": 0.001228977
+    },
+    "initial_probe": "Connection error with inadequate original cause logging; also selected mock fixture incorrectly. No capability pass claimed. Corrected fixture to canonical 64x64 quadrant PNG and improved diagnostic capture. Unknown billing retains $0.75 reservation.",
+    "live_result": "STOPPED_HTTP_429",
+    "provider": "Ionstream",
+    "limit_source": "upstream_provider_shared_pool",
+    "project_paused": true,
+    "budget_reset": false,
+    "images_regenerated": false,
+    "author_and_review_gate_complete": false,
+    "completed_openrouter_allowance_micros": 4800,
+    "unsettled_reservation_micros": 902737,
+    "tickets": [
+      {
+        "id": "openrouter-probe-unknown",
+        "status": "BLOCKED",
+        "candidate_id": null
+      },
+      {
+        "id": "openrouter-probe-passed",
+        "status": "SUBMITTED",
+        "candidate_id": "524b73fa-3618-422c-a8c3-28363831cf82"
+      },
+      {
+        "id": "deepseek-author-a",
+        "status": "WORKING",
+        "candidate_id": null
+      },
+      {
+        "id": "deepseek-author-b",
+        "status": "BLOCKED",
+        "candidate_id": null
+      }
+    ],
+    "evidence_file": "v3/scripts/studio-spike/output/phase5/9a27550d-63b9-4274-a9cc-de38e64a12e6/openrouter-state-audit.json",
+    "exhausted_nim_diagnostics_preserved": true
+  },
+  "director_model_decision": {
+    "writer": "moonshotai/kimi-k3",
+    "basis": "Director preferred Kimi script over Muse Spark 1.3 Contributor in same-answer writing comparison; Grok 4.7 and 4.6 timed out, writing quality unjudged",
+    "execution_candidate": "deepseek/deepseek-v4.1-flash",
+    "writing_policy": "Based on a true story: faithful compression and everyday embellishment permitted while preserving meaning, relationships and important events. Every night explicitly accepted for family viewing ritual.",
+    "production_activation": false,
+    "existing_literal_quote_and_contract_validators_unchanged": true
+  },
+  "latest_live_checkpoint": {
+    "status": "PASS",
+    "tickets": [
+      {
+        "id": "packet-author-a",
+        "status": "AWAITING_APPROVAL",
+        "candidate_id": "cbd0f8b6-aa39-441f-bfff-8c33738a90f2",
+        "max_turns": 8
+      },
+      {
+        "id": "packet-author-b",
+        "status": "AWAITING_APPROVAL",
+        "candidate_id": "8c167e4a-80dc-4c4f-9120-107e27d911b6",
+        "max_turns": 8
+      },
+      {
+        "id": "packet-review-0",
+        "status": "SUBMITTED",
+        "candidate_id": null,
+        "max_turns": 6
+      },
+      {
+        "id": "packet-review-1",
+        "status": "SUBMITTED",
+        "candidate_id": null,
+        "max_turns": 4
+      }
+    ],
+    "routing": {
+      "primary": "decart/fp4",
+      "text_backup": "sail-research/fp4",
+      "image_backup": null
+    },
+    "author_publications": 2,
+    "independent_reviews_passed": 2,
+    "director_authorized_recovery": {
+      "command_id": "director-six-turn-decart-recovery",
+      "ticket_id": "packet-review-0",
+      "status": "WORKING",
+      "revision": 3,
+      "limits": {
+        "max_attempts": 1,
+        "max_strikes": 3,
+        "max_turns": 6,
+        "allowance": 1500000
+      },
+      "recovered_operation_id": "6f277016-9813-4555-b5b5-a9d92f4bbe82",
+      "billing_reservation_retained": true
+    },
+    "same_review_attempt_and_candidate": true,
+    "review_turns": 6,
+    "review_turn_limit": 6,
+    "images_regenerated": false,
+    "no_nim_fourth_attempt": true,
+    "no_phase6": true,
+    "project_paused": true
+  },
+  "completion_audit": {
+    "status": "PASS",
+    "accepted_candidates": [
+      {
+        "author": "packet-author-a",
+        "reviewer": "packet-review-0",
+        "version_id": "cbd0f8b6-aa39-441f-bfff-8c33738a90f2",
+        "sha256": "293175c4a4ced67cf149e976bf6a42d56d66b34bccf16c63597ae53d5c616df6",
+        "dimensions": {
+          "width": 2048,
+          "height": 1152
+        },
+        "independent_workers": true,
+        "review_turns": 6,
+        "review_limit": 6,
+        "inspection": [
+          {
+            "kind": "author",
+            "evidence_id": "c9f8fd3c-5a33-4437-8546-ee1f154d540a",
+            "run_id": "b0c874e3-61a2-4541-8a24-6ddc1b95027e",
+            "model": "deepseek/deepseek-v4.1-flash",
+            "modality": "image",
+            "coverage": "complete frame",
+            "sha256": "293175c4a4ced67cf149e976bf6a42d56d66b34bccf16c63597ae53d5c616df6"
+          },
+          {
+            "kind": "reviewer",
+            "evidence_id": "a6ced6ca-6f08-4e52-85e5-78c1bec8b1c5",
+            "run_id": "a8b1ed26-789e-4112-b2a1-407030efb591",
+            "model": "deepseek/deepseek-v4.1-flash",
+            "modality": "image",
+            "coverage": "complete frame",
+            "sha256": "293175c4a4ced67cf149e976bf6a42d56d66b34bccf16c63597ae53d5c616df6"
+          }
+        ],
+        "findings": "Inspected the actual bytes via inspect_candidate (SHA256 293175c4a4ced67cf149e976bf6a42d56d66b34bccf16c63597ae53d5c616df6), matching the packet content hash. The image is a stylized 3D-rendered family kitchen in 16:9 landscape aspect, warm daylight through a curtained window over the sink. Criteria assessment: (1) Empty stylized 3D family kitchen background \u2014 confirmed; soft-shaded CG render aesthetic, no live-action photo plate. (2) Usable 16:9 landscape \u2014 confirmed; wide horizontal framing. (3) Believable counter/sink/stove placement \u2014 confirmed; apron-front farmhouse sink centered under the window with tile backsplash, L-shaped sage cabinets with wood countertops continuing into the right corner, freestanding cream range with kettle on the cooktop and stand mixer on the right counter; plumbing underside cabinet and stove vent presence read plausibly. (4) Clear central floor space for character staging \u2014 confirmed; a large unobstructed wood floor area with only a small oval woven rug occupies the lower-center/left, leaving the mid-frame foreground clear. (5) No people, animals, human figures or faces \u2014 confirmed; all decorative items (plant pot, fruit bowl, mugs, fabrics) are non-figurative and no pareidolic faces appear in tiles, wood grain, curtains, or foliage. (6) No captions, logos or watermarks \u2014 confirmed; no text or branding anywhere in the frame. (7) Invented test scene \u2014 consistent with a generic, non-identifiable domestic kitchen rather than a specific memoir location. No blocking defects observed."
+      },
+      {
+        "author": "packet-author-b",
+        "reviewer": "packet-review-1",
+        "version_id": "8c167e4a-80dc-4c4f-9120-107e27d911b6",
+        "sha256": "0fa92275d57535fe889b8989978f739087e37426e4eeecc6f7854df035a4ec2e",
+        "dimensions": {
+          "width": 2048,
+          "height": 1152
+        },
+        "independent_workers": true,
+        "review_turns": 3,
+        "review_limit": 4,
+        "inspection": [
+          {
+            "kind": "author",
+            "evidence_id": "3256e97f-747c-45c3-b388-b25652f04e76",
+            "run_id": "6f709acc-ddcc-4fc3-b212-33430bb5a73d",
+            "model": "deepseek/deepseek-v4.1-flash",
+            "modality": "image",
+            "coverage": "complete frame",
+            "sha256": "0fa92275d57535fe889b8989978f739087e37426e4eeecc6f7854df035a4ec2e"
+          },
+          {
+            "kind": "reviewer",
+            "evidence_id": "03ad2055-1d57-442d-866e-11c1f32b44bd",
+            "run_id": "63e4622a-d13b-441c-bd8f-d227bf1c005e",
+            "model": "deepseek/deepseek-v4.1-flash",
+            "modality": "image",
+            "coverage": "complete frame",
+            "sha256": "0fa92275d57535fe889b8989978f739087e37426e4eeecc6f7854df035a4ec2e"
+          }
+        ],
+        "findings": "Reviewed the exact candidate in the packet (content_hash 0fa92275d57535fe889b8989978f739087e37426e4eeecc6f7854df035a4ec2e matches the SHA256 reported by inspect_candidate, and candidate_path /references/candidate.webp matches the packet's phase5 / packet-author-b assignment). The frame is a single landscape 16:9 image of a stylized 3D family kitchen rendered at dusk: warm interior lighting, white subway-tile backsplash, wood counters and upper cabinets, two green shaker lower-cabinet runs, a white retro refrigerator on the right, a farmhouse apron sink centered under a three-column window, a copper kettle on a range/stove at left, a small island with two X-back stools, hanging pendant lanterns, a mug rack and apple bowl on the right, and a woven rug on the floor. Assessment against the packet criteria: (1) EMPTY \u2014 the scene contains no occupants; the floor, counters, and staging zones are unoccupied. (2) 16:9 LANDSCAPE \u2014 the frame is a wide landscape composition with the proportions consistent with 16:9. (3) BELIEVABLE COUNTER/SINK/STOVE PLACEMENT \u2014 the stove/range sits against the left wall under the hood/cabinet zone, the sink is centered on the window wall with a gooseneck faucet on the counter behind it, and the wood counters wrap the walls at one consistent working height with the island at bar height facing the window; cabinetry, fridge, and shelving occupy plausible positions along the perimeter. (4) CLEAR CENTRAL FLOOR \u2014 the foreground/central floor area is open and unobstructed enough for character staging (only a flat rug lies on it, which does not block placement). (5) NO PEOPLE/ANIMALS/FIGURES/FACES \u2014 scanning the whole frame, including backsplash tiles, window/dusk reflection, appliance surfaces, hanging mugs, pots, and shelf items, I found no humans, animals, or face-like forms. (6) NO CAPTIONS/LOGOS/WATERMARKS \u2014 no text, logos, or watermarks appear anywhere in the frame. (7) INVENTED TEST SCENE \u2014 the composition is a generic, non-identifiable kitchen, not a recognizable memoir location. No blocking defects were found; only minor cosmetic notes are recorded."
+      }
+    ],
+    "live_author_overlap_pairs": [
+      [
+        "80c40e5d-0feb-4b6d-b152-9267f6e1769a",
+        "0034a935-34f1-43bf-aa23-604da1001d76"
+      ],
+      [
+        "80c40e5d-0feb-4b6d-b152-9267f6e1769a",
+        "a8f1b237-cb5a-47a3-a01e-4bd227847ab2"
+      ],
+      [
+        "2c2050c9-0cf1-408c-81aa-68c64224eaeb",
+        "a8f1b237-cb5a-47a3-a01e-4bd227847ab2"
+      ],
+      [
+        "db558f6f-ba02-4ef0-9ba9-ad52484b11c2",
+        "a8f1b237-cb5a-47a3-a01e-4bd227847ab2"
+      ],
+      [
+        "db558f6f-ba02-4ef0-9ba9-ad52484b11c2",
+        "a165adc0-515c-412d-af3a-fde85a16277b"
+      ],
+      [
+        "db558f6f-ba02-4ef0-9ba9-ad52484b11c2",
+        "bcac9ba7-7850-4270-b95e-625fdfeacb26"
+      ],
+      [
+        "145c0874-f41a-4eb7-a0b4-824715ae5eec",
+        "bcac9ba7-7850-4270-b95e-625fdfeacb26"
+      ]
+    ],
+    "author_wire": [
+      {
+        "ticket": "packet-author-b",
+        "provider": "openrouter",
+        "operation_id": "0034a935-34f1-43bf-aa23-604da1001d76",
+        "started": 1791405791951,
+        "ended": 1791405793819
+      },
+      {
+        "ticket": "packet-author-a",
+        "provider": "openrouter",
+        "operation_id": "80c40e5d-0feb-4b6d-b152-9267f6e1769a",
+        "started": 1791405791945,
+        "ended": 1791405793920
+      },
+      {
+        "ticket": "packet-author-a",
+        "provider": "openrouter",
+        "operation_id": "2c2050c9-0cf1-408c-81aa-68c64224eaeb",
+        "started": 1791405793948,
+        "ended": 1791405795553
+      },
+      {
+        "ticket": "packet-author-b",
+        "provider": "openrouter",
+        "operation_id": "a8f1b237-cb5a-47a3-a01e-4bd227847ab2",
+        "started": 1791405793847,
+        "ended": 1791405796177
+      },
+      {
+        "ticket": "packet-author-b",
+        "provider": "openrouter",
+        "operation_id": "a165adc0-515c-412d-af3a-fde85a16277b",
+        "started": 1791405796190,
+        "ended": 1791405797458
+      },
+      {
+        "ticket": "packet-author-a",
+        "provider": "openrouter",
+        "operation_id": "db558f6f-ba02-4ef0-9ba9-ad52484b11c2",
+        "started": 1791405795582,
+        "ended": 1791405810753
+      },
+      {
+        "ticket": "packet-author-a",
+        "provider": "openrouter",
+        "operation_id": "145c0874-f41a-4eb7-a0b4-824715ae5eec",
+        "started": 1791405810805,
+        "ended": 1791405812505
+      },
+      {
+        "ticket": "packet-author-b",
+        "provider": "openrouter",
+        "operation_id": "bcac9ba7-7850-4270-b95e-625fdfeacb26",
+        "started": 1791405797487,
+        "ended": 1791405815679
+      },
+      {
+        "ticket": "packet-author-b",
+        "provider": "openrouter",
+        "operation_id": "ad7daa10-4a93-418c-a226-b706d0406232",
+        "started": 1791405815710,
+        "ended": 1791405817683
+      }
+    ],
+    "project_paused": true,
+    "max_workers": 2,
+    "provider_policy": [
+      {
+        "provider": "meta-muse",
+        "max_inflight": 1,
+        "min_interval_ms": 0,
+        "next_allowed_at": 0
+      },
+      {
+        "provider": "nvidia-nim",
+        "max_inflight": 1,
+        "min_interval_ms": 15000,
+        "next_allowed_at": 1791388597726
+      },
+      {
+        "provider": "openrouter",
+        "max_inflight": 5,
+        "min_interval_ms": 0,
+        "next_allowed_at": 1791406468070
+      }
+    ],
+    "openrouter_reported_allowance_micros": 18240,
+    "unknown_reservation_micros": 898761,
+    "total_allowance_used_micros": 937001,
+    "remaining_allowance_micros": 4062999,
+    "verified_charges": null,
+    "muse_generations": 2,
+    "saved_production_files_verified": 313,
+    "production_unchanged": true,
+    "no_director_approvals": true,
+    "no_inflight_operations": true,
+    "director_extension": {
+      "command_id": "director-six-turn-decart-recovery",
+      "ticket_id": "packet-review-0",
+      "status": "WORKING",
+      "revision": 3,
+      "limits": {
+        "max_attempts": 1,
+        "max_strikes": 3,
+        "max_turns": 6,
+        "allowance": 1500000
+      },
+      "recovered_operation_id": "6f277016-9813-4555-b5b5-a9d92f4bbe82",
+      "billing_reservation_retained": true
+    },
+    "live_worker_receipts": [
+      {
+        "ticket": "packet-author-a",
+        "run_id": "b0c874e3-61a2-4541-8a24-6ddc1b95027e",
+        "elapsed_ms": 24307,
+        "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/b0c874e3-61a2-4541-8a24-6ddc1b95027e?poll=true",
+        "submitted": true
+      },
+      {
+        "ticket": "packet-author-b",
+        "run_id": "6f709acc-ddcc-4fc3-b212-33430bb5a73d",
+        "elapsed_ms": 30738,
+        "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/6f709acc-ddcc-4fc3-b212-33430bb5a73d?poll=true",
+        "submitted": true
+      },
+      {
+        "ticket": "packet-review-0",
+        "run_id": "a8b1ed26-789e-4112-b2a1-407030efb591",
+        "elapsed_ms": 22384,
+        "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/a8b1ed26-789e-4112-b2a1-407030efb591?poll=true",
+        "submitted": true
+      },
+      {
+        "ticket": "packet-review-1",
+        "run_id": "63e4622a-d13b-441c-bd8f-d227bf1c005e",
+        "elapsed_ms": 53261,
+        "trace_url": "https://smith.langchain.com/o/59bb6f3b-10c7-4ea4-8dbc-ca4511154ce6/projects/p/27ae49c0-feff-48ad-85e7-a6803e1e1e38/r/63e4622a-d13b-441c-bd8f-d227bf1c005e?poll=true",
+        "submitted": true
+      }
+    ],
+    "requirements": [
+      {
+        "requirement": "Two independent assignments dispatch concurrently under exclusive ownership",
+        "evidence": "Live request interval overlap plus distinct SQL worker/attempt claims; two-worker cap; cross-process exclusive-claim tests",
+        "result": "PASS"
+      },
+      {
+        "requirement": "Shared transactional allowance and provider concurrency limits",
+        "evidence": "Project allowance remains 5,000,000 microUSD; reservations remain counted; local concurrent reservation/provider-slot tests and durable pacing tests",
+        "result": "PASS"
+      },
+      {
+        "requirement": "SQLite contention",
+        "evidence": "Child-process contention waits instead of failing startup; independent-process claim and budget tests",
+        "result": "PASS"
+      },
+      {
+        "requirement": "Live author publication and independent review",
+        "evidence": "Both exact immutable version hashes have completed author and independent reviewer inspection evidence, FINISHED/PASS review records, and AWAITING_APPROVAL tickets",
+        "result": "PASS"
+      },
+      {
+        "requirement": "NIM investigation at most three distinct repairs then escalate",
+        "evidence": "Three recorded diagnostics retained; no fourth NIM trial; director-authorized OpenRouter alternative used",
+        "result": "PASS"
+      },
+      {
+        "requirement": "Preserve saved production paused and unchanged",
+        "evidence": "313 file hashes and complete file inventory equal baseline; isolated test ends paused; no migration/production approvals",
+        "result": "PASS"
+      },
+      {
+        "requirement": "Record major-checkpoint director policy",
+        "evidence": "approval_policy in this proof and RFC; activation deferred to Phase 6",
+        "result": "PASS"
+      },
+      {
+        "requirement": "Stop before Phase 6",
+        "evidence": "Only isolated harness/core safety changes; no format integration or production routing",
+        "result": "PASS"
+      }
+    ]
+  }
+}

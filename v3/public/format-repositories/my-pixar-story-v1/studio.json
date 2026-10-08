@@ -1,0 +1,203 @@
+{
+  "version": 1,
+  "agents": {
+    "script-writer": {
+      "name": "Leo",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/leo/SKILL.md",
+      "tools": [
+        "readAsset"
+      ]
+    },
+    "text-reviewer": {
+      "name": "Sage",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/sage/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage"
+      ]
+    },
+    "cast-designer": {
+      "name": "Cleo",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/cleo/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage"
+      ]
+    },
+    "sheet-prompter": {
+      "name": "Pia",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/pia/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage"
+      ]
+    },
+    "background-product-owner": {
+      "name": "Beau",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/beau/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage"
+      ]
+    },
+    "pixar-prompter": {
+      "name": "Pia",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/pia/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage"
+      ]
+    },
+    "shot-planner": {
+      "name": "Sam",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/sam/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage"
+      ]
+    },
+    "composition-writer": {
+      "name": "Cam",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/cam/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage"
+      ]
+    },
+    "motion-director": {
+      "name": "Mo",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/mo/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage"
+      ]
+    },
+    "video-prompt-engineer": {
+      "name": "Vin",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/vin/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage"
+      ]
+    },
+    "sound-designer": {
+      "name": "Finn",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/finn/SKILL.md",
+      "tools": [
+        "readAsset",
+        "listenAudio",
+        "measureAudio"
+      ]
+    },
+    "film-editor": {
+      "name": "Eli",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/eli/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage",
+        "watchVideo",
+        "listenAudio",
+        "measureAudio",
+        "transcribe",
+        "inspectAudio",
+        "renderAudioEdit"
+      ]
+    },
+    "audio-reviewer": {
+      "name": "Ava",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/ava/SKILL.md",
+      "tools": [
+        "readAsset",
+        "listenAudio",
+        "measureAudio",
+        "transcribe",
+        "speakerSimilarity"
+      ]
+    },
+    "visual-reviewer": {
+      "name": "Vera",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/vera/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage",
+        "watchVideo"
+      ]
+    },
+    "generation-planner": {
+      "name": "Max",
+      "model": "gpt-5.6-sol",
+      "skill": "crew/max/SKILL.md",
+      "tools": [
+        "readAsset",
+        "viewImage"
+      ]
+    }
+  },
+  "generation": {
+    "voice": {
+      "provider": "cartesia",
+      "model": "sonic-3.6-2026-08-27",
+      "apiVersion": "2026-08-14"
+    },
+    "image": {
+      "provider": "meta-muse",
+      "model": "muse-image-1.0",
+      "estimatedUnitCostUsd": 0.01
+    },
+    "video": {
+      "provider": "replicate",
+      "profile": "seedance-mini-480p",
+      "model": "seedance-2.0-mini",
+      "resolution": "480p"
+    },
+    "mediaReview": {
+      "provider": "gemini",
+      "model": "gemini-3.8-flash",
+      "samplingFps": 4
+    },
+    "music": {
+      "provider": "elevenlabs",
+      "model": "music_v2_5",
+      "enabledByDefault": false
+    },
+    "effect": {
+      "provider": "elevenlabs",
+      "model": "eleven_text_to_sound_v2",
+      "enabledByDefault": false
+    }
+  },
+  "limits": {
+    "generationAttempts": 3,
+    "reviewDisagreements": 2,
+    "finishedWorkerAttempts": 3,
+    "crewTasksPerDispatch": 8,
+    "initialSpendCeilingUsd": 0
+  },
+  "reviewers": {
+    "text-reviewer": "evaluation/rubrics/text.md",
+    "audio-reviewer": "evaluation/rubrics/audio.md",
+    "visual-reviewer": "evaluation/rubrics/visual.md"
+  },
+  "recipes": {
+    "characterPrompt": "character-prompter.md",
+    "sheetPrompt": "character-sheet-recipe.md",
+    "backgroundPrompt": "background-prompter.md",
+    "backgroundAnglePrompt": "background-prompter.md"
+  },
+  "communication": "orchestrator-voice.md",
+  "writingPolicy": "grounded-v1"
+}

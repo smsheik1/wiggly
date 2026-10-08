@@ -1,0 +1,6 @@
+node_modules/
+agent-runs/
+*.tgz
+dist/
+secrets.env
+evaluation/local/

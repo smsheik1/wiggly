@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-01",
+  "formatVersion": "2.0.0",
+  "scope": "orchestration checkpoint; not finished-film or real media quality proof",
+  "testsPassed": 73,
+  "cleanExtraction": "npm ci, check, test, smoke passed",
+  "blindAgent": "actual host-authored grandmother script; actual separate-worker text reviews; isolated simulated human revision; restart/stale-review checks; paused at genuine voiceSample gate, sequence 6, zero jobs/allowances",
+  "finalRunnerCompatibility": "final extracted runner resumed the same isolated checkpoint unchanged",
+  "paidProviderCalls": 0,
+  "productionCredentialsRead": false,
+  "simplificationReview": "ponytail-review: Lean already. Ship. Removed unused import; no extra agent framework or provider SDK layers.",
+  "unproven": [
+    "live provider access/quality/cost",
+    "actual qualified perceptual reviewer and sufficient human labels",
+    "actual end-to-end film (explicitly excluded)",
+    "app integration and cross-platform native install beyond tested macOS"
+  ],
+  "evaluationFoundation": {
+    "cases": 22,
+    "inventoryRecords": 145,
+    "calibrationCases": 13,
+    "holdoutCases": 9,
+    "testsPassed": 27,
+    "dataFirstCommit": "7586ebce",
+    "knownAnatomyDefectsMissed": 1,
+    "semanticVoiceAnatomyJudgesQualified": false,
+    "freshPackageProof": "27 tests, preflight, both smoke fixtures, calibration/holdout, immutable SQLite checkpoint; incomplete reviewer responses discovered and fixed with guardrail",
+    "paidProviderCalls": 0,
+    "productionCredentialsRead": false,
+    "remoteTracingOrUpload": false
+  },
+  "backgroundRuntime": {
+    "testsPassed": 39,
+    "paidProviderCalls": 0,
+    "productionCredentialsRead": false,
+    "blindPackageProof": "final clean extraction: npm ci/check, 39 tests, both smoke fixtures, custom scene-first role/approval/reference/owner-review restart proof; generated-master changes reopen owner brief and preserve other location approvals",
+    "simplificationReview": "Existing LangGraph nodes, schemas and direct adapter extended; no new dependencies or framework. Removed duplicate event-history write and unused fixture imports. Lean already. Ship.",
+    "liveMediaQualityProven": false,
+    "remaining": "host perceptual review qualification; scene compositions/video/music/assembly; no reference bank shipped"
+  },
+  "keyframeRuntime": {
+    "testsPassed": 51,
+    "paidProviderCalls": 0,
+    "productionCredentialsRead": false,
+    "liveMediaQualityProven": false,
+    "blindPackageProof": "final fresh extraction: npm ci/check, 51 tests, both smoke fixtures, custom CLI host-module/restart/digest/scene-role proof; second rejected frame escalates after repaired prompt approval",
+    "simplificationReview": "Extends existing stage/review/provider protocol; one scoped shot validation/reference helper, no new dependencies or renderer. Lean already. Ship.",
+    "remaining": "qualified actual visual reviewer, video/music/assembly/final film proof",
+    "observedFailureAndFix": "Blind proof found prompt approval reset image rejection count; compute consecutive per-shot rejections from saved frame reviews; regression and independent reproduction pass."
+  },
+  "studioRuntime": {
+    "testsPassed": 73,
+    "paidProviderCalls": 0,
+    "productionCredentialsRead": false,
+    "actualAIVideoGenerations": 0,
+    "remoteTracingOrUpload": false,
+    "productionReviewerQualified": false,
+    "realEndToEndProof": "explicitly excluded",
+    "mechanics": "qualification reports from verified heldout predictions; video request/review/repair gates; async recovery; sound/edits/assembly/finalization; all studio interrupts reopened through SQLite with isolated events; two-second synthetic assembly component, no real story film",
+    "blindPackageProof": "final fresh extraction: npm ci/check, 73 tests and both smoke fixtures; independent graph/CLI reproductions verify all five defect fixes, source-media integrity before key loading, repair/restart/rejoin, narrated-source impact pause and human film editor changes; no remaining material bug in scope",
+    "simplificationReview": "Ponytail-review: Lean already. Ship. Reuses existing graph/schema/provider protocol, no new dependency; removed unused imports, duplicate import and unreachable legacy dependency entry. One scoped local assembler, no generic worker framework.",
+    "observedFailuresAndFixes": [
+      "generated sound request omitted receipt prompt: snapshot prompt and graph receipts tested",
+      "film rejection rerendered unchanged edit: route repair to edit or bound used source",
+      "qualification evidence deleted unnoticed: expose and recompute saved corpus/predictions/media",
+      "longer audio disguised short video: measure video stream duration",
+      "heldout target leaked through calibration reference: split checks include references"
+    ],
+    "conservativeBoundary": "Final narration-source repairs escalate for human impact confirmation; v1 invalidates downstream visuals. Human film feedback reopens editor.",
+    "auditedArchiveBeforeEvidenceMetadataSha256": "e6b27aa3da8b4b8eb92bb88fb031fe4e48eb60ac29c3b06afecacfb96e6a6a98"
+  }
+}

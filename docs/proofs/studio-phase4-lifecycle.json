@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-07",
+  "phase": 4,
+  "status": "PHASE_4_PASSED",
+  "authorization": "Director instructed: if Phase 3 goal completed successfully, begin Phase 4; otherwise do not. Phase 3 goal completed successfully.",
+  "scope": "Isolated SQL lifecycle and local operator adapter. No production migration/resume or Phase 5 authorization.",
+  "implementation": [
+    "v3/lib/studio-production.ts",
+    "v3/lib/studio-operator.ts",
+    "v3/scripts/studio-spike/production-tools.ts",
+    "v3/scripts/studio-spike/operator-cli.ts"
+  ],
+  "runtime": {
+    "node": "26.8.1",
+    "sqlite": "3.53.4",
+    "dependency_additions": 0
+  },
+  "checks": {
+    "typecheck": "PASS",
+    "phase4_tests": 14,
+    "phase3_tests": 19,
+    "existing_harness_tests": 8,
+    "total_tests": 41,
+    "rejection_repair_independent_review_exact_version_approval": "PASS",
+    "restart_awaiting_approval_while_paused": "PASS",
+    "approval_preserves_pause": "PASS",
+    "author_reviewer_separation_completed_inspection_and_coverage": "PASS",
+    "stale_inputs_cards_and_concurrent_decisions": "PASS",
+    "duplicate_decision_idempotency_and_conflicting_command_rejection": "PASS",
+    "unsigned_modified_foreign_principal_wrong_hash_rejection": "PASS",
+    "published_byte_corruption_rejection": "PASS",
+    "approved_local_versions_required_for_downstream_inputs": "PASS",
+    "inconclusive_review_no_author_strike": "PASS",
+    "separate_attempt_strike_and_turn_escalation": "PASS",
+    "authenticated_extensions_preserve_counts_and_project_cap": "PASS",
+    "native_middleware_blocks_extra_model_call": "PASS",
+    "native_reviewer_submit_ends_run_without_director_approval": "PASS",
+    "local_cli_signed_decision_and_replay": "PASS",
+    "worker_denied_operator_capability_and_signing_tools": "PASS",
+    "isolated_v1_schema_upgrade_preserves_versions_claims_pause": "PASS",
+    "six_existing_named_sigkill_checks": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "commands": [
+    "npm run check --prefix v3/scripts/studio-spike",
+    "npm test --prefix v3/scripts/studio-spike",
+    "git check-ignore v3/operator-auth.json",
+    "git diff --check"
+  ],
+  "findings": [
+    "LangChain telemetry callback errors can be swallowed; a failing native harness regression prompted enforcement through wrapModelCall middleware instead.",
+    "SQLite busy_timeout is set before the first schema read to protect concurrent process startup."
+  ],
+  "operator_boundary": {
+    "authentication": "Local OS-owned private signing capability, canonical HMAC-SHA256 payload, exact-revision atomic SQL transition.",
+    "worker_access": "Capability outside native worker mounts; no SQL, signing, operator or unrestricted shell tool.",
+    "limit": "Not isolation against arbitrary processes running as the same OS user. Trusted control-plane APIs remain internal, not agent tools.",
+    "director_decisions": "Explicit mock fixture operator decisions only; no actual film or saved production approvals."
+  },
+  "production_baseline": {
+    "files_verified": 313,
+    "all_unchanged": true,
+    "manifest_sha256": "9d857f03119e18cb74d4368d843228395fc4d9cd30807f80ed06aac6318e0d26",
+    "production_paused": true,
+    "migration_started": false
+  },
+  "phase4_external_api_calls": 0,
+  "phase4_provider_spend_usd": 0,
+  "remaining_gates": [
+    "Full LangGraph checkpoint recovery: current checks prove SQL and artifact recovery, not durable multimodal worker execution.",
+    "Phase 2 NVIDIA garbled-response reliability remains unresolved.",
+    "Phase 5 bounded concurrent production under shared allowance and provider limits requires authorization.",
+    "Phase 6 film integration, renderer parity, migration rehearsal and explicit cutover approval.",
+    "Current dependency advisory reassessment before deployment as an untrusted-input service."
+  ],
+  "complexity_review": "Ponytail self-review: native SQLite/crypto/fs and native Deep Agents middleware; no ORM, new dependencies, queue service, dashboard, or custom observability platform."
+}
