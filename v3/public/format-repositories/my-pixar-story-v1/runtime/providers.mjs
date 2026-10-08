@@ -121,6 +121,11 @@ export async function executeJob(p, job, runDir, apiKey, fetcher = fetch, collec
   if (p.gate !== 'collect' || p.step !== job.plan.operation || !recorded?.authorization || !['submitting', 'submitted', 'uncertain'].includes(recorded.status) || recorded.key !== keyFor(p) || digest({ plan: job.plan, request: job.request, dependencies: job.dependencies }) !== recorded.digest || job.dependencies.some(id => !p.artifacts.some(a => a.id === id && a.valid))) throw new Error('UNAUTHORIZED_PROVIDER_CALL: use the current recorded request after the runner checkpoints submission.');
   assertAllowed(p, p.step);
   if(job.request.regeneration){const parent=artifact(p,'narration'),scope=job.request.regeneration;if(!p.narrationRegeneration||parent?.id!==scope.artifactId||parent.digest!==scope.artifactDigest||digest(parent)!==digest(scope.parent)||digest(requestDescriptor(p,job.plan))!==digest(job.request))throw new Error('NARRATION_REGENERATION_STALE: exact current parent, human scope and request required.');}
+  return executeMediaRequest(job, runDir, apiKey, fetcher, collectOnly, onJobId);
+}
+// Trusted transport boundary. The caller must authorize and persist the exact request
+// before entry; workers never receive this function or provider credentials.
+export async function executeMediaRequest(job, runDir, apiKey, fetcher = fetch, collectOnly = false, onJobId) {
   const request = job.request; await verifyFiles(request);
   const dir = join(runDir, 'receipts', job.id); await mkdir(dir, { recursive: true });
   if(job.plan.provider==='replicate'){const cached=join(dir,'result.json');try{return JSON.parse(await readFile(cached,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}const result=await executeVideo({...job,request:{...job.request,runDir}},dir,apiKey,fetcher,collectOnly,onJobId);if(!result.pending)await atomicJson(cached,result);return result;}

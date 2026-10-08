@@ -400,3 +400,47 @@ Final-film review preserves the existing separate audiovisual requirement: call
 `startMemoirReview(..., allowance, "audio")` with a different worker identity.
 A visual-only pass does not produce a director approval card. Unavailable perception
 must return INCONCLUSIVE; technical metadata cannot substitute for seeing/hearing.
+
+
+## Live memoir rehearsal — preparation checkpoint
+
+`rehearsal.ts prepare --root <isolated-private-root> --kit <format-kit> --source
+<saved-run> --preferred <selected-Kimi-script> --authored <Codex-repaired-script>`
+validates the real inputs and repaired script, requires identical narration, records
+source hashes, copies consent/reference evidence, and creates a new paused project
+with zero allowance. Imported evidence does not confer new approvals. The command
+cannot reset an existing rehearsal and makes no provider calls. Keep personal
+answers, photos, scripts, keys and operational SQLite data in ignored `output/`.
+
+`rehearsal-capability.ts prepare --root <root> --kit <kit>` makes explicitly synthetic
+local image/video/audio fixtures (Node, FFmpeg/ffprobe and macOS `say` required). These are capability probes, never production
+film assets. Held-out controls stay outside model requests.
+
+After explicit human authorization of the exact `capability-batch.json`, a trusted
+operator records an authorization file containing `quote_sha256` (the hash of
+JSON.stringify(parsed quote)), `allowance_micros` (200000), and the actual
+`operator_message`. Run `rehearsal-capability.ts run --root <root> --kit <kit>
+--authorization <file>` once. This permits only three configured Gemini perception
+calls, keeps unknown billing outcomes reserved, stops on external errors, links
+LangSmith traces, verifies held-out observations, and pauses on exit. It does not
+permit production generation, additional calls, retries, or migration. Authorization
+files are host-only records of a human decision, not worker tools.
+
+`media-transport.ts` reuses the Format's provider transport behind SQLite intent,
+allowance, lease, request-ID and immutable-file gates. Legacy execution retains its
+original authorization checks. Completed SQL operations reuse verified local results;
+known queued jobs collect without submitting again; unknown outcomes block.
+`media-perception.ts` confines inspection to the producer's exact media packet and
+uses successful provider responses to bind transmitted bytes, including uploaded
+media, to SQL evidence. Completed cached inspections reuse their original evidence.
+Incomplete perception never produces completed inspection evidence. Media payloads
+and secret metadata are omitted from traces.
+
+Rehearsal assignment/review callers explicitly set `maxTurns: 12`; old defaults
+remain unchanged. The full real author/reviewer media workflow, director approval,
+production generation, film render and measured narration revision are subsequent
+priced batches. This checkpoint proves free preparation and isolated integration
+checks, not that a real film has been produced or creatively accepted.
+
+Focused checks: `node --import tsx --test rehearsal.test.ts phase6.test.ts` and
+`npm run check`. All provider tests use injected isolated mock transports.

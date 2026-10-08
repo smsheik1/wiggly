@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 import type { RunnableConfig } from "@langchain/core/runnables";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { askActiveAgent } from "../../lib/agent-bridge.js";
-import { StudioProduction, memoirReviewModality, memoirReviewCoverage, memoirFilmReviewCriteria, type InputVersions, type WorkerLease } from "../../lib/studio-production.js";
+import { StudioProduction, memoirReviewModality, memoirReviewCoverage, memoirFilmReviewCriteria, type InputVersions, type WorkerLease, type TicketLimits } from "../../lib/studio-production.js";
 import { workspaceAgent, hash } from "./harness.js";
 import { publicationTool, productionMiddleware, reviewTool } from "./production-tools.js";
 
@@ -59,7 +59,7 @@ export function approvedProjection(format: Format, store: StudioProduction, proj
   // This read-only shape exists only to reuse validators; it is never a second workflow record.
   return { id: projectId, formatVersion: "2.0.0", step, productionProfile: "seedance-mini-480p", reviewMode: "supervised", workflowRevision: 4, gate: "produce", lifecycle: "active", inputs: sourceInputs, studio: { config: format.config }, sqlValidationView: true, feedback: [], artifacts, ...selectors };
 }
-export function createMemoirAssignment(format: Format, store: StudioProduction, options: { id: string; projectId: string; kind: string; role: string; outcome: string; inputs: InputVersions; selectors?: Record<string, string>; allowanceMicros?: number }) {
+export function createMemoirAssignment(format: Format, store: StudioProduction, options: { id: string; projectId: string; kind: string; role: string; outcome: string; inputs: InputVersions; selectors?: Record<string, string>; allowanceMicros?: number; limits?: Partial<TicketLimits> }) {
   const { id, projectId, kind, role, outcome, inputs } = options;
   for (const [key, value] of Object.entries(options.selectors ?? {})) if (!["characterId", "locationId", "angleId", "shotId", "clipId", "effectId"].includes(key) || !/^[a-z][a-z0-9-]*$/.test(value)) throw new Error("INVALID_MEMOIR_SELECTOR");
   if (!format.contracts.Content[kind] || !format.contracts.criteria[kind] || !outcome.trim()) throw new Error("INVALID_MEMOIR_ASSIGNMENT");
@@ -67,7 +67,7 @@ export function createMemoirAssignment(format: Format, store: StudioProduction, 
   const worker = format.config.agents[role];
   if (!worker) throw new Error("UNKNOWN_MEMOIR_ROLE");
   const skill = readFileSync(join(format.kit, worker.skill), "utf8");
-  store.createMemoirTicket(id, projectId, role, inputs, options.allowanceMicros ?? 0, kind, format.contracts.criteria[kind], { outcome, asset_key: format.workflow.keyFor(projection), selectors: options.selectors ?? {}, skill, skill_sha256: hash(Buffer.from(skill)), skill_name: basename(dirname(worker.skill)), tools: worker.tools, model: role === "script-writer" ? memoirModels.writer : memoirModels.execution, lip_sync: false });
+  store.createMemoirTicket(id, projectId, role, inputs, options.allowanceMicros ?? 0, kind, format.contracts.criteria[kind], { outcome, asset_key: format.workflow.keyFor(projection), selectors: options.selectors ?? {}, skill, skill_sha256: hash(Buffer.from(skill)), skill_name: basename(dirname(worker.skill)), tools: worker.tools, model: role === "script-writer" ? memoirModels.writer : memoirModels.execution, lip_sync: false }, options.limits);
   return store.ticket(id);
 }
 export function candidateValidator(format: Format, store: StudioProduction, ticketId: string) {
@@ -120,13 +120,13 @@ export async function prepareMemoirComposition(format: Format, store: StudioProd
   return { ...prepared, manifest, exact_inputs: inputs, director_approved: false };
 }
 
-export function startMemoirReview(store: StudioProduction, authorId: string, reviewerId: string, allowanceMicros = 0, filmModality?: "video" | "audio") {
+export function startMemoirReview(store: StudioProduction, authorId: string, reviewerId: string, allowanceMicros = 0, filmModality?: "video" | "audio", limits: Partial<TicketLimits> = {}) {
   const assignment = store.memoirAssignment(authorId);
   if (!assignment) throw new Error("MEMOIR_INPUT_BINDING_REQUIRED");
   const kind = assignment.kind;
   if (kind === "film" && !filmModality) throw new Error("FILM_REVIEW_MODALITY_REQUIRED");
   const modality = kind === "film" ? filmModality! : memoirReviewModality(kind);
-  return store.startReview(authorId, reviewerId, "independent-reviewer", { criteria: kind === "film" ? memoirFilmReviewCriteria[filmModality!] : JSON.parse(assignment.criteria), modality, coverage: memoirReviewCoverage }, allowanceMicros);
+  return store.startReview(authorId, reviewerId, "independent-reviewer", { criteria: kind === "film" ? memoirFilmReviewCriteria[filmModality!] : JSON.parse(assignment.criteria), modality, coverage: memoirReviewCoverage }, allowanceMicros, limits);
 }
 
 export async function runMemoirReviewer(format: Format, store: StudioProduction, ctx: WorkerLease, model: BaseChatModel, inspectionTools: any[], invokeConfig: RunnableConfig = {}, evidenceReferences?: () => string[], continuationContext = "") {

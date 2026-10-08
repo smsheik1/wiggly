@@ -1,0 +1,59 @@
+{
+  "status": "PREPARATION_CHECKPOINT; LIVE CAPABILITY EXECUTION AWAITS AUTHORIZATION",
+  "scope": "Separate private Shaz memoir rehearsal; saved production stays unchanged and paused",
+  "new_paid_calls": 0,
+  "prepared_project": {
+    "id": "shaz-memoir-rehearsal",
+    "paused": true,
+    "allowance_micros": 0,
+    "saved_files_preserved": 313,
+    "preferred_kimi_narration": "All four narration strings unchanged, including every night",
+    "script_contract": "PASS after operating-agent metadata/cast repair",
+    "approvals_imported": false,
+    "independent_script_review": "PENDING",
+    "private_source_material": "Ignored local output only; not committed"
+  },
+  "implementation": [
+    "Reuse existing provider transport behind SQLite intents, reservations, lease fencing and immutable media pinning",
+    "Add still-image inspection to existing Gemini audio/video inspection",
+    "Bind successfully transmitted inline/uploaded media bytes to SQL evidence; cached inspections reuse evidence",
+    "Add explicit twelve-turn author/reviewer options without changing prior defaults",
+    "Create local held-out capability fixtures and one bounded three-call gate",
+    "Declare revision affected/preserved assets and initialize lightweight scorecard",
+    "Canonicalize rehearsal destinations before writes; reject source containment and symlink aliases"
+  ],
+  "verification": {
+    "studio_checks": { "existing_safety_harness": 61, "memoir_policy": 16, "media_and_isolation": 8, "total": 85, "status": "PASS" },
+    "format_regressions": { "tests": 238, "status": "PASS" },
+    "typescript": "PASS",
+    "free_installation_contract_check": "PASS; credentials not read",
+    "packaged_free_smoke": "PASS; two example inputs; no provider calls",
+    "official_renderer_archive": "Original v2.0.0 archive SHA-256 unchanged; renderer not rebuilt",
+    "fresh_agent_check": "Read-only instruction/actionability review; found isolation bypass, fixed with regression tests; not a completed blind film proof",
+    "git_diff_check": "PASS"
+  },
+  "observed_fixes": [
+    "Repeated inspections previously lost their SQL receipt IDs; cached results now reuse recorded delivery evidence",
+    "Uploaded media and empty upload-session responses now work through the SQL adapter",
+    "Trace media metadata now also redacts credentials",
+    "Child names beginning with '..' and symlinked paths could bypass source isolation; canonical and segment-aware checks reject before writes"
+  ],
+  "next_batch": {
+    "provider": "Gemini gemini-3.8-flash",
+    "calls": 3,
+    "deliverables": ["Image perception", "Moving-video perception", "Audio perception"],
+    "allowance_micros": 200000,
+    "estimated_reservation_micros": 180000,
+    "authorized": false,
+    "private_media_included": false,
+    "production_generation_included": false,
+    "automatic_retries": false
+  },
+  "not_yet_proven": [
+    "Live image/video/audio capability through the new SQL adapter",
+    "Real narration performance and character/style approval",
+    "Real independently reviewed baseline film",
+    "Cheap controlled narration revision and measured business scorecard",
+    "Exact final-film director approval"
+  ]
+}

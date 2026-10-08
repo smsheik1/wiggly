@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --import tsx --test spike.test.ts phase3.test.ts phase4.test.ts phase5.test.ts phase6.test.ts",
+    "test": "node --import tsx --test spike.test.ts phase3.test.ts phase4.test.ts phase5.test.ts phase6.test.ts rehearsal.test.ts",
     "check": "tsc",
     "trace": "node --import tsx trace-check.ts",
     "live": "node --import tsx live.ts",

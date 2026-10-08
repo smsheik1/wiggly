@@ -280,8 +280,8 @@ export class StudioProduction {
       this.#run("INSERT INTO format_policies VALUES (?,'memoir-v1-four-checkpoints',?)", p.project_id, authorization);
     });
   }
-  createMemoirTicket(ticketId: string, projectId: string, role: string, inputs: InputVersions, allowanceMicros: number, kind: string, criteria: string[], packet: unknown) {
-    return this.#tx(() => { this.createTicket(ticketId, projectId, role, inputs, allowanceMicros); this.#bindMemoirAssignment(ticketId, kind, criteria, packet); return this.ticket(ticketId); });
+  createMemoirTicket(ticketId: string, projectId: string, role: string, inputs: InputVersions, allowanceMicros: number, kind: string, criteria: string[], packet: unknown, limits: Partial<TicketLimits> = {}) {
+    return this.#tx(() => { this.createTicket(ticketId, projectId, role, inputs, allowanceMicros, "AUTHOR", limits); this.#bindMemoirAssignment(ticketId, kind, criteria, packet); return this.ticket(ticketId); });
   }
   bindMemoirAssignment(ticketId: string, kind: string, criteria: string[], packet: unknown = {}) { return this.#tx(() => this.#bindMemoirAssignment(ticketId, kind, criteria, packet)); }
   #bindMemoirAssignment(ticketId: string, kind: string, criteria: string[], packet: unknown) {

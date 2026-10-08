@@ -197,3 +197,13 @@ test("publishing a revision head retains its historical starting output without 
   assert.equal(store.acceptedVersion("film", third.id).id, third.id);
   store.setInput("film", "source", "source-v2"); assert.throws(() => store.acceptedVersion("film", third.id), /STALE_INPUTS/);
 }));
+
+test("rehearsal author and review limits are explicitly twelve without changing old defaults", () => fixture((store, principal) => {
+  store.activateMemoirPolicy(policy(store, principal));
+  store.createMemoirTicket("twelve", "film", "artist", {}, 0, "backgroundAngle", ["continuity"], {}, { maxTurns: 12 });
+  assert.equal(store.ticket("twelve").max_turns, 12);
+  publish(store, "legacy-default");
+  assert.equal(store.ticket("legacy-default").max_turns, 8);
+  store.startReview("legacy-default", "twelve-review", "reviewer", { criteria: ["continuity"], modality: "image", coverage: memoirReviewCoverage }, 0, { maxTurns: 12 });
+  assert.equal(store.ticket("twelve-review").max_turns, 12);
+}));
