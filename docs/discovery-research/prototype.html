@@ -1,0 +1,1337 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wiggly Discovery Prototype</title>
+  <link rel="icon" href="prototype-assets/favicon.svg">
+  <style>
+    :root {
+      --paper: #f4f0e7;
+      --paper-2: #fffdf8;
+      --white: #ffffff;
+      --ink: #050718;
+      --muted: #687188;
+      --line: #cbd2df;
+      --aqua: #45d9f5;
+      --yellow: #ffe562;
+      --lime: #b9f34c;
+      --violet: #7547e8;
+      --coral: #ff7566;
+      --max: 1380px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    body.sheet-open { overflow: hidden; }
+    button, input, a { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; }
+
+    .site-header {
+      position: sticky;
+      z-index: 40;
+      top: 0;
+      min-height: 70px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 2px solid var(--ink);
+      backdrop-filter: blur(14px);
+    }
+
+    .header-inner {
+      position: relative;
+      width: min(var(--max), calc(100% - 36px));
+      min-height: 70px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: auto minmax(220px, 520px) auto;
+      align-items: center;
+      gap: 26px;
+    }
+
+    .brand-link {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      text-decoration: none;
+    }
+
+    .brand-link img {
+      display: block;
+      width: 116px;
+      height: 44px;
+      object-fit: contain;
+    }
+
+    .search {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      background: #f4f6f9;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    .search span { color: var(--muted); font-size: 14px; }
+
+    .search input {
+      width: 100%;
+      padding: 0;
+      color: var(--ink);
+      background: transparent;
+      border: 0;
+      outline: 0;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .header-nav { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+
+    .nav-link, .button {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      color: var(--ink);
+      background: transparent;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 850;
+      text-decoration: none;
+    }
+
+    .nav-link:hover, .nav-link:focus-visible { border-color: var(--ink); }
+    .button { background: var(--white); border-color: var(--ink); }
+    .button:hover, .button:focus-visible { transform: translateY(-1px); box-shadow: 3px 3px 0 var(--ink); }
+    .button.primary { background: var(--yellow); }
+    .button.dark { color: var(--white); background: var(--ink); }
+    .button.violet { color: var(--white); background: var(--violet); }
+    .button.small { min-height: 34px; padding: 6px 10px; font-size: 12px; }
+
+    .mobile-menu { display: none; }
+
+    main { min-height: calc(100svh - 70px); }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .container { width: min(var(--max), calc(100% - 36px)); margin: 0 auto; }
+
+    .discover-hero {
+      padding: 52px 0 32px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
+      align-items: end;
+      gap: 40px;
+    }
+
+    .kicker {
+      width: fit-content;
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      margin-bottom: 16px;
+      padding: 5px 9px;
+      color: var(--ink);
+      background: var(--aqua);
+      border: 2px solid var(--ink);
+      font-size: 10px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      max-width: 900px;
+      font-size: clamp(54px, 7vw, 104px);
+      line-height: 0.9;
+      font-weight: 950;
+    }
+
+    h2 {
+      font-size: clamp(34px, 4.4vw, 62px);
+      line-height: 0.96;
+      font-weight: 950;
+    }
+
+    h3 { font-size: 18px; line-height: 1.12; font-weight: 900; }
+
+    .hero-side {
+      padding: 22px;
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 7px 7px 0 var(--ink);
+      display: grid;
+      gap: 14px;
+    }
+
+    .hero-side p { color: var(--muted); font-size: 17px; line-height: 1.42; font-weight: 650; }
+
+    .mini-flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .mini-flow div { padding: 10px; background: #f6f8fb; border: 1px solid var(--line); border-radius: 5px; }
+    .mini-flow b { display: block; color: var(--violet); font-size: 10px; margin-bottom: 4px; }
+    .mini-flow span { font-size: 12px; line-height: 1.2; font-weight: 800; }
+
+    .filter-row {
+      padding-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .filter-row::-webkit-scrollbar { display: none; }
+
+    .filter {
+      flex: 0 0 auto;
+      min-height: 36px;
+      padding: 7px 12px;
+      color: var(--ink);
+      background: var(--white);
+      border: 1px solid var(--ink);
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .filter.active { background: var(--aqua); border-width: 2px; }
+
+    .feed-band {
+      padding: 30px 0 46px;
+      border-top: 1px solid var(--line);
+    }
+
+    .feed-band.alt { background: var(--paper-2); }
+
+    .section-head {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .section-head p { max-width: 520px; color: var(--muted); font-size: 14px; line-height: 1.4; font-weight: 650; }
+
+    .ad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .ad-card {
+      min-width: 0;
+      overflow: hidden;
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      box-shadow: 6px 6px 0 var(--ink);
+    }
+
+    .media-well {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      overflow: hidden;
+      background: #080a16;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .media-well video, .media-well img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      background: #080a16;
+    }
+
+    .media-well .format-tag {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 8px;
+      color: var(--ink);
+      background: var(--aqua);
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 950;
+    }
+
+    .media-well .sound-button {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      min-width: 58px;
+      min-height: 34px;
+      color: var(--white);
+      background: rgba(5, 7, 24, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .ad-copy { min-height: 150px; padding: 14px; display: grid; align-content: space-between; gap: 10px; }
+    .ad-copy .brand { color: var(--violet); font-size: 10px; font-weight: 950; text-transform: uppercase; }
+    .ad-copy .meta { color: var(--muted); font-size: 12px; line-height: 1.32; font-weight: 650; }
+    .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+    .text-action {
+      min-height: 34px;
+      padding: 6px 0;
+      color: var(--ink);
+      background: transparent;
+      border: 0;
+      border-bottom: 2px solid var(--ink);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .text-action.saved { color: var(--violet); border-color: var(--violet); }
+
+    .detail-shell { padding: 34px 0 60px; }
+
+    .back-link {
+      width: fit-content;
+      margin-bottom: 20px;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .ad-detail-hero {
+      display: grid;
+      grid-template-columns: minmax(330px, 0.8fr) minmax(440px, 1.2fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .detail-player {
+      position: sticky;
+      top: 96px;
+      width: min(100%, 460px);
+      aspect-ratio: 9 / 16;
+      justify-self: center;
+      overflow: hidden;
+      background: var(--ink);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 9px 9px 0 var(--aqua);
+    }
+
+    .detail-player video, .detail-player img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .detail-player [hidden] { display: none; }
+
+    .detail-player .sound-button {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      min-width: 66px;
+      min-height: 38px;
+      color: var(--white);
+      background: rgba(5, 7, 24, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 999px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .detail-copy { display: grid; gap: 22px; }
+
+    .detail-title {
+      padding: 28px;
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 7px 7px 0 var(--ink);
+      display: grid;
+      gap: 16px;
+    }
+
+    .detail-title .brand { color: var(--violet); font-size: 12px; font-weight: 950; text-transform: uppercase; }
+    .detail-title h1 { font-size: clamp(48px, 5vw, 78px); }
+    .detail-title > p { color: var(--muted); font-size: 17px; line-height: 1.42; font-weight: 650; }
+
+    .made-with {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px;
+      background: #e7faff;
+      border: 1px solid #8edcec;
+      border-radius: 6px;
+    }
+
+    .made-with span { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .made-with strong { display: block; margin-top: 2px; color: var(--ink); font-size: 15px; }
+
+    .primary-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    .proof-panel {
+      padding: 24px;
+      color: var(--white);
+      background: var(--ink);
+      border-radius: 8px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .proof-panel p { color: #c4cad9; font-size: 16px; line-height: 1.5; font-weight: 620; }
+    .proof-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .proof-list div { padding: 12px; background: #171a2a; border: 1px solid #34394e; border-radius: 5px; }
+    .proof-list b { display: block; color: var(--yellow); font-size: 12px; margin-bottom: 5px; }
+    .proof-list span { font-size: 13px; font-weight: 750; }
+
+    .related-section { margin-top: 56px; display: grid; gap: 18px; }
+
+    .format-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(420px, 0.85fr);
+      gap: 26px;
+      align-items: stretch;
+    }
+
+    .proof-reel {
+      min-height: 600px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      padding: 8px;
+      background: var(--ink);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 9px 9px 0 var(--aqua);
+    }
+
+    .proof-reel video {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      object-fit: cover;
+      background: #111424;
+      border-radius: 4px;
+    }
+
+    .format-summary {
+      padding: 30px;
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      display: grid;
+      align-content: start;
+      gap: 18px;
+    }
+
+    .format-summary h1 { font-size: clamp(52px, 6vw, 88px); }
+    .format-summary > p { color: var(--muted); font-size: 17px; line-height: 1.45; font-weight: 650; }
+
+    .trust-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .trust-line span { padding: 6px 8px; background: #f3f5f8; border: 1px solid var(--line); border-radius: 5px; }
+
+    .run-facts { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+    .run-facts div { min-height: 44px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); font-size: 13px; }
+    .run-facts div:last-child { border-bottom: 0; }
+    .run-facts span { color: var(--muted); font-weight: 700; }
+    .run-facts strong { text-align: right; }
+
+    .science-band { margin-top: 62px; padding: 50px 0; color: var(--white); background: var(--ink); }
+    .science-band .container { display: grid; gap: 26px; }
+    .science-band h2 { max-width: 900px; }
+    .science-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .science-step { padding: 18px; background: #15182a; border: 1px solid #34394e; border-radius: 6px; }
+    .science-step b { display: block; margin-bottom: 12px; color: var(--aqua); font-size: 12px; }
+    .science-step h3 { margin-bottom: 8px; }
+    .science-step p { color: #b8bed0; font-size: 13px; line-height: 1.4; }
+
+    .creator-hero {
+      padding: 46px 0 34px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .creator-avatar {
+      width: 92px;
+      height: 92px;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      background: var(--violet);
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      font-size: 28px;
+      font-weight: 950;
+      box-shadow: 5px 5px 0 var(--ink);
+    }
+
+    .creator-hero p { max-width: 670px; color: var(--muted); font-size: 16px; line-height: 1.45; font-weight: 650; }
+
+    .simple-page { padding: 48px 0 70px; }
+    .simple-page h1 { margin-bottom: 16px; font-size: clamp(56px, 7vw, 92px); }
+    .simple-page > .container > p { max-width: 640px; margin-bottom: 30px; color: var(--muted); font-size: 17px; line-height: 1.45; font-weight: 650; }
+
+    .empty-saved {
+      min-height: 440px;
+      display: grid;
+      place-items: center;
+      padding: 30px;
+      text-align: center;
+      background: var(--white);
+      border: 2px dashed var(--ink);
+      border-radius: 8px;
+    }
+
+    .empty-saved div { max-width: 520px; display: grid; gap: 14px; justify-items: center; }
+    .empty-saved p { color: var(--muted); line-height: 1.45; font-weight: 650; }
+
+    .sheet-backdrop {
+      position: fixed;
+      z-index: 80;
+      inset: 0;
+      display: none;
+      align-items: stretch;
+      justify-content: flex-end;
+      background: rgba(5, 7, 24, 0.62);
+      backdrop-filter: blur(4px);
+    }
+
+    .sheet-backdrop.open { display: flex; }
+
+    .handoff-sheet {
+      width: min(520px, 100%);
+      height: 100%;
+      padding: 24px;
+      overflow-y: auto;
+      background: var(--paper-2);
+      border-left: 2px solid var(--ink);
+      box-shadow: -12px 0 30px rgba(5, 7, 24, 0.22);
+      display: grid;
+      align-content: start;
+      gap: 20px;
+    }
+
+    .sheet-head { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+    .sheet-head h2 { font-size: 42px; }
+
+    .icon-button {
+      width: 40px;
+      height: 40px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .sheet-section {
+      padding: 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .sheet-section > b { color: var(--violet); font-size: 11px; text-transform: uppercase; }
+    .check-list { display: grid; gap: 8px; }
+    .check-list div { display: grid; grid-template-columns: 24px 1fr; gap: 9px; align-items: start; font-size: 14px; font-weight: 700; }
+    .check-list span:first-child { width: 22px; height: 22px; display: grid; place-items: center; background: var(--lime); border: 1px solid var(--ink); border-radius: 50%; font-size: 11px; }
+
+    .estimate { display: grid; gap: 0; }
+    .estimate div { min-height: 42px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); font-size: 13px; }
+    .estimate div:last-child { border-bottom: 0; font-weight: 900; }
+    .estimate span { color: var(--muted); }
+
+    .agent-choice {
+      min-height: 64px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 40px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      background: #eefbfe;
+      border: 2px solid var(--ink);
+      border-radius: 6px;
+    }
+
+    .agent-icon { width: 40px; height: 40px; display: grid; place-items: center; color: var(--white); background: var(--ink); border-radius: 5px; font-weight: 950; }
+    .agent-choice p { color: var(--muted); font-size: 12px; font-weight: 650; }
+    .ready { color: #20703a; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+
+    .sheet-note { color: var(--muted); font-size: 12px; line-height: 1.4; font-weight: 650; }
+
+    .toast {
+      position: fixed;
+      z-index: 100;
+      right: 22px;
+      bottom: 22px;
+      max-width: 360px;
+      padding: 14px 16px;
+      color: var(--white);
+      background: var(--ink);
+      border: 1px solid #3b4054;
+      border-radius: 7px;
+      box-shadow: 6px 6px 0 var(--aqua);
+      opacity: 0;
+      transform: translateY(16px);
+      pointer-events: none;
+      transition: opacity 150ms ease, transform 150ms ease;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1120px) {
+      .ad-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .header-inner { grid-template-columns: auto 1fr auto; }
+      .header-nav .nav-link { display: none; }
+    }
+
+    @media (max-width: 820px) {
+      .site-header, .header-inner { min-height: 62px; }
+      .header-inner { width: min(100% - 24px, var(--max)); grid-template-columns: auto 1fr auto; gap: 10px; }
+      .brand-link img { width: 92px; height: 36px; }
+      .search { display: none; }
+      .header-nav { display: none; }
+      .header-nav.mobile-open {
+        position: absolute;
+        top: 58px;
+        right: 0;
+        left: 0;
+        z-index: 45;
+        display: grid;
+        padding: 10px;
+        background: var(--white);
+        border: 2px solid var(--ink);
+        border-radius: 6px;
+        box-shadow: 5px 5px 0 var(--ink);
+      }
+      .header-nav.mobile-open .nav-link { display: inline-flex; }
+      .mobile-menu { display: inline-flex; }
+      .container { width: min(100% - 24px, var(--max)); }
+      .discover-hero { padding: 34px 0 26px; grid-template-columns: 1fr; gap: 20px; }
+      h1 { font-size: clamp(52px, 16vw, 78px); }
+      .hero-side { padding: 16px; }
+      .mini-flow { grid-template-columns: 1fr; }
+      .section-head { align-items: start; display: grid; }
+      .ad-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .ad-detail-hero, .format-hero { grid-template-columns: 1fr; }
+      .format-summary { order: -1; }
+      .detail-player { position: relative; top: 0; max-height: none; }
+      .detail-title { padding: 20px; }
+      .detail-title h1 { font-size: clamp(44px, 13vw, 68px); }
+      .proof-list, .science-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .format-summary { padding: 20px; }
+      .proof-reel { min-height: 520px; }
+      .creator-hero { grid-template-columns: auto 1fr; }
+      .creator-hero .button { grid-column: 1 / -1; width: 100%; }
+    }
+
+    @media (max-width: 560px) {
+      .ad-grid { grid-template-columns: 1fr; }
+      .ad-card { box-shadow: 5px 5px 0 var(--ink); }
+      .ad-copy { min-height: 132px; }
+      .discover-hero { padding-top: 26px; gap: 14px; }
+      .hero-side { padding: 11px 14px; }
+      .hero-side p, .mini-flow { display: none; }
+      .filter-row { margin-right: -12px; padding-right: 12px; }
+      .made-with { align-items: start; display: grid; }
+      .made-with .button { width: 100%; }
+      .primary-actions .button { flex: 1 1 100%; }
+      .proof-list, .science-grid { grid-template-columns: 1fr; }
+      .proof-reel { min-height: 680px; grid-template-columns: 1fr 1fr; }
+      .creator-avatar { width: 70px; height: 70px; }
+      .handoff-sheet { padding: 18px 14px 28px; }
+      .sheet-head h2 { font-size: 36px; }
+      .toast { right: 12px; bottom: 12px; left: 12px; max-width: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand-link" href="#discover" aria-label="Wiggly Discovery">
+        <img src="../../v3/public/wiggly-wordmark-3d-crop.png" alt="Wiggly">
+      </a>
+      <label class="search">
+        <span>Search</span>
+        <input id="search-input" type="search" placeholder="Ads, brands, Formats, creators">
+      </label>
+      <nav class="header-nav" aria-label="Primary navigation">
+        <a class="nav-link" href="#discover">Discover</a>
+        <a class="nav-link" href="#format/three-d-breakdown">Formats</a>
+        <a class="nav-link" href="#creator/wiggly-studio">Creators</a>
+        <a class="button small" href="#saved">Saved</a>
+      </nav>
+      <button class="button small mobile-menu" id="mobile-menu" type="button" aria-expanded="false">Menu</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="view active" id="discover-view" data-view="discover">
+      <div class="container">
+        <div class="discover-hero">
+          <div>
+            <span class="kicker">Finished ads. Repeatable Formats.</span>
+            <h1>Ads worth stealing.</h1>
+          </div>
+          <div class="hero-side">
+            <h3>See it. Trust it. Make yours.</h3>
+            <p>Every ad here points to the exact Format an agent can use to make your version.</p>
+            <div class="mini-flow">
+              <div><b>01</b><span>Watch the ad</span></div>
+              <div><b>02</b><span>Check the proof</span></div>
+              <div><b>03</b><span>Use the Format</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="filter-row" aria-label="Ad filters">
+          <button class="filter active" data-filter="all">For you</button>
+          <button class="filter" data-filter="ecommerce">Ecommerce</button>
+          <button class="filter" data-filter="explain">Explain it</button>
+          <button class="filter" data-filter="story">Brand story</button>
+          <button class="filter" data-filter="static">Static</button>
+          <button class="filter" data-filter="under-30">Under 30s</button>
+        </div>
+      </div>
+
+      <section class="feed-band">
+        <div class="container">
+          <div class="section-head">
+            <div><span class="kicker">Curated by Wiggly</span><h2>Worth stealing this week</h2></div>
+            <p>Real finished work, picked because the idea is clear and the Format is ready to use.</p>
+          </div>
+          <div class="ad-grid" id="featured-grid"></div>
+        </div>
+      </section>
+
+      <section class="feed-band alt">
+        <div class="container">
+          <div class="section-head">
+            <div><span class="kicker" style="background:var(--yellow)">Show the hidden thing</span><h2>Explain a complicated product</h2></div>
+            <p>Formats that turn mechanisms, systems, and proof into something a cold audience can see.</p>
+          </div>
+          <div class="ad-grid" id="explain-grid"></div>
+        </div>
+      </section>
+    </section>
+
+    <section class="view" id="ad-view" data-view="ad">
+      <div class="container detail-shell">
+        <a class="back-link" href="#discover">← Back to discovery</a>
+        <div class="ad-detail-hero">
+          <div class="detail-player">
+            <video id="detail-video" playsinline loop controls></video>
+            <img id="detail-image" alt="">
+            <button class="sound-button" id="detail-sound" type="button">Sound</button>
+          </div>
+          <div class="detail-copy">
+            <div class="detail-title">
+              <span class="brand" id="detail-brand">Final Straw</span>
+              <h1 id="detail-title">Why this straw never bends</h1>
+              <p id="detail-summary">A product-science mini-doc that turns the hidden mechanism into the sales story.</p>
+              <div class="made-with">
+                <div><span>Made with</span><strong id="detail-format">3D Breakdown · v1</strong></div>
+                <a class="button small" href="#format/three-d-breakdown">See the exact science</a>
+              </div>
+              <div class="primary-actions">
+                <button class="button primary use-format" type="button">Use this Format</button>
+                <button class="button save-current" type="button">Save</button>
+                <button class="button share-current" type="button">Share</button>
+              </div>
+            </div>
+            <div class="proof-panel">
+              <span class="kicker">Why it works</span>
+              <h2 id="detail-proof-title">The product difference becomes a physical reveal.</h2>
+              <p id="detail-proof-copy">The ad starts with an everyday failure, exposes the hidden material problem, then lets the product solve it on screen.</p>
+              <div class="proof-list">
+                <div><b>Goal</b><span id="detail-goal">Explain it</span></div>
+                <div><b>Runtime</b><span id="detail-runtime">20 sec</span></div>
+                <div><b>Creator</b><span><a href="#creator/wiggly-studio">Wiggly Studio</a></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <section class="related-section">
+          <div class="section-head"><div><span class="kicker">Same recipe</span><h2>More made with this Format</h2></div></div>
+          <div class="ad-grid" id="related-grid"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view" id="format-view" data-view="format">
+      <div class="container detail-shell">
+        <a class="back-link" href="#discover">← Back to discovery</a>
+        <div class="format-hero">
+          <div class="proof-reel" aria-label="3D Breakdown proof reel">
+            <video src="../../v3/public/format-repositories/three-d-breakdown-v1/goldens/finalstraw.mp4" muted loop playsinline autoplay></video>
+            <video src="../../v3/public/format-repositories/three-d-breakdown-v1/goldens/gruns.mp4" muted loop playsinline autoplay></video>
+            <video src="../../v3/public/format-repositories/three-d-breakdown-v1/goldens/theragun.mp4" muted loop playsinline autoplay></video>
+            <video src="../../v3/public/format-repositories/three-d-breakdown-v1/goldens/kiala.mp4" muted loop playsinline autoplay></video>
+          </div>
+          <div class="format-summary">
+            <span class="kicker">Wiggly Format · current public v1</span>
+            <h1>3D Breakdown</h1>
+            <p>Turn a hidden product mechanism, origin story, or customer problem into a narrated 3D mini-documentary.</p>
+            <div class="trust-line">
+              <span>5 real proof ads</span>
+              <span>Curated by Wiggly</span>
+              <span>Updated Jul 2026</span>
+            </div>
+            <div class="run-facts">
+              <div><span>You provide</span><strong>A URL, one goal, product images</strong></div>
+              <div><span>The agent makes</span><strong>Story, storyboard, clips, voice, MP4</strong></div>
+              <div><span>Typical time</span><strong>5–12 minutes</strong></div>
+              <div><span>Estimated cost</span><strong>About $0.70</strong></div>
+              <div><span>Output</span><strong>9:16 · 20 seconds</strong></div>
+            </div>
+            <button class="button primary use-format" type="button">Use this Format</button>
+            <a class="text-action" href="../../v3/public/format-repositories/three-d-breakdown-v1/README.md">Open technical proof</a>
+          </div>
+        </div>
+      </div>
+      <section class="science-band">
+        <div class="container">
+          <span class="kicker">The exact science</span>
+          <h2>The agent follows a proven assembly line.</h2>
+          <div class="science-grid">
+            <div class="science-step"><b>01</b><h3>Find the story</h3><p>Research the site and pick one product, problem, or brand story.</p></div>
+            <div class="science-step"><b>02</b><h3>Approve the idea</h3><p>Choose from five clear story directions before paid media work begins.</p></div>
+            <div class="science-step"><b>03</b><h3>Build the visuals</h3><p>Create one storyboard, review it, then turn approved frames into clips.</p></div>
+            <div class="science-step"><b>04</b><h3>Finish the ad</h3><p>Add narration, captions, CTA, and one final vertical MP4.</p></div>
+          </div>
+        </div>
+      </section>
+      <section class="feed-band">
+        <div class="container">
+          <div class="section-head"><div><span class="kicker">Proof across brands</span><h2>Same Format. Different products.</h2></div><p>The visual world changes. The consequence → mechanism → payoff structure stays.</p></div>
+          <div class="ad-grid" id="format-proof-grid"></div>
+        </div>
+      </section>
+    </section>
+
+    <section class="view" id="creator-view" data-view="creator">
+      <div class="container">
+        <div class="creator-hero">
+          <div class="creator-avatar">WS</div>
+          <div>
+            <span class="kicker">Format creator</span>
+            <h2>Wiggly Studio</h2>
+            <p>We turn ad ideas into repeatable production systems an agent can run with you.</p>
+          </div>
+          <button class="button primary use-format" type="button">Use a Format</button>
+        </div>
+      </div>
+      <section class="feed-band">
+        <div class="container">
+          <div class="section-head"><div><span class="kicker">Published work</span><h2>Finished ads</h2></div></div>
+          <div class="ad-grid" id="creator-grid"></div>
+        </div>
+      </section>
+    </section>
+
+    <section class="view simple-page" id="saved-view" data-view="saved">
+      <div class="container">
+        <h1>Saved ads</h1>
+        <p>Your private shortlist. Nothing here is public.</p>
+        <div id="saved-content"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="sheet-backdrop" id="handoff-backdrop" aria-hidden="true">
+    <aside class="handoff-sheet" role="dialog" aria-modal="true" aria-labelledby="handoff-title">
+      <div class="sheet-head">
+        <div><span class="kicker">Use this Format</span><h2 id="handoff-title">3D Breakdown</h2></div>
+        <button class="icon-button" id="close-sheet" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="sheet-section">
+        <b>What you need</b>
+        <div class="check-list">
+          <div><span>✓</span><span>A website or product page</span></div>
+          <div><span>✓</span><span>One product, problem, or brand story</span></div>
+          <div><span>✓</span><span>A real product image when the story needs it</span></div>
+        </div>
+      </div>
+      <div class="sheet-section">
+        <b>Run estimate</b>
+        <div class="estimate">
+          <div><span>Story</span><strong>Free · about 1 min</strong></div>
+          <div><span>Storyboard</span><strong>~$0.05 · 1–2 min</strong></div>
+          <div><span>Video</span><strong>~$0.60 · 3–6 min</strong></div>
+          <div><span>Voice + final</span><strong>~$0.05 · under 2 min</strong></div>
+          <div><span>Total</span><strong>~$0.70 · 5–12 min</strong></div>
+        </div>
+      </div>
+      <div class="sheet-section">
+        <b>Choose an agent</b>
+        <div class="agent-choice">
+          <div class="agent-icon">C</div>
+          <div><strong>Codex</strong><p>Guided run. One question at a time.</p></div>
+          <span class="ready">Ready</span>
+        </div>
+      </div>
+      <button class="button dark" id="start-agent" type="button">Start with Codex</button>
+      <p class="sheet-note">The agent receives 3D Breakdown v1, the proof examples, and the required-input checklist. Estimates are not billing guarantees.</p>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const ROOT = "../../v3/public/";
+    const ads = [
+      {
+        id: "final-straw",
+        brand: "Final Straw",
+        title: "Why this straw never bends",
+        format: "3D Breakdown",
+        runtime: "20 sec",
+        creator: "Wiggly Studio",
+        media: ROOT + "format-repositories/three-d-breakdown-v1/goldens/finalstraw.mp4",
+        poster: ROOT + "format-repositories/three-d-breakdown-v1/goldens/finalstraw-contact-sheet.jpg",
+        tags: ["all", "ecommerce", "explain", "under-30"],
+        summary: "A product-science mini-doc that turns the hidden mechanism into the sales story.",
+        proofTitle: "The product difference becomes a physical reveal.",
+        proofCopy: "The ad starts with an everyday failure, exposes the hidden material problem, then lets the product solve it on screen.",
+        goal: "Explain it"
+      },
+      {
+        id: "gruns",
+        brand: "Grüns",
+        title: "Sixty ingredients, one gummy",
+        format: "3D Breakdown",
+        runtime: "20 sec",
+        creator: "Wiggly Studio",
+        media: ROOT + "format-repositories/three-d-breakdown-v1/goldens/gruns.mp4",
+        poster: "prototype-assets/gruns.jpg",
+        tags: ["all", "ecommerce", "explain", "under-30"],
+        summary: "A supplement stack becomes a visual simplification story.",
+        proofTitle: "The clutter becomes the enemy.",
+        proofCopy: "Dozens of separate bottles collapse into one clear routine the viewer can understand in seconds.",
+        goal: "Sell a product"
+      },
+      {
+        id: "theragun",
+        brand: "Therabody",
+        title: "Why heat changes the massage",
+        format: "3D Breakdown",
+        runtime: "20 sec",
+        creator: "Wiggly Studio",
+        media: ROOT + "format-repositories/three-d-breakdown-v1/goldens/theragun.mp4",
+        poster: "prototype-assets/theragun.jpg",
+        tags: ["all", "ecommerce", "explain", "under-30"],
+        summary: "The hidden heat-and-percussion mechanism becomes the story.",
+        proofTitle: "Two invisible benefits become one visual system.",
+        proofCopy: "Heat and percussive motion are shown working together instead of appearing as a feature list.",
+        goal: "Explain it"
+      },
+      {
+        id: "kiala",
+        brand: "Kiala Nutrition",
+        title: "The supplement journey",
+        format: "3D Breakdown",
+        runtime: "20 sec",
+        creator: "Wiggly Studio",
+        media: ROOT + "format-repositories/three-d-breakdown-v1/goldens/kiala.mp4",
+        poster: "prototype-assets/kiala.jpg",
+        tags: ["all", "ecommerce", "explain", "under-30"],
+        summary: "A hidden delivery problem becomes a product-science story.",
+        proofTitle: "The journey gives the claim a visible reason.",
+        proofCopy: "Instead of listing ingredients, the ad shows what must happen before the product can do its job.",
+        goal: "Explain it"
+      },
+      {
+        id: "naruto-compilers",
+        brand: "Developer education",
+        title: "Compilers, explained by Naruto",
+        format: "Otaku Explainer",
+        runtime: "45 sec",
+        creator: "Shaz",
+        media: ROOT + "format-repositories/otaku-explainer-v1/outputs/naruto-compilers.mp4",
+        poster: ROOT + "format-repositories/otaku-explainer-v1/outputs/naruto-compilers-contact-sheet.jpg",
+        tags: ["all", "explain"],
+        summary: "A familiar scene turns a technical concept into a conversation.",
+        proofTitle: "Familiar characters carry unfamiliar ideas.",
+        proofCopy: "The scene gives each technical role a character, so the explanation feels like a story instead of a lecture.",
+        goal: "Teach"
+      },
+      {
+        id: "naruto-mcp",
+        brand: "Developer tools",
+        title: "MCP, explained by Naruto",
+        format: "Otaku Explainer",
+        runtime: "45 sec",
+        creator: "Shaz",
+        media: ROOT + "format-repositories/otaku-explainer-v1/outputs/naruto-mcp.mp4",
+        poster: ROOT + "format-repositories/otaku-explainer-v1/outputs/naruto-mcp-contact-sheet.jpg",
+        tags: ["all", "explain"],
+        summary: "A character dialogue makes an agent protocol easier to remember.",
+        proofTitle: "The analogy is visible before it is technical.",
+        proofCopy: "The viewer understands who asks, who acts, and who reports back before the jargon arrives.",
+        goal: "Teach"
+      },
+      {
+        id: "this-is-fine",
+        brand: "Wiggly",
+        title: "When every ad looks the same",
+        format: "Meme",
+        runtime: "Static",
+        creator: "Wiggly Studio",
+        image: ROOT + "memes/this_is_fine_full.png",
+        tags: ["all", "static"],
+        summary: "A known meme makes the buyer's frustration instantly legible.",
+        proofTitle: "The format is understood before the copy is read.",
+        proofCopy: "Familiar visual language compresses the setup and leaves room for the brand-specific punchline.",
+        goal: "Entertain"
+      },
+      {
+        id: "hybrid-news",
+        brand: "Founder-led",
+        title: "Turn the announcement into the ad",
+        format: "Hybrid News",
+        runtime: "Static",
+        creator: "Wiggly Studio",
+        image: ROOT + "maker-fixtures/hybrid-news/reference.png",
+        tags: ["all", "static", "story"],
+        summary: "A founder moment becomes a high-contrast news creative.",
+        proofTitle: "The source event creates the hook.",
+        proofCopy: "The Format frames one real announcement as a story with a clear visual hierarchy and next action.",
+        goal: "Tell the story"
+      }
+    ];
+
+    const state = {
+      filter: "all",
+      currentAd: ads[0],
+      saved: new Set(JSON.parse(localStorage.getItem("wiggly-prototype-saved") || "[]")),
+      soundOn: false,
+      activeVideo: null
+    };
+
+    const views = [...document.querySelectorAll("[data-view]")];
+    const handoff = document.querySelector("#handoff-backdrop");
+    const toast = document.querySelector("#toast");
+
+    const escape = (value) => String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+
+    const persistSaves = () => {
+      localStorage.setItem("wiggly-prototype-saved", JSON.stringify([...state.saved]));
+    };
+
+    const showToast = (message) => {
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 2200);
+    };
+
+    const pauseOtherVideos = (keep) => {
+      document.querySelectorAll("video").forEach((video) => {
+        if (video !== keep && !video.closest(".proof-reel")) video.pause();
+      });
+      state.activeVideo = keep || null;
+    };
+
+    const toggleSave = (id) => {
+      if (state.saved.has(id)) {
+        state.saved.delete(id);
+        showToast("Removed from Saved ads");
+      } else {
+        state.saved.add(id);
+        showToast("Saved privately");
+      }
+      persistSaves();
+      renderAll();
+    };
+
+    const openHandoff = () => {
+      handoff.classList.add("open");
+      handoff.setAttribute("aria-hidden", "false");
+      document.body.classList.add("sheet-open");
+      document.querySelector("#close-sheet").focus();
+    };
+
+    const closeHandoff = () => {
+      handoff.classList.remove("open");
+      handoff.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("sheet-open");
+    };
+
+    const cardMarkup = (ad) => {
+      const saved = state.saved.has(ad.id);
+      const media = ad.media
+        ? `<video src="${escape(ad.media)}" poster="${escape(ad.poster || "")}" muted loop playsinline preload="metadata"></video>`
+        : `<img src="${escape(ad.image)}" alt="">`;
+      const tagColor = ad.format === "Otaku Explainer" ? "var(--yellow)" : ad.format === "Meme" ? "var(--lime)" : ad.format === "Hybrid News" ? "var(--coral)" : "var(--aqua)";
+      return `
+        <article class="ad-card" data-ad-id="${escape(ad.id)}" data-tags="${escape(ad.tags.join(" "))}">
+          <div class="media-well">
+            ${media}
+            <span class="format-tag" style="background:${tagColor}">${escape(ad.format)}</span>
+            ${ad.media ? `<button class="sound-button" type="button" data-sound="${escape(ad.id)}">${state.soundOn ? "Mute" : "Sound"}</button>` : ""}
+          </div>
+          <div class="ad-copy">
+            <div>
+              <span class="brand">${escape(ad.brand)}</span>
+              <h3>${escape(ad.title)}</h3>
+              <span class="meta">Made with ${escape(ad.format)} · ${escape(ad.runtime)}<br>by ${escape(ad.creator)}</span>
+            </div>
+            <div class="card-actions">
+              <button class="text-action ${saved ? "saved" : ""}" type="button" data-save="${escape(ad.id)}">${saved ? "Saved" : "Save"}</button>
+              <a class="button small primary" href="#ad/${escape(ad.id)}">Open ad</a>
+            </div>
+          </div>
+        </article>`;
+    };
+
+    const bindCards = (root) => {
+      root.querySelectorAll("[data-save]").forEach((button) => {
+        button.addEventListener("click", () => toggleSave(button.dataset.save));
+      });
+      root.querySelectorAll("[data-sound]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const card = button.closest(".ad-card");
+          const video = card.querySelector("video");
+          state.soundOn = !state.soundOn;
+          pauseOtherVideos(video);
+          video.muted = !state.soundOn;
+          video.play().catch(() => {});
+          document.querySelectorAll("[data-sound]").forEach((item) => { item.textContent = state.soundOn ? "Mute" : "Sound"; });
+        });
+      });
+      root.querySelectorAll(".ad-card video").forEach((video) => {
+        video.addEventListener("mouseenter", () => {
+          if (window.matchMedia("(hover:hover)").matches) {
+            pauseOtherVideos(video);
+            video.muted = !state.soundOn;
+            video.play().catch(() => {});
+          }
+        });
+        video.addEventListener("mouseleave", () => {
+          if (!state.soundOn && window.matchMedia("(hover:hover)").matches) video.pause();
+        });
+      });
+      observeVideos();
+    };
+
+    const renderGrid = (selector, list) => {
+      const root = document.querySelector(selector);
+      root.innerHTML = list.map(cardMarkup).join("");
+      bindCards(root);
+    };
+
+    const renderDiscover = () => {
+      const visible = ads.filter((ad) => state.filter === "all" || ad.tags.includes(state.filter));
+      renderGrid("#featured-grid", visible.slice(0, 4));
+      const explain = visible.filter((ad) => ad.tags.includes("explain"));
+      renderGrid("#explain-grid", (explain.length ? explain : ads.filter((ad) => ad.tags.includes("explain"))).slice(0, 4));
+    };
+
+    const renderAd = (ad) => {
+      state.currentAd = ad;
+      const video = document.querySelector("#detail-video");
+      const image = document.querySelector("#detail-image");
+      const sound = document.querySelector("#detail-sound");
+      if (ad.media) {
+        video.src = ad.media;
+        video.poster = ad.poster || "";
+        video.hidden = false;
+        image.hidden = true;
+        sound.hidden = false;
+      } else {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+        video.hidden = true;
+        image.src = ad.image;
+        image.alt = `${ad.brand}: ${ad.title}`;
+        image.hidden = false;
+        sound.hidden = true;
+      }
+      video.muted = !state.soundOn;
+      document.querySelector("#detail-brand").textContent = ad.brand;
+      document.querySelector("#detail-title").textContent = ad.title;
+      document.querySelector("#detail-summary").textContent = ad.summary;
+      document.querySelector("#detail-format").textContent = `${ad.format} · v1`;
+      document.querySelector("#detail-proof-title").textContent = ad.proofTitle;
+      document.querySelector("#detail-proof-copy").textContent = ad.proofCopy;
+      document.querySelector("#detail-goal").textContent = ad.goal;
+      document.querySelector("#detail-runtime").textContent = ad.runtime;
+      document.querySelector("#detail-sound").textContent = state.soundOn ? "Mute" : "Sound";
+      document.querySelector(".save-current").textContent = state.saved.has(ad.id) ? "Saved" : "Save";
+      renderGrid("#related-grid", ads.filter((item) => item.format === ad.format && item.id !== ad.id).slice(0, 4));
+    };
+
+    const renderSaved = () => {
+      const savedAds = ads.filter((ad) => state.saved.has(ad.id));
+      const root = document.querySelector("#saved-content");
+      if (!savedAds.length) {
+        root.innerHTML = `<div class="empty-saved"><div><span class="kicker">Private to you</span><h2>No saved ads yet.</h2><p>Save the work you want to learn from or use later.</p><a class="button primary" href="#discover">Browse finished ads</a></div></div>`;
+      } else {
+        root.innerHTML = `<div class="ad-grid">${savedAds.map(cardMarkup).join("")}</div>`;
+        bindCards(root);
+      }
+    };
+
+    const renderAll = () => {
+      renderDiscover();
+      renderGrid("#format-proof-grid", ads.filter((ad) => ad.format === "3D Breakdown").slice(0, 4));
+      renderGrid("#creator-grid", ads.filter((ad) => ad.creator === "Wiggly Studio").slice(0, 8));
+      renderGrid("#related-grid", ads.filter((ad) => ad.format === state.currentAd.format && ad.id !== state.currentAd.id).slice(0, 4));
+      renderSaved();
+      if (document.querySelector("#ad-view").classList.contains("active")) renderAd(state.currentAd);
+    };
+
+    const route = () => {
+      const hash = location.hash.slice(1) || "discover";
+      const [type, id] = hash.split("/");
+      views.forEach((view) => view.classList.remove("active"));
+      if (type === "ad") {
+        document.querySelector("#ad-view").classList.add("active");
+        renderAd(ads.find((ad) => ad.id === id) || ads[0]);
+      } else if (type === "format") {
+        document.querySelector("#format-view").classList.add("active");
+      } else if (type === "creator") {
+        document.querySelector("#creator-view").classList.add("active");
+      } else if (type === "saved") {
+        document.querySelector("#saved-view").classList.add("active");
+        renderSaved();
+      } else {
+        document.querySelector("#discover-view").classList.add("active");
+      }
+      pauseOtherVideos(null);
+      window.scrollTo({ top: 0, behavior: "auto" });
+    };
+
+    document.querySelectorAll(".filter").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.filter = button.dataset.filter;
+        document.querySelectorAll(".filter").forEach((item) => item.classList.toggle("active", item === button));
+        renderDiscover();
+      });
+    });
+
+    document.querySelector("#search-input").addEventListener("input", (event) => {
+      const query = event.target.value.trim().toLowerCase();
+      const results = query
+        ? ads.filter((ad) => [ad.brand, ad.title, ad.format, ad.creator, ad.goal].join(" ").toLowerCase().includes(query))
+        : ads;
+      renderGrid("#featured-grid", results.slice(0, 8));
+    });
+
+    document.addEventListener("click", (event) => {
+      if (event.target.closest(".use-format")) openHandoff();
+    });
+    document.querySelector("#close-sheet").addEventListener("click", closeHandoff);
+    handoff.addEventListener("click", (event) => { if (event.target === handoff) closeHandoff(); });
+    document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeHandoff(); });
+    document.querySelector("#start-agent").addEventListener("click", () => {
+      closeHandoff();
+      showToast("3D Breakdown v1 is ready for Codex");
+    });
+    document.querySelector(".save-current").addEventListener("click", () => toggleSave(state.currentAd.id));
+    document.querySelector(".share-current").addEventListener("click", () => showToast("Share link copied"));
+    document.querySelector("#detail-sound").addEventListener("click", () => {
+      const video = document.querySelector("#detail-video");
+      if (video.hidden) return;
+      state.soundOn = !state.soundOn;
+      video.muted = !state.soundOn;
+      video.play().catch(() => {});
+      document.querySelector("#detail-sound").textContent = state.soundOn ? "Mute" : "Sound";
+    });
+    document.querySelector("#mobile-menu").addEventListener("click", (event) => {
+      const nav = document.querySelector(".header-nav");
+      const isOpen = nav.classList.toggle("mobile-open");
+      event.currentTarget.setAttribute("aria-expanded", String(isOpen));
+    });
+    document.querySelectorAll(".header-nav a").forEach((link) => {
+      link.addEventListener("click", () => {
+        document.querySelector(".header-nav").classList.remove("mobile-open");
+        document.querySelector("#mobile-menu").setAttribute("aria-expanded", "false");
+      });
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      if (window.matchMedia("(hover:hover)").matches) return;
+      entries.forEach((entry) => {
+        const video = entry.target;
+        if (entry.isIntersecting && entry.intersectionRatio > 0.65) {
+          pauseOtherVideos(video);
+          video.muted = !state.soundOn;
+          video.play().catch(() => {});
+        } else if (!entry.isIntersecting) {
+          video.pause();
+        }
+      });
+    }, { threshold: [0, 0.65, 1] });
+
+    const observeVideos = () => {
+      document.querySelectorAll(".ad-card video").forEach((video) => observer.observe(video));
+    };
+
+    window.addEventListener("hashchange", route);
+    renderAll();
+    route();
+  </script>
+</body>
+</html>
