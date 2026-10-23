@@ -26,7 +26,7 @@
     },
     {
       "id": "upscale-and-lossless-assembly",
-      "output": "Upscale clips to 1080p via Modal SeedVR2 H100 and losslessly concatenate into master-movie.mp4 with 9-frame dailies."
+      "output": "Upscale clips to 1080p via ByteDance Video Upscaler on Replicate and losslessly concatenate into master-movie.mp4 with 9-frame dailies."
     }
   ]
 }

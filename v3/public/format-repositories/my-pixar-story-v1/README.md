@@ -25,11 +25,11 @@ npm test
 2. **Screenplay**: Author a 7-beat structured emotional arc with precise camera directions and dialogue.
 3. **Cast & Hero Props**: Generate 4K multi-angle character sheets and prop turnaround references.
 4. **Scene Synthesis**: Render high-fidelity video clips using Seedance 2.5 with native audio.
-5. **4K Upscaling**: Enhance video fidelity using SeedVR2 on Modal H100 GPUs.
+5. **1080p Upscaling**: Enhance video fidelity using ByteDance Video Upscaler on Replicate.
 6. **Lossless Assembly**: Losslessly conform, stitch, and deliver the final master MP4.
 
 ## Requirements
 
 - Node.js 20+
 - FFmpeg 6.0+
-- Wiggly MCP Server (Tollbooth) or direct Replicate / Modal API keys
+- Wiggly MCP Server (Tollbooth) or direct Replicate API token

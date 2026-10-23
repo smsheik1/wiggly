@@ -82,7 +82,7 @@ const requiredModels = [
   "Claude Haiku 5.5 / Meta Muse",
   "Nano Banana 2.1",
   "Seedance 2.5",
-  "SeedVR2 (Modal H100)",
+  "ByteDance Video Upscaler",
   "Lossless FFmpeg",
 ];
 
@@ -92,6 +92,15 @@ for (const model of requiredModels) {
     `Advibly section must mention model: ${model}`,
   );
 }
+
+// Check pricing verification
+assert.match(adviblySectionsSource, /\$19/);
+assert.match(adviblySectionsSource, /\$69/);
+
+// Check 3-tool MCP lifecycle verification
+assert.match(adviblySectionsSource, /wiggly_submit_film/);
+assert.match(adviblySectionsSource, /wiggly_get_film/);
+assert.match(adviblySectionsSource, /wiggly_finalize_film/);
 
 // Check install commands and downloads
 assert.match(adviblySectionsSource, /npx skills add smsheik1\/wiggly -s my-pixar-story/);

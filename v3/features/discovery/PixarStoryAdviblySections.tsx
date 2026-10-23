@@ -35,7 +35,7 @@ export function PixarStoryAdviblySections({
           command: "npx",
           args: ["-y", "@wiggly/mcp-server@latest"],
           env: {
-            WIGGLY_API_KEY: "your_api_key_or_leave_blank_for_byok",
+            WIGGLY_API_KEY: "your_wiggly_api_key",
           },
         },
       },
@@ -128,10 +128,10 @@ export function PixarStoryAdviblySections({
       description: "Generates widescreen 16:9 video clips with emergent synced dialogue, acoustic room ambience, and character Foley.",
     },
     {
-      name: "SeedVR2 (Modal H100)",
+      name: "ByteDance Video Upscaler",
       badge: "HD Master",
-      role: "1080p Cinematic Upscaler",
-      description: "Temporal super-resolution running on dedicated H100 GPUs for crystal-clear theatrical 1080p quality.",
+      role: "1080p Theatrical Upscaler",
+      description: "Temporal super-resolution upscaler via Replicate (ByteDance SeedVR lab) for crystal-clear theatrical 1080p quality.",
     },
     {
       name: "Lossless FFmpeg",
@@ -353,7 +353,178 @@ export function PixarStoryAdviblySections({
         </div>
       </section>
 
-      {/* 6. INSTALL SECTION (AGENT GRID & TOLLBOOTH) */}
+      {/* 6. TRANSPARENT STUDIO PRICING */}
+      <section className="border-t-2 border-[#080817] bg-[#fdfaf5] px-4 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[980px]">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#ff8c42]">
+                Studio Pricing
+              </p>
+              <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+                Pay per film, not per minute.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm font-bold text-[#596176]">
+              Iterate the story and draft cheaply. Only unlock the theatrical 1080p master once the family loves the screening preview.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-8 md:grid-cols-2">
+            {/* Tier 1: 720p Draft Preview */}
+            <div className="flex flex-col justify-between rounded-2xl border-2 border-[#080817] bg-white p-7 shadow-[6px_6px_0_#080817]">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="rounded-md border-2 border-[#080817] bg-[#e2e8f0] px-3 py-1 text-xs font-black uppercase tracking-wider">
+                    Screening Draft
+                  </span>
+                  <span className="text-3xl font-black text-[#080817]">$19</span>
+                </div>
+                <h3 className="mt-4 text-2xl font-black">720p Screening Preview</h3>
+                <p className="mt-2 text-sm font-bold text-[#596176]">
+                  Fast turnaround for family review and story sign-off. Everything you need to experience the emotional arc.
+                </p>
+
+                <ul className="mt-6 space-y-3">
+                  <li className="flex items-start gap-2.5 text-sm font-bold text-[#30374b]">
+                    <CheckCircle2 className="size-4 shrink-0 text-[#10b981] mt-0.5" />
+                    <span>Complete 72-second 7-beat animated film in 720p</span>
+                  </li>
+                  <li className="flex items-start gap-2.5 text-sm font-bold text-[#30374b]">
+                    <CheckCircle2 className="size-4 shrink-0 text-[#10b981] mt-0.5" />
+                    <span>Continuous emotional piano score and Foley mix</span>
+                  </li>
+                  <li className="flex items-start gap-2.5 text-sm font-bold text-[#30374b]">
+                    <CheckCircle2 className="size-4 shrink-0 text-[#10b981] mt-0.5" />
+                    <span>9-Frame Dailies contact sheet for quick inspection</span>
+                  </li>
+                  <li className="flex items-start gap-2.5 text-sm font-bold text-[#30374b]">
+                    <CheckCircle2 className="size-4 shrink-0 text-[#10b981] mt-0.5" />
+                    <span>1 automated vision-QC retry per shot (up to 3 per film)</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="mt-8 border-t-2 border-dashed border-[#e2e8f0] pt-5 text-xs font-bold text-[#71717a]">
+                Generated via Replicate Seedance 2.5 with negative audio lock.
+              </div>
+            </div>
+
+            {/* Tier 2: 1080p Theatrical Master */}
+            <div className="flex flex-col justify-between rounded-2xl border-2 border-[#080817] bg-[#fff9eb] p-7 shadow-[8px_8px_0_#080817] relative">
+              <div className="absolute -top-3.5 right-6 rounded-full border-2 border-[#080817] bg-[#ff8c42] px-3.5 py-0.5 text-xs font-black uppercase tracking-wider text-white">
+                Best For Keepsakes
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="rounded-md border-2 border-[#080817] bg-[#c9ff55] px-3 py-1 text-xs font-black uppercase tracking-wider">
+                    Theatrical Master
+                  </span>
+                  <span className="text-3xl font-black text-[#080817]">$69</span>
+                </div>
+                <h3 className="mt-4 text-2xl font-black">1080p Theatrical Master</h3>
+                <p className="mt-2 text-sm font-bold text-[#596176]">
+                  Archival heirloom release with ByteDance temporal super-resolution, 4K character sheet, and parent voiceover mix.
+                </p>
+
+                <ul className="mt-6 space-y-3">
+                  <li className="flex items-start gap-2.5 text-sm font-bold text-[#30374b]">
+                    <CheckCircle2 className="size-4 shrink-0 text-[#ff8c42] mt-0.5" />
+                    <span><strong>1080p Theatrical Master</strong> via ByteDance Video Upscaler</span>
+                  </li>
+                  <li className="flex items-start gap-2.5 text-sm font-bold text-[#30374b]">
+                    <CheckCircle2 className="size-4 shrink-0 text-[#ff8c42] mt-0.5" />
+                    <span><strong>Authentic Parent Voiceover</strong> clone ducked under piano score</span>
+                  </li>
+                  <li className="flex items-start gap-2.5 text-sm font-bold text-[#30374b]">
+                    <CheckCircle2 className="size-4 shrink-0 text-[#ff8c42] mt-0.5" />
+                    <span><strong>4K Multi-Character Lineup Sheet</strong> &amp; 3D Hero Prop Turnarounds</span>
+                  </li>
+                  <li className="flex items-start gap-2.5 text-sm font-bold text-[#30374b]">
+                    <CheckCircle2 className="size-4 shrink-0 text-[#ff8c42] mt-0.5" />
+                    <span>Permanent cloud link, uncompressed master MP4, &amp; lossless archive</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="mt-8 border-t-2 border-dashed border-[#e2e8f0] pt-5 text-xs font-bold text-[#71717a]">
+                Full commercial and personal keepsake rights included.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. ZERO-TIMEOUT MCP TOLLBOOTH */}
+      <section className="border-t-2 border-[#080817] bg-[#f0f9ff] px-4 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[980px]">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#0284c7]">
+                Tollbooth Architecture
+              </p>
+              <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+                3 discrete MCP tools. Zero timeouts.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm font-bold text-[#596176]">
+              Your client agent is the creative director. Heavy diffusion rendering runs asynchronously on Wiggly’s tollbooth backend.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {/* Tool 1 */}
+            <div className="rounded-xl border-2 border-[#080817] bg-white p-6 shadow-[5px_5px_0_#080817]">
+              <div className="inline-flex items-center gap-2 rounded-md border-2 border-[#080817] bg-[#52d6ff] px-2.5 py-1 text-xs font-black uppercase">
+                Step 1: Submit
+              </div>
+              <h3 className="mt-3 font-mono text-base font-black text-[#080817]">
+                wiggly_submit_film
+              </h3>
+              <p className="mt-2 text-xs font-bold leading-relaxed text-[#596176]">
+                Dispatches generation pass in &lt;500ms. Accepts screenplay, family photo URLs for facial likeness, and an idempotency key to prevent double-billing.
+              </p>
+              <div className="mt-4 rounded-lg bg-[#080817] p-3 text-[11px] font-mono text-[#52d6ff]">
+                returns: &#123; jobId, status: &quot;queued&quot; &#125;
+              </div>
+            </div>
+
+            {/* Tool 2 */}
+            <div className="rounded-xl border-2 border-[#080817] bg-white p-6 shadow-[5px_5px_0_#080817]">
+              <div className="inline-flex items-center gap-2 rounded-md border-2 border-[#080817] bg-[#c9ff55] px-2.5 py-1 text-xs font-black uppercase">
+                Step 2: Poll
+              </div>
+              <h3 className="mt-3 font-mono text-base font-black text-[#080817]">
+                wiggly_get_film
+              </h3>
+              <p className="mt-2 text-xs font-bold leading-relaxed text-[#596176]">
+                Resilient polling with retryAfterSec: 15. Never drops sockets in Cursor or Claude Code. Returns live stage, 720p draft URL, and 3x3 contact sheets.
+              </p>
+              <div className="mt-4 rounded-lg bg-[#080817] p-3 text-[11px] font-mono text-[#c9ff55]">
+                returns: &#123; stage, previewUrl, contactSheet &#125;
+              </div>
+            </div>
+
+            {/* Tool 3 */}
+            <div className="rounded-xl border-2 border-[#080817] bg-white p-6 shadow-[5px_5px_0_#080817]">
+              <div className="inline-flex items-center gap-2 rounded-md border-2 border-[#080817] bg-[#ff8c42] px-2.5 py-1 text-xs font-black uppercase">
+                Step 3: Finalize
+              </div>
+              <h3 className="mt-3 font-mono text-base font-black text-[#080817]">
+                wiggly_finalize_film
+              </h3>
+              <p className="mt-2 text-xs font-bold leading-relaxed text-[#596176]">
+                Human approval gate. Trigger a single shot reroll with director feedback (1 free auto-retry per shot, max 3 per film), or order the 1080p master.
+              </p>
+              <div className="mt-4 rounded-lg bg-[#080817] p-3 text-[11px] font-mono text-[#ff8c42]">
+                actions: approve | reroll | master
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. INSTALL SECTION (AGENT GRID & TOLLBOOTH) */}
       <section
         id="install"
         className="border-t-2 border-[#080817] bg-[#080817] px-4 py-16 text-white sm:px-8 sm:py-24"
