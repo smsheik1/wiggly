@@ -94,7 +94,7 @@ for (const model of requiredModels) {
 }
 
 // Check install commands and downloads
-assert.match(adviblySectionsSource, /npx skills add wiggly\/skills -s my-pixar-story/);
+assert.match(adviblySectionsSource, /npx skills add smsheik1\/wiggly -s my-pixar-story/);
 assert.match(adviblySectionsSource, /wiggly-my-pixar-story-format-kit\.zip/);
 assert.match(adviblySectionsSource, /my-pixar-story\.skill/);
 
