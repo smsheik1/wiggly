@@ -93,7 +93,7 @@ export function inspectMediaQuality(scene: MyPixarStoryAdScene): MediaInspection
   let characterDnaConsistent = true;
   const compiledDna = storyboard.compiledCharacterDna.toLowerCase();
 
-  storyboard.scenes.forEach((s, idx) => {
+  storyboard.scenes.forEach((s: any, idx: number) => {
     const beat = (idx + 1) as StoryBeatNumber;
     const prompt = s.characterDnaAgePrompt.toLowerCase();
     
@@ -120,7 +120,7 @@ export function inspectMediaQuality(scene: MyPixarStoryAdScene): MediaInspection
 
   // 2. Audio Continuity & Pacing Verification
   let audioContinuityPassed = true;
-  storyboard.scenes.forEach((s, idx) => {
+  storyboard.scenes.forEach((s: any, idx: number) => {
     const beat = (idx + 1) as StoryBeatNumber;
     const words = s.narrationScript.trim().split(/\s+/).filter(Boolean);
     const wordCount = words.length;
@@ -149,9 +149,9 @@ export function inspectMediaQuality(scene: MyPixarStoryAdScene): MediaInspection
   const keyframes = scene.layout.activeKeyframeUrls;
   let contactSheetVerified = false;
 
-  if (clips && clips.length === 5 && clips.every((c) => Boolean(c?.trim()))) {
+  if (clips && clips.length === 5 && clips.every((c: any) => Boolean(c?.trim()))) {
     contactSheetVerified = true;
-  } else if (keyframes && keyframes.length === 5 && keyframes.every((k) => Boolean(k?.trim()))) {
+  } else if (keyframes && keyframes.length === 5 && keyframes.every((k: any) => Boolean(k?.trim()))) {
     contactSheetVerified = true;
   } else {
     // If not all 5 are present, note as warning (draft stage before full render)
@@ -192,7 +192,7 @@ export function generateProductionReceipt(options: {
   const resolution = isCheckoutExport ? "1080p" : "480p";
   const resolvedImageModel = imageModel ?? storyboard.imageModel ?? "meta/muse-image-1.0";
 
-  const beats = storyboard.scenes.map((s, idx) => {
+  const beats = storyboard.scenes.map((s: any, idx: number) => {
     const beatNumber = (idx + 1) as StoryBeatNumber;
     const wordCount = s.narrationScript.trim().split(/\s+/).filter(Boolean).length;
     const hasVisual = Boolean(
@@ -231,8 +231,8 @@ export function generateProductionReceipt(options: {
     duration: storyboard.totalDurationSeconds,
     tier,
     imageModel: resolvedImageModel,
-    scripts: storyboard.scenes.map((s) => s.narrationScript),
-    prompts: storyboard.scenes.map((s) => s.seaDanceVideoPrompt),
+    scripts: storyboard.scenes.map((s: any) => s.narrationScript),
+    prompts: storyboard.scenes.map((s: any) => s.seaDanceVideoPrompt),
   };
 
   const checksum = crypto

@@ -22,6 +22,7 @@ import {
   FormatRepoPackageAssets,
   FormatRepoPackageEvidence,
 } from "@/features/discovery/FormatRepoPackageSections";
+import { PixarStoryAdviblySections } from "@/features/discovery/PixarStoryAdviblySections";
 import { getDiscoveryCreatorByName } from "@/features/discovery/creators";
 import {
   getFormatRepoFamily,
@@ -134,6 +135,15 @@ export default async function FormatPage({
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
+            {slug === "my-pixar-story" ? (
+              <a
+                href="#install"
+                className="inline-flex min-h-12 items-center gap-2 rounded-md border-2 border-[#080817] bg-[#52d6ff] px-5 text-sm font-black text-[#080817] shadow-[4px_4px_0_#080817]"
+              >
+                Install skill
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </a>
+            ) : null}
             <a
               href="#examples"
               className="inline-flex min-h-12 items-center gap-2 rounded-md border-2 border-[#080817] bg-[#080817] px-5 text-sm font-black text-white shadow-[4px_4px_0_#52d6ff]"
@@ -251,16 +261,22 @@ export default async function FormatPage({
         </section>
       ) : null}
 
-      {repoPage.kind === "shared" ? (
-        <FormatRepoPackageConnections format={format} data={repoPage.package} />
+      {slug === "my-pixar-story" ? (
+        <PixarStoryAdviblySections format={format} />
       ) : (
-        <FormatRepoConnections presentation={repoPage} />
-      )}
+        <>
+          {repoPage.kind === "shared" ? (
+            <FormatRepoPackageConnections format={format} data={repoPage.package} />
+          ) : (
+            <FormatRepoConnections presentation={repoPage} />
+          )}
 
-      {repoPage.kind !== "shared" ? (
-        <FormatRepoIncludedAssets presentation={repoPage} />
-      ) : (
-        <FormatRepoPackageAssets format={format} data={repoPage.package} />
+          {repoPage.kind !== "shared" ? (
+            <FormatRepoIncludedAssets presentation={repoPage} />
+          ) : (
+            <FormatRepoPackageAssets format={format} data={repoPage.package} />
+          )}
+        </>
       )}
 
       <section

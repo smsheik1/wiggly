@@ -1,0 +1,487 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Check,
+  Copy,
+  Download,
+  ExternalLink,
+  Film,
+  Sparkles,
+  Layers,
+  Cpu,
+  Bot,
+  Volume2,
+  Sliders,
+  CheckCircle2,
+  ShieldCheck,
+} from "lucide-react";
+import Link from "next/link";
+import type { DiscoveryFormatProfile } from "./types";
+
+export function PixarStoryAdviblySections({
+  format,
+}: {
+  format: DiscoveryFormatProfile;
+}) {
+  const [copiedCommand, setCopiedCommand] = useState(false);
+  const [copiedMcp, setCopiedMcp] = useState(false);
+
+  const installCommand = "npx skills add wiggly/skills -s my-pixar-story";
+  const mcpConfig = JSON.stringify(
+    {
+      mcpServers: {
+        wiggly: {
+          command: "npx",
+          args: ["-y", "@wiggly/mcp-server@latest"],
+          env: {
+            WIGGLY_API_KEY: "your_api_key_or_leave_blank_for_byok",
+          },
+        },
+      },
+    },
+    null,
+    2
+  );
+
+  const copyToClipboard = (text: string, type: "cmd" | "mcp") => {
+    navigator.clipboard.writeText(text);
+    if (type === "cmd") {
+      setCopiedCommand(true);
+      setTimeout(() => setCopiedCommand(false), 2000);
+    } else {
+      setCopiedMcp(true);
+      setTimeout(() => setCopiedMcp(false), 2000);
+    }
+  };
+
+  const samplePrompts = [
+    "Make a Pixar-style story for my daughter",
+    "3D animated family memoir from our memories",
+    "Warm big-eyed feature-animation film about my dad",
+    "Pixar-style tribute for my mom's birthday",
+  ];
+
+  const pipelineSteps = [
+    {
+      num: 1,
+      title: "Story Director (Beats & Thesis)",
+      desc: "The skill reads your questionnaire memories, builds an original protagonist across life stages (childhood, young adult, adult) and hero props (vehicles, instruments, keepsakes), then writes a 5–7 beat script paced to time with an earned thesis. Mandatory approval gate before spending a credit.",
+    },
+    {
+      num: 2,
+      title: "4K Character Lineup Sheets",
+      desc: "One expressive feature-3D character lineup sheet with Nano Banana 2.1 via Google Flow, generated sequentially for character continuity: large eyes with catchlights, tactile materials, warm volumetric light, and creamy depth of field. A weak still is re-rolled cheaply here, never repaired in video.",
+    },
+    {
+      num: 3,
+      title: "Spatial 3D Environment Plates",
+      desc: "Spatial 3D environment plates with soft rounded shapes, volumetric lighting, and storybook depth of field.",
+    },
+    {
+      num: 4,
+      title: "16:9 Storyboard Direct Panels",
+      desc: "Native 16:9 2K storyboard panels locking camera moves, character eyelines, and physical staging for human director approval.",
+    },
+    {
+      num: 5,
+      title: "Seedance 2.5 Emergent Multimodal Audio",
+      desc: "ByteDance Seedance 2.5 generates each scene with emergent native audio—lip sync, voice acting, acoustic ambience, and Foley are synthesized simultaneously in the visual latent space, eliminating external TTS phasing.",
+    },
+    {
+      num: 6,
+      title: "Lossless FFmpeg Concat & Dailies",
+      desc: "Lossless FFmpeg assembly stitches the clips into a master 72-second 1080p film with automated dailies contact sheets.",
+    },
+  ];
+
+  const agentLogos = [
+    { name: "Claude Code", tag: "Official", color: "#d97706" },
+    { name: "Claude", tag: "Anthropic", color: "#ea580c" },
+    { name: "Cursor", tag: "Native", color: "#0284c7" },
+    { name: "Codex", tag: "OpenAI", color: "#16a34a" },
+    { name: "VS Code", tag: "Copilot", color: "#2563eb" },
+    { name: "Windsurf", tag: "Codeium", color: "#06b6d4" },
+    { name: "ChatGPT", tag: "OpenAI", color: "#10b981" },
+    { name: "Antigravity", tag: "Google", color: "#8b5cf6" },
+    { name: "Grokbot", tag: "xAI", color: "#e11d48" },
+    { name: "Meta Muse", tag: "Meta", color: "#4f46e5" },
+  ];
+
+  const modelStack = [
+    {
+      name: "Claude Haiku 5.5 / Meta Muse",
+      badge: "High Reasoning",
+      role: "Screenplay Director",
+      description: "Extracts true facts, balances humor and tenderness, discovers the closing thesis, and drafts natural spoken lines.",
+    },
+    {
+      name: "Nano Banana 2.1",
+      badge: "Google Flow",
+      role: "Character & Prop Sheets",
+      description: "Multi-character reference lineups, hero vehicles, and spatial environment plates with 3D Pixar stylized aesthetic.",
+    },
+    {
+      name: "ByteDance Seedance 2.5",
+      badge: "Native Audio",
+      role: "Video & Acoustic Diffusion",
+      description: "Generates widescreen 16:9 video clips with emergent synced dialogue, acoustic room ambience, and character Foley.",
+    },
+    {
+      name: "SeedVR2 (Modal H100)",
+      badge: "HD Master",
+      role: "1080p Cinematic Upscaler",
+      description: "Temporal super-resolution running on dedicated H100 GPUs for crystal-clear theatrical 1080p quality.",
+    },
+    {
+      name: "Lossless FFmpeg",
+      badge: "Zero Loss",
+      role: "Conform & Dailies Assembly",
+      description: "Automatic lossless concatenation demuxer, audio balance verification, and 9-frame story contact sheets.",
+    },
+  ];
+
+  return (
+    <div className="w-full text-[#080817]">
+      {/* 1. JUST ASK SECTION */}
+      <section className="border-t-2 border-[#080817] bg-[#f9f6ef] px-4 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[980px]">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#667087]">
+            Just ask
+          </p>
+          <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+            The skill fires on natural requests like these.
+          </h2>
+          <p className="mt-4 text-lg font-bold text-[#596176]">
+            No complex terminal commands or rigid parameters to memorize.
+          </p>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            {samplePrompts.map((prompt) => (
+              <span
+                key={prompt}
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#080817] bg-white px-5 py-3 text-base font-black shadow-[4px_4px_0_#080817]"
+              >
+                <Sparkles className="size-4 text-[#ff8c42]" />
+                “{prompt}”
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 2. THE PIPELINE SECTION */}
+      <section className="border-t-2 border-[#080817] bg-white px-4 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[980px]">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#667087]">
+                The pipeline
+              </p>
+              <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+                How an agent directs your film.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm font-bold text-[#596176]">
+              Approve the cast sheet, then the storyboard. Animation, voice and score run after that.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {pipelineSteps.map((step) => (
+              <div
+                key={step.num}
+                className="flex flex-col justify-between rounded-xl border-2 border-[#080817] bg-[#fbf9f4] p-6 shadow-[5px_5px_0_#080817]"
+              >
+                <div>
+                  <div className="inline-flex size-10 items-center justify-center rounded-lg border-2 border-[#080817] bg-[#52d6ff] text-xl font-black">
+                    {step.num}
+                  </div>
+                  <h3 className="mt-4 text-xl font-black">{step.title}</h3>
+                  <p className="mt-3 text-sm font-medium leading-relaxed text-[#424254]">
+                    {step.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3. ORIGINAL CASTS & PROPS */}
+      <section className="border-t-2 border-[#080817] bg-[#dff8ff] px-4 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[980px]">
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#31566e]">
+                Original casts &amp; hero props
+              </p>
+              <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+                Real people. Never stock avatars.
+              </h2>
+              <p className="mt-4 text-lg font-bold leading-relaxed text-[#30374b]">
+                No borrowed characters and no house mascot pasted onto every story. For each family the skill designs its own protagonist across childhood to adult stages, along with hero vehicles and keepsakes, written from the facts in your questionnaire answers.
+              </p>
+              <ul className="mt-6 space-y-3">
+                <li className="flex items-center gap-3 text-base font-bold text-[#1e3850]">
+                  <CheckCircle2 className="size-5 text-[#0091ff]" />
+                  Original characters and settings only, never a franchise character or studio logo
+                </li>
+                <li className="flex items-center gap-3 text-base font-bold text-[#1e3850]">
+                  <CheckCircle2 className="size-5 text-[#0091ff]" />
+                  Five to seven cinematic beats: the early memory, the sacrifice, the turn, the payoff
+                </li>
+                <li className="flex items-center gap-3 text-base font-bold text-[#1e3850]">
+                  <CheckCircle2 className="size-5 text-[#0091ff]" />
+                  Strict fidelity: facts, ages, and spoken words are true to your real family answers
+                </li>
+              </ul>
+            </div>
+
+            <div className="overflow-hidden rounded-xl border-2 border-[#080817] bg-white p-4 shadow-[8px_8px_0_#080817]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/format-repositories/my-pixar-story-v1/examples/character-lineup.png"
+                alt="4K Character Lineup Compilation Sheet"
+                className="w-full rounded-lg border border-[#080817] object-cover"
+              />
+              <p className="mt-3 text-center text-xs font-black uppercase tracking-wider text-[#667087]">
+                Actual 4K Character Lineup Sheet (Shaz, Sister, Mia)
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. THE MODEL STACK */}
+      <section className="border-t-2 border-[#080817] bg-[#fffdf8] px-4 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[980px]">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#667087]">
+            The model stack
+          </p>
+          <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+            Each model has one job.
+          </h2>
+          <p className="mt-4 max-w-2xl text-lg font-bold text-[#596176]">
+            The still carries the look: the eyes, the light, the silhouette. Nano Banana 2.1 makes every character and location plate, and Seedance 2.5 synthesizes the visual movement and emergent audio in one coherent pass.
+          </p>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {modelStack.map((m) => (
+              <div
+                key={m.name}
+                className="flex flex-col justify-between rounded-xl border-2 border-[#080817] bg-white p-5 shadow-[4px_4px_0_#080817]"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-md border-2 border-[#080817] bg-[#c9ff55] px-2.5 py-1 text-[11px] font-black uppercase tracking-wider">
+                      {m.badge}
+                    </span>
+                    <Cpu className="size-4 text-[#667087]" />
+                  </div>
+                  <h3 className="mt-3 text-lg font-black">{m.name}</h3>
+                  <p className="mt-1 text-xs font-black uppercase tracking-wider text-[#ff78bd]">
+                    {m.role}
+                  </p>
+                  <p className="mt-3 text-xs font-bold leading-relaxed text-[#596176]">
+                    {m.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. WHAT YOU GET */}
+      <section className="border-t-2 border-[#080817] bg-[#ffecf5] px-4 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[980px]">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#ff4081]">
+                Final deliverables
+              </p>
+              <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+                What you get.
+              </h2>
+              <ul className="mt-8 space-y-4">
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 size-2 rounded-full bg-[#080817]" />
+                  <p className="text-base font-bold text-[#30374b]">
+                    A finished widescreen (16:9) 3D animated memoir, roughly 72 seconds in 1080p HD
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 size-2 rounded-full bg-[#080817]" />
+                  <p className="text-base font-bold text-[#30374b]">
+                    Continuous character continuity across life stages (childhood, teen, adult)
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 size-2 rounded-full bg-[#080817]" />
+                  <p className="text-base font-bold text-[#30374b]">
+                    An approved 4K cast lineup sheet, hero prop sheets, and 8-panel storyboard sheets
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 size-2 rounded-full bg-[#080817]" />
+                  <p className="text-base font-bold text-[#30374b]">
+                    100% native synchronized dialogue, acoustic ambience, and Foley mixed in
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 size-2 rounded-full bg-[#080817]" />
+                  <p className="text-base font-bold text-[#30374b]">
+                    One master MP4 deliverable and 9-frame dailies contact sheet ready to share
+                  </p>
+                </li>
+              </ul>
+            </div>
+
+            <div className="overflow-hidden rounded-xl border-2 border-[#080817] bg-white p-4 shadow-[8px_8px_0_#080817]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/format-repositories/my-pixar-story-v1/examples/story-grid.png"
+                alt="1080p Full Story Grid"
+                className="w-full rounded-lg border border-[#080817] object-cover"
+              />
+              <p className="mt-3 text-center text-xs font-black uppercase tracking-wider text-[#667087]">
+                Master 9-Frame Story Grid (Childhood to Porch Light)
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. INSTALL SECTION (AGENT GRID & TOLLBOOTH) */}
+      <section
+        id="install"
+        className="border-t-2 border-[#080817] bg-[#080817] px-4 py-16 text-white sm:px-8 sm:py-24"
+      >
+        <div className="mx-auto max-w-[980px]">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#52d6ff]">
+                Installation
+              </p>
+              <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+                Install for your agent.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm font-bold text-[#a1a1aa]">
+              Install the skill, then make sure the Wiggly MCP is connected so it has tools to call. Works with every skills-capable agent.
+            </p>
+          </div>
+
+          {/* Supported Coding Agents Grid */}
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {agentLogos.map((agent) => (
+              <div
+                key={agent.name}
+                className="flex items-center gap-3 rounded-lg border border-[#27272a] bg-[#18181b] p-3 transition hover:border-[#52d6ff]"
+              >
+                <div
+                  className="size-3 rounded-full"
+                  style={{ backgroundColor: agent.color }}
+                />
+                <div>
+                  <p className="text-sm font-black">{agent.name}</p>
+                  <p className="text-[10px] font-bold text-[#71717a]">{agent.tag}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* One-click Downloads */}
+          <div className="mt-12 rounded-xl border-2 border-[#27272a] bg-[#121215] p-6 sm:p-8">
+            <h3 className="text-xl font-black">One click, no terminal</h3>
+            <p className="mt-2 text-sm font-bold text-[#a1a1aa]">
+              Drop the .skill file into Claude → Settings → Skills, or unzip the folder into ~/.claude/skills or .cursor/skills.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-4">
+              <a
+                href="/format-repositories/my-pixar-story-v1/downloads/my-pixar-story.skill"
+                download
+                className="inline-flex items-center gap-2 rounded-lg border-2 border-white bg-white px-5 py-3 text-sm font-black text-[#080817] shadow-[4px_4px_0_#52d6ff] transition hover:bg-[#52d6ff]"
+              >
+                <Download className="size-4" />
+                Download .skill
+              </a>
+              <a
+                href="/format-repositories/my-pixar-story-v1/downloads/wiggly-my-pixar-story-format-kit.zip"
+                download
+                className="inline-flex items-center gap-2 rounded-lg border-2 border-[#27272a] bg-[#18181b] px-5 py-3 text-sm font-black text-white hover:border-white"
+              >
+                <Download className="size-4" />
+                Download .zip
+              </a>
+            </div>
+          </div>
+
+          {/* One-command Install */}
+          <div className="mt-6 rounded-xl border-2 border-[#27272a] bg-[#121215] p-6 sm:p-8">
+            <h3 className="text-xl font-black">One command (any agent)</h3>
+            <div className="mt-4 flex items-center justify-between rounded-lg border border-[#27272a] bg-[#09090b] px-4 py-3 font-mono text-sm">
+              <span className="text-[#52d6ff]">{installCommand}</span>
+              <button
+                type="button"
+                onClick={() => copyToClipboard(installCommand, "cmd")}
+                className="inline-flex items-center gap-1.5 rounded bg-[#27272a] px-3 py-1 text-xs font-bold text-white hover:bg-[#3f3f46]"
+              >
+                {copiedCommand ? (
+                  <>
+                    <Check className="size-3.5 text-green-400" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-3.5" />
+                    Copy
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Connect MCP Callout */}
+          <div className="mt-6 rounded-xl border-2 border-[#52d6ff] bg-[#0c1e28] p-6 sm:p-8">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <span className="rounded border border-[#52d6ff] bg-[#52d6ff]/10 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-[#52d6ff]">
+                  Tollbooth Server
+                </span>
+                <h3 className="mt-3 text-2xl font-black text-white">
+                  Connect the Wiggly MCP
+                </h3>
+                <p className="mt-2 text-sm font-bold text-[#94a3b8]">
+                  The MCP server provides the video rendering, character extraction, and 1080p upscaling tools.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => copyToClipboard(mcpConfig, "mcp")}
+                className="inline-flex items-center gap-2 rounded-lg border-2 border-[#52d6ff] bg-[#52d6ff] px-5 py-2.5 text-sm font-black text-[#080817] shadow-[3px_3px_0_#fff]"
+              >
+                {copiedMcp ? (
+                  <>
+                    <Check className="size-4" />
+                    Config Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-4" />
+                    Copy MCP Config
+                  </>
+                )}
+              </button>
+            </div>
+
+            <pre className="mt-5 overflow-x-auto rounded-lg border border-[#1e3a4b] bg-[#051119] p-4 text-xs font-mono text-[#a5f3fc]">
+              {mcpConfig}
+            </pre>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
