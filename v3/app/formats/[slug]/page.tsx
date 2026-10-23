@@ -101,8 +101,14 @@ export default async function FormatPage({
         </div>
       </header>
 
-      <section className="mx-auto grid w-[min(100%-32px,980px)] gap-[38px] py-9 md:grid-cols-[1.15fr_0.85fr] md:items-center md:py-14">
-        <div>
+      <section
+        className={`mx-auto py-9 md:py-14 ${
+          heroIsLandscapeVideo
+            ? "flex w-[min(100%-32px,1040px)] flex-col gap-10"
+            : "grid w-[min(100%-32px,980px)] gap-[38px] md:grid-cols-[1.15fr_0.85fr] md:items-center"
+        }`}
+      >
+        <div className={heroIsLandscapeVideo ? "max-w-3xl" : ""}>
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-md border-2 border-[#080817] bg-[#52d6ff] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em]">
               <BadgeCheck className="size-4" aria-hidden="true" />
@@ -175,8 +181,8 @@ export default async function FormatPage({
         </div>
 
         <div
-          className={`mx-auto w-full overflow-hidden rounded-[12px] border-2 border-[#080817] bg-[#080817] shadow-[8px_8px_0_#080817] ${
-            heroIsLandscapeVideo ? "max-w-[760px]" : "max-w-[310px]"
+          className={`w-full overflow-hidden rounded-[16px] border-2 border-[#080817] bg-[#080817] shadow-[10px_10px_0_#080817] ${
+            heroIsLandscapeVideo ? "mx-auto max-w-[1040px]" : "mx-auto max-w-[310px]"
           }`}
         >
           <DiscoveryProofMedia
@@ -306,9 +312,13 @@ export default async function FormatPage({
           </div>
 
           <div
-            className={`mt-10 grid gap-6 sm:grid-cols-2 ${
-              format.proofEntries.length > 4 ? "lg:grid-cols-3" : ""
-            }`}
+            className={
+              format.proofEntries.length === 1 && heroIsLandscapeVideo
+                ? "mt-10 mx-auto max-w-[960px] w-full"
+                : `mt-10 grid gap-6 sm:grid-cols-2 ${
+                    format.proofEntries.length > 4 ? "lg:grid-cols-3" : ""
+                  }`
+            }
           >
             {format.proofEntries.map((entry, index) => (
               <article
