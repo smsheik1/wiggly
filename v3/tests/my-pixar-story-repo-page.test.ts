@@ -21,6 +21,7 @@ const publicAssets = [
   "public/format-repositories/my-pixar-story-v1/examples/character-lineup.png",
   "public/format-repositories/my-pixar-story-v1/examples/story-grid.png",
   "public/format-repositories/my-pixar-story-v1/downloads/wiggly-my-pixar-story-format-kit.zip",
+  "public/format-repositories/my-pixar-story-v1/downloads/wiggly-my-pixar-story-format-kit.zip.sha256",
   "public/format-repositories/my-pixar-story-v1/downloads/my-pixar-story.skill",
   "public/format-repositories/my-pixar-story-v1/README.md",
   "public/format-repositories/my-pixar-story-v1/SKILL.md",
