@@ -27,7 +27,7 @@ export function PixarStoryAdviblySections({
   const [copiedCommand, setCopiedCommand] = useState(false);
   const [copiedMcp, setCopiedMcp] = useState(false);
 
-  const installCommand = "npx skills add wiggly/skills -s my-pixar-story";
+  const installCommand = "npx skills add smsheik1/wiggly -s my-pixar-story";
   const mcpConfig = JSON.stringify(
     {
       mcpServers: {
