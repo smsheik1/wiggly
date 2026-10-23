@@ -10,27 +10,20 @@
       "name": "Wiggly MCP Server (Tollbooth)",
       "environmentVariables": ["WIGGLY_API_KEY"],
       "optional": true,
-      "purpose": "Managed GPU orchestration for Replicate Seedance 2.5 video generation and Modal H100 upscaling with zero local setup."
+      "purpose": "Managed GPU orchestration for Replicate Seedance 2.5 video generation and ByteDance video upscaling with zero local setup."
     },
     {
-      "name": "Replicate (BYOK Video Engine)",
+      "name": "Replicate (BYOK Video Engine and Upscaler)",
       "environmentVariables": ["REPLICATE_API_TOKEN"],
       "optional": true,
-      "model": "bytedance/seedance-2.5",
-      "purpose": "Direct generation of 480p/720p widescreen cinematic video clips with native lip-synced audio."
-    },
-    {
-      "name": "Modal (BYOK SeedVR2 Upscaler)",
-      "environmentVariables": ["MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET"],
-      "optional": true,
-      "model": "seedvr2-h100",
-      "purpose": "1080p high-fidelity temporal video upscaling."
+      "model": "bytedance/seedance-2.5 and bytedance/video-upscaler",
+      "purpose": "Direct generation of 480p/720p widescreen cinematic video clips and 1080p high-fidelity temporal video upscaling."
     }
   ],
   "paidApprovalRequired": true,
   "automaticInstallation": false,
   "notes": [
-    "Connect the Wiggly MCP server to run renders through managed cloud credits, or bring your own Replicate and Modal API tokens.",
+    "Connect the Wiggly MCP server to run renders through managed cloud credits, or bring your own Replicate API token.",
     "Mandatory approval gate: Character lineup sheets and storyboard direct-panels must be reviewed and approved before GPU rendering begins.",
     "All audio is synthesized natively in the Seedance latent space; no external TTS desync or manual audio alignment required."
   ]

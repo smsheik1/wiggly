@@ -60,7 +60,7 @@ const formatConfigs: FormatProfileConfig[] = [
       ],
       instructions: [
         "Install the skill via `npx @wiggly/skill install my-pixar-story` or download the `.skill` file",
-        "Connect the Wiggly MCP server or provide Replicate/Modal API tokens",
+        "Connect the Wiggly MCP server or provide a Replicate API token",
         "Pass the family answers into the Story Director to review the beat map and thesis",
         "Approve the 4K character sheet and storyboard panels before triggering video",
         "The Producer node renders clips, upscales to 1080p, and stitches the master film",
@@ -70,7 +70,7 @@ const formatConfigs: FormatProfileConfig[] = [
         { label: "4K Character + Prop sheets", cost: "~$0.20 image generation", time: "about 2-3 min" },
         { label: "16:9 Storyboard direct panels", cost: "~$0.30 image generation", time: "about 2-3 min" },
         { label: "Seedance 2.5 video clips + native audio", cost: "~$6.00 Replicate GPU", time: "about 8-12 min" },
-        { label: "Modal SeedVR2 1080p upscaling", cost: "~$0.80 Modal H100", time: "about 3 min" },
+        { label: "ByteDance 1080p upscaling", cost: "~$0.80 Replicate GPU", time: "about 3 min" },
       ],
       totalEstimate: "About $7-$8 total render cost; ~15-20 minutes end-to-end.",
       output: "One 1920 × 1080 widescreen MP4 (16:9), 72 seconds, with native synced dialogue, score, and sound effects",
