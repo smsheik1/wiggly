@@ -7,7 +7,7 @@
   ],
   "providers": [
     {
-      "name": "Wiggly MCP Server (Tollbooth)",
+      "name": "Wiggly Studio MCP Server",
       "environmentVariables": ["WIGGLY_API_KEY"],
       "optional": true,
       "purpose": "Managed GPU orchestration for Replicate Seedance 2.5 video generation and ByteDance video upscaling with zero local setup."
@@ -23,8 +23,8 @@
   "paidApprovalRequired": true,
   "automaticInstallation": false,
   "notes": [
-    "Connect the Wiggly MCP server to run renders through managed cloud credits, or bring your own Replicate API token.",
+    "Connect the Wiggly Studio MCP server to run renders through managed studio cloud compute, or bring your own Replicate API token.",
     "Mandatory approval gate: Character lineup sheets and storyboard direct-panels must be reviewed and approved before GPU rendering begins.",
-    "All audio is synthesized natively in the Seedance latent space; no external TTS desync or manual audio alignment required."
+    "Continuous 72-second emotional piano score, ambient room Foley, and authentic parent voiceover narration."
   ]
 }
