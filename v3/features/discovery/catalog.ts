@@ -2133,6 +2133,24 @@ const fortniteFilterDiscoveryEntries: DiscoveryEntry[] = [
 
 export const discoveryCatalog: DiscoveryEntry[] = [
   {
+    id: "my-pixar-story-shaz-for-mia",
+    status: "published",
+    showInDiscovery: false,
+    order: 1,
+    brand: "Pixar-Style Family Memoir · A Father's Promise",
+    title: "Shaz for Mia — I Still Leave the Porch Light On",
+    curatorNote: "The complete 72-second 3D animated memoir written from a father's questionnaire answers. Features continuous character continuity across life stages (young Shaz, adult Shaz, sister, Mia), hero prop locks (2000 Honda Accord coupe), and 100% native Seedance 2.5 emergent dialogue and acoustic score.",
+    goal: "story",
+    media: {
+      kind: "video",
+      src: "/format-repositories/my-pixar-story-v1/examples/shaz-for-mia-web.mp4",
+      poster: "/format-repositories/my-pixar-story-v1/examples/shaz-for-mia-poster.jpg",
+      durationLabel: "72 sec",
+      aspectRatio: "16:9",
+    },
+    format: { slug: "my-pixar-story", name: "My Pixar Story", version: "2.0.0", owner: "Wiggly Studio" },
+  },
+  {
     id: "character-gameplay-how-batman-sleeps",
     status: "published",
     order: 16,

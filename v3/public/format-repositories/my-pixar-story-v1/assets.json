@@ -1,0 +1,22 @@
+{
+  "assets": [
+    {
+      "label": "Master 1080p Movie",
+      "description": "72-second widescreen master film with native synchronized dialogue, Foley, and score.",
+      "href": "/format-repositories/my-pixar-story-v1/examples/shaz-for-mia-web.mp4",
+      "image": false
+    },
+    {
+      "label": "4K Character Lineup Sheet",
+      "description": "Multi-character reference compilation sheet establishing visual continuity for all life stages.",
+      "href": "/format-repositories/my-pixar-story-v1/examples/character-lineup.png",
+      "image": true
+    },
+    {
+      "label": "1080p Story Contact Grid",
+      "description": "9-frame story contact sheet tracking progression from childhood memory to today's porch light.",
+      "href": "/format-repositories/my-pixar-story-v1/examples/story-grid.png",
+      "image": true
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "automatedChecks": [
+    "Run all 581 hermetic unit and graph integration tests with 100% green pass rate.",
+    "Verify zero family-specific string leakage across all agent roles, shared rubrics, and linters.",
+    "Validate cast count, 3 life-stage card caps, on-screen limits (<=2 characters per shot), and speech rate budget (3 words/sec).",
+    "Verify 1920 × 1080 (16:9), 24 fps H.264/AAC output, lossless clip concatenation, and audio synchronization in the final master deliverable."
+  ],
+  "creativeReview": [
+    "Inspect the 4K character sheet for facial consistency, eye catchlights, and locked wardrobe across all life stages.",
+    "Verify the screenplay's emotional arc: ensure setup/payoff continuity and that the ending delivers the family's true closing thesis.",
+    "Listen to dialogue playback to verify lip-sync alignment and ambient score balance."
+  ],
+  "limits": [
+    "Output is 16:9 widescreen at 1080 × 1920, 60 to 90 seconds total runtime.",
+    "At most two characters actively staged on screen per shot to avoid diffusion multi-subject morphing.",
+    "Facts are strictly grounded in family questionnaire answers; no invented people, events, dates, or promises."
+  ]
+}

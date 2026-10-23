@@ -4,7 +4,7 @@ import type { ThreeDBreakdownStorySubject } from "../formats/three-d-breakdown/s
 export const AD_SCENE_VERSION = 1 as const;
 
 export type AdFormatId = "visualizer" | "meme" | "were-sorry" | "video-meme" | "jingle" | "text-message" | "brainrot" | "reviews" | "motion-story" | "three-d-breakdown";
-export type RenderableAdFormatId = AdFormatId | "memoir-film" | "static-package" | "talking-fish-news" | "lego-music-video";
+export type RenderableAdFormatId = AdFormatId | "memoir-film" | "static-package" | "talking-fish-news" | "lego-music-video" | "my-pixar-story";
 
 export type HeadlineType =
   | "painful_moment"
@@ -639,4 +639,19 @@ export type MemoirFilmAdScene = AdSceneBase<
   }
 >;
 
-export type RenderableAdScene = MemoirFilmAdScene | AdScene | StaticPackageAdScene | TalkingFishNewsProofScene | LegoMusicVideoAdScene;
+export type MyPixarStoryAdSceneLayout = {
+  preset: "my-pixar-story-memoir";
+  storyboard: any;
+  activeClipUrls?: string[];
+  activeKeyframeUrls?: string[];
+  musicAudioUrl?: string;
+  voiceoverAudioUrl?: string;
+};
+
+export type MyPixarStoryAdScene = AdSceneBase<
+  "my-pixar-story",
+  AdSceneStyleBase,
+  MyPixarStoryAdSceneLayout
+>;
+
+export type RenderableAdScene = MemoirFilmAdScene | MyPixarStoryAdScene | AdScene | StaticPackageAdScene | TalkingFishNewsProofScene | LegoMusicVideoAdScene;

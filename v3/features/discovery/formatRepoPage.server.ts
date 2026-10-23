@@ -115,13 +115,21 @@ export async function getFormatRepoPagePresentation(
       kind: "shared",
       package: getFormatRepoPackageData(format),
       copy: {
-        runDescription: slug === "repo-builder"
+        runDescription: slug === "my-pixar-story"
+          ? "Install the skill and connect your coding agent. The agent plans the story, builds 4K character lineup sheets, and renders the finished film through the Producer node."
+          : slug === "repo-builder"
           ? "Bring a reference and review the blueprint with your coding agent. This baseline guides analysis and Repo authoring; it does not promise an exact clone or automatically publish the result. Existing gameplay is sourced or supplied, not recreated."
           : format.packagePath
           ? "The agent reads this version’s instructions, checks the requirements, and walks you through the approved workflow. Review the inputs and estimate before starting."
           : "This collection contains saved examples, but does not yet include a runnable Repo.",
-        examplesTitle: slug === "repo-builder" ? "The workflow & its evidence." : "Examples & references.",
-        examplesDescription: slug === "repo-builder"
+        examplesTitle: slug === "my-pixar-story"
+          ? "Finished memoir proof."
+          : slug === "repo-builder"
+          ? "The workflow & its evidence."
+          : "Examples & references.",
+        examplesDescription: slug === "my-pixar-story"
+          ? "Watch the complete 72-second 1080p master movie 'Shaz for Mia', with 100% native Seedance dialogue and acoustic score."
+          : slug === "repo-builder"
           ? "The diagram explains the workflow. The benchmark below records what was actually tested—and what still needs creative validation. It is not a finished Batman recreation."
           : `${format.proofEntries.length} saved examples for this recipe—not ${format.proofEntries.length} separate Repos. Each example keeps its original version and provenance.`,
       },

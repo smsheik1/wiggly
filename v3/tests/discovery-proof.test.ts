@@ -175,7 +175,8 @@ assert.ok(
     discoveryFormatSlugs.includes("tutorial-video") &&
     discoveryFormatSlugs.includes("character-gameplay-conversations") &&
     discoveryFormatSlugs.includes("roast-me-conversations") &&
-    discoveryFormatSlugs.length === 55 &&
+    discoveryFormatSlugs.includes("my-pixar-story") &&
+    discoveryFormatSlugs.length === 56 &&
     !discoveryFormatSlugs.includes("motion-story"),
 );
 

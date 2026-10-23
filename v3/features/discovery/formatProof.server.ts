@@ -24,6 +24,60 @@ type FormatProfileConfig = {
 
 const formatConfigs: FormatProfileConfig[] = [
   {
+    slug: "my-pixar-story",
+    promise: "Turn your family's real questionnaire memories into a cinematic, 3D animated memoir with consistent characters, authentic emotion, and native synced dialogue.",
+    lastUpdated: "October 2026",
+    githubRepo: "https://github.com/smsheik1/wiggly-my-pixar-story-studio",
+    manifestPath: "format-repositories/my-pixar-story-v1/format.json",
+    repositoryHref: "/format-repositories/my-pixar-story-v1/downloads/wiggly-my-pixar-story-format-kit.zip",
+    technicalHref: "https://github.com/smsheik1/wiggly-my-pixar-story-studio/blob/main/README.md",
+    historicalProofVersions: ["2.0.0"],
+    whatStays: [
+      "Consistent 3D Pixar stylized character lineup across all ages",
+      "Native emergent multimodal dialogue and acoustic score",
+      "Zero-hallucination fidelity to the family's true questionnaire answers",
+      "Widescreen 16:9 1080p cinematic framing and storybook lighting",
+      "Mandatory cast sheet and storyboard approval before rendering",
+    ],
+    whatChanges: [
+      "The family members and their real life stages (childhood, teen, adult)",
+      "The specific memories, comedic moments, and emotional turn",
+      "The hero props (vehicles, instruments, keepsakes)",
+      "The final message and spoken closing thesis",
+    ],
+    handoff: {
+      requiredInputs: [
+        "A completed family questionnaire (childhood, teen, adult, and finale memories)",
+        "Optional real family photos for character reference",
+        "Target runtime (60 to 90 seconds)",
+      ],
+      deliverables: [
+        "One approved 5-7 beat screenplay with locked closing thesis",
+        "One 4K multi-character reference lineup sheet",
+        "Eight-panel native 16:9 storyboard direct-plate sheets",
+        "One finished 1080p master MP4 with synced native dialogue and sound effects",
+        "A 9-frame dailies contact sheet",
+      ],
+      instructions: [
+        "Install the skill via `npx @wiggly/skill install my-pixar-story` or download the `.skill` file",
+        "Connect the Wiggly MCP server or provide Replicate/Modal API tokens",
+        "Pass the family answers into the Story Director to review the beat map and thesis",
+        "Approve the 4K character sheet and storyboard panels before triggering video",
+        "The Producer node renders clips, upscales to 1080p, and stitches the master film",
+      ],
+      estimates: [
+        { label: "Screenplay + thesis discovery", cost: "~$0.05 LLM cost", time: "about 1-2 min" },
+        { label: "4K Character + Prop sheets", cost: "~$0.20 image generation", time: "about 2-3 min" },
+        { label: "16:9 Storyboard direct panels", cost: "~$0.30 image generation", time: "about 2-3 min" },
+        { label: "Seedance 2.5 video clips + native audio", cost: "~$6.00 Replicate GPU", time: "about 8-12 min" },
+        { label: "Modal SeedVR2 1080p upscaling", cost: "~$0.80 Modal H100", time: "about 3 min" },
+      ],
+      totalEstimate: "About $7-$8 total render cost; ~15-20 minutes end-to-end.",
+      output: "One 1920 × 1080 widescreen MP4 (16:9), 72 seconds, with native synced dialogue, score, and sound effects",
+      firstQuestion: "Who is this story for, and what is the one moment or lesson you want them to always remember?",
+    },
+  },
+  {
     slug: "character-gameplay-conversations",
     promise: "Fan-favorite characters trade lines over Arkham Knight and Spider-Man 2 gameplay with timed captions and ducked music—assembled into vertical 9:16 Shorts.",
     lastUpdated: "September 2026",

@@ -1,0 +1,32 @@
+{
+  "stages": [
+    {
+      "id": "direct-story",
+      "output": "Analyze questionnaire answers, plan emotional approaches, discover the closing thesis, and draft 5-7 dramatic beats.",
+      "approvalRequired": true
+    },
+    {
+      "id": "design-characters-and-props",
+      "output": "Generate 4K multi-character lineup sheets and hero prop continuity sheets with Nano Banana 2.1 via Google Flow.",
+      "approvalRequired": true
+    },
+    {
+      "id": "scout-locations",
+      "output": "Generate 16:9 3D environment plates with storybook lighting and camera depth of field."
+    },
+    {
+      "id": "illustrate-storyboards",
+      "output": "Draw 8-panel native 16:9 storyboard direct-plate sheets locking camera movements and staging.",
+      "approvalRequired": true
+    },
+    {
+      "id": "compile-and-render-seedance",
+      "output": "Compile prompts into Seedance 2.5 with emergent native dialogue, acoustic ambience, and Foley.",
+      "approvalRequired": true
+    },
+    {
+      "id": "upscale-and-lossless-assembly",
+      "output": "Upscale clips to 1080p via Modal SeedVR2 H100 and losslessly concatenate into master-movie.mp4 with 9-frame dailies."
+    }
+  ]
+}
