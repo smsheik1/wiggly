@@ -30,5 +30,12 @@ arkham-content-studio/
 v3/public/format-repositories/*/outputs/
 v3/public/format-repositories/*/run/
 v3/public/format-repositories/*/downloads/*.zip
+!v3/public/format-repositories/my-pixar-story-v1/downloads/*.zip
 v3/public/format-repositories/*/progress.html
 v3/public/format-repositories/*/progress.json
+
+# Local large media & spike files
+/shaz-for-mia-1080p.mp4
+/patch_*.py
+/seedvr/
+v3/tests/my-pixar-story/
