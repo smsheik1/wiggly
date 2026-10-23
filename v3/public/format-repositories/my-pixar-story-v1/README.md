@@ -32,4 +32,4 @@ npm test
 
 - Node.js 20+
 - FFmpeg 6.0+
-- Wiggly MCP Server (Tollbooth) or direct Replicate API token
+- Wiggly Studio MCP Server or direct Replicate API token

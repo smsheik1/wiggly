@@ -67,7 +67,7 @@ export function PixarStoryAdviblySections({
     {
       num: 1,
       title: "Story Director (Beats & Thesis)",
-      desc: "The skill reads your questionnaire memories, builds an original protagonist across life stages (childhood, young adult, adult) and hero props (vehicles, instruments, keepsakes), then writes a 5–7 beat script paced to time with an earned thesis. Mandatory approval gate before spending a credit.",
+      desc: "The skill reads your questionnaire memories, builds an original protagonist across life stages (childhood, young adult, adult) and hero props (vehicles, instruments, keepsakes), then writes a 5–7 beat script paced to time with an earned thesis. Mandatory approval gate before rendering video.",
     },
     {
       num: 2,
@@ -529,20 +529,20 @@ export function PixarStoryAdviblySections({
         </div>
       </section>
 
-      {/* 7. ZERO-TIMEOUT MCP TOLLBOOTH */}
+      {/* 7. ZERO-TIMEOUT MCP CLOUD ENGINE */}
       <section className="border-t-2 border-[#080817] bg-[#f0f9ff] px-4 py-14 sm:px-8 sm:py-20">
         <div className="mx-auto max-w-[980px]">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#0284c7]">
-                Tollbooth Architecture
+                Studio Cloud Engine
               </p>
               <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
                 3 discrete MCP tools. Zero timeouts.
               </h2>
             </div>
             <p className="max-w-md text-sm font-bold text-[#596176]">
-              Your client agent is the creative director. Heavy diffusion rendering runs asynchronously on Wiggly’s tollbooth backend.
+              Your client agent is the creative director. Heavy diffusion rendering and 1080p upscaling run asynchronously on Wiggly’s high-performance cloud GPUs.
             </p>
           </div>
 
@@ -556,7 +556,7 @@ export function PixarStoryAdviblySections({
                 wiggly_submit_film
               </h3>
               <p className="mt-2 text-xs font-bold leading-relaxed text-[#596176]">
-                Dispatches generation pass in &lt;500ms. Accepts screenplay, family photo URLs for facial likeness, and an idempotency key to prevent double-billing.
+                Dispatches generation pass in &lt;500ms. Accepts screenplay, family photo URLs for facial likeness, and an idempotency key to guarantee safe, durable job dispatch.
               </p>
               <div className="mt-4 rounded-lg bg-[#080817] p-3 text-[11px] font-mono text-[#52d6ff]">
                 returns: &#123; jobId, status: &quot;queued&quot; &#125;
@@ -598,7 +598,7 @@ export function PixarStoryAdviblySections({
         </div>
       </section>
 
-      {/* 8. INSTALL SECTION (AGENT GRID & TOLLBOOTH) */}
+      {/* 8. INSTALL SECTION (AGENT GRID & STUDIO MCP) */}
       <section
         id="install"
         className="border-t-2 border-[#080817] bg-[#080817] px-4 py-16 text-white sm:px-8 sm:py-24"
@@ -693,7 +693,7 @@ export function PixarStoryAdviblySections({
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <span className="rounded border border-[#52d6ff] bg-[#52d6ff]/10 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-[#52d6ff]">
-                  Tollbooth Server
+                  Studio Cloud Runtime
                 </span>
                 <h3 className="mt-3 text-2xl font-black text-white">
                   Connect the Wiggly MCP

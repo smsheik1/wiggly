@@ -22,7 +22,7 @@ Transform a family's questionnaire answers and real reference photos into an emo
 1. **Real Memories, Never Stock Avatars:** Every character, location, and hero prop is generated from authentic questionnaire answers and family reference photos. No borrowed characters or generic house mascots.
 2. **Character & Prop Continuity First:** A 4K character lineup sheet and hero prop turnaround sheet are locked *before* rendering any video. Once approved, all life stages and key objects maintain persistent identity across every scene.
 3. **The "Opening of Up" Audio Architecture:** Rather than risking uncanny AI lip-flap desync, characters act wordlessly with rich emotional expressions, set against a continuous 72-second emotional piano score, ambient foley, and the real parent's authentic voiceover narrating across the scene cuts.
-4. **Zero-GPU Tollbooth MCP Interface:** The client agent acts as the Creative Director; heavy rendering (Seedance 2.5 on Replicate) and 1080p upscaling (`bytedance/video-upscaler`) run asynchronously on Wiggly's tollbooth backend via `@wiggly/mcp-server`.
+4. **Zero-Setup Studio MCP Interface:** The client agent acts as the Creative Director; heavy rendering (Seedance 2.5 on Replicate) and 1080p upscaling (`bytedance/video-upscaler`) run asynchronously on Wiggly's managed studio cloud GPUs via `@wiggly/mcp-server`.
 
 ---
 
@@ -64,7 +64,7 @@ Every video prompt authors **Visual Action**, **Camera Direction**, and **Negati
 
 ---
 
-## 5. The 3-Tool Asynchronous MCP Tollbooth
+## 5. The 3-Tool Asynchronous Studio Cloud Engine
 
 Client agents communicate with Wiggly using three discrete tools from `@wiggly/mcp-server`:
 
@@ -123,7 +123,7 @@ Enables the user to reroll a single defective shot (max 1 free auto-retry per sh
 
 ## 6. Execution Options
 
-### Option A: Wiggly MCP Tollbooth (Hosted Zero-Setup)
+### Option A: Wiggly Studio Cloud MCP (Hosted Zero-Setup)
 Connect the official Wiggly MCP server to handle image generation, Seedance video synthesis, Replicate upscaling, and FFmpeg assembly automatically:
 ```json
 {
