@@ -107,6 +107,13 @@ assert.match(adviblySectionsSource, /npx skills add smsheik1\/wiggly -s my-pixar
 assert.match(adviblySectionsSource, /wiggly-my-pixar-story-format-kit\.zip/);
 assert.match(adviblySectionsSource, /my-pixar-story\.skill/);
 
+// Check full-width showcase & high-res inspection links
+assert.match(adviblySectionsSource, /Open Full 4K Image/);
+assert.match(adviblySectionsSource, /Open Full-Res Story Grid/);
+assert.match(adviblySectionsSource, /max-w-\[1040px\]/);
+assert.match(adviblySectionsSource, /Strict Fidelity/);
+assert.match(adviblySectionsSource, /Life-Stage Continuity/);
+
 // 4. Page Integration verification
 const pageSource = readFileSync("app/formats/[slug]/page.tsx", "utf8");
 assert.match(pageSource, /PixarStoryAdviblySections/);
