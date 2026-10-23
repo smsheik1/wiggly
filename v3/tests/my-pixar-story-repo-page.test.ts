@@ -114,10 +114,21 @@ assert.match(adviblySectionsSource, /max-w-\[1040px\]/);
 assert.match(adviblySectionsSource, /Strict Fidelity/);
 assert.match(adviblySectionsSource, /Life-Stage Continuity/);
 
+// Check Desktop Chat Showcase integration & removal of raw JSON
+assert.match(adviblySectionsSource, /DesktopChatShowcase/);
+assert.ok(!adviblySectionsSource.includes("mcpServers"), "Raw JSON mcpServers block must be removed");
+const desktopChatSource = readFileSync("features/discovery/DesktopChatShowcase.tsx", "utf8");
+assert.match(desktopChatSource, /Meta Muse/);
+assert.match(desktopChatSource, /ChatGPT/);
+assert.match(desktopChatSource, /Grokbot/);
+assert.match(desktopChatSource, /character-lineup\.png/);
+assert.match(desktopChatSource, /shaz-for-mia-poster\.jpg/);
+
 // 4. Page Integration verification
 const pageSource = readFileSync("app/formats/[slug]/page.tsx", "utf8");
 assert.match(pageSource, /PixarStoryAdviblySections/);
 assert.match(pageSource, /slug === "my-pixar-story"/);
+assert.match(pageSource, /heroIsLandscapeVideo \? "mx-auto max-w-\[1040px\]"/);
 
 // 5. Server presentation generation verification
 const presentation = await getFormatRepoPagePresentation("my-pixar-story");

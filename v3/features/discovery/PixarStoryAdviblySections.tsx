@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { DiscoveryFormatProfile } from "./types";
+import { DesktopChatShowcase } from "./DesktopChatShowcase";
 
 export function PixarStoryAdviblySections({
   format,
@@ -26,34 +27,13 @@ export function PixarStoryAdviblySections({
   format: DiscoveryFormatProfile;
 }) {
   const [copiedCommand, setCopiedCommand] = useState(false);
-  const [copiedMcp, setCopiedMcp] = useState(false);
 
   const installCommand = "npx skills add smsheik1/wiggly -s my-pixar-story";
-  const mcpConfig = JSON.stringify(
-    {
-      mcpServers: {
-        wiggly: {
-          command: "npx",
-          args: ["-y", "@wiggly/mcp-server@latest"],
-          env: {
-            WIGGLY_API_KEY: "your_wiggly_api_key",
-          },
-        },
-      },
-    },
-    null,
-    2
-  );
 
-  const copyToClipboard = (text: string, type: "cmd" | "mcp") => {
+  const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    if (type === "cmd") {
-      setCopiedCommand(true);
-      setTimeout(() => setCopiedCommand(false), 2000);
-    } else {
-      setCopiedMcp(true);
-      setTimeout(() => setCopiedMcp(false), 2000);
-    }
+    setCopiedCommand(true);
+    setTimeout(() => setCopiedCommand(false), 2000);
   };
 
   const samplePrompts = [
@@ -598,28 +578,33 @@ export function PixarStoryAdviblySections({
         </div>
       </section>
 
-      {/* 8. INSTALL SECTION (AGENT GRID & STUDIO MCP) */}
+      {/* 8. INSTALL SECTION (INTERACTIVE DESKTOP CHAT SHOWCASE & INSTALL) */}
       <section
         id="install"
         className="border-t-2 border-[#080817] bg-[#080817] px-4 py-16 text-white sm:px-8 sm:py-24"
       >
-        <div className="mx-auto max-w-[980px]">
+        <div className="mx-auto max-w-[1040px]">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#52d6ff]">
-                Installation
+                Live Desktop Simulation
               </p>
               <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
-                Install for your agent.
+                Direct your film in chat.
               </h2>
             </div>
             <p className="max-w-md text-sm font-bold text-[#a1a1aa]">
-              Install the skill, then make sure the Wiggly MCP is connected so it has tools to call. Works with every skills-capable agent.
+              Talk naturally to your AI agent. Review the 4K character sheet before video renders, then get your 72-second 1080p master.
             </p>
           </div>
 
+          {/* Interactive macOS Desktop Chat Showcase */}
+          <div className="mt-10">
+            <DesktopChatShowcase />
+          </div>
+
           {/* Supported Coding Agents Grid */}
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-5">
             {agentLogos.map((agent) => (
               <div
                 key={agent.name}
@@ -637,93 +622,63 @@ export function PixarStoryAdviblySections({
             ))}
           </div>
 
-          {/* One-click Downloads */}
-          <div className="mt-12 rounded-xl border-2 border-[#27272a] bg-[#121215] p-6 sm:p-8">
-            <h3 className="text-xl font-black">One click, no terminal</h3>
-            <p className="mt-2 text-sm font-bold text-[#a1a1aa]">
-              Drop the .skill file into Claude → Settings → Skills, or unzip the folder into ~/.claude/skills or .cursor/skills.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-4">
-              <a
-                href="/format-repositories/my-pixar-story-v1/downloads/my-pixar-story.skill"
-                download
-                className="inline-flex items-center gap-2 rounded-lg border-2 border-white bg-white px-5 py-3 text-sm font-black text-[#080817] shadow-[4px_4px_0_#52d6ff] transition hover:bg-[#52d6ff]"
-              >
-                <Download className="size-4" />
-                Download .skill
-              </a>
-              <a
-                href="/format-repositories/my-pixar-story-v1/downloads/wiggly-my-pixar-story-format-kit.zip"
-                download
-                className="inline-flex items-center gap-2 rounded-lg border-2 border-[#27272a] bg-[#18181b] px-5 py-3 text-sm font-black text-white hover:border-white"
-              >
-                <Download className="size-4" />
-                Download .zip
-              </a>
+          {/* Quick Install Action Cards */}
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            {/* One-click Downloads */}
+            <div className="rounded-xl border-2 border-[#27272a] bg-[#121215] p-6 sm:p-8">
+              <h3 className="text-xl font-black">One click, no terminal</h3>
+              <p className="mt-2 text-sm font-bold text-[#a1a1aa]">
+                Drop the .skill file into Claude → Settings → Skills, or unzip the folder into ~/.claude/skills or .cursor/skills.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-4">
+                <a
+                  href="/format-repositories/my-pixar-story-v1/downloads/my-pixar-story.skill"
+                  download
+                  className="inline-flex items-center gap-2 rounded-lg border-2 border-white bg-white px-5 py-3 text-sm font-black text-[#080817] shadow-[4px_4px_0_#52d6ff] transition hover:bg-[#52d6ff]"
+                >
+                  <Download className="size-4" />
+                  Download .skill
+                </a>
+                <a
+                  href="/format-repositories/my-pixar-story-v1/downloads/wiggly-my-pixar-story-format-kit.zip"
+                  download
+                  className="inline-flex items-center gap-2 rounded-lg border-2 border-[#27272a] bg-[#18181b] px-5 py-3 text-sm font-black text-white hover:border-white"
+                >
+                  <Download className="size-4" />
+                  Download .zip
+                </a>
+              </div>
             </div>
-          </div>
 
-          {/* One-command Install */}
-          <div className="mt-6 rounded-xl border-2 border-[#27272a] bg-[#121215] p-6 sm:p-8">
-            <h3 className="text-xl font-black">One command (any agent)</h3>
-            <div className="mt-4 flex items-center justify-between rounded-lg border border-[#27272a] bg-[#09090b] px-4 py-3 font-mono text-sm">
-              <span className="text-[#52d6ff]">{installCommand}</span>
-              <button
-                type="button"
-                onClick={() => copyToClipboard(installCommand, "cmd")}
-                className="inline-flex items-center gap-1.5 rounded bg-[#27272a] px-3 py-1 text-xs font-bold text-white hover:bg-[#3f3f46]"
-              >
-                {copiedCommand ? (
-                  <>
-                    <Check className="size-3.5 text-green-400" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="size-3.5" />
-                    Copy
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Connect MCP Callout */}
-          <div className="mt-6 rounded-xl border-2 border-[#52d6ff] bg-[#0c1e28] p-6 sm:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* One-command Install */}
+            <div className="rounded-xl border-2 border-[#27272a] bg-[#121215] p-6 sm:p-8 flex flex-col justify-between">
               <div>
-                <span className="rounded border border-[#52d6ff] bg-[#52d6ff]/10 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-[#52d6ff]">
-                  Studio Cloud Runtime
-                </span>
-                <h3 className="mt-3 text-2xl font-black text-white">
-                  Connect the Wiggly MCP
-                </h3>
-                <p className="mt-2 text-sm font-bold text-[#94a3b8]">
-                  The MCP server provides the video rendering, character extraction, and 1080p upscaling tools.
+                <h3 className="text-xl font-black">One command (any agent)</h3>
+                <p className="mt-2 text-sm font-bold text-[#a1a1aa]">
+                  Installs the official skill directly into your active workspace.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => copyToClipboard(mcpConfig, "mcp")}
-                className="inline-flex items-center gap-2 rounded-lg border-2 border-[#52d6ff] bg-[#52d6ff] px-5 py-2.5 text-sm font-black text-[#080817] shadow-[3px_3px_0_#fff]"
-              >
-                {copiedMcp ? (
-                  <>
-                    <Check className="size-4" />
-                    Config Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="size-4" />
-                    Copy MCP Config
-                  </>
-                )}
-              </button>
+              <div className="mt-4 flex items-center justify-between rounded-lg border border-[#27272a] bg-[#09090b] px-4 py-3 font-mono text-sm">
+                <span className="text-[#52d6ff]">{installCommand}</span>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(installCommand)}
+                  className="inline-flex items-center gap-1.5 rounded bg-[#27272a] px-3 py-1 text-xs font-bold text-white hover:bg-[#3f3f46]"
+                >
+                  {copiedCommand ? (
+                    <>
+                      <Check className="size-3.5 text-green-400" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-3.5" />
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-
-            <pre className="mt-5 overflow-x-auto rounded-lg border border-[#1e3a4b] bg-[#051119] p-4 text-xs font-mono text-[#a5f3fc]">
-              {mcpConfig}
-            </pre>
           </div>
         </div>
       </section>
