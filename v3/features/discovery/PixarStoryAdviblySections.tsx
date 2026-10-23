@@ -15,6 +15,7 @@ import {
   Sliders,
   CheckCircle2,
   ShieldCheck,
+  Maximize2,
 } from "lucide-react";
 import Link from "next/link";
 import type { DiscoveryFormatProfile } from "./types";
@@ -86,7 +87,7 @@ export function PixarStoryAdviblySections({
     {
       num: 5,
       title: "Seedance 2.5 Emergent Multimodal Audio",
-      desc: "ByteDance Seedance 2.5 generates each scene with emergent native audio—lip sync, voice acting, acoustic ambience, and Foley are synthesized simultaneously in the visual latent space, eliminating external TTS phasing.",
+      desc: "ByteDance Seedance 2.5 generates expressive 3D character acting and ambient Foley in the visual latent space, mixed with a continuous 72-second emotional piano score and authentic parent voiceover narrating across the scene cuts.",
     },
     {
       num: 6,
@@ -210,45 +211,84 @@ export function PixarStoryAdviblySections({
 
       {/* 3. ORIGINAL CASTS & PROPS */}
       <section className="border-t-2 border-[#080817] bg-[#dff8ff] px-4 py-14 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-[980px]">
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#31566e]">
-                Original casts &amp; hero props
-              </p>
-              <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
-                Real people. Never stock avatars.
-              </h2>
-              <p className="mt-4 text-lg font-bold leading-relaxed text-[#30374b]">
-                No borrowed characters and no house mascot pasted onto every story. For each family the skill designs its own protagonist across childhood to adult stages, along with hero vehicles and keepsakes, written from the facts in your questionnaire answers.
-              </p>
-              <ul className="mt-6 space-y-3">
-                <li className="flex items-center gap-3 text-base font-bold text-[#1e3850]">
-                  <CheckCircle2 className="size-5 text-[#0091ff]" />
-                  Original characters and settings only, never a franchise character or studio logo
-                </li>
-                <li className="flex items-center gap-3 text-base font-bold text-[#1e3850]">
-                  <CheckCircle2 className="size-5 text-[#0091ff]" />
-                  Five to seven cinematic beats: the early memory, the sacrifice, the turn, the payoff
-                </li>
-                <li className="flex items-center gap-3 text-base font-bold text-[#1e3850]">
-                  <CheckCircle2 className="size-5 text-[#0091ff]" />
-                  Strict fidelity: facts, ages, and spoken words are true to your real family answers
-                </li>
-              </ul>
+        <div className="mx-auto max-w-[1040px]">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#31566e]">
+              Original casts &amp; hero props
+            </p>
+            <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+              Real people. Never stock avatars.
+            </h2>
+            <p className="mt-4 max-w-3xl text-lg font-bold leading-relaxed text-[#30374b]">
+              No borrowed characters and no house mascot pasted onto every story. For each family the skill designs its own protagonist across childhood to adult stages, along with hero vehicles and keepsakes, written directly from the facts in your questionnaire answers.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-xl border-2 border-[#080817] bg-white/95 p-5 shadow-[4px_4px_0_#080817]">
+                <div className="flex items-center gap-2 text-sm font-black text-[#080817]">
+                  <CheckCircle2 className="size-4 text-[#0091ff]" />
+                  <span>Strict Fidelity</span>
+                </div>
+                <p className="mt-2 text-xs font-bold leading-relaxed text-[#596176]">
+                  Facts, ages, settings, and spoken memories are 100% faithful to your real family answers.
+                </p>
+              </div>
+
+              <div className="rounded-xl border-2 border-[#080817] bg-white/95 p-5 shadow-[4px_4px_0_#080817]">
+                <div className="flex items-center gap-2 text-sm font-black text-[#080817]">
+                  <CheckCircle2 className="size-4 text-[#0091ff]" />
+                  <span>Life-Stage Continuity</span>
+                </div>
+                <p className="mt-2 text-xs font-bold leading-relaxed text-[#596176]">
+                  Persistent facial structure, hair silhouette, and wardrobe styling across 3 distinct life stages.
+                </p>
+              </div>
+
+              <div className="rounded-xl border-2 border-[#080817] bg-white/95 p-5 shadow-[4px_4px_0_#080817]">
+                <div className="flex items-center gap-2 text-sm font-black text-[#080817]">
+                  <CheckCircle2 className="size-4 text-[#0091ff]" />
+                  <span>100% Original IP</span>
+                </div>
+                <p className="mt-2 text-xs font-bold leading-relaxed text-[#596176]">
+                  Whimsical 3D stylized models designed from scratch; never borrowed franchise characters or logos.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Full-width 4K Lineup Showcase Card */}
+          <div className="mt-10 overflow-hidden rounded-2xl border-2 border-[#080817] bg-white p-4 shadow-[8px_8px_0_#080817] sm:p-6">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b-2 border-[#080817]/10 pb-4">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="rounded-md border-2 border-[#080817] bg-[#52d6ff] px-2.5 py-1 text-xs font-black uppercase tracking-wider text-[#080817]">
+                  4K Character Sheet
+                </span>
+                <span className="text-sm font-black text-[#080817]">
+                  Actual Master Lineup (Shaz, Sister, Mia across life stages)
+                </span>
+              </div>
+              <a
+                href="/format-repositories/my-pixar-story-v1/examples/character-lineup.png"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[#080817] bg-[#f5f1e8] px-3.5 py-1.5 text-xs font-black text-[#080817] shadow-[2px_2px_0_#080817] transition hover:bg-[#52d6ff]"
+              >
+                <Maximize2 className="size-3.5" />
+                Open Full 4K Image
+              </a>
             </div>
 
-            <div className="overflow-hidden rounded-xl border-2 border-[#080817] bg-white p-4 shadow-[8px_8px_0_#080817]">
+            <div className="overflow-hidden rounded-xl border-2 border-[#080817] bg-[#f0f0f0]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/format-repositories/my-pixar-story-v1/examples/character-lineup.png"
                 alt="4K Character Lineup Compilation Sheet"
-                className="w-full rounded-lg border border-[#080817] object-cover"
+                className="block w-full object-contain"
               />
-              <p className="mt-3 text-center text-xs font-black uppercase tracking-wider text-[#667087]">
-                Actual 4K Character Lineup Sheet (Shaz, Sister, Mia)
-              </p>
             </div>
+            <p className="mt-3 text-center text-xs font-bold text-[#596176]">
+              Locked before any video frames are rendered to guarantee character, clothing, and color continuity across all 7 scenes.
+            </p>
           </div>
         </div>
       </section>
@@ -295,60 +335,94 @@ export function PixarStoryAdviblySections({
 
       {/* 5. WHAT YOU GET */}
       <section className="border-t-2 border-[#080817] bg-[#ffecf5] px-4 py-14 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-[980px]">
-          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#ff4081]">
-                Final deliverables
-              </p>
-              <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
-                What you get.
-              </h2>
-              <ul className="mt-8 space-y-4">
-                <li className="flex items-start gap-3">
-                  <span className="mt-1 size-2 rounded-full bg-[#080817]" />
-                  <p className="text-base font-bold text-[#30374b]">
-                    A finished widescreen (16:9) 3D animated memoir, roughly 72 seconds in 1080p HD
-                  </p>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-1 size-2 rounded-full bg-[#080817]" />
-                  <p className="text-base font-bold text-[#30374b]">
-                    Continuous character continuity across life stages (childhood, teen, adult)
-                  </p>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-1 size-2 rounded-full bg-[#080817]" />
-                  <p className="text-base font-bold text-[#30374b]">
-                    An approved 4K cast lineup sheet, hero prop sheets, and 8-panel storyboard sheets
-                  </p>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-1 size-2 rounded-full bg-[#080817]" />
-                  <p className="text-base font-bold text-[#30374b]">
-                    100% native synchronized dialogue, acoustic ambience, and Foley mixed in
-                  </p>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-1 size-2 rounded-full bg-[#080817]" />
-                  <p className="text-base font-bold text-[#30374b]">
-                    One master MP4 deliverable and 9-frame dailies contact sheet ready to share
-                  </p>
-                </li>
-              </ul>
+        <div className="mx-auto max-w-[1040px]">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#ff4081]">
+              Final deliverables
+            </p>
+            <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+              What you get.
+            </h2>
+            <p className="mt-4 max-w-3xl text-lg font-bold leading-relaxed text-[#30374b]">
+              A complete, archival-grade animated short film deliverable package. Everything from the approved character blueprints to the final lossless theatrical master.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-xl border-2 border-[#080817] bg-white/95 p-4 shadow-[4px_4px_0_#080817]">
+                <div className="inline-flex size-7 items-center justify-center rounded-md border-2 border-[#080817] bg-[#ff78bd] text-xs font-black">
+                  1
+                </div>
+                <h4 className="mt-3 text-base font-black">72-Second Master Film</h4>
+                <p className="mt-1.5 text-xs font-bold leading-relaxed text-[#596176]">
+                  Finished widescreen 16:9 3D animated memoir in 1080p theatrical quality.
+                </p>
+              </div>
+
+              <div className="rounded-xl border-2 border-[#080817] bg-white/95 p-4 shadow-[4px_4px_0_#080817]">
+                <div className="inline-flex size-7 items-center justify-center rounded-md border-2 border-[#080817] bg-[#52d6ff] text-xs font-black">
+                  2
+                </div>
+                <h4 className="mt-3 text-base font-black">4K Turnaround Sheets</h4>
+                <p className="mt-1.5 text-xs font-bold leading-relaxed text-[#596176]">
+                  Approved multi-character reference lineup and 3D hero vehicle &amp; keepsake plates.
+                </p>
+              </div>
+
+              <div className="rounded-xl border-2 border-[#080817] bg-white/95 p-4 shadow-[4px_4px_0_#080817]">
+                <div className="inline-flex size-7 items-center justify-center rounded-md border-2 border-[#080817] bg-[#c9ff55] text-xs font-black">
+                  3
+                </div>
+                <h4 className="mt-3 text-base font-black">&apos;Up&apos; Audio Architecture</h4>
+                <p className="mt-1.5 text-xs font-bold leading-relaxed text-[#596176]">
+                  Continuous 72-second emotional piano score, ambient room Foley, and authentic parent voiceover.
+                </p>
+              </div>
+
+              <div className="rounded-xl border-2 border-[#080817] bg-white/95 p-4 shadow-[4px_4px_0_#080817]">
+                <div className="inline-flex size-7 items-center justify-center rounded-md border-2 border-[#080817] bg-[#ff8c42] text-xs font-black">
+                  4
+                </div>
+                <h4 className="mt-3 text-base font-black">9-Frame Master Dailies</h4>
+                <p className="mt-1.5 text-xs font-bold leading-relaxed text-[#596176]">
+                  Full-story contact sheet and uncompressed master archive ready to share with family.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Full-width Story Grid Showcase Card */}
+          <div className="mt-10 overflow-hidden rounded-2xl border-2 border-[#080817] bg-white p-4 shadow-[8px_8px_0_#080817] sm:p-6">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b-2 border-[#080817]/10 pb-4">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="rounded-md border-2 border-[#080817] bg-[#ff78bd] px-2.5 py-1 text-xs font-black uppercase tracking-wider text-[#080817]">
+                  Master Story Grid
+                </span>
+                <span className="text-sm font-black text-[#080817]">
+                  9-Frame Dailies Contact Sheet (Childhood to Porch Light)
+                </span>
+              </div>
+              <a
+                href="/format-repositories/my-pixar-story-v1/examples/story-grid.png"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[#080817] bg-[#f5f1e8] px-3.5 py-1.5 text-xs font-black text-[#080817] shadow-[2px_2px_0_#080817] transition hover:bg-[#ff78bd]"
+              >
+                <Maximize2 className="size-3.5" />
+                Open Full-Res Story Grid
+              </a>
             </div>
 
-            <div className="overflow-hidden rounded-xl border-2 border-[#080817] bg-white p-4 shadow-[8px_8px_0_#080817]">
+            <div className="overflow-hidden rounded-xl border-2 border-[#080817] bg-[#080817]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/format-repositories/my-pixar-story-v1/examples/story-grid.png"
                 alt="1080p Full Story Grid"
-                className="w-full rounded-lg border border-[#080817] object-cover"
+                className="block w-full object-contain"
               />
-              <p className="mt-3 text-center text-xs font-black uppercase tracking-wider text-[#667087]">
-                Master 9-Frame Story Grid (Childhood to Porch Light)
-              </p>
             </div>
+            <p className="mt-3 text-center text-xs font-bold text-[#596176]">
+              Master 9-Frame Theatrical Story Grid assembled via lossless FFmpeg. Shows camera framing, color script arc, and lighting progression from the initial memories to the emotional conclusion.
+            </p>
           </div>
         </div>
       </section>
