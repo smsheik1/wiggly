@@ -16,6 +16,7 @@ import type * as discoveryModeration from "../discoveryModeration.js";
 import type * as discoverySubmissions from "../discoverySubmissions.js";
 import type * as jingleStoryboards from "../jingleStoryboards.js";
 import type * as makerFormats from "../makerFormats.js";
+import type * as mcpFilm from "../mcpFilm.js";
 import type * as productPhotoshoots from "../productPhotoshoots.js";
 import type * as renderJobs from "../renderJobs.js";
 import type * as researchRuns from "../researchRuns.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   discoverySubmissions: typeof discoverySubmissions;
   jingleStoryboards: typeof jingleStoryboards;
   makerFormats: typeof makerFormats;
+  mcpFilm: typeof mcpFilm;
   productPhotoshoots: typeof productPhotoshoots;
   renderJobs: typeof renderJobs;
   researchRuns: typeof researchRuns;

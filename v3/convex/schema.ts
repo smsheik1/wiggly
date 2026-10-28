@@ -230,4 +230,61 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_slug", ["slug"]),
+
+  mcpAccounts: defineTable({
+    workosUserId: v.string(),
+    subscribed: v.boolean(),
+    paymentPending: v.boolean(),
+    labels: v.array(v.string()),
+    checkoutToken: v.optional(v.string()),
+    checkoutKind: v.optional(v.union(v.literal("subscription"), v.literal("pack"))),
+    checkoutStatus: v.optional(v.union(v.literal("open"), v.literal("paid"))),
+    stripeCustomerId: v.optional(v.string()),
+    uploadId: v.optional(v.string()),
+    uploadExpiresAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  }).index("by_workosUserId", ["workosUserId"]).index("by_checkoutToken", ["checkoutToken"]).index("by_stripeCustomerId", ["stripeCustomerId"]).index("by_uploadId", ["uploadId"]),
+
+  mcpStripeEvents: defineTable({
+    eventId: v.string(),
+    createdAt: v.number(),
+  }).index("by_eventId", ["eventId"]),
+
+  mcpCreditBalances: defineTable({
+    accountId: v.id("mcpAccounts"),
+    monthlyCredits: v.number(),
+    purchasedCredits: v.number(),
+    updatedAt: v.number(),
+  }).index("by_accountId", ["accountId"]),
+
+  mcpQuotes: defineTable({
+    accountId: v.id("mcpAccounts"),
+    quoteId: v.string(),
+    key: v.string(),
+    credits: v.number(),
+    expiresAt: v.number(),
+    jobId: v.optional(v.string()),
+  }).index("by_accountId", ["accountId"]).index("by_quoteId", ["quoteId"]),
+
+  mcpJobs: defineTable({
+    accountId: v.id("mcpAccounts"),
+    jobId: v.string(),
+    stage: v.union(
+      v.literal("queued"),
+      v.literal("lineup"),
+      v.literal("beats"),
+      v.literal("assembly"),
+      v.literal("ready"),
+      v.literal("failed"),
+    ),
+    creditsCharged: v.number(),
+    creditsRefunded: v.boolean(),
+    videoUrl: v.optional(v.string()),
+    error: v.optional(v.string()),
+    correlationId: v.string(),
+    storyboardJson: v.optional(v.string()),
+    beatUrls: v.optional(v.array(v.string())),
+    stillUrls: v.optional(v.array(v.string())),
+    createdAt: v.number(),
+  }).index("by_accountId", ["accountId"]).index("by_jobId", ["jobId"]).index("by_stage", ["stage"]),
 });
