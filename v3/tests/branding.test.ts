@@ -12,6 +12,10 @@ assert.doesNotMatch(
   "The retired waveform must not return as Wiggly's browser icon.",
 );
 
+const mcpSetupPage = readFileSync(path.join(root, "features/discovery/McpSetupPage.tsx"), "utf8");
+assert.doesNotMatch(mcpSetupPage, /wiggly-logo\.svg/, "The retired waveform must not appear on the MCP setup page.");
+assert.match(mcpSetupPage, /wiggly-app-icon-v1-512\.png/);
+
 for (const icon of [
   ["wiggly-app-icon-v1-32.png", 32],
   ["wiggly-app-icon-v1-180.png", 180],

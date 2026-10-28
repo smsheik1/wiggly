@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DM_Sans, Manrope } from "next/font/google";
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,7 +23,11 @@ import {
   FormatRepoPackageAssets,
   FormatRepoPackageEvidence,
 } from "@/features/discovery/FormatRepoPackageSections";
-import { PixarStoryAdviblySections } from "@/features/discovery/PixarStoryAdviblySections";
+import {
+  PixarStoryAdviblySections,
+  PixarStoryHeroAction,
+  PixarStoryNav,
+} from "@/features/discovery/PixarStoryAdviblySections";
 import { getDiscoveryCreatorByName } from "@/features/discovery/creators";
 import {
   getFormatRepoFamily,
@@ -32,6 +37,20 @@ import {
   discoveryFormatSlugs,
   getDiscoveryFormatProfile,
 } from "@/features/discovery/formatProof.server";
+
+const pixarBody = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-pixar-body",
+  display: "swap",
+});
+
+const pixarDisplay = Manrope({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-pixar-display",
+  display: "swap",
+});
 
 export function generateStaticParams() {
   return discoveryFormatSlugs.map((slug) => ({ slug }));
@@ -48,9 +67,12 @@ export async function generateMetadata({
 
   return {
     title: `${format.name} Format | Wiggly`,
-    description: format.repositoryHref
-      ? `${format.promise} Download version ${format.version} and inspect its saved proof.`
-      : `${format.promise} See real saved proof for version ${format.version}.`,
+    description:
+      slug === "my-pixar-story"
+        ? "Make a Pixar-style story from our family memories."
+        : format.repositoryHref
+          ? `${format.promise} Download version ${format.version} and inspect its saved proof.`
+          : `${format.promise} See real saved proof for version ${format.version}.`,
   };
 }
 
@@ -67,8 +89,11 @@ export default async function FormatPage({
   if (!heroProof) notFound();
   const isAuthoringKit = heroProof.role === "workflow-illustration";
   const creator = getDiscoveryCreatorByName(format.creator);
+  const isPixarStory = slug === "my-pixar-story";
   const heroIsLandscapeVideo =
-    heroProof.media.kind === "video" && heroProof.media.aspectRatio === "16:9";
+    !isPixarStory &&
+    heroProof.media.kind === "video" &&
+    heroProof.media.aspectRatio === "16:9";
   const repoPage = await getFormatRepoPagePresentation(slug);
   const repoFamily = getFormatRepoFamily(slug);
   const repoTrust = repoPage.kind === "shared" ? null : repoPage.trust;
@@ -80,7 +105,8 @@ export default async function FormatPage({
     : heroProof;
 
   return (
-    <main className="min-h-screen bg-[#f5f1e8] text-[#080817]">
+    <main className={`min-h-screen text-[#080817] ${isPixarStory ? `${pixarBody.variable} ${pixarDisplay.variable} bg-[#f6f5f1] font-[family-name:var(--font-pixar-body)]` : "bg-[#f5f1e8]"}`}>
+      {isPixarStory ? <PixarStoryNav /> : (
       <header className="border-b-2 border-[#080817]">
         <div className="mx-auto flex min-h-[66px] w-[min(100%-32px,980px)] items-center justify-between gap-4">
           <Link
@@ -100,7 +126,11 @@ export default async function FormatPage({
           </Link>
         </div>
       </header>
+      )}
 
+      {isPixarStory ? <PixarStoryHeroAction /> : null}
+
+      {isPixarStory ? null : (
       <section
         className={`mx-auto py-9 md:py-14 ${
           heroIsLandscapeVideo
@@ -141,43 +171,34 @@ export default async function FormatPage({
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            {slug === "my-pixar-story" ? (
               <a
-                href="#install"
-                className="inline-flex min-h-12 items-center gap-2 rounded-md border-2 border-[#080817] bg-[#52d6ff] px-5 text-sm font-black text-[#080817] shadow-[4px_4px_0_#080817]"
+                href="#examples"
+                className="inline-flex min-h-12 items-center gap-2 rounded-md border-2 border-[#080817] bg-[#080817] px-5 text-sm font-black text-white shadow-[4px_4px_0_#52d6ff]"
               >
-                Install skill
+                {isAuthoringKit ? "See workflow & evidence" : "See examples"}
                 <ArrowRight className="size-4" aria-hidden="true" />
               </a>
-            ) : null}
-            <a
-              href="#examples"
-              className="inline-flex min-h-12 items-center gap-2 rounded-md border-2 border-[#080817] bg-[#080817] px-5 text-sm font-black text-white shadow-[4px_4px_0_#52d6ff]"
-            >
-              {isAuthoringKit ? "See workflow & evidence" : "See examples"}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </a>
-            {format.handoff ? <DiscoveryFormatHandoff format={format} /> : null}
-            {format.technicalHref && repoPage.kind !== "shared" ? (
-              <Link
-                href={format.technicalHref}
-                className="inline-flex min-h-12 items-center gap-2 rounded-md border-2 border-[#080817] bg-white px-5 text-sm font-black"
-              >
-                Technical proof
-                <ExternalLink className="size-4" aria-hidden="true" />
-              </Link>
-            ) : null}
-            {format.repositoryHref ? (
-              <a
-                href={format.repositoryHref}
-                download
-                className="inline-flex min-h-12 items-center gap-2 rounded-md border-2 border-[#080817] bg-[#c9ff55] px-5 text-sm font-black"
-              >
-                Download runnable Repo
-                <Download className="size-4" aria-hidden="true" />
-              </a>
-            ) : null}
-          </div>
+              {format.handoff ? <DiscoveryFormatHandoff format={format} /> : null}
+              {format.technicalHref && repoPage.kind !== "shared" ? (
+                <Link
+                  href={format.technicalHref}
+                  className="inline-flex min-h-12 items-center gap-2 rounded-md border-2 border-[#080817] bg-white px-5 text-sm font-black"
+                >
+                  Technical proof
+                  <ExternalLink className="size-4" aria-hidden="true" />
+                </Link>
+              ) : null}
+              {format.repositoryHref ? (
+                <a
+                  href={format.repositoryHref}
+                  download
+                  className="inline-flex min-h-12 items-center gap-2 rounded-md border-2 border-[#080817] bg-[#c9ff55] px-5 text-sm font-black"
+                >
+                  Download runnable Repo
+                  <Download className="size-4" aria-hidden="true" />
+                </a>
+              ) : null}
+            </div>
         </div>
 
         <div
@@ -198,6 +219,7 @@ export default async function FormatPage({
           />
         </div>
       </section>
+      )}
 
       {format.characterOptions?.length ? (
         <section
@@ -268,7 +290,7 @@ export default async function FormatPage({
       ) : null}
 
       {slug === "my-pixar-story" ? (
-        <PixarStoryAdviblySections format={format} />
+        <PixarStoryAdviblySections film={format.proofEntries[0]} />
       ) : (
         <>
           {repoPage.kind === "shared" ? (
@@ -285,6 +307,7 @@ export default async function FormatPage({
         </>
       )}
 
+      {isPixarStory ? null : (
       <section
         id="examples"
         className="scroll-mt-6 border-y-2 border-[#080817] bg-[#fffdf8] px-4 py-12 sm:px-8 sm:py-16"
@@ -361,8 +384,9 @@ export default async function FormatPage({
           </div>
         </div>
       </section>
+      )}
 
-      {repoPage.kind === "shared" ? (
+      {repoPage.kind === "shared" && !isPixarStory ? (
         <FormatRepoPackageEvidence format={format} data={repoPage.package} />
       ) : null}
 
@@ -378,10 +402,12 @@ export default async function FormatPage({
         />
       ) : null}
 
-      <FormatRepoRunSummary
-        format={format}
-        description={repoPageCopy?.runDescription}
-      />
+      {isPixarStory ? null : (
+        <FormatRepoRunSummary
+          format={format}
+          description={repoPageCopy?.runDescription}
+        />
+      )}
     </main>
   );
 }

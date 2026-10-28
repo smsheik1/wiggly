@@ -40,6 +40,7 @@ for (const asset of publicAssets) {
 const adviblySectionsSource = readFileSync("features/discovery/PixarStoryAdviblySections.tsx", "utf8");
 
 // Compatible agents must match Advibly + Grokbot & Meta Muse
+const agentSource = readFileSync("features/discovery/mcpSetupAgents.ts", "utf8");
 const requiredAgents = [
   "Claude Code",
   "Claude",
@@ -55,10 +56,12 @@ const requiredAgents = [
 
 for (const agent of requiredAgents) {
   assert.ok(
-    adviblySectionsSource.includes(`"${agent}"`) || adviblySectionsSource.includes(`'${agent}'`),
-    `Advibly section must include agent: ${agent}`,
+    agentSource.includes(`"${agent}"`) || agentSource.includes(`'${agent}'`),
+    `MCP setup agents must include agent: ${agent}`,
   );
 }
+
+assert.match(adviblySectionsSource, /href=\{`\/mcp-setup\/\$\{slug\}`\}/);
 
 // Pipeline stages verification
 const requiredStages = [
@@ -93,42 +96,44 @@ for (const model of requiredModels) {
   );
 }
 
-// Check pricing verification
-assert.match(adviblySectionsSource, /\$19/);
-assert.match(adviblySectionsSource, /\$69/);
+assert.doesNotMatch(adviblySectionsSource, /\$19/);
+assert.doesNotMatch(adviblySectionsSource, /\$69/);
+assert.doesNotMatch(adviblySectionsSource, /wiggly_submit_film/);
+assert.doesNotMatch(adviblySectionsSource, /WIGGLY_API_KEY/);
+assert.ok(!adviblySectionsSource.includes("mcpServers"), "Raw JSON mcpServers block must be removed");
 
-// Check 3-tool MCP lifecycle verification
-assert.match(adviblySectionsSource, /wiggly_submit_film/);
-assert.match(adviblySectionsSource, /wiggly_get_film/);
-assert.match(adviblySectionsSource, /wiggly_finalize_film/);
-
-// Check install commands and downloads
 assert.match(adviblySectionsSource, /npx skills add smsheik1\/wiggly -s my-pixar-story/);
+assert.match(adviblySectionsSource, /Make a Pixar-style story from our family memories\./);
+assert.match(adviblySectionsSource, /Connect the Wiggly MCP first/);
+assert.match(adviblySectionsSource, /href="\/mcp-setup"/);
+assert.match(adviblySectionsSource, /quotes credits before each still/);
 assert.match(adviblySectionsSource, /wiggly-my-pixar-story-format-kit\.zip/);
 assert.match(adviblySectionsSource, /my-pixar-story\.skill/);
-
-// Check full-width showcase & high-res inspection links
-assert.match(adviblySectionsSource, /Open Full 4K Image/);
-assert.match(adviblySectionsSource, /Open Full-Res Story Grid/);
+assert.match(adviblySectionsSource, /git clone https:\/\/github.com\/smsheik1\/wiggly\.git/);
 assert.match(adviblySectionsSource, /max-w-\[1040px\]/);
-assert.match(adviblySectionsSource, /Strict Fidelity/);
-assert.match(adviblySectionsSource, /Life-Stage Continuity/);
-
-// Check Desktop Chat Showcase integration & removal of raw JSON
-assert.match(adviblySectionsSource, /DesktopChatShowcase/);
-assert.ok(!adviblySectionsSource.includes("mcpServers"), "Raw JSON mcpServers block must be removed");
-const desktopChatSource = readFileSync("features/discovery/DesktopChatShowcase.tsx", "utf8");
-assert.match(desktopChatSource, /Meta Muse/);
-assert.match(desktopChatSource, /ChatGPT/);
-assert.match(desktopChatSource, /Grokbot/);
-assert.match(desktopChatSource, /character-lineup\.png/);
-assert.match(desktopChatSource, /shaz-for-mia-poster\.jpg/);
+assert.match(adviblySectionsSource, /All skills/);
+assert.match(adviblySectionsSource, /What the skill/);
+assert.match(adviblySectionsSource, /does for you\./);
+assert.match(adviblySectionsSource, /3D animated family memoir from our memories/);
+assert.match(adviblySectionsSource, /Warm big-eyed feature-animation film about my dad/);
+assert.match(adviblySectionsSource, /Pixar-style tribute for my mom's birthday/);
+assert.match(adviblySectionsSource, /A new cast for every family\./);
+assert.match(adviblySectionsSource, /Short shots/);
+assert.match(adviblySectionsSource, /Read the source/);
+assert.match(adviblySectionsSource, /The playbook\./);
+assert.match(adviblySectionsSource, /What to watch for\./);
+assert.match(adviblySectionsSource, /Keep building\./);
+assert.doesNotMatch(adviblySectionsSource, /Start creating/);
 
 // 4. Page Integration verification
 const pageSource = readFileSync("app/formats/[slug]/page.tsx", "utf8");
 assert.match(pageSource, /PixarStoryAdviblySections/);
+assert.match(pageSource, /PixarStoryHeroAction/);
 assert.match(pageSource, /slug === "my-pixar-story"/);
-assert.match(pageSource, /heroIsLandscapeVideo \? "mx-auto max-w-\[1040px\]"/);
+assert.match(pageSource, /isPixarStory \? null : \(/);
+assert.match(pageSource, /DM_Sans/);
+assert.match(pageSource, /Manrope/);
+assert.doesNotMatch(pageSource, /Start creating/);
 
 // 5. Server presentation generation verification
 const presentation = await getFormatRepoPagePresentation("my-pixar-story");
