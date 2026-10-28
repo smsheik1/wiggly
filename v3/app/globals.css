@@ -36,6 +36,10 @@
   color-scheme: light;
 }
 
+.pixar-display {
+  font-family: var(--font-pixar-display), ui-sans-serif, system-ui, sans-serif;
+}
+
 * {
   box-sizing: border-box;
 }
