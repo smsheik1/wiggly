@@ -113,6 +113,19 @@ try {
           waitUntil: "domcontentloaded",
         });
         assert.equal(response?.status(), 200, `${slug}: page must load.`);
+        if (slug === "my-pixar-story") {
+          await page.locator("#install").waitFor();
+          assert.equal(await page.locator("#examples video").count(), 1, `${slug}: finished example must be visible.`);
+          assert.equal(await page.locator('#install a[download][href$=".skill"]').count(), 1, `${slug}: skill download must be available.`);
+          assert.equal(await page.locator('#install a[download][href$=".zip"]').count(), 1, `${slug}: kit download must be available.`);
+          for (const link of await page.locator("#install a[download]").all()) {
+            assert.equal((await page.request.head(`${baseUrl}${await link.getAttribute("href")}`)).status(), 200, `${slug}: download must be served.`);
+          }
+          const dimensions = await page.evaluate(() => ({ width: innerWidth, content: document.documentElement.scrollWidth }));
+          assert.ok(dimensions.content <= dimensions.width + 1, `${slug}: desktop horizontal overflow`);
+          if (++checked % 10 === 0) console.log(`${checked}/${discoveryFormatSlugs.length} live routes checked`);
+          continue;
+        }
         const assetsSelector = slug === "squilliam-news" ? "#anchors" : "#included-assets";
         await page.locator(assetsSelector).waitFor();
         if (slug === "squilliam-news") {
