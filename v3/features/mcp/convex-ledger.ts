@@ -17,10 +17,18 @@ function convexClient() {
   return client;
 }
 
+export function invokeConvex<T>(
+  client: { query: (reference: unknown, arguments_: Record<string, unknown>) => Promise<T>; mutation: (reference: unknown, arguments_: Record<string, unknown>) => Promise<T> },
+  kind: "mutation" | "query",
+  ref: unknown,
+  args: Record<string, unknown>,
+) {
+  return kind === "query" ? client.query(ref, args) : client.mutation(ref, args);
+}
+
 function callInternal<T>(kind: "mutation" | "query", ref: unknown, args: Record<string, unknown>) {
   const client = convexClient();
-  const run = client[kind] as (reference: unknown, arguments_: Record<string, unknown>) => Promise<T>;
-  return run(ref, args);
+  return invokeConvex<T>(client as never, kind, ref, args);
 }
 
 export class ConvexFilmLedger {
