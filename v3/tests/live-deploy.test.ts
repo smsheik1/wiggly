@@ -53,6 +53,8 @@ assert.ok(
 );
 assert.ok(script.includes("wiggly-v3"), "v3 app must have its own PM2 app name.");
 assert.ok(script.includes("wiggly-v3-render-worker"), "v3 render worker must have its own PM2 app name.");
+assert.ok(script.includes("run mcp-draft-worker:watch"), "v3 deploy must keep the MCP draft worker running beside the ad render worker.");
+assert.ok(script.includes("wiggly-v3-mcp-draft"), "the MCP draft worker must have its own PM2 app name.");
 assert.ok(script.includes("npx convex deploy"), "v3 deploy must sync Convex functions before smoke.");
 for (const convexRuntimeValue of [
   "BRANDFETCH_API_KEY",
