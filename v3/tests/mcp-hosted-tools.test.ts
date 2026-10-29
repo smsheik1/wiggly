@@ -11,6 +11,7 @@ import { workosTokenVerifier } from "../features/mcp/workos-verifier";
 import type { Storyboard } from "../features/mcp/film-ledger";
 
 const storyboard: Storyboard = {
+  format: "my-pixar-story",
   title: "Sunday",
   subject: "Leo",
   beats: Array.from({ length: 7 }, () => ({
@@ -22,6 +23,7 @@ const storyboard: Storyboard = {
   characters: [
     {
       name: "Leo",
+      skinTone: "olive",
       description: [
         "Eyes: oversized round brown eyes, a small iris in a wide band of white sclera, bright catchlights.",
         "Face: soft round cheeks and a small nose.",
@@ -33,6 +35,7 @@ const storyboard: Storyboard = {
     },
     {
       name: "Mom",
+      skinTone: "warm",
       description: [
         "Eyes: round brown eyes, a small iris in a wide band of white sclera.",
         "Face: soft closed-lip smile.",
@@ -50,6 +53,7 @@ async function signedRoute(resumeGraph?: (resume: { runId: string; decision: Rec
   ledger?: MemoryFilmLedger;
   loadAccount?: (accountId: string) => Promise<import("../features/mcp/film-ledger").Account>;
   saveAccount?: (accountId: string, account: import("../features/mcp/film-ledger").Account) => Promise<void>;
+  listUploads?: (accountId: string) => Promise<Array<{ label: string; url: string }>>;
 }) {
   const { publicKey, privateKey } = await generateKeyPair("RS256", { extractable: true });
   const jwk = await exportJWK(publicKey);
@@ -68,6 +72,7 @@ async function signedRoute(resumeGraph?: (resume: { runId: string; decision: Rec
     resumeGraph,
     loadAccount: extras?.loadAccount,
     saveAccount: extras?.saveAccount,
+    listUploads: extras?.listUploads,
   });
   return { token, route };
 }
@@ -121,7 +126,18 @@ test("a signed WorkOS token is accepted and a token for another resource is reje
   const body = await listed.json();
   assert.equal(listed.status, 200, JSON.stringify(body));
   const names = body.result.tools.map((tool: { name: string }) => tool.name);
-  assert.deepEqual(names, ["wiggly_open_upload", "wiggly_submit_draft", "wiggly_get_draft", "wiggly_approve_draft"]);
+  assert.deepEqual(names, ["wiggly_open_upload", "wiggly_list_uploads", "wiggly_submit_draft", "wiggly_get_draft", "wiggly_approve_draft"]);
+});
+
+test("list uploads returns the label and a signed url", async () => {
+  const { token, route } = await signedRoute(undefined, {
+    listUploads: async () => [{ label: "Leo", url: "https://wiggly.agentenamel.com/api/mcp/photos/user_1/Leo.jpg?exp=1&sig=abc" }],
+  });
+  const listed = await route.POST(mcpRequest(token, "tools/call", { name: "wiggly_list_uploads", arguments: {} }, "wiggly_list_uploads"));
+  const body = await listed.json();
+  assert.equal(listed.status, 200, JSON.stringify(body));
+  assert.equal(body.result.structuredContent.photos[0].label, "Leo");
+  assert.match(body.result.structuredContent.photos[0].url, /Leo\.jpg/);
 });
 
 test("submit starts a draft without a quote, and hides another account's job", async () => {
@@ -205,7 +221,7 @@ test("get draft reads the v2 state file and approve resumes that run", async () 
   const approveBody = await approved.json();
   assert.equal(approved.status, 200, JSON.stringify(approveBody));
   assert.deepEqual(decision?.approvedAssets, { "@Image 1": "asset:master-render:leo" });
-  assert.equal(route.ledger.exportState("user_1").monthlyCredits, 1892);
+  assert.equal(route.ledger.exportState("user_1").monthlyCredits, 1900);
 });
 
 test("approve on a Convex ledger loads the account, resumes, and saves it back", async () => {
@@ -235,5 +251,5 @@ test("approve on a Convex ledger loads the account, resumes, and saves it back",
   }, "wiggly_approve_draft"));
   const body = await approved.json();
   assert.equal(approved.status, 200, JSON.stringify(body));
-  assert.equal(savedCredits, 1900 - 21 * 10);
+  assert.equal(savedCredits, 1900);
 });

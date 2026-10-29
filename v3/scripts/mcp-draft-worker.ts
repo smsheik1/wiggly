@@ -1,7 +1,7 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { exportAccount, importAccount, listActiveJobs } from "../features/mcp/convex-ledger";
-import { replicateSetupError, runDraftTick } from "../features/mcp/draft-worker";
+import { replicateSetupError, runDraftTick, type CrewPhoto } from "../features/mcp/draft-worker";
 import { signPhoto } from "../features/mcp/photo-store";
 
 async function token() {
@@ -29,17 +29,14 @@ const photoRoot = path.join(process.cwd(), "data", "mcp-uploads");
 const origin = "https://wiggly.agentenamel.com";
 const watch = process.argv.includes("--watch");
 
-async function signedPhotoUrls(accountId: string) {
-  let names: string[] = [];
-  try {
-    names = await readdir(path.join(photoRoot, accountId));
-  } catch {
-    return [];
-  }
+async function accountPhotos(accountId: string): Promise<CrewPhoto[]> {
+  const account = await exportAccount(accountId);
   const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
-  return names
-    .filter((name) => /\.(png|jpe?g|webp)$/i.test(name))
-    .map((name) => `${origin}${signPhoto(photoSecret, accountId, name, expiresAt)}`);
+  return (account.photos ?? []).map((photo) => ({
+    label: photo.label,
+    path: path.join(photoRoot, accountId, photo.filename),
+    url: `${origin}${signPhoto(photoSecret, accountId, photo.filename, expiresAt)}`,
+  }));
 }
 
 async function tick() {
@@ -49,11 +46,15 @@ async function tick() {
     return;
   }
   const lines = await runDraftTick({
-    jobs: await Promise.all(jobs.map(async (job) => ({
-      accountId: job.workosUserId,
-      jobId: job.jobId,
-      imageUrls: await signedPhotoUrls(job.workosUserId),
-    }))),
+    jobs: await Promise.all(jobs.map(async (job) => {
+      const photos = await accountPhotos(job.workosUserId);
+      return {
+        accountId: job.workosUserId,
+        jobId: job.jobId,
+        imageUrls: photos.map((photo) => photo.url),
+        photos,
+      };
+    })),
     loadAccount: exportAccount,
     saveAccount: importAccount,
   });

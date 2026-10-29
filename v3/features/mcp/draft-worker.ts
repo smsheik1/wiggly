@@ -1,11 +1,13 @@
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
-import { IMAGE_CREDITS, VIDEO_CREDITS_PER_SECOND } from "./credits";
-import { MemoryFilmLedger, type Account, type Storyboard } from "./film-ledger";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { crewFeeCredits, crewFeeMissingError } from "./crew-fee";
+import { INSTALLED_FORMAT_IDS, MemoryFilmLedger, type Account, type Storyboard } from "./film-ledger";
+import { AwaitingCredits, CREW_FEE_ITEM, chargeItem, chargeThenRender, clipCredits, refundItem, stillCredits } from "./render-charge";
 
-export const DEFAULT_FORMAT_ID = "my-pixar-story";
-export const SERVER_STUDIOS_ROOT = "/home/ubuntu/wiggly-format-studios";
+export function bundledStudiosRoot() {
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../studios");
+}
 
 const FORMAT_CREWS: Record<string, { folder: string; entry: string }> = {
   "my-pixar-story": { folder: "my-pixar-story-v2", entry: "scripts/run-customer.mjs" },
@@ -13,7 +15,7 @@ const FORMAT_CREWS: Record<string, { folder: string; entry: string }> = {
 
 export function studiosRoot() {
   const configured = process.env.WIGGLY_FORMAT_STUDIOS?.trim();
-  return configured || SERVER_STUDIOS_ROOT;
+  return configured || bundledStudiosRoot();
 }
 
 export function studioForFormat(formatId: string, root = studiosRoot()) {
@@ -21,11 +23,10 @@ export function studioForFormat(formatId: string, root = studiosRoot()) {
   if (!crew) {
     throw new Error([
       `No crew is installed for format "${formatId}".`,
-      `Studios live on the server under ${root}, one folder per format.`,
-      `1. On the server, open ${root}.`,
-      "2. Check out that format's studio into its own folder.",
-      "3. Register the folder in FORMAT_CREWS in v3/features/mcp/draft-worker.ts.",
-      "4. Restart wiggly-v3-mcp-draft.",
+      `Installed formats: ${INSTALLED_FORMAT_IDS.join(", ")}.`,
+      `Each installed format lives in studios/<folder> inside the release.`,
+      "1. Register the folder in FORMAT_CREWS in v3/features/mcp/draft-worker.ts.",
+      "2. Restart wiggly-v3-mcp-draft.",
     ].join("\n"));
   }
   return { directory: path.join(root, crew.folder), entry: crew.entry, formatId };
@@ -33,12 +34,35 @@ export function studioForFormat(formatId: string, root = studiosRoot()) {
 
 export function missingStudioError(formatId: string, directory: string) {
   return [
-    `The ${formatId} studio is not on this machine at ${directory}.`,
-    "A customer film starts from a studio checked out on the server.",
-    `1. On the server, create ${studiosRoot()} if it is missing.`,
-    `2. Clone the ${formatId} studio so ${directory}/scripts/run-customer.mjs exists.`,
-    "3. If the studios live in another parent directory, set WIGGLY_FORMAT_STUDIOS to that directory and restart wiggly-v3-mcp-draft.",
+    `The ${formatId} studio is not in this release at ${directory}.`,
+    `1. The release must include ${directory}/scripts/run-customer.mjs.`,
+    "2. On this Mac, set WIGGLY_FORMAT_STUDIOS to the parent of that studio folder and restart wiggly-v3-mcp-draft.",
   ].join("\n");
+}
+
+export type CrewPhoto = { label: string; path: string; url?: string };
+
+export function crewPhotoReferences(storyboard: Storyboard, photos: CrewPhoto[]) {
+  return storyboard.characters.map((character) => {
+    const name = character.name.trim();
+    const photo = photos.find((item) => item.label.trim() === name);
+    if (!photo?.path) throw new Error(`No photo file for ${name}. Call wiggly_list_uploads after the upload is done.`);
+    return {
+      id: name,
+      name,
+      realPerson: name,
+      skinTone: character.skinTone?.trim() ?? "",
+      description: character.description?.trim() ?? "",
+      path: photo.path,
+      ...(photo.url ? { url: photo.url } : {}),
+    };
+  });
+}
+
+export function requireFormatId(format: string | undefined) {
+  const formatId = format?.trim() ?? "";
+  if (!formatId) throw new Error(`storyboard.format is required. Installed formats: ${INSTALLED_FORMAT_IDS.join(", ")}.`);
+  return formatId;
 }
 
 async function loadStudio(formatId: string) {
@@ -78,7 +102,18 @@ export type StudioState = {
   status?: string;
   pendingApproval?: string[];
   videoUrl?: string;
+  credits?: number;
+  creditItemId?: string;
 };
+
+function billRender(input: { ledger: MemoryFilmLedger; accountId: string; jobId: string; runDir: string }) {
+  return async (item: { kind: string; request: { itemId?: string; duration?: number }; render: () => Promise<{ dest?: string; videoPath?: string }> }) => {
+    const itemId = item.request.itemId;
+    if (!itemId) throw new Error("A render has no item id, so it was not charged and it was not started.");
+    const credits = item.kind === "clip" ? clipCredits(item.request.duration ?? 10) : stillCredits();
+    return chargeThenRender({ ...input, itemId, credits, render: item.render });
+  };
+}
 
 export type GraphStart = {
   runId: string;
@@ -90,33 +125,53 @@ export async function startV2Run(input: {
   jobId: string;
   storyboard: Storyboard;
   imageUrls: string[];
+  photos?: CrewPhoto[];
   runsRoot: string;
   formatId?: string;
+  ledger: MemoryFilmLedger;
+  accountId: string;
 }): Promise<GraphStart> {
-  const formatId = input.formatId ?? (input.storyboard.format?.trim() || DEFAULT_FORMAT_ID);
+  const fee = crewFeeCredits();
+  if (fee == null) throw new Error(crewFeeMissingError());
+  const formatId = input.formatId ?? requireFormatId(input.storyboard.format);
+  const runDir = path.join(input.runsRoot, input.jobId);
+  await chargeItem({ ledger: input.ledger, accountId: input.accountId, jobId: input.jobId, runDir, itemId: CREW_FEE_ITEM, credits: fee });
   const { runCustomer } = await loadStudio(formatId);
-  const names = input.storyboard.characters.map((character) => character.name);
-  const started = await runCustomer({
-    runId: input.jobId,
-    runsRoot: input.runsRoot,
-    photoRefsPath: null,
-    project: {
-      inputs: {
-        ...questionnaireFromStoryboard(input.storyboard),
-        photoReferences: input.imageUrls.map((url, index) => ({
-          id: `photo-${index + 1}`,
-          name: names[index] ?? input.storyboard.subject,
-          url,
-        })),
+  try {
+    const started = await runCustomer({
+      runId: input.jobId,
+      runsRoot: input.runsRoot,
+      photoRefsPath: null,
+      chargeRender: billRender({ ledger: input.ledger, accountId: input.accountId, jobId: input.jobId, runDir }),
+      project: {
+        inputs: {
+          ...questionnaireFromStoryboard(input.storyboard),
+          photoReferences: crewPhotoReferences(input.storyboard, input.photos ?? []),
+        },
       },
-    },
-  });
-  return { runId: started.runId, stateFile: started.stateFile, state: started.state };
+    });
+    return { runId: started.runId, stateFile: started.stateFile, state: started.state };
+  } catch (error) {
+    if (!(error instanceof AwaitingCredits)) {
+      try {
+        await access(path.join(runDir, "outputs", "state.json"));
+      } catch {
+        await refundItem({ ledger: input.ledger, accountId: input.accountId, jobId: input.jobId, runDir, itemId: CREW_FEE_ITEM });
+      }
+    }
+    throw error;
+  }
 }
 
-export async function resumeV2Run(input: { runId: string; decision: Record<string, unknown>; runsRoot: string; formatId?: string }) {
-  const { resumeCustomer } = await loadStudio(input.formatId ?? DEFAULT_FORMAT_ID);
-  const resumed = await resumeCustomer({ runId: input.runId, decision: input.decision, runsRoot: input.runsRoot });
+export async function resumeV2Run(input: { runId: string; decision: Record<string, unknown>; runsRoot: string; formatId?: string; ledger: MemoryFilmLedger; accountId: string; jobId: string }) {
+  const { resumeCustomer } = await loadStudio(requireFormatId(input.formatId));
+  const runDir = path.join(input.runsRoot, input.runId);
+  const resumed = await resumeCustomer({
+    runId: input.runId,
+    decision: input.decision,
+    runsRoot: input.runsRoot,
+    chargeRender: billRender({ ledger: input.ledger, accountId: input.accountId, jobId: input.jobId, runDir }),
+  });
   return { state: resumed.state as StudioState };
 }
 
@@ -128,6 +183,10 @@ function applyStudioState(ledger: MemoryFilmLedger, accountId: string, jobId: st
   if (state.status === "done") {
     ledger.setStage(accountId, jobId, "ready", state.videoUrl);
     return "ready";
+  }
+  if (state.status === "awaiting-credits") {
+    ledger.setStage(accountId, jobId, "awaiting-credits");
+    return "awaiting-credits";
   }
   if (state.status === "awaiting-approval" || state.status === "awaiting-production") {
     ledger.setStage(accountId, jobId, "awaiting-approval");
@@ -142,22 +201,52 @@ export async function stepDraftJob(input: {
   accountId: string;
   jobId: string;
   imageUrls: string[];
+  photos?: CrewPhoto[];
   token?: string;
   runsRoot?: string;
-  startGraph?: (start: { jobId: string; storyboard: Storyboard; imageUrls: string[]; runsRoot: string; formatId: string }) => Promise<GraphStart>;
+  startGraph?: (start: { jobId: string; storyboard: Storyboard; imageUrls: string[]; photos: CrewPhoto[]; runsRoot: string; formatId: string }) => Promise<GraphStart>;
+  resumeGraph?: (resume: { runId: string; decision: Record<string, unknown> }) => Promise<{ state: StudioState }>;
 }) {
   const job = input.ledger.exportState(input.accountId).jobs.find((item) => item.jobId === input.jobId);
   if (!job?.storyboard) throw new Error("This job has no storyboard.");
-  const formatId = job.storyboard.format?.trim() || DEFAULT_FORMAT_ID;
+  const formatId = requireFormatId(job.storyboard.format);
   studioForFormat(formatId);
   const runsRoot = input.runsRoot ?? path.join(process.cwd(), "data", "format-runs");
   if (!job.stateFile) {
-    const start = input.startGraph ?? startV2Run;
-    const started = await start({ jobId: input.jobId, storyboard: job.storyboard, imageUrls: input.imageUrls, runsRoot, formatId });
-    input.ledger.setRun(input.accountId, input.jobId, { runId: started.runId, stateFile: started.stateFile });
-    return applyStudioState(input.ledger, input.accountId, input.jobId, started.state);
+    const start = input.startGraph ?? ((start) => startV2Run({ ...start, ledger: input.ledger, accountId: input.accountId }));
+    try {
+      const started = await start({ jobId: input.jobId, storyboard: job.storyboard, imageUrls: input.imageUrls, photos: input.photos ?? [], runsRoot, formatId });
+      input.ledger.setRun(input.accountId, input.jobId, { runId: started.runId, stateFile: started.stateFile });
+      return applyStudioState(input.ledger, input.accountId, input.jobId, started.state);
+    } catch (error) {
+      if (error instanceof AwaitingCredits) {
+        input.ledger.setStage(input.accountId, input.jobId, "awaiting-credits");
+        return "awaiting-credits";
+      }
+      throw error;
+    }
   }
   const state = JSON.parse(await readFile(job.stateFile, "utf8")) as StudioState;
+  if (state.status === "awaiting-credits") {
+    const cost = Number(state.credits ?? 0);
+    const account = input.ledger.exportState(input.accountId);
+    const covered = account.monthlyCredits + account.purchasedCredits >= cost && cost > 0;
+    if (!covered) {
+      input.ledger.setStage(input.accountId, input.jobId, "awaiting-credits");
+      return "awaiting-credits";
+    }
+    if (!job.runId) throw new Error("This paused film has no run to resume.");
+    const resume = input.resumeGraph ?? ((item: { runId: string; decision: Record<string, unknown> }) => resumeV2Run({
+      ...item,
+      runsRoot,
+      formatId,
+      ledger: input.ledger,
+      accountId: input.accountId,
+      jobId: input.jobId,
+    }));
+    const resumed = await resume({ runId: job.runId, decision: { kind: "credits" } });
+    return applyStudioState(input.ledger, input.accountId, input.jobId, resumed.state);
+  }
   return applyStudioState(input.ledger, input.accountId, input.jobId, state);
 }
 
@@ -172,18 +261,19 @@ export async function approveDraft(input: {
   const job = input.ledger.exportState(input.accountId).jobs.find((item) => item.jobId === input.jobId);
   if (!job?.stateFile || !job.runId) return { ok: false as const, message: "This job has no v2 run to approve." };
   const state = JSON.parse(await readFile(job.stateFile, "utf8")) as StudioState;
-  const pending = state.pendingApproval ?? [];
-  const stills = pending.filter((tag) => tag.startsWith("@")).length;
-  const credits = state.status === "awaiting-production"
-    ? (input.seconds ?? 10) * VIDEO_CREDITS_PER_SECOND
-    : stills * IMAGE_CREDITS;
-  if (credits > 0) {
-    const spent = input.ledger.spendCredits(input.accountId, input.jobId, credits);
-    if (!spent.ok) return spent;
+  if (state.status === "awaiting-credits") {
+    return { ok: false as const, message: "This run is paused for credits. Top up, then the worker resumes it. Do not call wiggly_approve_draft." };
   }
   const runsRoot = path.dirname(path.dirname(path.dirname(job.stateFile)));
-  const formatId = job.storyboard?.format?.trim() || DEFAULT_FORMAT_ID;
-  const resume = input.resumeGraph ?? ((item: { runId: string; decision: Record<string, unknown> }) => resumeV2Run({ ...item, runsRoot, formatId }));
+  const formatId = requireFormatId(job.storyboard?.format);
+  const resume = input.resumeGraph ?? ((item: { runId: string; decision: Record<string, unknown> }) => resumeV2Run({
+    ...item,
+    runsRoot,
+    formatId,
+    ledger: input.ledger,
+    accountId: input.accountId,
+    jobId: input.jobId,
+  }));
   const resumed = await resume({ runId: job.runId, decision: input.decision });
   const stage = applyStudioState(input.ledger, input.accountId, input.jobId, resumed.state);
   return { ok: true as const, data: { stage, status: resumed.state.status ?? stage } };
@@ -204,11 +294,11 @@ export async function studioStatusFromFile(stateFile: unknown) {
 }
 
 export async function runDraftTick(input: {
-  jobs: Array<{ accountId: string; jobId: string; imageUrls: string[] }>;
+  jobs: Array<{ accountId: string; jobId: string; imageUrls: string[]; photos?: CrewPhoto[] }>;
   loadAccount: (accountId: string) => Promise<Account> | Account;
   saveAccount: (accountId: string, account: Account) => Promise<void> | void;
   runsRoot?: string;
-  startGraph?: (start: { jobId: string; storyboard: Storyboard; imageUrls: string[]; runsRoot: string; formatId: string }) => Promise<GraphStart>;
+  startGraph?: (start: { jobId: string; storyboard: Storyboard; imageUrls: string[]; photos: CrewPhoto[]; runsRoot: string; formatId: string }) => Promise<GraphStart>;
 }) {
   const lines: string[] = [];
   for (const job of input.jobs) {
@@ -219,6 +309,7 @@ export async function runDraftTick(input: {
       accountId: job.accountId,
       jobId: job.jobId,
       imageUrls: job.imageUrls,
+      photos: job.photos,
       runsRoot: input.runsRoot,
       startGraph: input.startGraph,
     });

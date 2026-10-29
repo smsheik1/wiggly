@@ -15,11 +15,14 @@ function openCheckout(account: Account, kind: CheckoutKind) {
   return checkoutUrl(kind, account.checkoutToken);
 }
 
-export const DRAFT_STAGES = ["queued", "running", "awaiting-approval", "lineup", "beats", "assembly", "ready", "failed"] as const;
+export const DRAFT_STAGES = ["queued", "running", "awaiting-approval", "awaiting-credits", "lineup", "beats", "assembly", "ready", "failed"] as const;
 export type DraftStage = (typeof DRAFT_STAGES)[number];
-const ACTIVE_STAGES: DraftStage[] = ["queued", "running", "awaiting-approval", "lineup", "beats", "assembly"];
+const ACTIVE_STAGES: DraftStage[] = ["queued", "running", "awaiting-approval", "awaiting-credits", "lineup", "beats", "assembly"];
+export const INSTALLED_FORMAT_IDS = ["my-pixar-story"] as const;
 const QUOTE_TTL_MS = 24 * 60 * 60 * 1000;
 const UPLOAD_TTL_MS = 60 * 60 * 1000;
+
+export type AccountPhoto = { label: string; filename: string };
 
 export type Storyboard = {
   format?: string;
@@ -31,7 +34,7 @@ export type Storyboard = {
     camera: string;
     narration_line?: string;
   }>;
-  characters: Array<{ name: string; description?: string }>;
+  characters: Array<{ name: string; description?: string; skinTone?: string }>;
   hero_props: Array<{ name: string }>;
   /** How many lineup gates have already failed. Worker bookkeeping, persisted with the storyboard. */
   lineupGateAttempts?: number;
@@ -83,6 +86,7 @@ export type Account = {
   monthlyCredits: number;
   purchasedCredits: number;
   labels: string[];
+  photos: AccountPhoto[];
   quotes: Quote[];
   jobs: DraftJob[];
   checkoutToken?: string;
@@ -133,6 +137,7 @@ function quoteCost(storyboard: Storyboard) {
 
 function problems(storyboard: Storyboard, labels: string[]) {
   const issues: string[] = [];
+  if (!storyboard.format?.trim()) issues.push(`storyboard.format is empty. Installed formats: ${INSTALLED_FORMAT_IDS.join(", ")}`);
   if (!storyboard.title.trim()) issues.push("storyboard.title is empty");
   if (!storyboard.subject.trim()) issues.push("storyboard.subject is empty");
   if (storyboard.beats.length !== 7) {
@@ -147,6 +152,8 @@ function problems(storyboard: Storyboard, labels: string[]) {
   if (names.length === 0) issues.push("storyboard.characters is empty");
   storyboard.characters.forEach((character, index) => {
     if (!character.name.trim()) issues.push(`storyboard.characters[${index}].name is empty`);
+    if ((character.skinTone?.trim().length ?? 0) < 3) issues.push(`storyboard.characters[${index}].skinTone must be at least 3 characters`);
+    if ((character.description?.trim().length ?? 0) < 10) issues.push(`storyboard.characters[${index}].description must be at least 10 characters`);
   });
   const labelSet = new Set(labels.map((label) => label.trim()));
   const nameSet = new Set(names);
@@ -173,6 +180,7 @@ export class MemoryFilmLedger {
         monthlyCredits: 0,
         purchasedCredits: 0,
         labels: [],
+        photos: [],
         quotes: [],
         jobs: [],
       };
@@ -186,7 +194,15 @@ export class MemoryFilmLedger {
   }
 
   attachPhotos(accountId: string, labels: string[]) {
-    this.account(accountId).labels = labels.map((label) => label.trim()).filter(Boolean);
+    const account = this.account(accountId);
+    account.labels = labels.map((label) => label.trim()).filter(Boolean);
+    account.photos = account.labels.map((label) => ({ label, filename: `${label}.jpg` }));
+  }
+
+  attachPhotoFiles(accountId: string, photos: AccountPhoto[]) {
+    const account = this.account(accountId);
+    account.photos = photos.map((photo) => ({ label: photo.label.trim(), filename: photo.filename }));
+    account.labels = account.photos.map((photo) => photo.label).filter(Boolean);
   }
 
   openUpload(accountId: string): { uploadUrl: string; expiresAt: string } {
@@ -294,6 +310,16 @@ export class MemoryFilmLedger {
     return { ok: true, data: { balance: balance(account), credits_charged: job.creditsCharged } };
   }
 
+  refundCharge(accountId: string, jobId: string, credits: number) {
+    if (!(credits > 0)) return;
+    const account = this.account(accountId);
+    const job = account.jobs.find((item) => item.jobId === jobId);
+    if (!job || job.stage === "ready" || job.creditsRefunded) return;
+    const amount = Math.min(credits, job.creditsCharged);
+    job.creditsCharged -= amount;
+    account.purchasedCredits += amount;
+  }
+
   getDraft(accountId: string, jobId?: string): LedgerResult {
     const account = this.account(accountId);
     const job = jobId ? account.jobs.find((item) => item.jobId === jobId) : account.jobs.at(-1);
@@ -308,7 +334,9 @@ export class MemoryFilmLedger {
   }
 
   importState(accountId: string, account: Account) {
-    this.accounts.set(accountId, structuredClone(account));
+    const next = structuredClone(account);
+    next.photos = next.photos ?? [];
+    this.accounts.set(accountId, next);
   }
 
   applyPayment(accountId: string, kind: CheckoutKind, stripeCustomerId?: string) {

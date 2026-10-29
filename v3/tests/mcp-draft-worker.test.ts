@@ -3,11 +3,13 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { approveDraft, questionnaireFromStoryboard, runDraftTick, SERVER_STUDIOS_ROOT, stepDraftJob, studioForFormat } from "../features/mcp/draft-worker";
+import { access } from "node:fs/promises";
+import { approveDraft, bundledStudiosRoot, crewPhotoReferences, questionnaireFromStoryboard, runDraftTick, stepDraftJob, studioForFormat } from "../features/mcp/draft-worker";
 import { MemoryFilmLedger, type Storyboard } from "../features/mcp/film-ledger";
 import { JobStore, studioStateFile } from "../features/mcp/job-store";
 
 const storyboard: Storyboard = {
+  format: "my-pixar-story",
   title: "Sunday",
   subject: "Leo",
   beats: Array.from({ length: 7 }, () => ({
@@ -15,7 +17,7 @@ const storyboard: Storyboard = {
     action: "Leo looks up.",
     camera: "Wide.",
   })),
-  characters: [{ name: "Leo" }],
+  characters: [{ name: "Leo", skinTone: "olive", description: "An adult man with short dark hair and a trimmed beard." }],
   hero_props: [],
 };
 
@@ -28,14 +30,26 @@ function startedJob() {
   return { ledger, jobId: String(started.data.job_id) };
 }
 
-test("the worker starts the format the job asks for from a studio directory on the server", () => {
-  const pixar = studioForFormat("my-pixar-story", SERVER_STUDIOS_ROOT);
-  assert.equal(pixar.directory, "/home/ubuntu/wiggly-format-studios/my-pixar-story-v2");
-  assert.equal(pixar.directory.includes("/Users/"), false);
-  assert.throws(() => studioForFormat("talking-fish", SERVER_STUDIOS_ROOT), /No crew is installed for format "talking-fish"/);
+test("the worker resolves an installed format inside the release", () => {
+  const root = bundledStudiosRoot();
+  const pixar = studioForFormat("my-pixar-story", root);
+  assert.equal(pixar.directory, path.join(root, "my-pixar-story-v2"));
+  assert.equal(pixar.directory.endsWith(`${path.sep}studios${path.sep}my-pixar-story-v2`), true);
+  assert.throws(() => studioForFormat("talking-fish", root), /Installed formats: my-pixar-story/);
 });
 
-test("a queued draft without a format starts the Pixar studio", async () => {
+test("a queued draft without a format stops before a studio starts", async () => {
+  const ledger = new MemoryFilmLedger();
+  ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 1900 });
+  ledger.attachPhotos("user_1", ["Leo"]);
+  const started = ledger.submitDraft("user_1", { storyboard: { ...storyboard, format: " " } });
+  assert.equal(started.ok, false);
+  if (started.ok) return;
+  assert.match(started.message, /storyboard.format/);
+  assert.match(started.message, /my-pixar-story/);
+});
+
+test("a queued draft starts the format on the storyboard", async () => {
   const job = startedJob();
   let formatId = "";
   await stepDraftJob({
@@ -53,6 +67,20 @@ test("a queued draft without a format starts the Pixar studio", async () => {
     },
   });
   assert.equal(formatId, "my-pixar-story");
+});
+
+test("the crew reference keeps a real photo file and the look the agent wrote", async () => {
+  const root = path.join(tmpdir(), "wiggly-photo-ref");
+  await mkdir(root, { recursive: true });
+  const file = path.join(root, "Leo.jpg");
+  await writeFile(file, "photo");
+  const refs = crewPhotoReferences(storyboard, [{ label: "Leo", path: file, url: "https://example.com/leo.jpg" }]);
+  assert.equal(refs[0]?.id, "Leo");
+  assert.equal(refs[0]?.realPerson, "Leo");
+  assert.equal(refs[0]?.skinTone, "olive");
+  assert.equal(refs[0]?.description, storyboard.characters[0]?.description);
+  assert.equal(refs[0]?.path, file);
+  await access(file);
 });
 
 test("an unknown format stops before a studio starts", async () => {
@@ -138,7 +166,7 @@ test("wiggly_get_film reads the v2 state file", async () => {
   assert.equal(film.status, "awaiting_approval");
 });
 
-test("an approval spends the still credits, writes the decision, and resumes", async () => {
+test("an approval resumes the gate and leaves the still charge to the render", async () => {
   const job = startedJob();
   const root = path.join(tmpdir(), `wiggly-approve-${job.jobId}`);
   const stateFile = path.join(root, job.jobId, "outputs", "state.json");
@@ -159,33 +187,47 @@ test("an approval spends the still credits, writes the decision, and resumes", a
   });
   assert.equal(approved.ok, true);
   assert.deepEqual(decision?.approvedAssets, { "@Image 1": "asset:master-render:leo" });
-  assert.equal(job.ledger.exportState("user_1").monthlyCredits, 1892);
+  assert.equal(job.ledger.exportState("user_1").monthlyCredits, 1900);
 });
 
-test("a production approval stops and returns the top-up link when the balance is zero", async () => {
+test("a credit pause stays paused until the balance covers the next item", async () => {
   const job = startedJob();
   job.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 0, purchasedCredits: 0 });
-  const root = path.join(tmpdir(), `wiggly-topup-${job.jobId}`);
+  const root = path.join(tmpdir(), `wiggly-credits-${job.jobId}`);
   const stateFile = path.join(root, job.jobId, "outputs", "state.json");
   await mkdir(path.dirname(stateFile), { recursive: true });
-  await writeFile(stateFile, JSON.stringify({ status: "awaiting-production", pendingApproval: ["production"] }));
+  await writeFile(stateFile, JSON.stringify({ status: "awaiting-credits", credits: 8, creditItemId: "@Leo", pendingApproval: [] }));
   job.ledger.setRun("user_1", job.jobId, { runId: job.jobId, stateFile });
+  job.ledger.setStage("user_1", job.jobId, "awaiting-credits");
   let resumed = false;
-  const approved = await approveDraft({
+  const paused = await stepDraftJob({
     ledger: job.ledger,
     accountId: "user_1",
     jobId: job.jobId,
-    decision: { decision: "approve" },
-    seconds: 10,
+    imageUrls: [],
+    runsRoot: root,
     resumeGraph: async () => {
       resumed = true;
-      return { state: { status: "done" } };
+      return { state: { status: "running" } };
     },
   });
-  assert.equal(approved.ok, false);
-  if (approved.ok) return;
-  assert.match(approved.message, /billing\/credits/);
+  assert.equal(paused, "awaiting-credits");
   assert.equal(resumed, false);
+  job.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 8 });
+  let decision: Record<string, unknown> | undefined;
+  const continued = await stepDraftJob({
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    imageUrls: [],
+    runsRoot: root,
+    resumeGraph: async (resume) => {
+      decision = resume.decision;
+      return { state: { status: "running", pendingApproval: [] } };
+    },
+  });
+  assert.equal(continued, "running");
+  assert.deepEqual(decision, { kind: "credits" });
 });
 
 test("a failed v2 run returns the credits already spent", async () => {

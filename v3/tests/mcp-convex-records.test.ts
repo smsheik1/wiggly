@@ -9,7 +9,7 @@ test("Convex schema keeps the live product tables and adds the MCP job fields", 
   for (const table of ["sessions", "adScenes", "researchRuns", "mcpAccounts", "mcpCreditBalances", "mcpQuotes", "mcpJobs"]) {
     assert.ok(schema.includes(table), table);
   }
-  for (const field of ["awaiting-approval", "running", "runId", "stateFile"]) {
+  for (const field of ["awaiting-approval", "awaiting-credits", "running", "runId", "stateFile"]) {
     assert.ok(schema.includes(field), field);
   }
 });
