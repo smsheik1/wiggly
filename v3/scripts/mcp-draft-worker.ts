@@ -1,15 +1,17 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { exportAccount, importAccount, listActiveJobs } from "../features/mcp/convex-ledger";
-import { replicateSetupError, runDraftTick, type CrewPhoto } from "../features/mcp/draft-worker";
+import { releasePreflight, runDraftTick, studioForFormat, type CrewPhoto } from "../features/mcp/draft-worker";
 import { signPhoto } from "../features/mcp/photo-store";
 
-async function token() {
-  if (process.env.REPLICATE_API_TOKEN?.trim()) return process.env.REPLICATE_API_TOKEN.trim();
+async function namedSecret(name: string) {
+  const fromEnv = process.env[name]?.trim();
+  if (fromEnv) return fromEnv;
+  const pattern = new RegExp(`^${name}=([^\\r\\n]+)`, "m");
   for (const root of [process.cwd(), path.join(process.cwd(), "..")]) {
     try {
       const content = await readFile(path.join(root, "secrets.env"), "utf8");
-      const match = content.match(/^REPLICATE_API_TOKEN=([^\r\n]+)/m);
+      const match = content.match(pattern);
       if (match?.[1]?.trim()) return match[1].trim();
     } catch {
       // The next directory may hold the file.
@@ -18,9 +20,17 @@ async function token() {
   return "";
 }
 
-const replicateToken = await token();
-if (!replicateToken) {
-  console.error(replicateSetupError());
+const studio = studioForFormat("my-pixar-story");
+try {
+  await releasePreflight({
+    studioDir: studio.directory,
+    studioEntry: studio.entry,
+    appDir: process.cwd(),
+    openRouterKey: await namedSecret("OPENROUTER_API_KEY"),
+    replicateKey: await namedSecret("REPLICATE_API_TOKEN"),
+  });
+} catch (error) {
+  console.error(error instanceof Error ? error.message : "The draft worker cannot start.");
   process.exit(1);
 }
 

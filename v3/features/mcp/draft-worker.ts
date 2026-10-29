@@ -1,4 +1,4 @@
-import { access, readFile } from "node:fs/promises";
+import { access, lstat, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { crewFeeCredits, crewFeeMissingError } from "./crew-fee";
@@ -30,6 +30,65 @@ export function studioForFormat(formatId: string, root = studiosRoot()) {
     ].join("\n"));
   }
   return { directory: path.join(root, crew.folder), entry: crew.entry, formatId };
+}
+
+export function openRouterSetupError() {
+  return [
+    "OpenRouter is not connected. OPENROUTER_API_KEY is missing, so the draft worker cannot start a crew.",
+    "1. Open https://openrouter.ai/settings/keys",
+    "2. Copy the API key.",
+    "3. Open secrets.env at the Wiggly repo root.",
+    "4. Add a line: OPENROUTER_API_KEY=sk-or-...",
+    "5. Save the file and restart wiggly-v3-mcp-draft.",
+  ].join("\n");
+}
+
+export async function assertRealNodeModules(directory: string) {
+  const modules = path.join(directory, "node_modules");
+  let info;
+  try {
+    info = await lstat(modules);
+  } catch {
+    throw new Error([
+      `node_modules is missing at ${modules}.`,
+      `1. In ${directory}, run npm ci from the bundled lockfile.`,
+      "2. Restart wiggly-v3-mcp-draft.",
+      "3. Do not point node_modules at a Mac folder.",
+    ].join("\n"));
+  }
+  if (info.isSymbolicLink() || !info.isDirectory()) {
+    throw new Error([
+      `node_modules at ${modules} is not a real directory installed on this machine.`,
+      `1. Remove that link.`,
+      `2. In ${directory}, run npm ci from the bundled lockfile.`,
+      "3. Restart wiggly-v3-mcp-draft.",
+    ].join("\n"));
+  }
+}
+
+export async function releasePreflight(input: {
+  studioDir: string;
+  studioEntry: string;
+  appDir: string;
+  openRouterKey: string;
+  replicateKey: string;
+}) {
+  const problems: string[] = [];
+  try {
+    await access(path.join(input.studioDir, input.studioEntry));
+  } catch {
+    problems.push(missingStudioError("my-pixar-story", input.studioDir));
+  }
+  for (const directory of [input.studioDir, input.appDir]) {
+    try {
+      await assertRealNodeModules(directory);
+    } catch (error) {
+      problems.push(error instanceof Error ? error.message : "node_modules check failed.");
+    }
+  }
+  if (!input.openRouterKey.trim()) problems.push(openRouterSetupError());
+  if (!input.replicateKey.trim()) problems.push(replicateSetupError());
+  if (problems.length > 0) throw new Error(problems.join("\n\n"));
 }
 
 export function missingStudioError(formatId: string, directory: string) {
