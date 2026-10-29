@@ -613,6 +613,10 @@ export function DiscoveryClient({
         )}
       </section>
 
+      <footer className="px-6 py-8 text-center text-sm font-semibold">
+        <Link href="/privacy" className="text-violet-700 underline">Privacy Policy</Link>
+      </footer>
+
       <div className={`${styles.toast} ${toast ? styles.toastVisible : ""}`} role="status">
         {toast}
       </div>
