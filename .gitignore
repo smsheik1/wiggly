@@ -34,6 +34,8 @@ v3/public/format-repositories/*/downloads/*.zip
 v3/public/format-repositories/*/progress.html
 v3/public/format-repositories/*/progress.json
 
+v3/data/mcp-uploads/
+
 # Local large media & spike files
 /shaz-for-mia-1080p.mp4
 /patch_*.py
