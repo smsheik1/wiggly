@@ -15,13 +15,14 @@ function openCheckout(account: Account, kind: CheckoutKind) {
   return checkoutUrl(kind, account.checkoutToken);
 }
 
-export const DRAFT_STAGES = ["queued", "lineup", "beats", "assembly", "ready", "failed"] as const;
+export const DRAFT_STAGES = ["queued", "running", "awaiting-approval", "lineup", "beats", "assembly", "ready", "failed"] as const;
 export type DraftStage = (typeof DRAFT_STAGES)[number];
-const ACTIVE_STAGES: DraftStage[] = ["queued", "lineup", "beats", "assembly"];
+const ACTIVE_STAGES: DraftStage[] = ["queued", "running", "awaiting-approval", "lineup", "beats", "assembly"];
 const QUOTE_TTL_MS = 24 * 60 * 60 * 1000;
 const UPLOAD_TTL_MS = 60 * 60 * 1000;
 
 export type Storyboard = {
+  format?: string;
   title: string;
   subject: string;
   beats: Array<{
@@ -30,9 +31,26 @@ export type Storyboard = {
     camera: string;
     narration_line?: string;
   }>;
-  characters: Array<{ name: string }>;
+  characters: Array<{ name: string; description?: string }>;
   hero_props: Array<{ name: string }>;
+  /** How many lineup gates have already failed. Worker bookkeeping, persisted with the storyboard. */
+  lineupGateAttempts?: number;
 };
+
+export const CHARACTER_DESIGN_LABELS = ["Eyes", "Face", "Hair", "Skin", "Silhouette", "Wardrobe"] as const;
+
+export function characterDesignIssue(name: string, description: string | undefined) {
+  const label = name.trim() || "(unnamed)";
+  const text = description?.trim() ?? "";
+  if (!text || text.toLowerCase() === label.toLowerCase()) {
+    return `Character ${label} needs a design prompt with Eyes, Face, Hair, Skin, Silhouette, and Wardrobe. A name alone is not a lineup prompt.`;
+  }
+  const missing = CHARACTER_DESIGN_LABELS.filter((part) => !new RegExp(`(?:^|\\n)\\s*${part}\\s*:`, "i").test(text));
+  if (missing.length > 0) {
+    return `Character ${label} needs a design prompt with ${missing.join(", ")}. A photo caption is not a lineup prompt. The operating agent writes those labels after looking at the photo.`;
+  }
+  return null;
+}
 
 export type DraftJob = {
   jobId: string;
@@ -43,6 +61,8 @@ export type DraftJob = {
   error?: string;
   correlationId: string;
   storyboard?: Storyboard;
+  runId?: string;
+  stateFile?: string;
   beatUrls?: string[];
   stillUrls?: string[];
 };
@@ -91,7 +111,10 @@ function storyboardKey(storyboard: Storyboard, labels: string[]) {
       camera: beat.camera.trim(),
       narration_line: beat.narration_line?.trim() ?? "",
     })),
-    characters: storyboard.characters.map((character) => character.name.trim()),
+    characters: storyboard.characters.map((character) => ({
+      name: character.name.trim(),
+      description: character.description?.trim() ?? "",
+    })),
     hero_props: storyboard.hero_props.map((prop) => prop.name.trim()),
     labels: labels.map((label) => label.trim()).sort(),
   };
@@ -122,6 +145,9 @@ function problems(storyboard: Storyboard, labels: string[]) {
   });
   const names = storyboard.characters.map((character) => character.name.trim()).filter(Boolean);
   if (names.length === 0) issues.push("storyboard.characters is empty");
+  storyboard.characters.forEach((character, index) => {
+    if (!character.name.trim()) issues.push(`storyboard.characters[${index}].name is empty`);
+  });
   const labelSet = new Set(labels.map((label) => label.trim()));
   const nameSet = new Set(names);
   for (const name of names) {
@@ -194,6 +220,8 @@ export class MemoryFilmLedger {
       retryAfterSec: 15,
       credits_charged: job.creditsCharged,
       ...(job.videoUrl ? { videoUrl: job.videoUrl } : {}),
+      ...(job.runId ? { run_id: job.runId } : {}),
+      ...(job.stateFile ? { state_file: job.stateFile } : {}),
       ...(job.error ? { error: job.error, correlationId: job.correlationId, creditsRefunded: job.creditsRefunded } : {}),
     };
   }
@@ -225,65 +253,45 @@ export class MemoryFilmLedger {
       };
     }
 
-    if (input.confirm) {
-      const running = this.activeJob(account);
-      if (running) return { ok: true, data: this.jobPayload(running) };
-    }
+    const running = this.activeJob(account);
+    if (running) return { ok: true, data: this.jobPayload(running) };
 
     const issues = problems(input.storyboard, account.labels);
     if (issues.length > 0) {
       return { ok: false, message: `${issues.join(" ")} Next tool: wiggly_submit_draft.` };
     }
 
-    const cost = quoteCost(input.storyboard).total;
-    if (credits < cost) {
-      const url = openCheckout(account, account.subscribed ? "pack" : "subscription");
-      return {
-        ok: false,
-        message: `This draft costs ${cost} credits and the balance is ${credits}. Buy more at ${url}, then call wiggly_submit_draft again. The film is not shortened to fit the balance.`,
-      };
-    }
-
-    const key = storyboardKey(input.storyboard, account.labels);
-    if (!input.confirm) {
-      const quote: Quote = { quoteId: crypto.randomUUID(), key, credits: cost, expiresAt: Date.now() + QUOTE_TTL_MS };
-      account.quotes.push(quote);
-      return { ok: true, data: { quote_id: quote.quoteId, credits: cost, balance: credits } };
-    }
-
-    const quote = account.quotes.find((item) => item.quoteId === input.quoteId);
-    if (!quote) return { ok: false, message: "quote_id was not found. Call wiggly_submit_draft without confirm to get a quote." };
-    if (quote.expiresAt <= Date.now()) {
-      return { ok: false, message: "quote_id expired. Call wiggly_submit_draft without confirm to get a new quote." };
-    }
-    if (quote.key !== key) {
-      return { ok: false, message: "quote_id does not match this storyboard and these photo labels. Call wiggly_submit_draft without confirm." };
-    }
-    if (quote.jobId) {
-      const existing = account.jobs.find((job) => job.jobId === quote.jobId);
-      if (existing) return { ok: true, data: this.jobPayload(existing) };
-    }
-    if (balance(account) < quote.credits) {
-      const url = openCheckout(account, account.subscribed ? "pack" : "subscription");
-      return { ok: false, message: `The quote costs ${quote.credits} credits and the balance is ${balance(account)}. Buy more at ${url}.` };
-    }
-
-    let remaining = quote.credits;
-    const fromMonthly = Math.min(account.monthlyCredits, remaining);
-    account.monthlyCredits -= fromMonthly;
-    remaining -= fromMonthly;
-    account.purchasedCredits -= remaining;
     const job: DraftJob = {
       jobId: crypto.randomUUID(),
       stage: "queued",
-      creditsCharged: quote.credits,
+      creditsCharged: 0,
       creditsRefunded: false,
       correlationId: crypto.randomUUID(),
       storyboard: input.storyboard,
     };
-    quote.jobId = job.jobId;
     account.jobs.push(job);
     return { ok: true, data: this.jobPayload(job) };
+  }
+
+  spendCredits(accountId: string, jobId: string, credits: number): LedgerResult {
+    if (!(credits > 0)) return { ok: false, message: "A credit spend must be greater than zero." };
+    const account = this.account(accountId);
+    const job = account.jobs.find((item) => item.jobId === jobId);
+    if (!job || job.stage === "failed" || job.stage === "ready") return { ok: false, message: "That job is not running." };
+    if (balance(account) < credits) {
+      const url = openCheckout(account, account.subscribed ? "pack" : "subscription");
+      return {
+        ok: false,
+        message: `This step costs ${credits} credits and the balance is ${balance(account)}. Buy more at ${url}. The run is paused.`,
+      };
+    }
+    let remaining = credits;
+    const fromMonthly = Math.min(account.monthlyCredits, remaining);
+    account.monthlyCredits -= fromMonthly;
+    remaining -= fromMonthly;
+    account.purchasedCredits -= remaining;
+    job.creditsCharged += credits;
+    return { ok: true, data: { balance: balance(account), credits_charged: job.creditsCharged } };
   }
 
   getDraft(accountId: string, jobId?: string): LedgerResult {
@@ -316,6 +324,18 @@ export class MemoryFilmLedger {
     account.purchasedCredits += CREDIT_PACK_GRANT;
   }
 
+  setLineupGateAttempts(accountId: string, jobId: string, attempts: number) {
+    const job = this.account(accountId).jobs.find((item) => item.jobId === jobId);
+    if (!job?.storyboard || job.stage === "failed" || job.stage === "ready") return;
+    job.storyboard.lineupGateAttempts = attempts;
+  }
+
+  clearStillUrls(accountId: string, jobId: string) {
+    const job = this.account(accountId).jobs.find((item) => item.jobId === jobId);
+    if (!job || job.stage === "failed" || job.stage === "ready") return;
+    job.stillUrls = [];
+  }
+
   addStillUrl(accountId: string, jobId: string, url: string) {
     const job = this.account(accountId).jobs.find((item) => item.jobId === jobId);
     if (!job || job.stage === "failed" || job.stage === "ready") return;
@@ -326,6 +346,13 @@ export class MemoryFilmLedger {
     const job = this.account(accountId).jobs.find((item) => item.jobId === jobId);
     if (!job || job.stage === "failed" || job.stage === "ready") return;
     job.beatUrls = [...(job.beatUrls ?? []), url];
+  }
+
+  setRun(accountId: string, jobId: string, run: { runId: string; stateFile: string }) {
+    const job = this.account(accountId).jobs.find((item) => item.jobId === jobId);
+    if (!job || job.stage === "failed" || job.stage === "ready") return;
+    job.runId = run.runId;
+    job.stateFile = run.stateFile;
   }
 
   setStage(accountId: string, jobId: string, stage: DraftStage, videoUrl?: string) {

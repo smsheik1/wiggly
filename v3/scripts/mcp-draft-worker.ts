@@ -1,8 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { exportAccount, importAccount, listActiveJobs } from "../features/mcp/convex-ledger";
-import { replicateSetupError, stepDraftJob } from "../features/mcp/draft-worker";
-import { MemoryFilmLedger } from "../features/mcp/film-ledger";
+import { replicateSetupError, runDraftTick } from "../features/mcp/draft-worker";
 import { signPhoto } from "../features/mcp/photo-store";
 
 async function token() {
@@ -46,26 +45,19 @@ async function signedPhotoUrls(accountId: string) {
 async function tick() {
   const jobs = await listActiveJobs();
   if (jobs.length === 0) {
-    console.error("No queued, lineup, beats, or assembly drafts.");
+    console.error("No queued, running, or awaiting-approval drafts.");
     return;
   }
-  for (const job of jobs) {
-    const account = await exportAccount(job.workosUserId);
-    const ledger = new MemoryFilmLedger();
-    ledger.importState(job.workosUserId, account);
-    const stage = await stepDraftJob({
-      ledger,
+  const lines = await runDraftTick({
+    jobs: await Promise.all(jobs.map(async (job) => ({
       accountId: job.workosUserId,
       jobId: job.jobId,
       imageUrls: await signedPhotoUrls(job.workosUserId),
-      token: replicateToken,
-      photoRoot,
-      photoSecret,
-      publicOrigin: origin,
-    });
-    await importAccount(job.workosUserId, ledger.exportState(job.workosUserId));
-    console.error(`${job.jobId} ${job.stage} -> ${stage}`);
-  }
+    }))),
+    loadAccount: exportAccount,
+    saveAccount: importAccount,
+  });
+  for (const line of lines) console.error(line);
 }
 
 if (!photoSecret) {

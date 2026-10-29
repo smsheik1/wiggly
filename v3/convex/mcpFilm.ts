@@ -62,6 +62,8 @@ async function readAccount(ctx: QueryCtx | MutationCtx, workosUserId: string): P
       ...(job.storyboardJson ? { storyboard: JSON.parse(job.storyboardJson) as Storyboard } : {}),
       ...(job.beatUrls ? { beatUrls: job.beatUrls } : {}),
       ...(job.stillUrls ? { stillUrls: job.stillUrls } : {}),
+      ...(job.runId ? { runId: job.runId } : {}),
+      ...(job.stateFile ? { stateFile: job.stateFile } : {}),
     })),
   };
 }
@@ -143,6 +145,8 @@ async function writeAccount(ctx: MutationCtx, workosUserId: string, account: Acc
       ...(job.storyboard ? { storyboardJson: JSON.stringify(job.storyboard) } : {}),
       ...(job.beatUrls ? { beatUrls: job.beatUrls } : {}),
       ...(job.stillUrls ? { stillUrls: job.stillUrls } : {}),
+      ...(job.runId ? { runId: job.runId } : {}),
+      ...(job.stateFile ? { stateFile: job.stateFile } : {}),
     });
   }
 }
@@ -193,7 +197,7 @@ export const listActiveJobs = internalQuery({
     stage: v.string(),
   })),
   handler: async (ctx) => {
-    const stages = ["queued", "lineup", "beats", "assembly"] as const;
+    const stages = ["queued", "running", "awaiting-approval", "lineup", "beats", "assembly"] as const;
     const rows: { workosUserId: string; jobId: string; stage: string }[] = [];
     for (const stage of stages) {
       const jobs = await ctx.db.query("mcpJobs").withIndex("by_stage", (q) => q.eq("stage", stage)).collect();

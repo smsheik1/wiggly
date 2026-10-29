@@ -1,13 +1,30 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import type { SubmitFilmInput, FinalizeFilmInput } from './schema';
-import type { FilmJob, SubmitFilmResult, GetFilmResult, FinalizeFilmResult } from './types';
+import type { FilmJob, JobStatus, JobStage, SubmitFilmResult, GetFilmResult, FinalizeFilmResult } from './types';
 
 export const MAX_AUTO_REROLLS_PER_FILM = 3;
 export const MAX_REROLLS_PER_SHOT = 1;
 export const DEFAULT_RETRY_AFTER_SEC = 15;
 
+export function studioStateFile(runsRoot: string, jobId: string) {
+  return path.join(runsRoot, jobId, 'outputs', 'state.json');
+}
+
+function studioView(state: { status?: string; pendingApproval?: string[] }): { status: JobStatus; currentStage: JobStage; progressPercent: number } {
+  if (state.status === 'failed') return { status: 'failed', currentStage: 'ready_for_review', progressPercent: 100 };
+  if (state.status === 'done') return { status: 'succeeded', currentStage: 'completed', progressPercent: 100 };
+  if (state.status === 'awaiting-approval' || state.status === 'awaiting-production') {
+    return { status: 'awaiting_approval', currentStage: 'ready_for_review', progressPercent: 60 };
+  }
+  return { status: 'processing', currentStage: 'rendering_shots', progressPercent: 30 };
+}
+
 export class JobStore {
   private jobs = new Map<string, FilmJob>();
   private idempotencyMap = new Map<string, string>(); // idempotencyKey -> jobId
+
+  constructor(private readonly runsRoot?: string) {}
 
   /**
    * Submits a new film creation job or returns an existing one if the idempotencyKey matches.
@@ -57,24 +74,37 @@ export class JobStore {
   /**
    * Retrieves current job status, draft previews, and contact sheet.
    */
+  private async readStudio(jobId: string, stateFile?: string): Promise<{ status?: string; pendingApproval?: string[] } | null> {
+    const file = stateFile ?? (this.runsRoot ? studioStateFile(this.runsRoot, jobId) : undefined);
+    if (!file) return null;
+    try {
+      return JSON.parse(await readFile(file, 'utf8'));
+    } catch {
+      return null;
+    }
+  }
+
   async getFilm(jobId: string): Promise<GetFilmResult> {
     const job = this.jobs.get(jobId);
-    if (!job) {
+    const studio = await this.readStudio(jobId, job?.stateFile);
+    if (!job && !studio) {
       throw new Error(`Job not found: ${jobId}`);
     }
-
+    const view = studio ? studioView(studio) : null;
     return {
-      jobId: job.jobId,
-      status: job.status,
-      progressPercent: job.progressPercent,
-      currentStage: job.currentStage,
-      retryAfterSec: job.retryAfterSec,
-      draftPreviewUrl: job.draftPreviewUrl,
-      contactSheetUrl: job.contactSheetUrl,
-      clips: job.clips,
-      masterVideoUrl: job.masterVideoUrl,
-      rerollBudgetRemaining: job.rerollBudgetRemaining,
-      error: job.error,
+      jobId: job?.jobId ?? jobId,
+      status: view?.status ?? job?.status ?? 'processing',
+      progressPercent: view?.progressPercent ?? job?.progressPercent ?? 0,
+      currentStage: view?.currentStage ?? job?.currentStage ?? 'rendering_shots',
+      retryAfterSec: job?.retryAfterSec ?? DEFAULT_RETRY_AFTER_SEC,
+      draftPreviewUrl: job?.draftPreviewUrl,
+      contactSheetUrl: job?.contactSheetUrl,
+      clips: job?.clips,
+      masterVideoUrl: job?.masterVideoUrl,
+      rerollBudgetRemaining: job?.rerollBudgetRemaining ?? MAX_AUTO_REROLLS_PER_FILM,
+      error: job?.error,
+      ...(studio?.status ? { studioStatus: studio.status } : {}),
+      ...(studio?.pendingApproval ? { pendingApproval: studio.pendingApproval } : {}),
     };
   }
 
