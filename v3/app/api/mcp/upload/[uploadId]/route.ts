@@ -1,6 +1,7 @@
 import path from "node:path";
 import { getUploadSession, saveUploadLabels } from "../../../../../features/mcp/convex-ledger";
 import { savePhoto } from "../../../../../features/mcp/photo-store";
+import { publicOrigin } from "../../../../../features/mcp/public-origin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export async function POST(request: Request, context: { params: Promise<{ upload
       return new Response("Add a photo and a label for each person, such as Mom or Leo.", { status: 400 });
     }
     await saveUploadLabels(uploadId, labels);
-    return Response.redirect(new URL(`/upload/${uploadId}?saved=1`, request.url), 303);
+    return Response.redirect(`${publicOrigin()}/upload/${uploadId}?saved=1`, 303);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Upload failed.";
     console.error(message);

@@ -1,3 +1,4 @@
+import { publicOrigin } from "../../../../features/mcp/public-origin";
 import { createCheckoutSession } from "../../../../features/mcp/stripe-billing";
 
 export const runtime = "nodejs";
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Checkout link is incomplete. Call wiggly_submit_draft again." }, { status: 400 });
   }
   try {
-    const origin = new URL(request.url).origin;
+    const origin = publicOrigin();
     const session = await createCheckoutSession({ kind, checkoutToken: checkout, origin });
     if (!session.url) throw new Error("Stripe did not return a checkout URL.");
     return Response.redirect(session.url, 303);
