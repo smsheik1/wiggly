@@ -63,6 +63,7 @@
     "format:three-d:kit": "node scripts/build-three-d-breakdown-format-kit.mjs",
     "render-worker": "tsx scripts/render-worker.ts",
     "render-worker:watch": "tsx scripts/render-worker.ts --watch",
+    "mcp-draft-worker:watch": "tsx scripts/mcp-draft-worker.ts --watch",
     "render-worker:dev": "tsx watch scripts/render-worker.ts --watch",
     "remotion:still": "remotion still remotion-entry/index.ts AdSceneMp4 tmp/adscene-still.png --frame=66 --scale=0.25",
     "format:talking-fish-news": "node --import tsx scripts/talking-fish-news-format.ts",

@@ -107,6 +107,14 @@ pm2 start npm --name "$V3_APP_NAME" --update-env -- run start
 pm2 delete "$V3_WORKER_APP_NAME" >/dev/null 2>&1 || true
 pm2 start npm --name "$V3_WORKER_APP_NAME" --update-env -- run render-worker:watch
 
+if ! command -v ffmpeg >/dev/null 2>&1; then
+  sudo apt-get update
+  sudo apt-get install -y ffmpeg
+fi
+
+pm2 delete wiggly-v3-mcp-draft >/dev/null 2>&1 || true
+pm2 start npm --name wiggly-v3-mcp-draft --update-env -- run mcp-draft-worker:watch
+
 pm2 save
 pm2 status
 
