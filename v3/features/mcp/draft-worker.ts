@@ -19,6 +19,15 @@ export function replicateSetupError() {
   ].join("\n");
 }
 
+export function stillPrompts(storyboard: { title: string; characters: Array<{ name: string }>; hero_props: Array<{ name: string }> }) {
+  const names = [...storyboard.characters, ...storyboard.hero_props].map((item) => item.name.trim()).filter(Boolean);
+  const who = names.join(", ") || storyboard.title.trim();
+  return [
+    ...names,
+    `Contact sheet of ${who}. A 3 by 3 grid of the same subjects, consistent appearance, plain background.`,
+  ];
+}
+
 export function seedanceBeatInput(beat: { action: string; camera: string; duration_sec: number }, imageUrls: string[]) {
   return {
     prompt: `${beat.action} Camera: ${beat.camera}`,
@@ -126,11 +135,7 @@ export async function stepDraftJob(input: {
   }
   try {
     if (job.stage === "lineup") {
-      const subjects = [
-        ...job.storyboard.characters.map((character) => character.name),
-        ...job.storyboard.hero_props.map((prop) => prop.name),
-        `${job.storyboard.title} contact sheet`,
-      ];
+      const subjects = stillPrompts(job.storyboard);
       for (const subject of subjects) {
         const url = await postPrediction(fetchImpl, input.token, STILL_MODEL, {
           prompt: subject,

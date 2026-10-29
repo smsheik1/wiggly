@@ -4,7 +4,7 @@ import { mkdtemp, readFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { SEEDANCE_MODEL, seedanceBeatInput, stepDraftJob } from "../features/mcp/draft-worker";
+import { SEEDANCE_MODEL, seedanceBeatInput, stillPrompts, stepDraftJob } from "../features/mcp/draft-worker";
 import { MemoryFilmLedger, type Storyboard } from "../features/mcp/film-ledger";
 
 const storyboard: Storyboard = {
@@ -29,6 +29,13 @@ function startedJob() {
   if (!started.ok) throw new Error("start failed");
   return { ledger, jobId: String(started.data.job_id) };
 }
+
+test("the contact sheet prompt names the characters", () => {
+  const prompts = stillPrompts(storyboard);
+  assert.equal(prompts[0], "Leo");
+  assert.match(prompts.at(-1) ?? "", /Contact sheet of Leo/);
+  assert.equal(prompts.includes("Sunday contact sheet"), false);
+});
 
 test("a beat request is Seedance 2.5 at 480p with photos and no reference video", () => {
   const input = seedanceBeatInput({ action: "Leo looks up.", camera: "Wide.", duration_sec: 10 }, ["https://wiggly.agentenamel.com/photo.jpg"]);
