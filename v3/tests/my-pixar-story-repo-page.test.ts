@@ -138,6 +138,8 @@ assert.match(adviblySectionsSource, /What to watch for\./);
 assert.match(adviblySectionsSource, /Keep building\./);
 assert.match(adviblySectionsSource, /DiscoveryFormatHandoff/);
 assert.doesNotMatch(adviblySectionsSource, /Start creating/);
+assert.match(adviblySectionsSource, /href="#film"/, "Hero watch link must target #film");
+assert.match(adviblySectionsSource, /id="film"/, "Main finished film section must have id='film'");
 
 // Verify hero uses the prompt box instead of a raw terminal CLI box
 const heroActionMatch = adviblySectionsSource.match(/export function PixarStoryHeroAction[\s\S]*?^}\n\nexport function PixarStoryPromptBox/m);
