@@ -2879,13 +2879,6 @@ export const discoveryShelfDefinitions = [
     layout: "landscape",
   },
   {
-    id: "my-pixar-story",
-    title: "My Pixar Story",
-    description: "Turn real questionnaire memories into a cinematic 3D animated memoir with consistent characters, authentic emotion, and native synced dialogue.",
-    formats: ["my-pixar-story"],
-    layout: "landscape",
-  },
-  {
     id: "product-stories",
     title: "3D Breakdown",
     description: "3D product stories and compact performance ads.",
@@ -2902,6 +2895,13 @@ export const discoveryShelfDefinitions = [
     title: "Animal Conversations",
     description: "User-supplied dialogue staged as expressive, captioned character exchanges.",
     formats: ["animal-conversations"],
+  },
+  {
+    id: "my-pixar-story",
+    title: "My Pixar Story",
+    description: "Turn real questionnaire memories into a cinematic 3D animated memoir with consistent characters, authentic emotion, and native synced dialogue.",
+    formats: ["my-pixar-story"],
+    layout: "landscape",
   },
   {
     id: "character-dance-offs",
