@@ -214,7 +214,7 @@ export async function startV2Run(input: {
   ledger: MemoryFilmLedger;
   accountId: string;
   feeCredits?: number | null;
-  persist?: () => Promise<void> | void;
+  persist?: () => Promise<void | null> | void;
 }): Promise<GraphStart> {
   const formatId = input.formatId ?? requireFormatId(input.storyboard.format);
   crewPhotoReferences(input.storyboard, input.photos ?? []);
@@ -286,8 +286,8 @@ export async function stepDraftJob(input: {
   startGraph?: (start: { jobId: string; storyboard: Storyboard; imageUrls: string[]; photos: CrewPhoto[]; runsRoot: string; formatId: string }) => Promise<GraphStart>;
   resumeGraph?: (resume: { runId: string; decision: Record<string, unknown> }) => Promise<{ state: StudioState }>;
   feeCredits?: number | null;
-  persist?: () => Promise<void> | void;
-  renderStill?: (request: { prompt?: string; dest?: string; itemId?: string }) => Promise<{ dest?: string }>;
+  persist?: () => Promise<void | null> | void;
+  renderStill?: (request: { prompt?: string; dest?: string; itemId?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
   renderClip?: (request: { itemId?: string; duration?: number }) => Promise<{ dest?: string; videoPath?: string }>;
 }) {
   const job = input.ledger.exportState(input.accountId).jobs.find((item) => item.jobId === input.jobId);
@@ -387,7 +387,7 @@ export async function stepDraftJob(input: {
 async function defaultStill(formatId: string) {
   const studio = studioForFormat(formatId);
   const stills = await import(pathToFileURL(path.join(studio.directory, "graph/stills.mjs")).href);
-  return stills.nanoBananaStill({ apiKey: process.env.REPLICATE_API_TOKEN }) as (request: { prompt?: string; dest?: string; itemId?: string }) => Promise<{ dest?: string }>;
+  return stills.nanoBananaStill({ apiKey: process.env.REPLICATE_API_TOKEN }) as (request: { prompt?: string; dest?: string; itemId?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
 }
 
 async function defaultClip(formatId: string) {
@@ -403,7 +403,7 @@ export async function approveDraft(input: {
   decision: Record<string, unknown>;
   seconds?: number;
   resumeGraph?: (resume: { runId: string; decision: Record<string, unknown> }) => Promise<{ state: StudioState }>;
-  renderStill?: (request: { prompt?: string; dest?: string; itemId?: string }) => Promise<{ dest?: string }>;
+  renderStill?: (request: { prompt?: string; dest?: string; itemId?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
   renderClip?: (request: { itemId?: string; duration?: number }) => Promise<{ dest?: string; videoPath?: string }>;
 }) {
   const job = input.ledger.exportState(input.accountId).jobs.find((item) => item.jobId === input.jobId);
@@ -467,11 +467,11 @@ export async function studioStatusFromFile(stateFile: unknown) {
 export async function runDraftTick(input: {
   jobs: Array<{ accountId: string; jobId: string; imageUrls: string[]; photos?: CrewPhoto[] }>;
   loadAccount: (accountId: string) => Promise<Account> | Account;
-  saveAccount: (accountId: string, account: Account) => Promise<void> | void;
+  saveAccount: (accountId: string, account: Account) => Promise<void | null> | void;
   runsRoot?: string;
   startGraph?: (start: { jobId: string; storyboard: Storyboard; imageUrls: string[]; photos: CrewPhoto[]; runsRoot: string; formatId: string }) => Promise<GraphStart>;
   feeCredits?: number | null;
-  renderStill?: (request: { prompt?: string; dest?: string; itemId?: string }) => Promise<{ dest?: string }>;
+  renderStill?: (request: { prompt?: string; dest?: string; itemId?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
   renderClip?: (request: { itemId?: string; duration?: number }) => Promise<{ dest?: string; videoPath?: string }>;
 }) {
   const lines: string[] = [];
