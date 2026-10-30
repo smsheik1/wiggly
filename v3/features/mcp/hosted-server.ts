@@ -53,7 +53,7 @@ function writingToolName(job: WritingJob) {
 
 async function accountMemory(ledger: FilmLedger, hooks: {
   loadAccount?: (accountId: string) => Promise<Account>;
-  saveAccount?: (accountId: string, account: Account) => Promise<void>;
+  saveAccount?: (accountId: string, account: Account) => Promise<void | null>;
 } | undefined, accountId: string) {
   const memory = new MemoryFilmLedger();
   const direct = ledger as MemoryFilmLedger;
@@ -81,7 +81,7 @@ function toolResult(ok: boolean, payload: Record<string, unknown> | string, imag
 export function createHostedMcp(ledger: FilmLedger, hooks?: {
   resumeGraph?: (resume: { runId: string; decision: Record<string, unknown> }) => Promise<{ state: StudioState }>;
   loadAccount?: (accountId: string) => Promise<Account>;
-  saveAccount?: (accountId: string, account: Account) => Promise<void>;
+  saveAccount?: (accountId: string, account: Account) => Promise<void | null>;
   listUploads?: (accountId: string) => Promise<Array<{ label: string; url: string }>>;
   runsRoot?: string;
   photoRoot?: string;
@@ -221,17 +221,17 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
   }, { legacy: "reject" });
 }
 
-export function createMcpRoute(options?: {
+export function createMcpRoute<T extends FilmLedger = MemoryFilmLedger>(options?: {
   verifier?: OAuthTokenVerifier;
-  ledger?: FilmLedger;
+  ledger?: T;
   resumeGraph?: (resume: { runId: string; decision: Record<string, unknown> }) => Promise<{ state: StudioState }>;
   loadAccount?: (accountId: string) => Promise<Account>;
-  saveAccount?: (accountId: string, account: Account) => Promise<void>;
+  saveAccount?: (accountId: string, account: Account) => Promise<void | null>;
   listUploads?: (accountId: string) => Promise<Array<{ label: string; url: string }>>;
   runsRoot?: string;
   photoRoot?: string;
 }) {
-  const ledger = options?.ledger ?? new MemoryFilmLedger();
+  const ledger = (options?.ledger ?? new MemoryFilmLedger()) as T;
   const handler = createHostedMcp(ledger, options);
   const gate = requireBearerAuth({
     verifier: options?.verifier ?? workosTokenVerifier(),

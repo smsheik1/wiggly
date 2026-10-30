@@ -129,7 +129,7 @@ export async function advanceRender(input: {
   const snap = await compiled.getState(config);
   const interrupts = (snap?.tasks ?? []).flatMap((task: { interrupts?: Array<{ value?: { kind?: string; itemId?: string; credits?: number; missing?: string[] } }> }) => task.interrupts ?? []);
   const pause = interrupts[0]?.value ? interruptStatus(interrupts[0].value) : {};
-  const merged = { ...input.state, ...last, ...pause, renderStage: interrupts.length ? stage : undefined };
+  const merged: Record<string, unknown> = { ...input.state, ...last, ...pause, renderStage: interrupts.length ? stage : undefined };
   const master = merged.masterVideo as { videoPath?: string } | string | undefined;
   const masterPath = typeof master === "string" ? master : master?.videoPath;
   if (!interrupts.length && stage === "clips" && masterPath) {

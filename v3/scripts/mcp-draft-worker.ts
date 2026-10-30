@@ -61,7 +61,7 @@ async function tick() {
       return {
         accountId: job.workosUserId,
         jobId: job.jobId,
-        imageUrls: photos.map((photo) => photo.url),
+        imageUrls: photos.flatMap((photo) => photo.url ? [photo.url] : []),
         photos,
       };
     })),
