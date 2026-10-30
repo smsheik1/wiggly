@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { IMAGE_CREDITS, VIDEO_CREDITS_PER_SECOND } from "./credits";
 import type { MemoryFilmLedger } from "./film-ledger";
@@ -72,6 +72,14 @@ export async function refundItem(input: {
   await writeMap(file, charges);
 }
 
+export async function dropChargeKey(runDir: string, itemId: string) {
+  const file = chargesPath(runDir);
+  const charges = await readMap(file);
+  if (charges[itemId] == null) return;
+  delete charges[itemId];
+  await writeMap(file, charges);
+}
+
 export async function markPaid(runDir: string, itemId: string, dest: string) {
   const file = paidItemsPath(runDir);
   const paid = await readMap(file);
@@ -88,11 +96,28 @@ export async function chargeThenRender<T extends { dest?: string; videoPath?: st
   credits: number;
   render: () => Promise<T>;
 }) {
+  const already = await readMap(paidItemsPath(input.runDir));
+  const paidDest = already[input.itemId];
+  if (typeof paidDest === "string") {
+    try {
+      await access(paidDest);
+      return { dest: paidDest } as T;
+    } catch {
+      delete already[input.itemId];
+      await writeMap(paidItemsPath(input.runDir), already);
+      await dropChargeKey(input.runDir, input.itemId);
+    }
+  }
   await chargeItem(input);
   try {
     const saved = await input.render();
     const dest = saved.dest ?? saved.videoPath;
     if (!dest) throw new Error(`The render for ${input.itemId} returned no file.`);
+    try {
+      await access(dest);
+    } catch {
+      throw new Error(`The render for ${input.itemId} did not write ${dest}.`);
+    }
     await markPaid(input.runDir, input.itemId, dest);
     return saved;
   } catch (error) {

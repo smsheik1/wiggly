@@ -399,4 +399,11 @@ export class MemoryFilmLedger {
     job.creditsRefunded = true;
     account.purchasedCredits += job.creditsCharged;
   }
+
+  markFailed(accountId: string, jobId: string, error: string) {
+    const job = this.account(accountId).jobs.find((item) => item.jobId === jobId);
+    if (!job || job.stage === "ready" || job.stage === "failed") return;
+    job.stage = "failed";
+    job.error = error;
+  }
 }

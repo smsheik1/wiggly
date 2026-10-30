@@ -1,9 +1,9 @@
-import { access, lstat, readFile } from "node:fs/promises";
+import { access, lstat, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { crewFeeCredits, crewFeeMissingError } from "./crew-fee";
 import { INSTALLED_FORMAT_IDS, MemoryFilmLedger, type Account, type Storyboard } from "./film-ledger";
-import { AwaitingCredits, CREW_FEE_ITEM, chargeItem, chargeThenRender, clipCredits, refundItem, stillCredits } from "./render-charge";
+import { AwaitingCredits, CREW_FEE_ITEM, chargeItem, chargeThenRender, chargesPath, clipCredits, dropChargeKey, refundItem, stillCredits } from "./render-charge";
 
 export function bundledStudiosRoot() {
   return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../studios");
@@ -180,6 +180,38 @@ export type GraphStart = {
   state: StudioState;
 };
 
+async function readCharges(runDir: string) {
+  try {
+    return JSON.parse(await readFile(chargesPath(runDir), "utf8")) as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
+async function readRunState(runDir: string): Promise<{ stateFile: string; state: StudioState; broken?: boolean } | null> {
+  const stateFile = path.join(runDir, "outputs", "state.json");
+  let raw: string;
+  try {
+    raw = await readFile(stateFile, "utf8");
+  } catch (error) {
+    const code = error && typeof error === "object" && "code" in error ? String(error.code) : "";
+    if (code === "ENOENT") return null;
+    throw error;
+  }
+  try {
+    return { stateFile, state: JSON.parse(raw) as StudioState };
+  } catch {
+    return { stateFile, state: { status: "failed" }, broken: true };
+  }
+}
+
+function graphPause(error: unknown) {
+  if (!error || typeof error !== "object") return null;
+  const named = error as { name?: string; interrupts?: Array<{ value?: { kind?: string } }> };
+  if (named.name !== "GraphInterrupt" && named.name !== "NodeInterrupt") return null;
+  return named.interrupts?.[0]?.value?.kind === "credits" ? "awaiting-credits" as const : "awaiting-approval" as const;
+}
+
 export async function startV2Run(input: {
   jobId: string;
   storyboard: Storyboard;
@@ -189,13 +221,34 @@ export async function startV2Run(input: {
   formatId?: string;
   ledger: MemoryFilmLedger;
   accountId: string;
+  feeCredits?: number | null;
+  persist?: () => Promise<void> | void;
 }): Promise<GraphStart> {
-  const fee = crewFeeCredits();
+  const fee = input.feeCredits !== undefined ? input.feeCredits : crewFeeCredits();
   if (fee == null) throw new Error(crewFeeMissingError());
   const formatId = input.formatId ?? requireFormatId(input.storyboard.format);
-  const runDir = path.join(input.runsRoot, input.jobId);
-  await chargeItem({ ledger: input.ledger, accountId: input.accountId, jobId: input.jobId, runDir, itemId: CREW_FEE_ITEM, credits: fee });
+  const photoReferences = crewPhotoReferences(input.storyboard, input.photos ?? []);
   const { runCustomer } = await loadStudio(formatId);
+  const runDir = path.join(input.runsRoot, input.jobId);
+  const charged = input.ledger.exportState(input.accountId).jobs.find((job) => job.jobId === input.jobId)?.creditsCharged ?? 0;
+  const key = Number((await readCharges(runDir))[CREW_FEE_ITEM] ?? 0);
+  if (key > 0 && charged < key) await dropChargeKey(runDir, CREW_FEE_ITEM);
+  await chargeItem({ ledger: input.ledger, accountId: input.accountId, jobId: input.jobId, runDir, itemId: CREW_FEE_ITEM, credits: fee });
+  try {
+    await input.persist?.();
+  } catch (error) {
+    if (!(await readRunState(runDir))) {
+      await refundItem({ ledger: input.ledger, accountId: input.accountId, jobId: input.jobId, runDir, itemId: CREW_FEE_ITEM });
+    }
+    throw error;
+  }
+  const existing = await readRunState(runDir);
+  if (existing && (existing.broken || existing.state.status === "running" || !existing.state.status)) {
+    const state = { ...existing.state, status: "failed" };
+    await writeFile(existing.stateFile, JSON.stringify(state));
+    return { runId: input.jobId, stateFile: existing.stateFile, state };
+  }
+  if (existing) return { runId: input.jobId, stateFile: existing.stateFile, state: existing.state };
   try {
     const started = await runCustomer({
       runId: input.jobId,
@@ -205,18 +258,15 @@ export async function startV2Run(input: {
       project: {
         inputs: {
           ...questionnaireFromStoryboard(input.storyboard),
-          photoReferences: crewPhotoReferences(input.storyboard, input.photos ?? []),
+          photoReferences,
         },
       },
     });
     return { runId: started.runId, stateFile: started.stateFile, state: started.state };
   } catch (error) {
-    if (!(error instanceof AwaitingCredits)) {
-      try {
-        await access(path.join(runDir, "outputs", "state.json"));
-      } catch {
-        await refundItem({ ledger: input.ledger, accountId: input.accountId, jobId: input.jobId, runDir, itemId: CREW_FEE_ITEM });
-      }
+    if (!(error instanceof AwaitingCredits) && !graphPause(error) && !(await readRunState(runDir))) {
+      await refundItem({ ledger: input.ledger, accountId: input.accountId, jobId: input.jobId, runDir, itemId: CREW_FEE_ITEM });
+      await input.persist?.();
     }
     throw error;
   }
@@ -234,25 +284,29 @@ export async function resumeV2Run(input: { runId: string; decision: Record<strin
   return { state: resumed.state as StudioState };
 }
 
+function recordedStage(ledger: MemoryFilmLedger, accountId: string, jobId: string) {
+  return ledger.exportState(accountId).jobs.find((item) => item.jobId === jobId)?.stage;
+}
+
 function applyStudioState(ledger: MemoryFilmLedger, accountId: string, jobId: string, state: StudioState) {
   if (state.status === "failed") {
-    ledger.failJob(accountId, jobId, "The v2 run failed.");
-    return "failed";
+    ledger.markFailed(accountId, jobId, "The v2 run failed.");
+    return recordedStage(ledger, accountId, jobId) ?? "failed";
   }
   if (state.status === "done") {
     ledger.setStage(accountId, jobId, "ready", state.videoUrl);
-    return "ready";
+    return recordedStage(ledger, accountId, jobId) ?? "ready";
   }
   if (state.status === "awaiting-credits") {
     ledger.setStage(accountId, jobId, "awaiting-credits");
-    return "awaiting-credits";
+    return recordedStage(ledger, accountId, jobId) ?? "awaiting-credits";
   }
   if (state.status === "awaiting-approval" || state.status === "awaiting-production") {
     ledger.setStage(accountId, jobId, "awaiting-approval");
-    return state.status;
+    return recordedStage(ledger, accountId, jobId) ?? state.status;
   }
   ledger.setStage(accountId, jobId, "running");
-  return state.status ?? "running";
+  return recordedStage(ledger, accountId, jobId) ?? state.status ?? "running";
 }
 
 export async function stepDraftJob(input: {
@@ -265,6 +319,8 @@ export async function stepDraftJob(input: {
   runsRoot?: string;
   startGraph?: (start: { jobId: string; storyboard: Storyboard; imageUrls: string[]; photos: CrewPhoto[]; runsRoot: string; formatId: string }) => Promise<GraphStart>;
   resumeGraph?: (resume: { runId: string; decision: Record<string, unknown> }) => Promise<{ state: StudioState }>;
+  feeCredits?: number | null;
+  persist?: () => Promise<void> | void;
 }) {
   const job = input.ledger.exportState(input.accountId).jobs.find((item) => item.jobId === input.jobId);
   if (!job?.storyboard) throw new Error("This job has no storyboard.");
@@ -272,15 +328,30 @@ export async function stepDraftJob(input: {
   studioForFormat(formatId);
   const runsRoot = input.runsRoot ?? path.join(process.cwd(), "data", "format-runs");
   if (!job.stateFile) {
-    const start = input.startGraph ?? ((start) => startV2Run({ ...start, ledger: input.ledger, accountId: input.accountId }));
+    const start = input.startGraph ?? ((start) => startV2Run({
+      ...start,
+      ledger: input.ledger,
+      accountId: input.accountId,
+      feeCredits: input.feeCredits,
+      persist: input.persist,
+    }));
     try {
       const started = await start({ jobId: input.jobId, storyboard: job.storyboard, imageUrls: input.imageUrls, photos: input.photos ?? [], runsRoot, formatId });
       input.ledger.setRun(input.accountId, input.jobId, { runId: started.runId, stateFile: started.stateFile });
       return applyStudioState(input.ledger, input.accountId, input.jobId, started.state);
     } catch (error) {
-      if (error instanceof AwaitingCredits) {
-        input.ledger.setStage(input.accountId, input.jobId, "awaiting-credits");
-        return "awaiting-credits";
+      const runDir = path.join(runsRoot, input.jobId);
+      const existing = await readRunState(runDir);
+      const pause = error instanceof AwaitingCredits ? "awaiting-credits" : graphPause(error);
+      if (pause) {
+        if (existing) input.ledger.setRun(input.accountId, input.jobId, { runId: input.jobId, stateFile: existing.stateFile });
+        input.ledger.setStage(input.accountId, input.jobId, pause);
+        return pause;
+      }
+      if (existing) {
+        input.ledger.setRun(input.accountId, input.jobId, { runId: input.jobId, stateFile: existing.stateFile });
+        input.ledger.markFailed(input.accountId, input.jobId, "The v2 run failed.");
+        return "failed";
       }
       throw error;
     }
@@ -358,22 +429,29 @@ export async function runDraftTick(input: {
   saveAccount: (accountId: string, account: Account) => Promise<void> | void;
   runsRoot?: string;
   startGraph?: (start: { jobId: string; storyboard: Storyboard; imageUrls: string[]; photos: CrewPhoto[]; runsRoot: string; formatId: string }) => Promise<GraphStart>;
+  feeCredits?: number | null;
 }) {
   const lines: string[] = [];
   for (const job of input.jobs) {
     const ledger = new MemoryFilmLedger();
     ledger.importState(job.accountId, await input.loadAccount(job.accountId));
-    const stage = await stepDraftJob({
-      ledger,
-      accountId: job.accountId,
-      jobId: job.jobId,
-      imageUrls: job.imageUrls,
-      photos: job.photos,
-      runsRoot: input.runsRoot,
-      startGraph: input.startGraph,
-    });
-    await input.saveAccount(job.accountId, ledger.exportState(job.accountId));
-    lines.push(`${job.jobId} -> ${stage}`);
+    const persist = () => input.saveAccount(job.accountId, ledger.exportState(job.accountId));
+    try {
+      const stage = await stepDraftJob({
+        ledger,
+        accountId: job.accountId,
+        jobId: job.jobId,
+        imageUrls: job.imageUrls,
+        photos: job.photos,
+        runsRoot: input.runsRoot,
+        startGraph: input.startGraph,
+        feeCredits: input.feeCredits,
+        persist,
+      });
+      lines.push(`${job.jobId} -> ${stage}`);
+    } finally {
+      await persist();
+    }
   }
   return lines;
 }

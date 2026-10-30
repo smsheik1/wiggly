@@ -230,7 +230,7 @@ test("a credit pause stays paused until the balance covers the next item", async
   assert.deepEqual(decision, { kind: "credits" });
 });
 
-test("a failed v2 run returns the credits already spent", async () => {
+test("a failed v2 run keeps the crew fee and the charges already spent", async () => {
   const job = startedJob();
   const root = path.join(tmpdir(), `wiggly-fail-${job.jobId}`);
   const stateFile = path.join(root, job.jobId, "outputs", "state.json");
@@ -248,8 +248,11 @@ test("a failed v2 run returns the credits already spent", async () => {
   });
   assert.equal(stage, "failed");
   const account = job.ledger.exportState("user_1");
-  assert.equal(account.jobs[0]?.creditsRefunded, true);
-  assert.equal(account.purchasedCredits, 8);
+  assert.equal(account.jobs[0]?.creditsRefunded, false);
+  assert.equal(account.jobs[0]?.creditsCharged, 8);
+  assert.equal(account.jobs[0]?.error, "The v2 run failed.");
+  assert.equal(account.monthlyCredits, 1892);
+  assert.equal(account.purchasedCredits, 0);
 });
 
 test("the state file is what a later poll reads", async () => {

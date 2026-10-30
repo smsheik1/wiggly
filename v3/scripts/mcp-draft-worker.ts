@@ -52,7 +52,7 @@ async function accountPhotos(accountId: string): Promise<CrewPhoto[]> {
 async function tick() {
   const jobs = await listActiveJobs();
   if (jobs.length === 0) {
-    console.error("No queued, running, or awaiting-approval drafts.");
+    console.error("No queued, running, awaiting-approval, or awaiting-credits drafts.");
     return;
   }
   const lines = await runDraftTick({
