@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Check, Copy, Download } from "lucide-react";
+import { ArrowLeft, Bot, Check, Copy, Download } from "lucide-react";
 import Link from "next/link";
+import posthog from "posthog-js";
+import { buildDiscoveryHandoffPrompt } from "./handoff";
 import { DiscoveryFormatHandoff } from "./DiscoveryFormatHandoff";
 import type { DiscoveryFormatProfile } from "./types";
 import { mcpSetupAgents } from "./mcpSetupAgents";
@@ -125,23 +127,22 @@ export function PixarStoryHeroAction({
         <p className="mx-auto mt-5 max-w-[34rem] text-[17px] leading-7 text-[#4d4a44]">
           Give your agent your family&apos;s memories. It builds a consistent 3D cast and hands back a narrated widescreen film of about 72 seconds. The film on this page is one it made.
         </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {format?.handoff ? <DiscoveryFormatHandoff format={format} tone="dark" /> : null}
+
+        {format ? (
+          <div className="mx-auto mt-8 max-w-[560px]">
+            <PixarStoryPromptBox format={format} />
+          </div>
+        ) : null}
+
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
           <a
             href="#film"
-            className="inline-flex min-h-12 items-center rounded-full border border-black/10 bg-black/[0.04] px-6 text-sm font-semibold text-[#171614] transition-colors hover:bg-black/[0.08]"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-black/10 bg-black/[0.04] px-5 text-sm font-semibold text-[#171614] transition-colors hover:bg-black/[0.08]"
           >
             Watch the sample film
           </a>
-          <a
-            href={zipHref}
-            download
-            className="inline-flex min-h-12 items-center gap-2 rounded-full border border-black/10 bg-white px-5 text-sm font-semibold text-[#171614] shadow-sm transition-colors hover:bg-black/[0.02]"
-          >
-            <Download className="size-4" aria-hidden="true" />
-            Download free skill file
-          </a>
         </div>
+
         <p className="mt-4 text-sm text-[#6f6b62]">Free and open source. Works with Claude, Cursor, Codex, Antigravity, and VS Code.</p>
         <div className="mt-8">
           <p className="text-sm text-[#6f6b62]">Built for</p>
@@ -155,6 +156,66 @@ export function PixarStoryHeroAction({
         </div>
       </div>
     </section>
+  );
+}
+
+export function PixarStoryPromptBox({
+  format,
+}: {
+  format: DiscoveryFormatProfile;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const copyPrompt = async () => {
+    posthog.capture("format_handoff_started", {
+      destination: "coding-agent",
+      format_slug: format.slug,
+    });
+    try {
+      const origin =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : "https://wiggly.agentenamel.com";
+      const prompt = buildDiscoveryHandoffPrompt(format, origin);
+      await navigator.clipboard.writeText(prompt);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2400);
+    } catch {
+      // fallback
+    }
+  };
+
+  return (
+    <div
+      role="region"
+      aria-label="Agent Prompt"
+      className="flex items-center gap-3 rounded-[16px] bg-[#171614] px-4 py-3 text-left text-white shadow-lg shadow-black/10"
+    >
+      <Bot className="size-4 shrink-0 text-[#8d897f]" aria-hidden="true" />
+      <div className="min-w-0 flex-1 truncate font-mono text-[13px] leading-snug">
+        <span className="text-[#a39e94]">Paste into your agent: </span>
+        <span className="text-[#f5f1e8]">
+          Let&apos;s create this with the latest published Wiggly Format: My Pixar Story...
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={() => void copyPrompt()}
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-[#171614] transition-all hover:bg-[#e8e4dc] active:scale-95"
+      >
+        {copied ? (
+          <>
+            <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
+            <span className="font-bold text-emerald-700">Copied!</span>
+          </>
+        ) : (
+          <>
+            <Copy className="size-3.5" aria-hidden="true" />
+            <span>Copy prompt</span>
+          </>
+        )}
+      </button>
+    </div>
   );
 }
 
