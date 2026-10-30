@@ -115,14 +115,14 @@ assert.doesNotMatch(adviblySectionsSource, /wiggly_submit_film/);
 assert.doesNotMatch(adviblySectionsSource, /WIGGLY_API_KEY/);
 assert.ok(!adviblySectionsSource.includes("mcpServers"), "Raw JSON mcpServers block must be removed");
 
-assert.match(adviblySectionsSource, /npx skills add smsheik1\/wiggly -s my-pixar-story/);
+assert.match(adviblySectionsSource, /npx skills add wiggly-app\/skills -s my-pixar-story/);
 assert.match(adviblySectionsSource, /Make a Pixar-style story from our family memories\./);
 assert.match(adviblySectionsSource, /Connect the Wiggly MCP first/);
 assert.match(adviblySectionsSource, /href="\/mcp-setup"/);
 assert.match(adviblySectionsSource, /quotes credits before each still/);
 assert.match(adviblySectionsSource, /wiggly-my-pixar-story-format-kit\.zip/);
 assert.match(adviblySectionsSource, /my-pixar-story\.skill/);
-assert.match(adviblySectionsSource, /git clone https:\/\/github.com\/smsheik1\/wiggly\.git/);
+assert.match(adviblySectionsSource, /git clone https:\/\/github.com\/wiggly-app\/skills\.git/);
 assert.match(adviblySectionsSource, /max-w-\[1040px\]/);
 assert.match(adviblySectionsSource, /All skills/);
 assert.match(adviblySectionsSource, /What the skill/);
