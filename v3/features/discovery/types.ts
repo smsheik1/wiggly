@@ -65,6 +65,7 @@ export type DiscoveryRunEstimate = {
 };
 
 export type DiscoveryFormatHandoff = {
+  handoffMode?: "director" | "developer";
   requiredInputs: string[];
   deliverables: string[];
   instructions: string[];

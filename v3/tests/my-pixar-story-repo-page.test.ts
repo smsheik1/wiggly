@@ -151,7 +151,10 @@ assert.match(adviblySectionsSource, /Paste into your agent:/);
 const handoffPrompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
 assert.match(handoffPrompt, /CODING AGENT REQUIRED/);
 assert.match(handoffPrompt, /MCP Server: https:\/\/wiggly\.agentenamel\.com\/mcp/);
-assert.match(handoffPrompt, /npx skills add wiggly-app\/skills -s my-pixar-story/);
+assert.match(handoffPrompt, /Role: Creative Director/);
+assert.match(handoffPrompt, /TURN 1 INSTRUCTION:/);
+assert.match(handoffPrompt, /claude mcp add --transport http/);
+assert.doesNotMatch(handoffPrompt, /Continue until the Format's validation and quality checks pass/);
 
 // 4. Page Integration verification
 const pageSource = readFileSync("app/formats/[slug]/page.tsx", "utf8");

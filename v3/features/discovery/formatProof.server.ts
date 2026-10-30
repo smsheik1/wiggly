@@ -46,6 +46,7 @@ const formatConfigs: FormatProfileConfig[] = [
       "The final message and spoken closing thesis",
     ],
     handoff: {
+      handoffMode: "director",
       requiredInputs: [
         "A completed family questionnaire (childhood, teen, adult, and finale memories)",
         "Optional real family photos for character reference",
