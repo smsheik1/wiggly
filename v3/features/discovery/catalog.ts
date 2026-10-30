@@ -2135,7 +2135,6 @@ export const discoveryCatalog: DiscoveryEntry[] = [
   {
     id: "my-pixar-story-shaz-for-mia",
     status: "published",
-    showInDiscovery: false,
     order: 1,
     brand: "Pixar-Style Family Memoir · A Father's Promise",
     title: "Shaz for Mia — I Still Leave the Porch Light On",
@@ -2877,6 +2876,13 @@ export const discoveryShelfDefinitions = [
     title: "Animate Shaz",
     description: "A reusable 2D character who can speak, react, and stay on-model from scene to scene.",
     formats: ["shaz-puppet-runtime"],
+    layout: "landscape",
+  },
+  {
+    id: "my-pixar-story",
+    title: "My Pixar Story",
+    description: "Turn real questionnaire memories into a cinematic 3D animated memoir with consistent characters, authentic emotion, and native synced dialogue.",
+    formats: ["my-pixar-story"],
     layout: "landscape",
   },
   {

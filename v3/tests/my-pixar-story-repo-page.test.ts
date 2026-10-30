@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { getDiscoveryFormatProfile } from "../features/discovery/formatProof.server";
 import { buildDiscoveryHandoffPrompt } from "../features/discovery/handoff";
 import { getFormatRepoPagePresentation } from "../features/discovery/formatRepoPage.server";
+import { discoveryShelfDefinitions, getPublishedDiscoveryEntries } from "../features/discovery/catalog";
 
 // 1. Profile & Discovery verification
 const profile = getDiscoveryFormatProfile("my-pixar-story");
@@ -13,6 +14,15 @@ assert.equal(profile.proofEntries.length, 1);
 assert.equal(profile.proofEntries[0].id, "my-pixar-story-shaz-for-mia");
 assert.equal(profile.proofEntries[0].media.kind, "video");
 assert.equal(profile.proofEntries[0].media.src, "/format-repositories/my-pixar-story-v1/examples/shaz-for-mia-web.mp4");
+
+const pixarShelf = discoveryShelfDefinitions.find((s) => s.id === "my-pixar-story");
+assert.ok(pixarShelf, "my-pixar-story shelf must exist in discoveryShelfDefinitions");
+assert.equal(pixarShelf.layout, "landscape");
+assert.deepEqual(pixarShelf.formats, ["my-pixar-story"]);
+
+const publishedEntries = getPublishedDiscoveryEntries();
+const publishedPixarEntry = publishedEntries.find((e) => e.id === "my-pixar-story-shaz-for-mia");
+assert.ok(publishedPixarEntry, "my-pixar-story-shaz-for-mia must be published and visible on the Discover page");
 
 // 2. Physical Asset Parity verification
 const publicAssets = [
