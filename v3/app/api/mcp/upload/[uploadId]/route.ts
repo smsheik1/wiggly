@@ -18,11 +18,14 @@ export async function POST(request: Request, context: { params: Promise<{ upload
     const form = await request.formData();
     const labels: string[] = [];
     const photos: Array<{ label: string; filename: string }> = [];
+    const labelCounts = new Map<string, number>();
     for (let index = 0; index < 8; index += 1) {
       const file = form.get(`photo-${index}`);
       const label = String(form.get(`label-${index}`) ?? "").trim();
       if (!(file instanceof File) || file.size === 0 || !label) continue;
-      const filename = photoFilename(label, file.name || `photo-${index}.jpg`);
+      const count = labelCounts.get(label) ?? 0;
+      labelCounts.set(label, count + 1);
+      const filename = photoFilename(label, file.name || `photo-${index}.jpg`, count > 0 ? count : undefined);
       await savePhoto(photoRoot(), session.accountId, filename, Buffer.from(await file.arrayBuffer()));
       labels.push(label);
       photos.push({ label, filename });

@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { GET as getRender } from "../app/api/mcp/renders/[jobId]/[tag]/route";
 import { GET as getPhoto } from "../app/api/mcp/photos/[accountId]/[filename]/route";
 import { MemoryFilmLedger } from "../features/mcp/film-ledger";
-import { containedPath, photoSignatureValid, savePhoto, signPhoto, signRender } from "../features/mcp/photo-store";
+import { containedPath, photoFilename, photoSignatureValid, savePhoto, signPhoto, signRender } from "../features/mcp/photo-store";
 
 test("an upload session keeps labels on that account and photos stay inside its directory", async () => {
   const ledger = new MemoryFilmLedger();
@@ -99,4 +99,12 @@ test("the photo route serves uploaded photos with proper Content-Type headers", 
   } finally {
     await rm(uploadDir, { recursive: true, force: true });
   }
+});
+
+test("photoFilename handles multiple photos of the same label without overwriting", () => {
+  assert.equal(photoFilename("Z", "photo1.jpg"), "Z.jpg");
+  assert.equal(photoFilename("Z", "photo1.jpg", 0), "Z.jpg");
+  assert.equal(photoFilename("Z", "photo2.png", 1), "Z-2.png");
+  assert.equal(photoFilename("Z", "photo3.jpeg", 2), "Z-3.jpeg");
+  assert.equal(photoFilename("Z", "photo4.webp", 3), "Z-4.webp");
 });

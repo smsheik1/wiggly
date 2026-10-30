@@ -1,6 +1,7 @@
 import { access, lstat, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { runtimeImport } from "./runtime-import";
 import { INSTALLED_FORMAT_IDS, MemoryFilmLedger, type Account, type Storyboard } from "./film-ledger";
 import { AwaitingCredits, chargeThenRender, clipCredits, stillCredits } from "./render-charge";
 
@@ -130,7 +131,7 @@ async function loadStudio(formatId: string) {
   } catch {
     throw new Error(missingStudioError(formatId, studio.directory));
   }
-  return import(pathToFileURL(entry).href);
+  return runtimeImport(pathToFileURL(entry).href);
 }
 
 export function replicateSetupError() {
@@ -386,13 +387,13 @@ export async function stepDraftJob(input: {
 
 async function defaultStill(formatId: string) {
   const studio = studioForFormat(formatId);
-  const stills = await import(pathToFileURL(path.join(studio.directory, "graph/stills.mjs")).href);
+  const stills = await runtimeImport(pathToFileURL(path.join(studio.directory, "graph/stills.mjs")).href);
   return stills.nanoBananaStill({ apiKey: process.env.REPLICATE_API_TOKEN }) as (request: { prompt?: string; dest?: string; itemId?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
 }
 
 async function defaultClip(formatId: string) {
   const studio = studioForFormat(formatId);
-  const customer = await import(pathToFileURL(path.join(studio.directory, "scripts/run-customer.mjs")).href);
+  const customer = await runtimeImport(pathToFileURL(path.join(studio.directory, "scripts/run-customer.mjs")).href);
   return customer.seedance480pRenderer({ apiKey: process.env.REPLICATE_API_TOKEN }) as (request: { itemId?: string; duration?: number }) => Promise<{ dest?: string; videoPath?: string }>;
 }
 

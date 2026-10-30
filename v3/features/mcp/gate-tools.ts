@@ -1,6 +1,7 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { runtimeImport } from "./runtime-import";
 import { crewPhotoReferences, questionnaireFromStoryboard, studioForFormat, type CrewPhoto } from "./draft-worker";
 import { MemoryFilmLedger, type Storyboard } from "./film-ledger";
 
@@ -51,9 +52,9 @@ export async function loadCrewGates(formatId = "my-pixar-story"): Promise<Crew> 
   const graphUrl = pathToFileURL(path.join(studio.directory, "graph/graph.mjs")).href;
   const modelsUrl = pathToFileURL(path.join(studio.directory, "config/models.mjs")).href;
   const photosUrl = pathToFileURL(path.join(studio.directory, "graph/deep-agent-node.mjs")).href;
-  const graph = await import(graphUrl);
-  const models = await import(modelsUrl);
-  const photos = await import(photosUrl);
+  const graph = await runtimeImport(graphUrl);
+  const models = await runtimeImport(modelsUrl);
+  const photos = await runtimeImport(photosUrl);
   const crew: Crew = {
     specs: graph.AGENT_SPECS,
     retryNotes: graph.retryNotes,
