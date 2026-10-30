@@ -16,12 +16,16 @@ export function containedPath(root: string, accountId: string, filename: string)
   return { dir, full, safeName };
 }
 
-export function photoFilename(label: string, originalName: string) {
+export function photoFilename(label: string, originalName: string, index?: number) {
   const safe = label.trim().replace(/[^A-Za-z0-9_-]/g, "");
   if (!safe) throw new Error("Invalid photo label.");
   const ext = path.extname(originalName || "").toLowerCase();
   const allowed = new Set([".png", ".jpg", ".jpeg", ".webp"]);
-  return `${safe}${allowed.has(ext) ? ext : ".jpg"}`;
+  const safeExt = allowed.has(ext) ? ext : ".jpg";
+  if (typeof index === "number" && index > 0) {
+    return `${safe}-${index + 1}${safeExt}`;
+  }
+  return `${safe}${safeExt}`;
 }
 
 export async function savePhoto(root: string, accountId: string, filename: string, bytes: Buffer) {

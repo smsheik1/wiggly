@@ -1,6 +1,7 @@
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { runtimeImport } from "./runtime-import";
 import { signRender } from "./photo-store";
 import { publicOrigin } from "./public-origin";
 import { studioForFormat } from "./draft-worker";
@@ -13,14 +14,14 @@ type RenderClip = (request: { itemId?: string; duration?: number; dest?: string;
 
 async function studioModules(formatId: string) {
   const studio = studioForFormat(formatId);
-  const file = (name: string) => import(pathToFileURL(path.join(studio.directory, name)).href);
+  const file = (name: string) => runtimeImport(pathToFileURL(path.join(studio.directory, name)).href);
   const [graph, stills, producer, state, checkpoint, langgraph] = await Promise.all([
     file("graph/graph.mjs"),
     file("graph/stills.mjs"),
     file("graph/producer.mjs"),
     file("graph/state.mjs"),
     file("graph/file-checkpointer.mjs"),
-    import(pathToFileURL(path.join(studio.directory, "node_modules/@langchain/langgraph/dist/index.js")).href),
+    runtimeImport(pathToFileURL(path.join(studio.directory, "node_modules/@langchain/langgraph/dist/index.js")).href),
   ]);
   return { graph, stills, producer, state, checkpoint, langgraph, directory: studio.directory };
 }
