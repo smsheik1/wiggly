@@ -128,24 +128,21 @@ export function PixarStoryHeroAction({
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           {format?.handoff ? <DiscoveryFormatHandoff format={format} tone="dark" /> : null}
           <a
-            href="#install"
-            className="inline-flex items-center rounded-full bg-[#171614] px-5 py-3 text-sm font-semibold text-white"
+            href="#film"
+            className="inline-flex min-h-12 items-center rounded-full border border-black/10 bg-black/[0.04] px-6 text-sm font-semibold text-[#171614] transition-colors hover:bg-black/[0.08]"
           >
-            Install the skill
+            Watch the sample film
           </a>
           <a
             href={zipHref}
             download
-            className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold text-[#171614] shadow-sm"
+            className="inline-flex min-h-12 items-center gap-2 rounded-full border border-black/10 bg-white px-5 text-sm font-semibold text-[#171614] shadow-sm transition-colors hover:bg-black/[0.02]"
           >
             <Download className="size-4" aria-hidden="true" />
             Download free skill file
           </a>
         </div>
-        <div className="mx-auto mt-4 max-w-[560px]">
-          <PixarStoryInstallCommand />
-        </div>
-        <p className="mt-3 text-sm text-[#6f6b62]">Free and open source.</p>
+        <p className="mt-4 text-sm text-[#6f6b62]">Free and open source. Works with Claude, Cursor, Codex, Antigravity, and VS Code.</p>
         <div className="mt-8">
           <p className="text-sm text-[#6f6b62]">Built for</p>
           <ul className="mt-3 flex flex-wrap items-center justify-center gap-2">
