@@ -525,7 +525,7 @@ export function PixarStoryAdviblySections({
         </div>
       </section>
 
-      <section id="examples" className="px-4 pb-8 sm:px-8">
+      <section id="film" className="scroll-mt-12 px-4 pb-8 sm:px-8">
         <div className="mx-auto max-w-[1040px]">
           <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8d897f]">Finished memoir</p>
           <h2 className="pixar-display mt-3 text-center text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">
