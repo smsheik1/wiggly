@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { getDiscoveryFormatProfile } from "../features/discovery/formatProof.server";
 import { buildDiscoveryHandoffPrompt } from "../features/discovery/handoff";
 import { getFormatRepoPagePresentation } from "../features/discovery/formatRepoPage.server";
-import { discoveryShelfDefinitions, getPublishedDiscoveryEntries } from "../features/discovery/catalog";
+import { discoveryShelfDefinitions, getPublishedDiscoveryEntries, groupDiscoveryEntriesByShelf } from "../features/discovery/catalog";
 
 // 1. Profile & Discovery verification
 const profile = getDiscoveryFormatProfile("my-pixar-story");
@@ -23,6 +23,9 @@ assert.deepEqual(pixarShelf.formats, ["my-pixar-story"]);
 const publishedEntries = getPublishedDiscoveryEntries();
 const publishedPixarEntry = publishedEntries.find((e) => e.id === "my-pixar-story-shaz-for-mia");
 assert.ok(publishedPixarEntry, "my-pixar-story-shaz-for-mia must be published and visible on the Discover page");
+
+const discoveryShelves = groupDiscoveryEntriesByShelf(publishedEntries);
+assert.equal(discoveryShelves[0]?.id, "my-pixar-story", "My Pixar Story must be the first shelf at the top of the Discover page");
 
 // 2. Physical Asset Parity verification
 const publicAssets = [

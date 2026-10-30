@@ -387,11 +387,11 @@ assert.ok(
 const shelves = groupDiscoveryEntriesByShelf(published);
 const shelvedEntries = shelves.flatMap((shelf) => shelf.entries);
 const approvedRepoOrder = [
+  ["my-pixar-story", "My Pixar Story"],
   ["two-d-character-animation", "Animate Shaz"],
   ["product-stories", "3D Breakdown"],
   ["lego-music-videos", "Lego Music Video"],
   ["character-conversations", "Animal Conversations"],
-  ["my-pixar-story", "My Pixar Story"],
   ["character-dance-offs", "Bikini Bottom Dance Off"],
   ["product-photoshoots", "Product Photoshoot"],
   ["character-explainers", "Cartoon Explainer"],

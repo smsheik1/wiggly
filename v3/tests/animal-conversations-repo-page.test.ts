@@ -79,9 +79,9 @@ const shelf = discoveryShelves.find(
 );
 assert.equal(shelf?.entries[0]?.format.slug, "animal-conversations");
 assert.equal(
-  discoveryShelves[3],
+  discoveryShelves[4],
   shelf,
-  "Animal Conversations should be fourth in the approved Discover Repo order.",
+  "Animal Conversations should be fifth in the approved Discover Repo order.",
 );
 assert.equal(shelf?.title, "Animal Conversations");
 
