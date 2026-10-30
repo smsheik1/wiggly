@@ -128,7 +128,7 @@ export default async function FormatPage({
       </header>
       )}
 
-      {isPixarStory ? <PixarStoryHeroAction /> : null}
+      {isPixarStory ? <PixarStoryHeroAction format={format} /> : null}
 
       {isPixarStory ? null : (
       <section

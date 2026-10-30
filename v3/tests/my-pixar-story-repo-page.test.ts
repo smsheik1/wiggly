@@ -136,7 +136,13 @@ assert.match(adviblySectionsSource, /Read the source/);
 assert.match(adviblySectionsSource, /The playbook\./);
 assert.match(adviblySectionsSource, /What to watch for\./);
 assert.match(adviblySectionsSource, /Keep building\./);
+assert.match(adviblySectionsSource, /DiscoveryFormatHandoff/);
 assert.doesNotMatch(adviblySectionsSource, /Start creating/);
+
+const handoffPrompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
+assert.match(handoffPrompt, /CODING AGENT REQUIRED/);
+assert.match(handoffPrompt, /MCP Server: https:\/\/wiggly\.agentenamel\.com\/mcp/);
+assert.match(handoffPrompt, /npx skills add wiggly-app\/skills -s my-pixar-story/);
 
 // 4. Page Integration verification
 const pageSource = readFileSync("app/formats/[slug]/page.tsx", "utf8");
