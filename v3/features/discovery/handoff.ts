@@ -19,6 +19,31 @@ export function buildDiscoveryHandoffPrompt(
   }
 
   const formatUrl = absoluteUrl(origin, `/formats/${format.slug}`);
+
+  if (format.handoff.handoffMode === "director") {
+    const firstQuestion =
+      format.handoff.firstQuestion ||
+      "Who is this story for, and what is the one moment or lesson you want them to always remember?";
+    return `CODING AGENT REQUIRED: If you cannot access this computer's terminal, filesystem, and media files, do not analyze or simulate. Reply only: "Open this in Codex, Claude Code, Antigravity, Cursor, or Copilot CLI."
+
+Let's create a 3D animated family memoir with Wiggly Format: ${format.name}.
+
+Format Page: ${formatUrl}
+MCP Server: ${absoluteUrl(origin, "/mcp")} (HTTP / WorkOS OAuth)
+Skill: npx skills add wiggly-app/skills -s ${format.slug}
+
+Role: Creative Director. Work directly in this workspace. Do not clone developer repos, download zip archives, or run build/test suites.
+
+Photos: If the user has family reference photos, they can drop them into chat or put them in \`./photos\`. Photos are optional reference for character styling.
+
+TURN 1 INSTRUCTION:
+1. Run \`npx skills add wiggly-app/skills -s ${format.slug}\` to install the creative director skill.
+2. In the same response, greet me warmly and ask:
+"${firstQuestion}"
+
+Note: Wiggly MCP (\`claude mcp add --transport http wiggly ${absoluteUrl(origin, "/mcp")}\` or add via native MCP settings) handles 4K character sheet generation and Seedance video rendering after the screenplay is approved.`;
+  }
+
   const mcpLine = format.slug === "my-pixar-story"
     ? `MCP Server: ${absoluteUrl(origin, "/mcp")}\nInstall Skill: npx skills add wiggly-app/skills -s my-pixar-story\n`
     : "";

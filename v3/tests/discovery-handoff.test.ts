@@ -217,4 +217,25 @@ assert.doesNotMatch(
   "The hero shell should not change between old and new Repo pages.",
 );
 
+// Verify developer format snapshot remains unchanged
+const puppet = getDiscoveryFormatProfile("shaz-puppet-runtime");
+assert.ok(puppet?.handoff);
+const puppetPrompt = buildDiscoveryHandoffPrompt(puppet, origin);
+assert.match(puppetPrompt, /Let's create this with the latest published Wiggly Format: Animate Shaz\./);
+assert.match(puppetPrompt, /Use the packaged runtime; do not rebuild it\./);
+assert.match(puppetPrompt, /Continue until the Format's validation and quality checks pass/);
+
+// Verify director format produces clean, non-test creative prompt
+const pixar = getDiscoveryFormatProfile("my-pixar-story");
+assert.ok(pixar?.handoff);
+assert.equal(pixar.handoff.handoffMode, "director");
+const pixarPrompt = buildDiscoveryHandoffPrompt(pixar, origin);
+assert.match(pixarPrompt, /Role: Creative Director\./);
+assert.match(pixarPrompt, /TURN 1 INSTRUCTION:/);
+assert.match(pixarPrompt, /claude mcp add --transport http/);
+assert.doesNotMatch(pixarPrompt, /Use the packaged runtime; do not rebuild it/);
+assert.doesNotMatch(pixarPrompt, /Continue until the Format's validation and quality checks pass/);
+assert.doesNotMatch(pixarPrompt, /Runnable Repo:/);
+assert.doesNotMatch(pixarPrompt, /GitHub Repo:/);
+
 console.log("discovery handoff tests passed");
