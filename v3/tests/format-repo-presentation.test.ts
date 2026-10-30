@@ -37,12 +37,17 @@ for (const slug of discoveryFormatSlugs) {
       format,
       "https://wiggly.agentenamel.com",
     );
-    assert.ok(handoff.includes(format.repositoryHref));
-    assert.match(
-      handoff,
-      /KIT-MANIFEST\.json or format\.json/,
-      "Old kits must not be forced to read a nonexistent modern manifest.",
-    );
+    if (format.handoff?.handoffMode === "director") {
+      assert.match(handoff, /Role: Creative Director/);
+      assert.match(handoff, /TURN 1 INSTRUCTION:/);
+    } else {
+      assert.ok(handoff.includes(format.repositoryHref));
+      assert.match(
+        handoff,
+        /KIT-MANIFEST\.json or format\.json/,
+        "Old kits must not be forced to read a nonexistent modern manifest.",
+      );
+    }
   } else {
     referenceOnly.push(slug);
     assert.equal(format.handoff, undefined);
