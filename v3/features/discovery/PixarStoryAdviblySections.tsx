@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft, Check, Copy, Download } from "lucide-react";
 import Link from "next/link";
+import { DiscoveryFormatHandoff } from "./DiscoveryFormatHandoff";
 import type { DiscoveryFormatProfile } from "./types";
 import { mcpSetupAgents } from "./mcpSetupAgents";
 
@@ -90,7 +91,11 @@ export function PixarStoryNav() {
   );
 }
 
-export function PixarStoryHeroAction() {
+export function PixarStoryHeroAction({
+  format,
+}: {
+  format?: DiscoveryFormatProfile;
+} = {}) {
   return (
     <section className="relative overflow-hidden px-4 pb-20 pt-28 sm:pt-32">
       <div className="pointer-events-none absolute inset-0 hidden lg:block" aria-hidden="true">
@@ -121,6 +126,7 @@ export function PixarStoryHeroAction() {
           Give your agent your family&apos;s memories. It builds a consistent 3D cast and hands back a narrated widescreen film of about 72 seconds. The film on this page is one it made.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          {format?.handoff ? <DiscoveryFormatHandoff format={format} tone="dark" /> : null}
           <a
             href="#install"
             className="inline-flex items-center rounded-full bg-[#171614] px-5 py-3 text-sm font-semibold text-white"

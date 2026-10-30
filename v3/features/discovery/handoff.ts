@@ -19,6 +19,9 @@ export function buildDiscoveryHandoffPrompt(
   }
 
   const formatUrl = absoluteUrl(origin, `/formats/${format.slug}`);
+  const mcpLine = format.slug === "my-pixar-story"
+    ? `MCP Server: ${absoluteUrl(origin, "/mcp")}\nInstall Skill: npx skills add wiggly-app/skills -s my-pixar-story\n`
+    : "";
   const githubRepoLine = format.githubRepo ? `GitHub Repo: ${format.githubRepo}\n` : "";
   const repositoryLine = format.repositoryHref
     ? `Runnable Repo: ${absoluteUrl(origin, format.repositoryHref)}\n`
@@ -32,7 +35,7 @@ export function buildDiscoveryHandoffPrompt(
 Let's create this with the latest published Wiggly Format: ${format.name}.
 
 Format page: ${formatUrl}
-${githubRepoLine}${repositoryLine}${sourceOfTruth}
+${mcpLine}${githubRepoLine}${repositoryLine}${sourceOfTruth}
 
 Use the packaged runtime; do not rebuild it. Never use a paid provider without my explicit approval. Continue until the Format's validation and quality checks pass, then return its defined deliverables.`;
 }
