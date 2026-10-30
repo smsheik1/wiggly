@@ -40,14 +40,14 @@ async function readSecret(name: string) {
   return null;
 }
 
-export async function stripeClient() {
-  const key = await readSecret("STRIPE_SECRET_KEY");
+export async function stripeClient(options?: { ignoreSecretsFile?: boolean; apiKey?: string }) {
+  const key = options?.apiKey ?? (options?.ignoreSecretsFile ? (process.env.STRIPE_SECRET_KEY?.trim() || null) : await readSecret("STRIPE_SECRET_KEY"));
   if (!key) throw new Error(stripeSetupError("STRIPE_SECRET_KEY"));
   return new Stripe(key);
 }
 
-export async function stripeWebhookSecret() {
-  const secret = await readSecret("STRIPE_WEBHOOK_SECRET");
+export async function stripeWebhookSecret(options?: { ignoreSecretsFile?: boolean; secret?: string }) {
+  const secret = options?.secret ?? (options?.ignoreSecretsFile ? (process.env.STRIPE_WEBHOOK_SECRET?.trim() || null) : await readSecret("STRIPE_WEBHOOK_SECRET"));
   if (!secret) throw new Error(stripeSetupError("STRIPE_WEBHOOK_SECRET"));
   return secret;
 }
