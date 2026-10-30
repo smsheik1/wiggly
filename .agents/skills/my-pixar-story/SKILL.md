@@ -85,20 +85,24 @@ A still costs 8 credits. A clip costs 21 credits per second. Credits are taken w
 ## 6. Execution Options
 
 ### Option A: Wiggly Studio Cloud MCP (Hosted Zero-Setup)
-Connect the official Wiggly MCP server to handle image generation, Seedance video synthesis, Replicate upscaling, and FFmpeg assembly automatically:
+Connect the official Wiggly MCP server to handle image generation (Nano Banana 2.1), Seedance 2.5 video synthesis, and audio/video assembly automatically:
 ```json
 {
   "mcpServers": {
     "wiggly": {
-      "command": "npx",
-      "args": ["-y", "@wiggly/mcp-server@latest"],
-      "env": {
-        "WIGGLY_API_KEY": "your_wiggly_api_key"
+      "url": "https://wiggly.agentenamel.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_WIGGLY_ACCOUNT_TOKEN"
       }
     }
   }
 }
 ```
 
-### Credits:
-$19 grants 1900 credits. A still costs 8. A clip costs 21 per second. There is no separate draft price and no master price.
+### Credits & Pricing:
+- $19 grants 1900 credits.
+- A still costs 8 credits (Nano Banana 2.1).
+- A clip costs 21 credits per second (Seedance 2.5 at 480p).
+- Credits are deducted just-in-time when that picture or clip is about to render.
+- Text gates spend 0 credits.
+- One job runs at a time. A short balance pauses and returns a top-up link. There is no quote.

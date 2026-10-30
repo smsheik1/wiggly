@@ -4,6 +4,14 @@ import { photoSignatureValid, readPhoto } from "../../../../../../features/mcp/p
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function mimeTypeFor(file: string) {
+  const ext = path.extname(file).toLowerCase();
+  if (ext === ".png") return "image/png";
+  if (ext === ".webp") return "image/webp";
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+  return "application/octet-stream";
+}
+
 async function signingSecret() {
   const secret = process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET;
   if (secret?.trim()) return secret.trim();
@@ -21,7 +29,12 @@ export async function GET(request: Request, context: { params: Promise<{ account
       return new Response("This photo link is not valid.", { status: 401 });
     }
     const bytes = await readPhoto(path.join(process.cwd(), "data", "mcp-uploads"), accountId, filename);
-    return new Response(new Uint8Array(bytes), { headers: { "Cache-Control": "private, max-age=60" } });
+    return new Response(new Uint8Array(bytes), {
+      headers: {
+        "Content-Type": mimeTypeFor(filename),
+        "Cache-Control": "private, max-age=60",
+      },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Photo read failed.";
     const missing = message.includes("ENOENT");

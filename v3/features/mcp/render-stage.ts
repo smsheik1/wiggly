@@ -2,6 +2,7 @@ import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { signRender } from "./photo-store";
+import { publicOrigin } from "./public-origin";
 import { studioForFormat } from "./draft-worker";
 import { chargeThenRender, clipCredits, stillCredits } from "./render-charge";
 import type { MemoryFilmLedger } from "./film-ledger";
@@ -135,7 +136,11 @@ export async function advanceRender(input: {
   if (!interrupts.length && stage === "clips" && masterPath) {
     try {
       await access(masterPath);
-      merged.videoUrl = masterPath;
+      const secret = process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft";
+      const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
+      merged.videoUrl = `${publicOrigin()}${signRender(secret, input.jobId, "master-video", expiresAt)}`;
+      const assetFiles = { ...((merged.assetFiles ?? {}) as Record<string, string>), "master-video": masterPath };
+      merged.assetFiles = assetFiles;
       merged.status = "done";
     } catch {
       merged.status = "failed";
@@ -158,20 +163,34 @@ function mimeType(file: string) {
 }
 
 export async function draftMedia(stateFile: string, jobId: string, secret: string) {
-  const state = JSON.parse(await readFile(stateFile, "utf8")) as { assetFiles?: Record<string, string>; videoUrl?: string };
+  const state = JSON.parse(await readFile(stateFile, "utf8")) as {
+    assetFiles?: Record<string, string>;
+    videoUrl?: string;
+    masterVideo?: { videoPath?: string } | string;
+  };
   const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
   const stills: Array<{ tag: string; url: string }> = [];
   const images: Array<{ mimeType: string; data: string }> = [];
+  const origin = publicOrigin();
   for (const [tag, file] of Object.entries(state.assetFiles ?? {})) {
+    if (tag === "master-video") continue;
     try {
       const bytes = await readFile(file);
-      stills.push({ tag, url: signRender(secret, jobId, tag, expiresAt) });
+      stills.push({ tag, url: `${origin}${signRender(secret, jobId, tag, expiresAt)}` });
       if (mimeType(file).startsWith("image/")) images.push({ mimeType: mimeType(file), data: bytes.toString("base64") });
     } catch {
       // A missing file is not a picture the person can approve.
     }
   }
-  return { stills, images, videoUrl: state.videoUrl };
+  let videoUrl = state.videoUrl;
+  const master = typeof state.masterVideo === "string" ? state.masterVideo : state.masterVideo?.videoPath;
+  const masterPath = state.assetFiles?.["master-video"] ?? master;
+  if (masterPath) {
+    if (!videoUrl || (!videoUrl.startsWith("http://") && !videoUrl.startsWith("https://"))) {
+      videoUrl = `${origin}${signRender(secret, jobId, "master-video", expiresAt)}`;
+    }
+  }
+  return { stills, images, videoUrl };
 }
 
 export async function picturesReady(stateFile: string) {

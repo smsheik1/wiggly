@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 import { approveDraft, runDraftTick } from "../features/mcp/draft-worker";
 import { runWritingJob } from "../features/mcp/gate-tools";
 import { signRender } from "../features/mcp/photo-store";
+import { publicOrigin } from "../features/mcp/public-origin";
 import { draftMedia } from "../features/mcp/render-stage";
 import { MemoryFilmLedger, type Storyboard } from "../features/mcp/film-ledger";
 
@@ -404,7 +405,8 @@ test("a rendered sheet is returned as a signed url and an image", async () => {
   const stateFile = await putState(job, { status: "awaiting-approval", assetFiles: { "@Image 1": picture } });
   const media = await draftMedia(stateFile, job.jobId, "secret");
   assert.equal(media.stills[0]?.tag, "@Image 1");
-  assert.equal(media.stills[0]?.url, signRender("secret", job.jobId, "@Image 1", Number(new URL(`https://wiggly.example${media.stills[0]?.url}`).searchParams.get("exp"))));
+  const exp = Number(new URL(media.stills[0]!.url).searchParams.get("exp"));
+  assert.equal(media.stills[0]?.url, `${publicOrigin()}${signRender("secret", job.jobId, "@Image 1", exp)}`);
   assert.equal(media.images[0]?.data, png.toString("base64"));
 });
 
@@ -526,7 +528,8 @@ test("an approved production renders a two-second clip for 42 credits and assemb
   assert.equal(job.ledger.exportState("user_1").jobs[0]?.creditsCharged, 42);
   const stateFile = job.ledger.exportState("user_1").jobs[0]?.stateFile ?? "";
   const state = JSON.parse(await readFile(stateFile, "utf8"));
-  assert.equal(existsSync(state.videoUrl), true);
+  assert.equal(existsSync(state.assetFiles?.["master-video"]), true);
+  assert.match(state.videoUrl, /^https?:\/\/.+\/api\/mcp\/renders\/.+\/master-video\?/);
   assert.equal(job.ledger.exportState("user_1").jobs[0]?.stage, "ready");
 });
 

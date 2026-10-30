@@ -32,5 +32,11 @@ test("a missing Stripe key tells the operator where to paste it", () => {
 });
 
 test("checkout refuses to start without a Stripe key", async () => {
-  await assert.rejects(() => stripeClient(), /STRIPE_SECRET_KEY/);
+  const previous = process.env.STRIPE_SECRET_KEY;
+  delete process.env.STRIPE_SECRET_KEY;
+  try {
+    await assert.rejects(() => stripeClient({ ignoreSecretsFile: true }), /STRIPE_SECRET_KEY/);
+  } finally {
+    if (previous !== undefined) process.env.STRIPE_SECRET_KEY = previous;
+  }
 });
