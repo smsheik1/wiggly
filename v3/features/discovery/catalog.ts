@@ -2872,6 +2872,13 @@ export type DiscoveryShelf = {
 
 export const discoveryShelfDefinitions = [
   {
+    id: "my-pixar-story",
+    title: "My Pixar Story",
+    description: "Turn real questionnaire memories into a cinematic 3D animated memoir with consistent characters, authentic emotion, and native synced dialogue.",
+    formats: ["my-pixar-story"],
+    layout: "landscape",
+  },
+  {
     id: "two-d-character-animation",
     title: "Animate Shaz",
     description: "A reusable 2D character who can speak, react, and stay on-model from scene to scene.",
@@ -2895,13 +2902,6 @@ export const discoveryShelfDefinitions = [
     title: "Animal Conversations",
     description: "User-supplied dialogue staged as expressive, captioned character exchanges.",
     formats: ["animal-conversations"],
-  },
-  {
-    id: "my-pixar-story",
-    title: "My Pixar Story",
-    description: "Turn real questionnaire memories into a cinematic 3D animated memoir with consistent characters, authentic emotion, and native synced dialogue.",
-    formats: ["my-pixar-story"],
-    layout: "landscape",
   },
   {
     id: "character-dance-offs",
