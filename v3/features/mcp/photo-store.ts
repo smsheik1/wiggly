@@ -36,6 +36,20 @@ export async function readPhoto(root: string, accountId: string, filename: strin
   return readFile(full);
 }
 
+export function signRender(secret: string, jobId: string, tag: string, expiresAt: number) {
+  const payload = `${jobId}\n${tag}\n${expiresAt}`;
+  const sig = createHmac("sha256", secret).update(payload).digest("hex");
+  return `/api/mcp/renders/${encodeURIComponent(jobId)}/${encodeURIComponent(tag)}?exp=${expiresAt}&sig=${sig}`;
+}
+
+export function renderSignatureValid(secret: string, jobId: string, tag: string, expiresAt: number, signature: string) {
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return false;
+  const expected = createHmac("sha256", secret).update(`${jobId}\n${tag}\n${expiresAt}`).digest("hex");
+  const left = Buffer.from(expected);
+  const right = Buffer.from(signature);
+  return left.length === right.length && timingSafeEqual(left, right);
+}
+
 export function signPhoto(secret: string, accountId: string, filename: string, expiresAt: number) {
   const payload = `${accountId}\n${filename}\n${expiresAt}`;
   const sig = createHmac("sha256", secret).update(payload).digest("hex");

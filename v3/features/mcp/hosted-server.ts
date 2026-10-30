@@ -1,8 +1,11 @@
+import path from "node:path";
 import { McpServer, createMcpHandler, type OAuthTokenVerifier } from "@modelcontextprotocol/server";
 import { requireBearerAuth } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MCP_RESOURCE_URL, PROTECTED_RESOURCE_METADATA_URL } from "./hosted-auth";
-import { approveDraft, studioStatusFromFile, type StudioState } from "./draft-worker";
+import { approveDraft, studioStatusFromFile, type CrewPhoto, type StudioState } from "./draft-worker";
+import { draftMedia } from "./render-stage";
+import { ensureWritingState, runWritingJob, WRITING_JOBS, type GateImage, type WritingJob } from "./gate-tools";
 import { MemoryFilmLedger, type Account, type LedgerResult, type Storyboard } from "./film-ledger";
 
 type FilmLedger = {
@@ -36,10 +39,40 @@ const SUBMIT_DESCRIPTION = "Start one film. The person buys credits and creates.
 const DRAFT_DESCRIPTION = "Read the latest draft, or the job_id you pass. The status comes from the v2 run's outputs/state.json. Poll no faster than retryAfterSec and never faster than every 15 seconds. Speak up only when the stage changes. awaiting-approval is a pause for the person. ready includes the video URL. failed includes an error you can repeat. A job that never reaches ready returns the credits it spent.";
 const APPROVE_DESCRIPTION = "Approve the paused v2 gate. Pass job_id and the gate decision. An asset approval sends approvedAssets. An animatic or production approval sends decision approve. The same run resumes. If the balance cannot cover the next stills or Seedance seconds, the run stays paused and the result is the top-up link.";
 
-function toolResult(ok: boolean, payload: Record<string, unknown> | string) {
+const WRITING_DESCRIPTIONS: Record<WritingJob, string> = {
+  "story-director": "Write the stage play. Call with no draft first. The result is the skill and the input packet. Send the full JSON back as draft. Fix every gate error and resend. Three tries. This spends no credits.",
+  "character-architect": "Write the character sheets after the story director passes. Call with no draft first. Look at the image block. Send the full JSON back as draft. A retry keeps characters that already passed. This spends no credits.",
+  "location-scout": "Write the location plates after the story director passes. Call with no draft first. Send the full JSON back as draft. Either this or the character architect may go first. This spends no credits.",
+  "storyboard-artist": "Write the storyboard after both look jobs pass and the person approves the sheet assets. Call with no draft first. A rejected animatic reopens this tool with the notes. This spends no credits.",
+  "seedance-compiler": "Write the clip prompts after the person approves the animatic. Call with no draft first. A rejected animatic locks this tool. This spends no credits.",
+};
+
+function writingToolName(job: WritingJob) {
+  return `wiggly_${job.replaceAll("-", "_")}`;
+}
+
+async function accountMemory(ledger: FilmLedger, hooks: {
+  loadAccount?: (accountId: string) => Promise<Account>;
+  saveAccount?: (accountId: string, account: Account) => Promise<void>;
+} | undefined, accountId: string) {
+  const memory = new MemoryFilmLedger();
+  const direct = ledger as MemoryFilmLedger;
+  if (typeof direct.exportState === "function") {
+    memory.importState(accountId, direct.exportState(accountId));
+    return { memory, save: () => { direct.importState(accountId, memory.exportState(accountId)); } };
+  }
+  if (!hooks?.loadAccount) return null;
+  memory.importState(accountId, await hooks.loadAccount(accountId));
+  return { memory, save: async () => { await hooks.saveAccount?.(accountId, memory.exportState(accountId)); } };
+}
+
+function toolResult(ok: boolean, payload: Record<string, unknown> | string, images?: GateImage[]) {
   const text = typeof payload === "string" ? payload : JSON.stringify(payload);
   return {
-    content: [{ type: "text" as const, text }],
+    content: [
+      { type: "text" as const, text },
+      ...(images ?? []).map((image) => ({ type: "image" as const, data: image.data, mimeType: image.mimeType })),
+    ],
     ...(typeof payload === "string" ? {} : { structuredContent: payload }),
     ...(ok ? {} : { isError: true as const }),
   };
@@ -50,6 +83,8 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
   loadAccount?: (accountId: string) => Promise<Account>;
   saveAccount?: (accountId: string, account: Account) => Promise<void>;
   listUploads?: (accountId: string) => Promise<Array<{ label: string; url: string }>>;
+  runsRoot?: string;
+  photoRoot?: string;
 }) {
   return createMcpHandler(({ authInfo }) => {
     const accountId = String(authInfo?.extra?.sub ?? "");
@@ -87,8 +122,58 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
         confirm,
         quoteId: quote_id,
       });
+      if (result.ok && typeof (ledger as MemoryFilmLedger).exportState === "function") {
+        const memory = ledger as MemoryFilmLedger;
+        const jobId = String(result.data.job_id ?? "");
+        const account = memory.exportState(accountId);
+        const photos: CrewPhoto[] = (account.photos ?? []).map((photo) => ({
+          label: photo.label,
+          path: path.join(hooks?.photoRoot ?? path.join(process.cwd(), "data", "mcp-uploads"), accountId, photo.filename),
+        }));
+        try {
+          await ensureWritingState({
+            ledger: memory,
+            accountId,
+            jobId,
+            runsRoot: hooks?.runsRoot ?? path.join(process.cwd(), "data", "format-runs"),
+            photos,
+          });
+        } catch {
+          // The first writing tool opens the state when the photo files are ready.
+        }
+      }
       return result.ok ? toolResult(true, result.data) : toolResult(false, result.message);
     });
+    for (const job of WRITING_JOBS) {
+      server.registerTool(writingToolName(job), {
+        description: WRITING_DESCRIPTIONS[job],
+        inputSchema: z.object({
+          job_id: z.string().optional(),
+          draft: z.unknown().optional(),
+        }),
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+      }, async ({ job_id, draft }) => {
+        if (!accountId) return toolResult(false, "Authorization needed.");
+        const loaded = await accountMemory(ledger, hooks, accountId);
+        if (!loaded) return toolResult(false, "This server cannot load the film account.");
+        const account = loaded.memory.exportState(accountId);
+        const photos: CrewPhoto[] = (account.photos ?? []).map((photo) => ({
+          label: photo.label,
+          path: path.join(hooks?.photoRoot ?? path.join(process.cwd(), "data", "mcp-uploads"), accountId, photo.filename),
+        }));
+        const gate = await runWritingJob({
+          job,
+          ledger: loaded.memory,
+          accountId,
+          jobId: job_id,
+          draft,
+          photos,
+          runsRoot: hooks?.runsRoot ?? path.join(process.cwd(), "data", "format-runs"),
+        });
+        await loaded.save();
+        return gate.ok ? toolResult(true, gate.data ?? {}, gate.images) : toolResult(false, gate.message ?? "The gate refused this draft.");
+      });
+    }
     server.registerTool("wiggly_get_draft", {
       description: DRAFT_DESCRIPTION,
       inputSchema: z.object({ job_id: z.string().optional() }),
@@ -97,7 +182,11 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
       if (!accountId) return toolResult(false, "Authorization needed.");
       const result = await ledger.getDraft(accountId, job_id);
       if (!result.ok) return toolResult(false, result.message);
-      return toolResult(true, { ...result.data, ...(await studioStatusFromFile(result.data.state_file)) });
+      const status = await studioStatusFromFile(result.data.state_file);
+      const media = typeof result.data.state_file === "string"
+        ? await draftMedia(result.data.state_file, String(result.data.job_id ?? job_id ?? ""), process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft")
+        : { stills: [], images: [] };
+      return toolResult(true, { ...result.data, ...status, stills: media.stills, ...(media.videoUrl ? { videoUrl: media.videoUrl } : {}) }, media.images);
     });
     server.registerTool("wiggly_approve_draft", {
       description: APPROVE_DESCRIPTION,
@@ -139,6 +228,8 @@ export function createMcpRoute(options?: {
   loadAccount?: (accountId: string) => Promise<Account>;
   saveAccount?: (accountId: string, account: Account) => Promise<void>;
   listUploads?: (accountId: string) => Promise<Array<{ label: string; url: string }>>;
+  runsRoot?: string;
+  photoRoot?: string;
 }) {
   const ledger = options?.ledger ?? new MemoryFilmLedger();
   const handler = createHostedMcp(ledger, options);

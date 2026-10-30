@@ -4,8 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { MemoryFilmLedger } from "../features/mcp/film-ledger";
-import { AwaitingCredits, CREW_FEE_ITEM, chargeThenRender, chargesPath, paidItemsPath } from "../features/mcp/render-charge";
-import { crewFeeMissingError } from "../features/mcp/crew-fee";
+import { AwaitingCredits, chargeThenRender, chargesPath, paidItemsPath } from "../features/mcp/render-charge";
 import { runDraftTick, startV2Run } from "../features/mcp/draft-worker";
 import type { Account, Storyboard } from "../features/mcp/film-ledger";
 
@@ -27,18 +26,23 @@ function ledger() {
   return { book, jobId: String(started.data.job_id) };
 }
 
-test("a missing crew fee starts nothing and charges nothing", async () => {
+test("a film opens without a crew fee and charges nothing", async () => {
   const job = ledger();
-  await assert.rejects(() => startV2Run({
-    jobId: job.jobId,
-    storyboard,
-    imageUrls: [],
-    runsRoot: tmpdir(),
-    ledger: job.book,
-    accountId: "user_1",
-  }), new RegExp(crewFeeMissingError().split("\n")[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  assert.equal(job.book.exportState("user_1").monthlyCredits, 1900);
-  assert.equal(job.book.exportState("user_1").jobs[0]?.creditsCharged, 0);
+  await withStudio("export {}\n", async (runsRoot) => {
+    const started = await startV2Run({
+      jobId: job.jobId,
+      storyboard,
+      imageUrls: [],
+      photos,
+      runsRoot,
+      ledger: job.book,
+      accountId: "user_1",
+    });
+    assert.equal(started.state.status, "writing");
+    assert.equal(job.book.exportState("user_1").monthlyCredits, 1900);
+    assert.equal(job.book.exportState("user_1").jobs[0]?.creditsCharged, 0);
+    await assert.rejects(() => readFile(chargesPath(path.join(runsRoot, job.jobId)), "utf8"));
+  });
 });
 
 test("a short balance never starts the render", async () => {
@@ -234,158 +238,82 @@ test("a missing photo or a missing studio charges nothing", async () => {
   assert.equal(missingStudio.book.exportState("user_1").jobs[0]?.creditsCharged, 0);
 });
 
-test("the crew fee is refunded only when the crew never starts", async () => {
-  const crashed = ledger();
-  await withStudio("export async function runCustomer() { throw new Error('crew crashed'); }\n", async (runsRoot) => {
-    await assert.rejects(() => startV2Run({
-      jobId: crashed.jobId,
+test("opening a film does not call the text crew or charge a fee", async () => {
+  const source = "export async function runCustomer() { throw new Error('the text crew must not run'); }\n";
+  const job = ledger();
+  await withStudio(source, async (runsRoot) => {
+    const started = await startV2Run({
+      jobId: job.jobId,
       storyboard,
       imageUrls: [],
       photos,
       runsRoot,
-      ledger: crashed.book,
+      ledger: job.book,
       accountId: "user_1",
-      feeCredits: 40,
-    }), /crew crashed/);
-    const charges = JSON.parse(await readFile(chargesPath(path.join(runsRoot, crashed.jobId)), "utf8")) as Record<string, number>;
-    assert.equal(charges[CREW_FEE_ITEM], undefined);
-  });
-  const refunded = crashed.book.exportState("user_1");
-  assert.equal(refunded.monthlyCredits + refunded.purchasedCredits, 1900);
-  assert.equal(refunded.jobs[0]?.creditsCharged, 0);
-
-  const started = ledger();
-  await withStudio(`
-    import { mkdir, writeFile } from 'node:fs/promises';
-    import { join } from 'node:path';
-    export async function runCustomer({ runsRoot, runId }) {
-      const file = join(runsRoot, runId, 'outputs', 'state.json');
-      await mkdir(join(runsRoot, runId, 'outputs'), { recursive: true });
-      await writeFile(file, '{"status":"running"}');
-      throw new Error('crew crashed after start');
-    }
-  `, async (runsRoot) => {
-    await assert.rejects(() => startV2Run({
-      jobId: started.jobId,
-      storyboard,
-      imageUrls: [],
-      photos,
-      runsRoot,
-      ledger: started.book,
-      accountId: "user_1",
-      feeCredits: 40,
-    }), /crew crashed after start/);
-    const charges = JSON.parse(await readFile(chargesPath(path.join(runsRoot, started.jobId)), "utf8")) as Record<string, number>;
-    assert.equal(charges[CREW_FEE_ITEM], 40);
-  });
-  const kept = started.book.exportState("user_1");
-  assert.equal(kept.monthlyCredits, 1860);
-  assert.equal(kept.purchasedCredits, 0);
-  assert.equal(kept.jobs[0]?.creditsCharged, 40);
-});
-
-test("a saved crew crash keeps the fee and the next tick does not start again", async () => {
-  await withStudio(`
-    import { access, appendFile, mkdir, writeFile } from 'node:fs/promises';
-    import { join } from 'node:path';
-    export async function runCustomer({ runsRoot, runId }) {
-      await appendFile(join(runsRoot, 'calls.txt'), '1');
-      await access(join(runsRoot, 'fee-saved'));
-      const file = join(runsRoot, runId, 'outputs', 'state.json');
-      await mkdir(join(runsRoot, runId, 'outputs'), { recursive: true });
-      await writeFile(file, '{"status":"running"}');
-      throw new Error('crew crashed after start');
-    }
-  `, async (runsRoot) => {
-    const job = ledger();
-    let stored = job.book.exportState("user_1");
-    const lines = await runDraftTick({
-      jobs: [{ accountId: "user_1", jobId: job.jobId, imageUrls: [], photos }],
-      loadAccount: () => stored,
-      saveAccount: async (_accountId, next: Account) => {
-        stored = next;
-        if ((next.jobs[0]?.creditsCharged ?? 0) >= 40) await writeFile(path.join(runsRoot, "fee-saved"), "1");
-      },
-      runsRoot,
       feeCredits: 40,
     });
-    assert.match(lines[0] ?? "", /failed/);
-    assert.equal(await readFile(path.join(runsRoot, "calls.txt"), "utf8"), "1");
-    assert.equal(stored.jobs[0]?.creditsCharged, 40);
-    assert.equal(stored.jobs[0]?.creditsRefunded, false);
-    assert.equal(stored.jobs[0]?.stage, "failed");
-    assert.equal(stored.monthlyCredits, 1860);
-    const again = await runDraftTick({
+    assert.equal(started.state.status, "writing");
+    const again = await startV2Run({
+      jobId: job.jobId,
+      storyboard,
+      imageUrls: [],
+      photos,
+      runsRoot,
+      ledger: job.book,
+      accountId: "user_1",
+      feeCredits: 40,
+    });
+    assert.equal(again.state.status, "writing");
+  });
+  const account = job.book.exportState("user_1");
+  assert.equal(account.monthlyCredits + account.purchasedCredits, 1900);
+  assert.equal(account.jobs[0]?.creditsCharged, 0);
+});
+
+test("a tick opens the writing state and does not start the text crew", async () => {
+  const job = ledger();
+  await withStudio("export async function runCustomer() { throw new Error('the text crew must not run'); }\n", async (runsRoot) => {
+    let stored = job.book.exportState("user_1");
+    const lines = await runDraftTick({
       jobs: [{ accountId: "user_1", jobId: job.jobId, imageUrls: [], photos }],
       loadAccount: () => stored,
       saveAccount: (_accountId, next: Account) => { stored = next; },
       runsRoot,
       feeCredits: 40,
     });
-    assert.match(again[0] ?? "", /failed/);
-    assert.equal(await readFile(path.join(runsRoot, "calls.txt"), "utf8"), "1");
-    assert.equal(stored.jobs[0]?.creditsCharged, 40);
+    assert.match(lines[0] ?? "", /running/);
+    assert.equal(stored.jobs[0]?.creditsCharged, 0);
+    assert.equal(stored.jobs[0]?.stage, "running");
+    const state = JSON.parse(await readFile(stored.jobs[0]?.stateFile ?? "", "utf8")) as { status?: string };
+    assert.equal(state.status, "writing");
   });
 });
 
-test("a charge key without a saved fee is charged once and a finished state is not started again", async () => {
-  await withStudio(`
-    import { appendFile, mkdir, writeFile } from 'node:fs/promises';
-    import { join } from 'node:path';
-    export async function runCustomer({ runsRoot, runId }) {
-      await appendFile(join(runsRoot, 'calls.txt'), '1');
-      const file = join(runsRoot, runId, 'outputs', 'state.json');
-      await mkdir(join(runsRoot, runId, 'outputs'), { recursive: true });
-      await writeFile(file, '{"status":"awaiting-approval","pendingApproval":["@Leo"]}');
-      return { runId, stateFile: file, state: { status: 'awaiting-approval', pendingApproval: ['@Leo'] } };
-    }
-  `, async (runsRoot) => {
-    const stale = ledger();
-    const runDir = path.join(runsRoot, stale.jobId);
+test("an existing writing state is kept and a broken state charges nothing", async () => {
+  const job = ledger();
+  await withStudio("export {}\n", async (runsRoot) => {
+    const runDir = path.join(runsRoot, job.jobId);
     await mkdir(path.join(runDir, "outputs"), { recursive: true });
-    await writeFile(chargesPath(runDir), JSON.stringify({ [CREW_FEE_ITEM]: 40 }));
-    const stage = await startV2Run({
-      jobId: stale.jobId,
-      storyboard,
-      imageUrls: [],
-      photos,
-      runsRoot,
-      ledger: stale.book,
-      accountId: "user_1",
-      feeCredits: 40,
-    });
-    assert.equal(stage.state.status, "awaiting-approval");
-    assert.equal(stale.book.exportState("user_1").jobs[0]?.creditsCharged, 40);
-    assert.equal(await readFile(path.join(runsRoot, "calls.txt"), "utf8"), "1");
-
-    const started = ledger();
-    const startedDir = path.join(runsRoot, started.jobId);
-    await mkdir(path.join(startedDir, "outputs"), { recursive: true });
-    await writeFile(path.join(startedDir, "outputs", "state.json"), JSON.stringify({ status: "running" }));
-    await writeFile(chargesPath(startedDir), JSON.stringify({ [CREW_FEE_ITEM]: 40 }));
-    assert.equal(started.book.spendCredits("user_1", started.jobId, 40).ok, true);
+    await writeFile(path.join(runDir, "outputs", "state.json"), JSON.stringify({ status: "writing", passed: { "story-director": true } }));
     const existing = await startV2Run({
-      jobId: started.jobId,
+      jobId: job.jobId,
       storyboard,
       imageUrls: [],
       photos,
       runsRoot,
-      ledger: started.book,
+      ledger: job.book,
       accountId: "user_1",
-      feeCredits: 40,
     });
-    assert.equal(existing.state.status, "failed");
-    assert.equal(JSON.parse(await readFile(path.join(startedDir, "outputs", "state.json"), "utf8")).status, "failed");
-    assert.equal(started.book.exportState("user_1").jobs[0]?.creditsCharged, 40);
-    assert.equal(await readFile(path.join(runsRoot, "calls.txt"), "utf8"), "1");
+    assert.equal(existing.state.status, "writing");
+    assert.equal(JSON.parse(await readFile(path.join(runDir, "outputs", "state.json"), "utf8")).passed["story-director"], true);
+    assert.equal(job.book.exportState("user_1").jobs[0]?.creditsCharged, 0);
 
     const broken = ledger();
     const brokenDir = path.join(runsRoot, broken.jobId);
     await mkdir(path.join(brokenDir, "outputs"), { recursive: true });
     await writeFile(path.join(brokenDir, "outputs", "state.json"), "{");
-    await writeFile(chargesPath(brokenDir), JSON.stringify({ [CREW_FEE_ITEM]: 40 }));
-    assert.equal(broken.book.spendCredits("user_1", broken.jobId, 40).ok, true);
-    const repaired = await startV2Run({
+    broken.book.setRun("user_1", broken.jobId, { runId: broken.jobId, stateFile: path.join(brokenDir, "outputs", "state.json") });
+    await assert.rejects(() => startV2Run({
       jobId: broken.jobId,
       storyboard,
       imageUrls: [],
@@ -393,11 +321,7 @@ test("a charge key without a saved fee is charged once and a finished state is n
       runsRoot,
       ledger: broken.book,
       accountId: "user_1",
-      feeCredits: 40,
-    });
-    assert.equal(repaired.state.status, "failed");
-    assert.equal(JSON.parse(await readFile(path.join(brokenDir, "outputs", "state.json"), "utf8")).status, "failed");
-    assert.equal(broken.book.exportState("user_1").jobs[0]?.creditsCharged, 40);
-    assert.equal(await readFile(path.join(runsRoot, "calls.txt"), "utf8"), "1");
+    }), /could not be read/);
+    assert.equal(broken.book.exportState("user_1").jobs[0]?.creditsCharged, 0);
   });
 });

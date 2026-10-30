@@ -126,7 +126,18 @@ test("a signed WorkOS token is accepted and a token for another resource is reje
   const body = await listed.json();
   assert.equal(listed.status, 200, JSON.stringify(body));
   const names = body.result.tools.map((tool: { name: string }) => tool.name);
-  assert.deepEqual(names, ["wiggly_open_upload", "wiggly_list_uploads", "wiggly_submit_draft", "wiggly_get_draft", "wiggly_approve_draft"]);
+  assert.deepEqual(names, [
+    "wiggly_open_upload",
+    "wiggly_list_uploads",
+    "wiggly_submit_draft",
+    "wiggly_story_director",
+    "wiggly_character_architect",
+    "wiggly_location_scout",
+    "wiggly_storyboard_artist",
+    "wiggly_seedance_compiler",
+    "wiggly_get_draft",
+    "wiggly_approve_draft",
+  ]);
 });
 
 test("list uploads returns the label and a signed url", async () => {

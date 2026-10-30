@@ -49,13 +49,20 @@ test("a Mac node_modules symlink stops the worker before a job", async () => {
   }), /not a real directory/);
 });
 
-test("a missing provider key stops the worker before a job", async () => {
+test("a missing Replicate token stops the worker and a missing OpenRouter key does not", async () => {
   const dirs = await layout("key");
-  await assert.rejects(() => releasePreflight({
+  await releasePreflight({
     studioDir: dirs.studio,
     studioEntry: "scripts/run-customer.mjs",
     appDir: dirs.app,
     openRouterKey: "",
     replicateKey: "present",
-  }), /openrouter\.ai\/settings\/keys/);
+  });
+  await assert.rejects(() => releasePreflight({
+    studioDir: dirs.studio,
+    studioEntry: "scripts/run-customer.mjs",
+    appDir: dirs.app,
+    openRouterKey: "",
+    replicateKey: "",
+  }), /replicate\.com\/account\/api-tokens/);
 });
