@@ -26,7 +26,19 @@ Transform a family's questionnaire answers and real reference photos into an emo
 
 ---
 
-## 2. The 7-Beat Screenplay Architecture (72 Seconds Total)
+## 2. The Intake Standard: The Golden 5
+
+When interviewing the user for family memories (or if the user asks for "all questions"), use **The Golden 5**. Do not interrogate the user with technical camera, aspect ratio, or production checklists—YOU are the Creative Director and author those technical parameters from these 5 human answers:
+
+1. **Chapter 1 (Childhood, Age 8):** *"Take us back to you at 8 years old: who was your partner-in-crime, what silly trouble did you get into, and what was your weird obsession that you thought was the coolest thing on earth?"*
+2. **Chapter 2 (Teen Freedom):** *"What was your first real taste of freedom (what were you driving or riding), and what is one thing about teenage you that would shock your kids if they saw you back then?"*
+3. **Chapter 3 (The Leap of Faith):** *"What was the craziest risk or adventure you took when you first stepped out into the world on your own, and the moment you realized 'I actually did it'?"*
+4. **Chapter 4 (Romance / Origin Story):** *"How did you meet Mom/Dad/Spouse, what was the most awkward or hilarious moment trying to impress them, and when did you know they were the one?"*
+5. **Chapter 5 (What I Wish You Knew / Legacy Finale):** *"What is one thing you wish your kids truly understood about who you are inside—and if you could walk up to that 8-year-old version of yourself and give them a hug today, what would you say?"*
+
+---
+
+## 3. The 7-Beat Screenplay Architecture (72 Seconds Total)
 
 | Beat | Life Stage | Timing | Dramatic Purpose |
 |------|------------|--------|-------------------|
@@ -40,7 +52,7 @@ Transform a family's questionnaire answers and real reference photos into an emo
 
 ---
 
-## 3. Character & Hero Prop Prompt Recipes (Nano Banana 2.1)
+## 4. Character & Hero Prop Prompt Recipes (Nano Banana 2.1)
 
 To guarantee visual consistency, generate a single 4K multi-character lineup sheet and hero prop turnaround before animating:
 
@@ -52,7 +64,7 @@ To guarantee visual consistency, generate a single 4K multi-character lineup she
 
 ---
 
-## 4. Scene Prompting Architecture (Seedance 2.5 Negative Audio Lock)
+## 5. Scene Prompting Architecture (Seedance 2.5 Negative Audio Lock)
 
 Every video prompt authors **Visual Action**, **Camera Direction**, and **Negative Audio Directives** to ensure diffusion video clips never clash with the continuous musical score:
 
@@ -64,7 +76,7 @@ Every video prompt authors **Visual Action**, **Camera Direction**, and **Negati
 
 ---
 
-## 5. Wiggly writes nothing. You write the JSON. Wiggly checks it and renders.
+## 6. Wiggly writes nothing. You write the JSON. Wiggly checks it and renders.
 
 Call the tools in this order. Look at every image block. Fix every gate error and call the same tool again, up to three tries. Poll `wiggly_get_draft` while stills or clips are rendering, and show those pictures before you ask the person to approve. A rejection names `story-director` or `storyboard-artist`. Call that tool again with the notes. Do not write a still prompt or a clip prompt outside these tools. Do not approve assets, the animatic, or production yourself.
 
@@ -82,7 +94,7 @@ A still costs 8 credits. A clip costs 21 credits per second. Credits are taken w
 
 ---
 
-## 6. Execution Options
+## 7. Execution Options
 
 ### Option A: Wiggly Studio Cloud MCP (Hosted Zero-Setup)
 Connect the official Wiggly MCP server to handle image generation (Nano Banana 2.1), Seedance 2.5 video synthesis, and audio/video assembly automatically:
