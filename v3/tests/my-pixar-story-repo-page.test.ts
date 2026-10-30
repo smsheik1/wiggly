@@ -139,10 +139,12 @@ assert.match(adviblySectionsSource, /Keep building\./);
 assert.match(adviblySectionsSource, /DiscoveryFormatHandoff/);
 assert.doesNotMatch(adviblySectionsSource, /Start creating/);
 
-// Verify hero does not contain intimidating terminal box for casual users
-const heroActionMatch = adviblySectionsSource.match(/export function PixarStoryHeroAction[\s\S]*?^}/m);
+// Verify hero uses the prompt box instead of a raw terminal CLI box
+const heroActionMatch = adviblySectionsSource.match(/export function PixarStoryHeroAction[\s\S]*?^}\n\nexport function PixarStoryPromptBox/m);
 assert.ok(heroActionMatch, "PixarStoryHeroAction component must exist");
+assert.match(heroActionMatch[0], /PixarStoryPromptBox/, "Hero must render the Agent Prompt Box");
 assert.doesNotMatch(heroActionMatch[0], /PixarStoryInstallCommand/, "Hero must not contain terminal CLI box");
+assert.match(adviblySectionsSource, /Paste into your agent:/);
 
 const handoffPrompt = buildDiscoveryHandoffPrompt(profile, "https://wiggly.agentenamel.com");
 assert.match(handoffPrompt, /CODING AGENT REQUIRED/);
