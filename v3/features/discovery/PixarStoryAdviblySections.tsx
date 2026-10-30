@@ -6,15 +6,15 @@ import Link from "next/link";
 import type { DiscoveryFormatProfile } from "./types";
 import { mcpSetupAgents } from "./mcpSetupAgents";
 
-const installCommand = "npx skills add smsheik1/wiggly -s my-pixar-story";
+const installCommand = "npx skills add wiggly-app/skills -s my-pixar-story";
 const agentSentence = "Make a Pixar-style story from our family memories.";
-const manualInstall = `git clone https://github.com/smsheik1/wiggly.git
-cp -R skills/my-pixar-story ~/.claude/skills/`;
+const manualInstall = `git clone https://github.com/wiggly-app/skills.git
+cp -R my-pixar-story ~/.claude/skills/`;
 const poster = "/format-repositories/my-pixar-story-v1/examples/shaz-for-mia-poster.jpg";
 const filmSrc = "/format-repositories/my-pixar-story-v1/examples/shaz-for-mia-web.mp4";
 const skillHref = "/format-repositories/my-pixar-story-v1/downloads/my-pixar-story.skill";
 const zipHref = "/format-repositories/my-pixar-story-v1/downloads/wiggly-my-pixar-story-format-kit.zip";
-const sourceHref = "https://github.com/smsheik1/wiggly/blob/main/skills/my-pixar-story/SKILL.md";
+const sourceHref = "https://github.com/wiggly-app/skills/blob/main/my-pixar-story/SKILL.md";
 
 const phrases = [
   agentSentence,

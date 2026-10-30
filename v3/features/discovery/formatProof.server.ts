@@ -59,7 +59,7 @@ const formatConfigs: FormatProfileConfig[] = [
         "A 9-frame dailies contact sheet",
       ],
       instructions: [
-        "Install the skill via `npx skills add smsheik1/wiggly -s my-pixar-story` or download the `.skill` file",
+        "Install the skill via `npx skills add wiggly-app/skills -s my-pixar-story` or download the `.skill` file",
         "Connect the Wiggly MCP server or provide a Replicate API token",
         "Pass the family answers into the Story Director to review the beat map and thesis",
         "Approve the 4K character sheet and storyboard panels before triggering video",

@@ -57,7 +57,7 @@ const CLIENT_BRANDS: ClientBrand[] = [
     tag: "Anthropic Desktop",
     color: "#ea580c",
     avatarBg: "bg-[#ea580c]",
-    systemNotice: "Skill loaded: smsheik1/wiggly -s my-pixar-story",
+    systemNotice: "Skill loaded: wiggly-app/skills -s my-pixar-story",
   },
   {
     id: "cursor",
