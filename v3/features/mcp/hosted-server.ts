@@ -185,7 +185,7 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
       const status = await studioStatusFromFile(result.data.state_file);
       const media = typeof result.data.state_file === "string"
         ? await draftMedia(result.data.state_file, String(result.data.job_id ?? job_id ?? ""), process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft")
-        : { stills: [], images: [] };
+        : { stills: [], images: [], videoUrl: undefined };
       return toolResult(true, { ...result.data, ...status, stills: media.stills, ...(media.videoUrl ? { videoUrl: media.videoUrl } : {}) }, media.images);
     });
     server.registerTool("wiggly_approve_draft", {

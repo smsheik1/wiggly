@@ -402,7 +402,7 @@ export async function approveDraft(input: {
   jobId: string;
   decision: Record<string, unknown>;
   seconds?: number;
-  resumeGraph: (resume: { runId: string; decision: Record<string, unknown> }) => Promise<{ state: StudioState }>;
+  resumeGraph?: (resume: { runId: string; decision: Record<string, unknown> }) => Promise<{ state: StudioState }>;
   renderStill?: (request: { prompt?: string; dest?: string; itemId?: string }) => Promise<{ dest?: string }>;
   renderClip?: (request: { itemId?: string; duration?: number }) => Promise<{ dest?: string; videoPath?: string }>;
 }) {

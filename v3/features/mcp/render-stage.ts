@@ -171,7 +171,7 @@ export async function draftMedia(stateFile: string, jobId: string, secret: strin
       // A missing file is not a picture the person can approve.
     }
   }
-  return { stills, images, ...(state.videoUrl ? { videoUrl: state.videoUrl } : {}) };
+  return { stills, images, videoUrl: state.videoUrl };
 }
 
 export async function picturesReady(stateFile: string) {
