@@ -388,6 +388,7 @@ const shelves = groupDiscoveryEntriesByShelf(published);
 const shelvedEntries = shelves.flatMap((shelf) => shelf.entries);
 const approvedRepoOrder = [
   ["two-d-character-animation", "Animate Shaz"],
+  ["my-pixar-story", "My Pixar Story"],
   ["product-stories", "3D Breakdown"],
   ["lego-music-videos", "Lego Music Video"],
   ["character-conversations", "Animal Conversations"],
