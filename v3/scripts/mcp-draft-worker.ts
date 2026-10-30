@@ -1,16 +1,17 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { exportAccount, importAccount, listActiveJobs } from "../features/mcp/convex-ledger";
-import { replicateSetupError, stepDraftJob } from "../features/mcp/draft-worker";
-import { MemoryFilmLedger } from "../features/mcp/film-ledger";
+import { releasePreflight, runDraftTick, studioForFormat, type CrewPhoto } from "../features/mcp/draft-worker";
 import { signPhoto } from "../features/mcp/photo-store";
 
-async function token() {
-  if (process.env.REPLICATE_API_TOKEN?.trim()) return process.env.REPLICATE_API_TOKEN.trim();
+async function namedSecret(name: string) {
+  const fromEnv = process.env[name]?.trim();
+  if (fromEnv) return fromEnv;
+  const pattern = new RegExp(`^${name}=([^\\r\\n]+)`, "m");
   for (const root of [process.cwd(), path.join(process.cwd(), "..")]) {
     try {
       const content = await readFile(path.join(root, "secrets.env"), "utf8");
-      const match = content.match(/^REPLICATE_API_TOKEN=([^\r\n]+)/m);
+      const match = content.match(pattern);
       if (match?.[1]?.trim()) return match[1].trim();
     } catch {
       // The next directory may hold the file.
@@ -19,9 +20,17 @@ async function token() {
   return "";
 }
 
-const replicateToken = await token();
-if (!replicateToken) {
-  console.error(replicateSetupError());
+const studio = studioForFormat("my-pixar-story");
+try {
+  await releasePreflight({
+    studioDir: studio.directory,
+    studioEntry: studio.entry,
+    appDir: process.cwd(),
+    openRouterKey: await namedSecret("OPENROUTER_API_KEY"),
+    replicateKey: await namedSecret("REPLICATE_API_TOKEN"),
+  });
+} catch (error) {
+  console.error(error instanceof Error ? error.message : "The draft worker cannot start.");
   process.exit(1);
 }
 
@@ -30,42 +39,36 @@ const photoRoot = path.join(process.cwd(), "data", "mcp-uploads");
 const origin = "https://wiggly.agentenamel.com";
 const watch = process.argv.includes("--watch");
 
-async function signedPhotoUrls(accountId: string) {
-  let names: string[] = [];
-  try {
-    names = await readdir(path.join(photoRoot, accountId));
-  } catch {
-    return [];
-  }
+async function accountPhotos(accountId: string): Promise<CrewPhoto[]> {
+  const account = await exportAccount(accountId);
   const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
-  return names
-    .filter((name) => /\.(png|jpe?g|webp)$/i.test(name))
-    .map((name) => `${origin}${signPhoto(photoSecret, accountId, name, expiresAt)}`);
+  return (account.photos ?? []).map((photo) => ({
+    label: photo.label,
+    path: path.join(photoRoot, accountId, photo.filename),
+    url: `${origin}${signPhoto(photoSecret, accountId, photo.filename, expiresAt)}`,
+  }));
 }
 
 async function tick() {
   const jobs = await listActiveJobs();
   if (jobs.length === 0) {
-    console.error("No queued, lineup, beats, or assembly drafts.");
+    console.error("No queued, running, awaiting-approval, or awaiting-credits drafts.");
     return;
   }
-  for (const job of jobs) {
-    const account = await exportAccount(job.workosUserId);
-    const ledger = new MemoryFilmLedger();
-    ledger.importState(job.workosUserId, account);
-    const stage = await stepDraftJob({
-      ledger,
-      accountId: job.workosUserId,
-      jobId: job.jobId,
-      imageUrls: await signedPhotoUrls(job.workosUserId),
-      token: replicateToken,
-      photoRoot,
-      photoSecret,
-      publicOrigin: origin,
-    });
-    await importAccount(job.workosUserId, ledger.exportState(job.workosUserId));
-    console.error(`${job.jobId} ${job.stage} -> ${stage}`);
-  }
+  const lines = await runDraftTick({
+    jobs: await Promise.all(jobs.map(async (job) => {
+      const photos = await accountPhotos(job.workosUserId);
+      return {
+        accountId: job.workosUserId,
+        jobId: job.jobId,
+        imageUrls: photos.map((photo) => photo.url),
+        photos,
+      };
+    })),
+    loadAccount: exportAccount,
+    saveAccount: importAccount,
+  });
+  for (const line of lines) console.error(line);
 }
 
 if (!photoSecret) {

@@ -11,7 +11,12 @@ const storyboardValidator = v.object({
     camera: v.string(),
     narration_line: v.optional(v.string()),
   })),
-  characters: v.array(v.object({ name: v.string() })),
+  format: v.optional(v.string()),
+  characters: v.array(v.object({
+    name: v.string(),
+    description: v.optional(v.string()),
+    skinTone: v.optional(v.string()),
+  })),
   hero_props: v.array(v.object({ name: v.string() })),
 });
 
@@ -24,6 +29,7 @@ async function readAccount(ctx: QueryCtx | MutationCtx, workosUserId: string): P
       monthlyCredits: 0,
       purchasedCredits: 0,
       labels: [],
+      photos: [],
       quotes: [],
       jobs: [],
     };
@@ -38,6 +44,7 @@ async function readAccount(ctx: QueryCtx | MutationCtx, workosUserId: string): P
     monthlyCredits: balance?.monthlyCredits ?? 0,
     purchasedCredits: balance?.purchasedCredits ?? 0,
     labels: row.labels,
+    photos: row.photos ?? [],
     ...(row.checkoutToken ? { checkoutToken: row.checkoutToken } : {}),
     ...(row.checkoutKind ? { checkoutKind: row.checkoutKind } : {}),
     ...(row.checkoutStatus ? { checkoutStatus: row.checkoutStatus } : {}),
@@ -62,6 +69,8 @@ async function readAccount(ctx: QueryCtx | MutationCtx, workosUserId: string): P
       ...(job.storyboardJson ? { storyboard: JSON.parse(job.storyboardJson) as Storyboard } : {}),
       ...(job.beatUrls ? { beatUrls: job.beatUrls } : {}),
       ...(job.stillUrls ? { stillUrls: job.stillUrls } : {}),
+      ...(job.runId ? { runId: job.runId } : {}),
+      ...(job.stateFile ? { stateFile: job.stateFile } : {}),
     })),
   };
 }
@@ -76,6 +85,7 @@ async function writeAccount(ctx: MutationCtx, workosUserId: string, account: Acc
       subscribed: account.subscribed,
       paymentPending: account.paymentPending,
       labels: account.labels,
+      photos: account.photos ?? [],
       ...(account.checkoutToken ? { checkoutToken: account.checkoutToken } : {}),
       ...(account.checkoutKind ? { checkoutKind: account.checkoutKind } : {}),
       ...(account.checkoutStatus ? { checkoutStatus: account.checkoutStatus } : {}),
@@ -89,6 +99,7 @@ async function writeAccount(ctx: MutationCtx, workosUserId: string, account: Acc
       subscribed: account.subscribed,
       paymentPending: account.paymentPending,
       labels: account.labels,
+      photos: account.photos ?? [],
       ...(account.checkoutToken ? { checkoutToken: account.checkoutToken } : {}),
       ...(account.checkoutKind ? { checkoutKind: account.checkoutKind } : {}),
       ...(account.checkoutStatus ? { checkoutStatus: account.checkoutStatus } : {}),
@@ -143,6 +154,8 @@ async function writeAccount(ctx: MutationCtx, workosUserId: string, account: Acc
       ...(job.storyboard ? { storyboardJson: JSON.stringify(job.storyboard) } : {}),
       ...(job.beatUrls ? { beatUrls: job.beatUrls } : {}),
       ...(job.stillUrls ? { stillUrls: job.stillUrls } : {}),
+      ...(job.runId ? { runId: job.runId } : {}),
+      ...(job.stateFile ? { stateFile: job.stateFile } : {}),
     });
   }
 }
@@ -193,7 +206,7 @@ export const listActiveJobs = internalQuery({
     stage: v.string(),
   })),
   handler: async (ctx) => {
-    const stages = ["queued", "lineup", "beats", "assembly"] as const;
+    const stages = ["queued", "running", "awaiting-approval", "awaiting-credits", "lineup", "beats", "assembly"] as const;
     const rows: { workosUserId: string; jobId: string; stage: string }[] = [];
     for (const stage of stages) {
       const jobs = await ctx.db.query("mcpJobs").withIndex("by_stage", (q) => q.eq("stage", stage)).collect();
@@ -272,7 +285,11 @@ export const getUpload = internalQuery({
 });
 
 export const setPhotoLabels = internalMutation({
-  args: { uploadId: v.string(), labels: v.array(v.string()) },
+  args: {
+    uploadId: v.string(),
+    labels: v.array(v.string()),
+    photos: v.optional(v.array(v.object({ label: v.string(), filename: v.string() }))),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     const row = await ctx.db.query("mcpAccounts").withIndex("by_uploadId", (q) => q.eq("uploadId", args.uploadId)).unique();
@@ -281,7 +298,8 @@ export const setPhotoLabels = internalMutation({
     }
     const account = await readAccount(ctx, row.workosUserId);
     const { next } = apply(account, row.workosUserId, (ledger) => {
-      ledger.attachPhotos(row.workosUserId, args.labels);
+      if (args.photos && args.photos.length > 0) ledger.attachPhotoFiles(row.workosUserId, args.photos);
+      else ledger.attachPhotos(row.workosUserId, args.labels);
     });
     await writeAccount(ctx, row.workosUserId, next);
     return null;

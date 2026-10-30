@@ -66,6 +66,6 @@ export function importAccount(workosUserId: string, account: import("./film-ledg
   return callInternal<null>("mutation", internal.mcpFilm.importAccount, { workosUserId, account });
 }
 
-export function saveUploadLabels(uploadId: string, labels: string[]) {
-  return callInternal<null>("mutation", internal.mcpFilm.setPhotoLabels, { uploadId, labels });
+export function saveUploadLabels(uploadId: string, labels: string[], photos?: Array<{ label: string; filename: string }>) {
+  return callInternal<null>("mutation", internal.mcpFilm.setPhotoLabels, { uploadId, labels, photos });
 }

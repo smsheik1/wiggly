@@ -64,60 +64,21 @@ Every video prompt authors **Visual Action**, **Camera Direction**, and **Negati
 
 ---
 
-## 5. The 3-Tool Asynchronous Studio Cloud Engine
+## 5. Wiggly writes nothing. You write the JSON. Wiggly checks it and renders.
 
-Client agents communicate with Wiggly using three discrete tools from `@wiggly/mcp-server`:
+Call the tools in this order. Look at every image block. Fix every gate error and call the same tool again, up to three tries. Poll `wiggly_get_draft` while stills or clips are rendering, and show those pictures before you ask the person to approve. A rejection names `story-director` or `storyboard-artist`. Call that tool again with the notes. Do not write a still prompt or a clip prompt outside these tools. Do not approve assets, the animatic, or production yourself.
 
-### Step 1: Submit Film (`wiggly_submit_film`)
-Dispatches the draft generation pass. Returns a durable `jobId` in <500ms:
-```json
-{
-  "idempotencyKey": "unique-client-order-uuid-12345",
-  "storyboard": {
-    "title": "Shaz for Mia",
-    "subject": "Mia",
-    "beats": [...],
-    "characters": [
-      {
-        "tag": "@Shaz_Adult",
-        "name": "Shaz",
-        "ageOrStage": "34-year-old adult father",
-        "referencePhotoUrls": ["https://cdn.wiggly.com/uploads/shaz-dad.jpg"]
-      }
-    ],
-    "heroProps": [
-      {
-        "tag": "@2000_Honda_Accord",
-        "name": "2000 Honda Accord Coupe",
-        "description": "Silver 2-door coupe with slightly weathered paint",
-        "referencePhotoUrls": ["https://cdn.wiggly.com/uploads/honda.jpg"]
-      }
-    ]
-  },
-  "voiceover": {
-    "type": "parent_clone",
-    "voiceSampleUrl": "https://cdn.wiggly.com/uploads/shaz-voice-10s.mp3"
-  }
-}
-```
+1. `wiggly_open_upload`, then `wiggly_list_uploads`. You look at each photo and you write `skinTone` and `description`.
+2. `wiggly_submit_draft` with format `my-pixar-story`. This spends nothing.
+3. `wiggly_story_director`. Call it with no draft first. Send the JSON back as `draft`.
+4. `wiggly_character_architect` and `wiggly_location_scout`, in either order, after the story director passes. Look at the character photo.
+5. Poll `wiggly_get_draft` until the sheet stills are back. Show them. The person approves with `wiggly_approve_draft`.
+6. `wiggly_storyboard_artist` only after that approval.
+7. Poll `wiggly_get_draft` for the panel stills. The person approves the animatic. A rejection sends you back to step 3 or step 6.
+8. `wiggly_seedance_compiler` only after the animatic is approved.
+9. The person approves production. Clips render. Poll until `ready`, then the video URL is on `wiggly_get_draft`.
 
-### Step 2: Poll Status (`wiggly_get_film`)
-Checks pipeline progress without open-socket timeouts. Returns `retryAfterSec: 15`:
-```json
-{
-  "jobId": "film_1730000000_abc123"
-}
-```
-*Returns:* Current stage (`lineup_generation`, `rendering_shots`, `vision_qc`, `ready_for_review`), 720p watermarked draft video URL, and 3x3 dailies contact sheet.
-
-### Step 3: Human Approval Gate (`wiggly_finalize_film`)
-Enables the user to reroll a single defective shot (max 1 free auto-retry per shot, max 3 per film) or order the final 1080p theatrical master:
-```json
-{
-  "jobId": "film_1730000000_abc123",
-  "action": "order_1080p_master"
-}
-```
+A still costs 8 credits. A clip costs 21 credits per second. Credits are taken when that picture or clip is about to render. There is no quote. Text gates spend nothing.
 
 ---
 
@@ -139,6 +100,5 @@ Connect the official Wiggly MCP server to handle image generation, Seedance vide
 }
 ```
 
-### Pricing:
-* **720p Draft Preview:** **\$19.00**
-* **Theatrical 1080p Master:** **\$69.00** (Includes 4K character sheet, 3x3 contact sheet, continuous piano score, and parent voiceover mix).
+### Credits:
+$19 grants 1900 credits. A still costs 8. A clip costs 21 per second. There is no separate draft price and no master price.

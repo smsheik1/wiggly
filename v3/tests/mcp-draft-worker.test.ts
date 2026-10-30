@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
-import { mkdtemp, readFile, stat } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { SEEDANCE_MODEL, seedanceBeatInput, stillPrompts, stepDraftJob } from "../features/mcp/draft-worker";
+import { access } from "node:fs/promises";
+import { approveDraft, bundledStudiosRoot, crewPhotoReferences, questionnaireFromStoryboard, runDraftTick, stepDraftJob, studioForFormat } from "../features/mcp/draft-worker";
 import { MemoryFilmLedger, type Storyboard } from "../features/mcp/film-ledger";
+import { JobStore, studioStateFile } from "../features/mcp/job-store";
 
 const storyboard: Storyboard = {
+  format: "my-pixar-story",
   title: "Sunday",
   subject: "Leo",
   beats: Array.from({ length: 7 }, () => ({
@@ -15,7 +17,7 @@ const storyboard: Storyboard = {
     action: "Leo looks up.",
     camera: "Wide.",
   })),
-  characters: [{ name: "Leo" }],
+  characters: [{ name: "Leo", skinTone: "olive", description: "An adult man with short dark hair and a trimmed beard." }],
   hero_props: [],
 };
 
@@ -23,165 +25,261 @@ function startedJob() {
   const ledger = new MemoryFilmLedger();
   ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 1900 });
   ledger.attachPhotos("user_1", ["Leo"]);
-  const quote = ledger.submitDraft("user_1", { storyboard });
-  if (!quote.ok) throw new Error("quote failed");
-  const started = ledger.submitDraft("user_1", { storyboard, confirm: true, quoteId: String(quote.data.quote_id) });
+  const started = ledger.submitDraft("user_1", { storyboard });
   if (!started.ok) throw new Error("start failed");
   return { ledger, jobId: String(started.data.job_id) };
 }
 
-test("the contact sheet prompt names the characters", () => {
-  const prompts = stillPrompts(storyboard);
-  assert.equal(prompts[0], "Leo");
-  assert.match(prompts.at(-1) ?? "", /Contact sheet of Leo/);
-  assert.equal(prompts.includes("Sunday contact sheet"), false);
+test("the worker resolves an installed format inside the release", () => {
+  const root = bundledStudiosRoot();
+  const pixar = studioForFormat("my-pixar-story", root);
+  assert.equal(pixar.directory, path.join(root, "my-pixar-story-v2"));
+  assert.equal(pixar.directory.endsWith(`${path.sep}studios${path.sep}my-pixar-story-v2`), true);
+  assert.throws(() => studioForFormat("talking-fish", root), /Installed formats: my-pixar-story/);
 });
 
-test("a beat request is Seedance 2.5 at 480p with photos and no reference video", () => {
-  const input = seedanceBeatInput({ action: "Leo looks up.", camera: "Wide.", duration_sec: 10 }, ["https://wiggly.agentenamel.com/photo.jpg"]);
-  assert.equal(input.resolution, "480p");
-  assert.equal(input.aspect_ratio, "16:9");
-  assert.deepEqual(input.reference_images, ["https://wiggly.agentenamel.com/photo.jpg"]);
-  assert.equal("reference_videos" in input, false);
-  assert.equal(SEEDANCE_MODEL, "bytedance/seedance-2.5");
+test("a queued draft without a format stops before a studio starts", async () => {
+  const ledger = new MemoryFilmLedger();
+  ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 1900 });
+  ledger.attachPhotos("user_1", ["Leo"]);
+  const started = ledger.submitDraft("user_1", { storyboard: { ...storyboard, format: " " } });
+  assert.equal(started.ok, false);
+  if (started.ok) return;
+  assert.match(started.message, /storyboard.format/);
+  assert.match(started.message, /my-pixar-story/);
 });
 
-test("a provider failure returns the credits and a success moves the job to assembly", async () => {
-  const failed = startedJob();
-  failed.ledger.setStage("user_1", failed.jobId, "beats");
-  const before = failed.ledger.exportState("user_1").purchasedCredits;
-  const stage = await stepDraftJob({
-    ledger: failed.ledger,
+test("a queued draft starts the format on the storyboard", async () => {
+  const job = startedJob();
+  let formatId = "";
+  await stepDraftJob({
+    ledger: job.ledger,
     accountId: "user_1",
-    jobId: failed.jobId,
+    jobId: job.jobId,
     imageUrls: ["https://example.com/leo.jpg"],
-    token: "test-token",
-    fetchImpl: async () => new Response(JSON.stringify({ detail: "out of credit" }), { status: 402 }),
+    runsRoot: path.join(tmpdir(), `wiggly-format-${job.jobId}`),
+    startGraph: async (start) => {
+      formatId = start.formatId;
+      const stateFile = path.join(start.runsRoot, start.jobId, "outputs", "state.json");
+      await mkdir(path.dirname(stateFile), { recursive: true });
+      await writeFile(stateFile, JSON.stringify({ status: "running", pendingApproval: [] }));
+      return { runId: start.jobId, stateFile, state: { status: "running" } };
+    },
+  });
+  assert.equal(formatId, "my-pixar-story");
+});
+
+test("the crew reference keeps a real photo file and the look the agent wrote", async () => {
+  const root = path.join(tmpdir(), "wiggly-photo-ref");
+  await mkdir(root, { recursive: true });
+  const file = path.join(root, "Leo.jpg");
+  await writeFile(file, "photo");
+  const refs = crewPhotoReferences(storyboard, [{ label: "Leo", path: file, url: "https://example.com/leo.jpg" }]);
+  assert.equal(refs[0]?.id, "Leo");
+  assert.equal(refs[0]?.realPerson, "Leo");
+  assert.equal(refs[0]?.skinTone, "olive");
+  assert.equal(refs[0]?.description, storyboard.characters[0]?.description);
+  assert.equal(refs[0]?.path, file);
+  await access(file);
+});
+
+test("an unknown format stops before a studio starts", async () => {
+  const ledger = new MemoryFilmLedger();
+  ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 1900 });
+  ledger.attachPhotos("user_1", ["Leo"]);
+  const started = ledger.submitDraft("user_1", { storyboard: { ...storyboard, format: "talking-fish" } });
+  if (!started.ok) throw new Error("start failed");
+  let calls = 0;
+  await assert.rejects(() => stepDraftJob({
+    ledger,
+    accountId: "user_1",
+    jobId: String(started.data.job_id),
+    imageUrls: ["https://example.com/leo.jpg"],
+    startGraph: async () => {
+      calls += 1;
+      return { runId: "unused", stateFile: "/tmp/unused", state: {} };
+    },
+  }), /talking-fish/);
+  assert.equal(calls, 0);
+});
+
+test("a worker tick starts the queued v2 run and does not call a provider", async () => {
+  const job = startedJob();
+  const account = job.ledger.exportState("user_1");
+  let calls = 0;
+  const lines = await runDraftTick({
+    jobs: [{ accountId: "user_1", jobId: job.jobId, imageUrls: ["https://example.com/leo.jpg"] }],
+    loadAccount: () => account,
+    saveAccount: (_accountId, next) => job.ledger.importState("user_1", next),
+    runsRoot: path.join(tmpdir(), `wiggly-tick-${job.jobId}`),
+    startGraph: async (start) => {
+      calls += 1;
+      const stateFile = path.join(start.runsRoot, start.jobId, "outputs", "state.json");
+      await mkdir(path.dirname(stateFile), { recursive: true });
+      const state = { status: "awaiting-approval", pendingApproval: ["@Image 1"] };
+      await writeFile(stateFile, JSON.stringify(state));
+      return { runId: start.jobId, stateFile, state };
+    },
+  });
+  assert.equal(calls, 1);
+  assert.match(lines[0] ?? "", /awaiting-approval/);
+  assert.equal(job.ledger.exportState("user_1").jobs[0]?.runId, job.jobId);
+});
+
+test("a queued draft starts the v2 graph with the questionnaire and photos", async () => {
+  const job = startedJob();
+  const seen: Array<{ answers: unknown; photos: string[] }> = [];
+  const root = path.join(tmpdir(), `wiggly-draft-${job.jobId}`);
+  const stateFile = path.join(root, job.jobId, "outputs", "state.json");
+  await mkdir(path.dirname(stateFile), { recursive: true });
+  const stage = await stepDraftJob({
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    imageUrls: ["https://example.com/leo.jpg"],
+    runsRoot: root,
+    startGraph: async (start) => {
+      const questionnaire = questionnaireFromStoryboard(start.storyboard);
+      seen.push({ answers: questionnaire.answers, photos: start.imageUrls });
+      assert.equal(JSON.stringify(start).includes("Eyes:"), false);
+      const state = { status: "awaiting-approval", pendingApproval: ["@Image 1"] };
+      await writeFile(stateFile, JSON.stringify(state));
+      return { runId: start.jobId, stateFile, state };
+    },
+  });
+  assert.equal(stage, "awaiting-approval");
+  assert.deepEqual(seen[0]?.photos, ["https://example.com/leo.jpg"]);
+  assert.deepEqual((seen[0]?.answers as { people: string[] }).people, ["Leo"]);
+  const saved = job.ledger.exportState("user_1").jobs[0];
+  assert.equal(saved?.stateFile, stateFile);
+});
+
+test("wiggly_get_film reads the v2 state file", async () => {
+  const root = path.join(tmpdir(), "wiggly-get-film");
+  const jobId = "film_state_1";
+  const file = studioStateFile(root, jobId);
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, JSON.stringify({ status: "awaiting-approval", pendingApproval: ["@Image 1"] }));
+  const film = await new JobStore(root).getFilm(jobId);
+  assert.equal(film.studioStatus, "awaiting-approval");
+  assert.deepEqual(film.pendingApproval, ["@Image 1"]);
+  assert.equal(film.status, "awaiting_approval");
+});
+
+test("an approval resumes the gate and leaves the still charge to the render", async () => {
+  const job = startedJob();
+  const root = path.join(tmpdir(), `wiggly-approve-${job.jobId}`);
+  const stateFile = path.join(root, job.jobId, "outputs", "state.json");
+  await mkdir(path.dirname(stateFile), { recursive: true });
+  await writeFile(stateFile, JSON.stringify({ status: "awaiting-approval", pendingApproval: ["@Image 1"] }));
+  job.ledger.setRun("user_1", job.jobId, { runId: job.jobId, stateFile });
+  job.ledger.setStage("user_1", job.jobId, "awaiting-approval");
+  let decision: Record<string, unknown> | undefined;
+  const approved = await approveDraft({
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    decision: { approvedAssets: { "@Image 1": "asset:master-render:leo" } },
+    resumeGraph: async (resume) => {
+      decision = resume.decision;
+      return { state: { status: "awaiting-approval", pendingApproval: ["animatic"] } };
+    },
+  });
+  assert.equal(approved.ok, true);
+  assert.deepEqual(decision?.approvedAssets, { "@Image 1": "asset:master-render:leo" });
+  assert.equal(job.ledger.exportState("user_1").monthlyCredits, 1900);
+});
+
+test("a credit pause stays paused until the balance covers the next item", async () => {
+  const job = startedJob();
+  job.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 0, purchasedCredits: 0 });
+  const root = path.join(tmpdir(), `wiggly-credits-${job.jobId}`);
+  const stateFile = path.join(root, job.jobId, "outputs", "state.json");
+  await mkdir(path.dirname(stateFile), { recursive: true });
+  await writeFile(stateFile, JSON.stringify({ status: "awaiting-credits", credits: 8, creditItemId: "@Leo", pendingApproval: [] }));
+  job.ledger.setRun("user_1", job.jobId, { runId: job.jobId, stateFile });
+  job.ledger.setStage("user_1", job.jobId, "awaiting-credits");
+  let resumed = false;
+  const paused = await stepDraftJob({
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    imageUrls: [],
+    runsRoot: root,
+    resumeGraph: async () => {
+      resumed = true;
+      return { state: { status: "running" } };
+    },
+  });
+  assert.equal(paused, "awaiting-credits");
+  assert.equal(resumed, false);
+  job.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 8 });
+  let decision: Record<string, unknown> | undefined;
+  const continued = await stepDraftJob({
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    imageUrls: [],
+    runsRoot: root,
+    resumeGraph: async (resume) => {
+      decision = resume.decision;
+      return { state: { status: "running", pendingApproval: [] } };
+    },
+  });
+  assert.equal(continued, "running");
+  assert.deepEqual(decision, { kind: "credits" });
+});
+
+test("a failed v2 run keeps the crew fee and the charges already spent", async () => {
+  const job = startedJob();
+  const root = path.join(tmpdir(), `wiggly-fail-${job.jobId}`);
+  const stateFile = path.join(root, job.jobId, "outputs", "state.json");
+  await mkdir(path.dirname(stateFile), { recursive: true });
+  await writeFile(stateFile, JSON.stringify({ status: "running", pendingApproval: [] }));
+  job.ledger.setRun("user_1", job.jobId, { runId: job.jobId, stateFile });
+  assert.equal(job.ledger.spendCredits("user_1", job.jobId, 8).ok, true);
+  await writeFile(stateFile, JSON.stringify({ status: "failed", pendingApproval: [] }));
+  const stage = await stepDraftJob({
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    imageUrls: ["https://example.com/leo.jpg"],
+    runsRoot: root,
   });
   assert.equal(stage, "failed");
-  const refunded = failed.ledger.exportState("user_1");
-  assert.equal(refunded.jobs[0]?.creditsRefunded, true);
-  assert.ok(refunded.purchasedCredits > before);
-
-  const ok = startedJob();
-  ok.ledger.setStage("user_1", ok.jobId, "beats");
-  const bodies: unknown[] = [];
-  await stepDraftJob({
-    ledger: ok.ledger,
-    accountId: "user_1",
-    jobId: ok.jobId,
-    imageUrls: ["https://example.com/leo.jpg"],
-    token: "test-token",
-    fetchImpl: async (_url, init) => {
-      bodies.push(JSON.parse(String(init?.body)));
-      return new Response(JSON.stringify({ id: "pred", status: "succeeded", output: "https://example.com/clip.mp4" }), { status: 201 });
-    },
-  });
-  assert.equal(bodies.length, 7);
-  assert.equal(JSON.stringify(bodies).includes("reference_videos"), false);
-  assert.equal(JSON.stringify(bodies).includes("\"resolution\":\"480p\""), true);
-  assert.equal(ok.ledger.exportState("user_1").jobs[0]?.stage, "assembly");
-  assert.equal(ok.ledger.exportState("user_1").jobs[0]?.beatUrls?.length, 7);
+  const account = job.ledger.exportState("user_1");
+  assert.equal(account.jobs[0]?.creditsRefunded, false);
+  assert.equal(account.jobs[0]?.creditsCharged, 8);
+  assert.equal(account.jobs[0]?.error, "The v2 run failed.");
+  assert.equal(account.monthlyCredits, 1892);
+  assert.equal(account.purchasedCredits, 0);
 });
 
-test("lineup stills are the photos Seedance receives", async () => {
+test("the state file is what a later poll reads", async () => {
   const job = startedJob();
-  job.ledger.setStage("user_1", job.jobId, "lineup");
-  const bodies: Array<{ input: { reference_images?: string[] } }> = [];
-  let calls = 0;
+  const root = path.join(tmpdir(), `wiggly-poll-${job.jobId}`);
+  const stateFile = path.join(root, job.jobId, "outputs", "state.json");
+  await mkdir(path.dirname(stateFile), { recursive: true });
   await stepDraftJob({
     ledger: job.ledger,
     accountId: "user_1",
     jobId: job.jobId,
-    imageUrls: ["https://example.com/original.jpg"],
-    token: "test-token",
-    fetchImpl: async (_url, init) => {
-      calls += 1;
-      const body = JSON.parse(String(init?.body)) as { input: { reference_images?: string[] } };
-      bodies.push(body);
-      return new Response(JSON.stringify({ output: `https://example.com/still-${calls}.jpg` }), { status: 201 });
+    imageUrls: [],
+    runsRoot: root,
+    startGraph: async (start) => {
+      await writeFile(stateFile, JSON.stringify({ status: "running", pendingApproval: [] }));
+      return { runId: start.jobId, stateFile, state: { status: "running", pendingApproval: [] } };
     },
   });
-  assert.equal(job.ledger.exportState("user_1").jobs[0]?.stage, "beats");
-  assert.equal(job.ledger.exportState("user_1").jobs[0]?.stillUrls?.length, 2);
-  job.ledger.setStage("user_1", job.jobId, "beats");
-  await stepDraftJob({
-    ledger: job.ledger,
-    accountId: "user_1",
-    jobId: job.jobId,
-    imageUrls: ["https://example.com/original.jpg"],
-    token: "test-token",
-    fetchImpl: async (_url, init) => {
-      bodies.push(JSON.parse(String(init?.body)));
-      return new Response(JSON.stringify({ output: "https://example.com/beat.mp4" }), { status: 201 });
-    },
-  });
-  const beat = bodies.at(-1);
-  assert.deepEqual(beat?.input.reference_images, [
-    "https://example.com/still-1.jpg",
-    "https://example.com/still-2.jpg",
-  ]);
-});
-
-test("a processing prediction is polled until the output URL exists", async () => {
-  const job = startedJob();
-  job.ledger.setStage("user_1", job.jobId, "beats");
-  let calls = 0;
+  await writeFile(stateFile, JSON.stringify({ status: "done", pendingApproval: [] }));
   const stage = await stepDraftJob({
     ledger: job.ledger,
     accountId: "user_1",
     jobId: job.jobId,
-    imageUrls: ["https://example.com/leo.jpg"],
-    token: "test-token",
-    wait: async () => {},
-    fetchImpl: async () => {
-      calls += 1;
-      if (calls % 2 === 1) {
-        return new Response(JSON.stringify({
-          id: "pred",
-          status: "processing",
-          urls: { get: "https://api.replicate.com/v1/predictions/pred" },
-        }), { status: 201 });
-      }
-      return new Response(JSON.stringify({
-        id: "pred",
-        status: "succeeded",
-        output: ["https://example.com/clip.mp4"],
-      }), { status: 200 });
-    },
-  });
-  assert.equal(stage, "assembly");
-  assert.equal(calls, 14);
-});
-
-test("assembly stitches the beat files and marks the draft ready", async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), "wiggly-clip-"));
-  const clip = path.join(dir, "clip.mp4");
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn("ffmpeg", ["-y", "-f", "lavfi", "-i", "color=c=black:s=64x64:d=0.2", "-pix_fmt", "yuv420p", clip], { stdio: "ignore" });
-    child.on("error", reject);
-    child.on("close", (code) => (code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}`))));
-  });
-  const bytes = await readFile(clip);
-  const ready = startedJob();
-  const photoRoot = await mkdtemp(path.join(tmpdir(), "wiggly-ready-"));
-  ready.ledger.setStage("user_1", ready.jobId, "assembly");
-  for (let index = 0; index < 7; index += 1) ready.ledger.addBeatUrl("user_1", ready.jobId, `https://example.com/${index}.mp4`);
-  const stage = await stepDraftJob({
-    ledger: ready.ledger,
-    accountId: "user_1",
-    jobId: ready.jobId,
-    imageUrls: ["https://example.com/leo.jpg"],
-    token: "test-token",
-    photoRoot,
-    photoSecret: "test-secret",
-    publicOrigin: "https://wiggly.agentenamel.com",
-    fetchImpl: async () => new Response(new Uint8Array(bytes)),
+    imageUrls: [],
+    runsRoot: root,
   });
   assert.equal(stage, "ready");
-  const videoUrl = ready.ledger.exportState("user_1").jobs[0]?.videoUrl ?? "";
-  assert.match(videoUrl, /^https:\/\/wiggly\.agentenamel\.com\/api\/mcp\/photos\/user_1\/draft-/);
-  assert.match(videoUrl, /sig=/);
-  const filename = decodeURIComponent(new URL(videoUrl).pathname.split("/").pop() ?? "");
-  assert.ok((await stat(path.join(photoRoot, "user_1", filename))).size > 0);
+  const raw = JSON.parse(await readFile(stateFile, "utf8"));
+  assert.equal(raw.status, "done");
 });

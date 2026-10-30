@@ -16,6 +16,14 @@ export function containedPath(root: string, accountId: string, filename: string)
   return { dir, full, safeName };
 }
 
+export function photoFilename(label: string, originalName: string) {
+  const safe = label.trim().replace(/[^A-Za-z0-9_-]/g, "");
+  if (!safe) throw new Error("Invalid photo label.");
+  const ext = path.extname(originalName || "").toLowerCase();
+  const allowed = new Set([".png", ".jpg", ".jpeg", ".webp"]);
+  return `${safe}${allowed.has(ext) ? ext : ".jpg"}`;
+}
+
 export async function savePhoto(root: string, accountId: string, filename: string, bytes: Buffer) {
   const { dir, full, safeName } = containedPath(root, accountId, filename);
   await mkdir(dir, { recursive: true });
@@ -26,6 +34,20 @@ export async function savePhoto(root: string, accountId: string, filename: strin
 export async function readPhoto(root: string, accountId: string, filename: string) {
   const { full } = containedPath(root, accountId, filename);
   return readFile(full);
+}
+
+export function signRender(secret: string, jobId: string, tag: string, expiresAt: number) {
+  const payload = `${jobId}\n${tag}\n${expiresAt}`;
+  const sig = createHmac("sha256", secret).update(payload).digest("hex");
+  return `/api/mcp/renders/${encodeURIComponent(jobId)}/${encodeURIComponent(tag)}?exp=${expiresAt}&sig=${sig}`;
+}
+
+export function renderSignatureValid(secret: string, jobId: string, tag: string, expiresAt: number, signature: string) {
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return false;
+  const expected = createHmac("sha256", secret).update(`${jobId}\n${tag}\n${expiresAt}`).digest("hex");
+  const left = Buffer.from(expected);
+  const right = Buffer.from(signature);
+  return left.length === right.length && timingSafeEqual(left, right);
 }
 
 export function signPhoto(secret: string, accountId: string, filename: string, expiresAt: number) {

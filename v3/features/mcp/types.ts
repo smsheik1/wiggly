@@ -29,6 +29,7 @@ export interface FilmJob {
   createdAt: string;
   updatedAt: string;
   input: SubmitFilmInput;
+  stateFile?: string;
   rerollBudgetRemaining: number;
   rerollHistory: Array<{
     shotId: number;
@@ -67,6 +68,8 @@ export interface GetFilmResult {
     code: string;
     message: string;
   };
+  studioStatus?: string;
+  pendingApproval?: string[];
 }
 
 export interface FinalizeFilmResult {
