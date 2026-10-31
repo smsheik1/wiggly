@@ -190,6 +190,28 @@ test("an approval resumes the gate and leaves the still charge to the render", a
   assert.equal(job.ledger.exportState("user_1").monthlyCredits, 1900);
 });
 
+test("approveDraft normalizes array approvedAssets into an object map", async () => {
+  const job = startedJob();
+  const stateFile = path.join(tmpdir(), `wiggly-array-approve-${job.jobId}`, "outputs", "state.json");
+  await mkdir(path.dirname(stateFile), { recursive: true });
+  await writeFile(stateFile, JSON.stringify({ status: "awaiting-approval", pendingApproval: ["@Image 1"], assetFiles: { "@Image 1": "/tmp/image1.png" } }));
+  job.ledger.setRun("user_1", job.jobId, { runId: job.jobId, stateFile });
+  job.ledger.setStage("user_1", job.jobId, "awaiting-approval");
+  let decision: Record<string, unknown> | undefined;
+  const approved = await approveDraft({
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    decision: { approvedAssets: ["@Image 1"] },
+    resumeGraph: async (resume) => {
+      decision = resume.decision;
+      return { state: { status: "running", pendingApproval: [] } };
+    },
+  });
+  assert.equal(approved.ok, true);
+  assert.deepEqual(decision?.approvedAssets, { "@Image 1": "/tmp/image1.png" });
+});
+
 test("a credit pause stays paused until the balance covers the next item", async () => {
   const job = startedJob();
   job.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 0, purchasedCredits: 0 });

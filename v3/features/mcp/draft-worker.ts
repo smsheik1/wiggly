@@ -416,6 +416,13 @@ export async function approveDraft(input: {
   if (state.status === "awaiting-credits") {
     return { ok: false as const, message: "This run is paused for credits. Top up, then the worker resumes it. Do not call wiggly_approve_draft." };
   }
+  const rawApproved = input.decision?.approvedAssets;
+  let normalizedDecision = input.decision;
+  if (Array.isArray(rawApproved)) {
+    const assetFiles = (state.assetFiles ?? {}) as Record<string, string>;
+    const approvedMap = Object.fromEntries(rawApproved.map((tag) => [tag, assetFiles[tag] ?? true]));
+    normalizedDecision = { ...input.decision, approvedAssets: approvedMap };
+  }
   if (state.renderStage) {
     const { advanceRender, picturesReady } = await import("./render-stage");
     if (!(await picturesReady(job.stateFile))) {
@@ -432,7 +439,7 @@ export async function approveDraft(input: {
       jobId: input.jobId,
       renderStill: input.renderStill ?? (await defaultStill(formatId)),
       renderClip: input.renderClip ?? (await defaultClip(formatId)),
-      resume: input.decision,
+      resume: normalizedDecision,
     });
     if (!merged) return { ok: false as const, message: "This approval did not resume the film." };
     await writeFile(job.stateFile, JSON.stringify(merged));
@@ -449,7 +456,7 @@ export async function approveDraft(input: {
     accountId: input.accountId,
     jobId: input.jobId,
   }));
-  const resumed = await resume({ runId: job.runId, decision: input.decision });
+  const resumed = await resume({ runId: job.runId, decision: normalizedDecision });
   const stage = applyStudioState(input.ledger, input.accountId, input.jobId, resumed.state);
   return { ok: true as const, data: { stage, status: resumed.state.status ?? stage } };
 }
