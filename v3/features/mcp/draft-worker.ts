@@ -165,6 +165,8 @@ export type StudioState = {
   creditItemId?: string;
   renderStage?: string;
   passed?: Record<string, boolean>;
+  assetFiles?: Record<string, string>;
+  approvedAssets?: Record<string, unknown>;
 };
 
 function billRender(input: { ledger: MemoryFilmLedger; accountId: string; jobId: string; runDir: string }) {
