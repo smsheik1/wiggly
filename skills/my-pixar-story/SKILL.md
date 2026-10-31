@@ -28,27 +28,42 @@ Transform a family's questionnaire answers and real reference photos into an emo
 
 ## 2. The Intake Standard: The Golden 5
 
-When interviewing the user for family memories (or if the user asks for "all questions"), use **The Golden 5**. Do not interrogate the user with technical camera, aspect ratio, or production checklists—YOU are the Creative Director and author those technical parameters from these 5 human answers:
+When interviewing the user for memories (or if the user asks for "all questions"), adapt **The Golden 5** to the story's core relationship archetype. Do not interrogate the user with technical camera, aspect ratio, or production checklists—YOU are the Creative Director and author those technical parameters from these 5 human answers:
 
-1. **Chapter 1 (Childhood, Age 8):** *"Take us back to you at 8 years old: who was your partner-in-crime, what silly trouble did you get into, and what was your weird obsession that you thought was the coolest thing on earth?"*
-2. **Chapter 2 (Teen Freedom):** *"What was your first real taste of freedom (what were you driving or riding), and what is one thing about teenage you that would shock your kids if they saw you back then?"*
-3. **Chapter 3 (The Leap of Faith):** *"What was the craziest risk or adventure you took when you first stepped out into the world on your own, and the moment you realized 'I actually did it'?"*
-4. **Chapter 4 (Romance / Origin Story):** *"How did you meet Mom/Dad/Spouse, what was the most awkward or hilarious moment trying to impress them, and when did you know they were the one?"*
-5. **Chapter 5 (What I Wish You Knew / Legacy Finale):** *"What is one thing you wish your kids truly understood about who you are inside—and if you could walk up to that 8-year-old version of yourself and give them a hug today, what would you say?"*
+### Archetype A: Parent & Family Memoir (Life story for kids/parents)
+1. **Childhood (Age 8):** *"Take us back to you at 8 years old: who was your partner-in-crime, what silly trouble did you get into, and what was your weird obsession that you thought was the coolest thing on earth?"*
+2. **Teen Freedom:** *"What was your first real taste of freedom (what were you driving or riding), and what is one thing about teenage you that would shock your kids if they saw you back then?"*
+3. **The Leap of Faith:** *"What was the craziest risk or adventure you took when you first stepped out into the world on your own, and the moment you realized 'I actually did it'?"*
+4. **Partnership / Romance:** *"How did you meet Mom/Dad/Spouse, what was the most awkward or hilarious moment trying to impress them, and when did you know they were the one?"*
+5. **Legacy Finale:** *"What is one thing you wish your kids truly understood about who you are inside—and if you could walk up to that 8-year-old version of yourself and give them a hug today, what would you say?"*
+
+### Archetype B: Friendship & Brotherhood Memoir (Gym partners, best friends, farewells)
+1. **The Origin / First Rep:** *"How did you two first click or meet, what was the first impression that turned into an instant bond, and what was your signature inside joke or ritual?"*
+2. **The Freedom Machine & Late Nights:** *"What was your signature ride or late-night routine (cruising in the Camry, gas station snack runs, favourite diner), and the wildest conversation you had with the windows down?"*
+3. **The Grind & The Dream:** *"What were the big dreams you hyped each other up about when you were grinding late (buying the dream car, providing for family, making it big)?"*
+4. **The Crossroad / Goodbye:** *"What was the bittersweet moment things changed (moving away, the job offer, the packed car), and what keepsake or gesture marked the farewell?"*
+5. **The Timeless Bond:** *"What is the message you want them to feel every time they watch this—and how will you two still show up for each other no matter how many miles apart?"*
+
+### Archetype C: Romance & Anniversary Memoir
+1. **Before You:** *"What was your world like right before you met them, and what missing piece didn't you know you were looking for?"*
+2. **The Spark:** *"What was the clumsy, hilarious, or unforgettable first moment you two met, and the first time they made you laugh uncontrollably?"*
+3. **The Adventure:** *"What was your first big trip, late-night drive, or crazy shared hurdle where you looked at them and thought, 'we are unstoppable together'?"*
+4. **The Crucible:** *"What was a tough season you weathered hand-in-hand that cemented your trust?"*
+5. **The Vow:** *"Looking ahead at the next 50 years, what is the quiet promise you renew with them every single day?"*
 
 ---
 
 ## 3. The 7-Beat Screenplay Architecture (72 Seconds Total)
 
-| Beat | Life Stage | Timing | Dramatic Purpose |
-|------|------------|--------|-------------------|
-| **Beat 1** | Childhood (Ages 7–10) | 0:00–0:10 | **The Mischief & The Obsession:** Unfiltered joy, goofy partner-in-crime, early signature trait or keepsake. |
-| **Beat 2** | Teen (Ages 15–18) | 0:10–0:22 | **The Freedom Machine & Alter-Ego:** First vehicle, bike, or creative passion. The feeling of infinite road ahead. |
-| **Beat 3** | Young Adult (Ages 19–24) | 0:22–0:33 | **The Leap of Faith:** Leaving home, scrappy survival, working late under fluorescent or neon lights. |
-| **Beat 4** | Adult (Ages 25–30) | 0:33–0:44 | **The Meet-Cute & Partnership:** The clumsy, heartfelt moment with spouse/partner. The quiet realization of shared destiny. |
-| **Beat 5** | Adult (Ages 30–35) | 0:44–0:54 | **The Sacrifice & The Heavy Lift:** Navigating struggle, self-doubt, or long hours for the family's future. |
-| **Beat 6** | Present Day | 0:54–1:04 | **The Turn & Arrival:** The child is born; the chaos becomes clarity; the sacrifice pays off. |
-| **Beat 7** | The Timeless Coda | 1:04–1:12 | **The Porch Light / Closing Thesis:** Adult protagonist reflects on the journey; closing heartfelt message whispered across time. |
+| Beat | Timeline Stage | Timing | Universal Dramatic Purpose |
+|------|----------------|--------|----------------------------|
+| **Beat 1** | The Origin / Spark | 0:00–0:10 | **The Mischief & The Obsession:** Unfiltered joy, goofy partner-in-crime, early signature trait or keepsake. |
+| **Beat 2** | The First Ride / Freedom | 0:10–0:22 | **The Freedom Machine & Alter-Ego:** First vehicle, bike, late-night road trip, or creative passion. The feeling of infinite road ahead. |
+| **Beat 3** | The Fire / The Grind | 0:22–0:33 | **The Leap of Faith:** Stepping out into the world, scrappy survival, working late under neon or gym lights. |
+| **Beat 4** | The Anchor / The Bond | 0:33–0:44 | **The Connection & Partnership:** The spotter at the bench, the clumsy meet-cute, or the moment shared destiny is forged. |
+| **Beat 5** | The Heavy Lift & Trial | 0:44–0:54 | **The Sacrifice & Mutual Push:** Navigating struggle, self-doubt, long hours, or pushing each other through the final reps. |
+| **Beat 6** | The Turn & Arrival | 0:54–1:04 | **The Breakthrough & New Horizon:**<br>• *Parent:* The child is born; chaos turns to clarity.<br>• *Friendship:* The crossroad reached; new city/job embraced; mutual pride across the miles.<br>• *Romance:* The home built; the promise sealed.<br>• *Founder:* The milestone reached; vision proven. |
+| **Beat 7** | The Timeless Coda | 1:04–1:12 | **The Porch Light / Closing Thesis:** Protagonist reflects on the journey; closing heartfelt message whispered across time or distance ("still spotting you", "forever grateful"). |
 
 ---
 
