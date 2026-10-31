@@ -466,6 +466,8 @@ test("a passed storyboard renders panels from the approved sheet files", async (
   assert.ok(refs.some((paths) => paths.includes(sheetFile)));
   assert.match(lines[0] ?? "", /awaiting-approval/);
   assert.equal(stored.jobs[0]?.creditsCharged, refs.length * 8);
+  const endState = JSON.parse(await readFile(path.join(runsRoot, job.jobId, "outputs", "state.json"), "utf8"));
+  assert.ok(endState.assetFiles["1.1"], "rendered storyboard panels must be preserved in state.assetFiles on animatic pause");
 });
 
 test("an approved production renders a two-second clip for 42 credits and assembles the film", async () => {
