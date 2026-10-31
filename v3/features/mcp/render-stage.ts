@@ -1,4 +1,4 @@
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { runtimeImport } from "./runtime-import";
@@ -31,14 +31,24 @@ function passedJobs(state: Record<string, unknown>) {
 }
 
 export async function dueStage(state: Record<string, unknown>, formatId = "my-pixar-story"): Promise<Stage | null> {
-  if (["awaiting-credits", "awaiting-approval", "awaiting-production", "failed", "done"].includes(String(state.status ?? ""))) return null;
+  const status = String(state.status ?? "");
+  if (["awaiting-credits", "awaiting-production", "failed", "done"].includes(status)) return null;
   const passed = passedJobs(state);
   const { graph } = await studioModules(formatId);
   if (passed["character-architect"] && passed["location-scout"]) {
     const approved = (state.approvedAssets ?? {}) as Record<string, unknown>;
     const missing = (graph.requiredAssetTags(state) as string[]).filter((tag) => !approved[tag]);
-    if (missing.length > 0) return "sheets";
+    if (missing.length > 0) {
+      if (status === "awaiting-approval") {
+        const assetFiles = (state.assetFiles ?? {}) as Record<string, string>;
+        const hasAllFiles = missing.every((tag) => Boolean(assetFiles[tag]));
+        if (!hasAllFiles) return "sheets";
+        return null;
+      }
+      return "sheets";
+    }
   }
+  if (status === "awaiting-approval") return null;
   if (passed["storyboard-artist"] && !(state.approvedShotTimings as unknown[] | undefined)?.length) return "panels";
   if (passed["seedance-compiler"] && (state.productionApproval as { decision?: string } | undefined)?.decision !== "approve" && !state.masterVideo) return "clips";
   return null;
@@ -89,13 +99,14 @@ export async function advanceRender(input: {
     const file = saved.dest ?? saved.videoPath;
     return { ...saved, dest: file, videoPath: file, clipId: request.itemId };
   };
+  const halted = (s: Record<string, unknown>) => ["escalated", "failed", "awaiting-approval", "awaiting-production"].includes(String(s.status ?? ""));
   let graph = new StateGraph(modules.state.PipelineAnnotation);
   if (stage === "sheets") {
     graph = graph
       .addNode("render-sheets", modules.stills.makeSheetStillNode({ renderStill: billStill, runDir: input.runDir }))
       .addNode("asset-approval", modules.graph.makeApprovalNode({ useInterrupt: true }))
       .addEdge(START, "render-sheets")
-      .addEdge("render-sheets", "asset-approval")
+      .addConditionalEdges("render-sheets", (s: Record<string, unknown>) => (halted(s) ? END : "asset-approval"), ["asset-approval", END])
       .addEdge("asset-approval", END);
   } else if (stage === "panels") {
     graph = graph
@@ -103,7 +114,7 @@ export async function advanceRender(input: {
       .addNode("animatic-editor", modules.graph.makeAnimaticEditorNode())
       .addNode("animatic-approval", modules.graph.makeAnimaticApprovalNode({ useInterrupt: true }))
       .addEdge(START, "render-panels")
-      .addEdge("render-panels", "animatic-editor")
+      .addConditionalEdges("render-panels", (s: Record<string, unknown>) => (halted(s) ? END : "animatic-editor"), ["animatic-editor", END])
       .addEdge("animatic-editor", "animatic-approval")
       .addEdge("animatic-approval", END);
   } else {
@@ -116,10 +127,17 @@ export async function advanceRender(input: {
       .addEdge("producer", "assembly")
       .addEdge("assembly", END);
   }
+  if (!input.resume) {
+    const checkpointPath = path.join(input.runDir, "outputs", "checkpoint.json");
+    await rm(checkpointPath, { force: true });
+  }
   const checkpointer = new modules.checkpoint.FileMemorySaver(path.join(input.runDir, "outputs", "checkpoint.json"));
   const compiled = graph.compile({ checkpointer });
   const config = { configurable: { thread_id: input.jobId } };
-  const seed = { ...input.state, status: input.state.status === "writing" ? "running" : input.state.status, renderStage: stage };
+  const status = input.state.status === "writing" || (input.state.status === "awaiting-approval" && !input.resume)
+    ? "running"
+    : input.state.status;
+  const seed = { ...input.state, status, renderStage: stage };
   const payload = input.resume ? new Command({ resume: input.resume }) : seed;
   let last = seed;
   try {
