@@ -28,15 +28,15 @@ Transform a family's questionnaire answers and real reference photos into an emo
 
 ## 2. The 7-Beat Screenplay Architecture (72 Seconds Total)
 
-| Beat | Life Stage | Timing | Dramatic Purpose |
-|------|------------|--------|-------------------|
-| **Beat 1** | Childhood (Ages 7–10) | 0:00–0:10 | **The Mischief & The Obsession:** Unfiltered joy, goofy partner-in-crime, early signature trait or keepsake. |
-| **Beat 2** | Teen (Ages 15–18) | 0:10–0:22 | **The Freedom Machine & Alter-Ego:** First vehicle, bike, or creative passion. The feeling of infinite road ahead. |
-| **Beat 3** | Young Adult (Ages 19–24) | 0:22–0:33 | **The Leap of Faith:** Leaving home, scrappy survival, working late under fluorescent or neon lights. |
-| **Beat 4** | Adult (Ages 25–30) | 0:33–0:44 | **The Meet-Cute & Partnership:** The clumsy, heartfelt moment with spouse/partner. The quiet realization of shared destiny. |
-| **Beat 5** | Adult (Ages 30–35) | 0:44–0:54 | **The Sacrifice & The Heavy Lift:** Navigating struggle, self-doubt, or long hours for the family's future. |
-| **Beat 6** | Present Day | 0:54–1:04 | **The Turn & Arrival:** The child is born; the chaos becomes clarity; the sacrifice pays off. |
-| **Beat 7** | The Timeless Coda | 1:04–1:12 | **The Porch Light / Closing Thesis:** Adult protagonist reflects on the journey; closing heartfelt message whispered across time. |
+| Beat | Timeline Stage | Timing | Universal Dramatic Purpose |
+|------|----------------|--------|----------------------------|
+| **Beat 1** | The Origin / Spark | 0:00–0:10 | **The Mischief & The Obsession:** Unfiltered joy, goofy partner-in-crime, early signature trait or keepsake. |
+| **Beat 2** | The First Ride / Freedom | 0:10–0:22 | **The Freedom Machine & Alter-Ego:** First vehicle, bike, late-night road trip, or creative passion. The feeling of infinite road ahead. |
+| **Beat 3** | The Fire / The Grind | 0:22–0:33 | **The Leap of Faith:** Stepping out into the world, scrappy survival, working late under neon or gym lights. |
+| **Beat 4** | The Anchor / The Bond | 0:33–0:44 | **The Connection & Partnership:** The spotter at the bench, the clumsy meet-cute, or the moment shared destiny is forged. |
+| **Beat 5** | The Heavy Lift & Trial | 0:44–0:54 | **The Sacrifice & Mutual Push:** Navigating struggle, self-doubt, long hours, or pushing each other through the final reps. |
+| **Beat 6** | The Turn & Arrival | 0:54–1:04 | **The Breakthrough & New Horizon:**<br>• *Parent:* The child is born; chaos turns to clarity.<br>• *Friendship:* The crossroad reached; new city/job embraced; mutual pride across the miles.<br>• *Romance:* The home built; the promise sealed.<br>• *Founder:* The milestone reached; vision proven. |
+| **Beat 7** | The Timeless Coda | 1:04–1:12 | **The Porch Light / Closing Thesis:** Protagonist reflects on the journey; closing heartfelt message whispered across time or distance ("still spotting you", "forever grateful"). |
 
 ---
 
