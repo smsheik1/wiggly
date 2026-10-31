@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { runtimeImport } from "./runtime-import";
 import { INSTALLED_FORMAT_IDS, MemoryFilmLedger, type Account, type Storyboard } from "./film-ledger";
+import { namedSecret } from "./named-secret";
 import { AwaitingCredits, chargeThenRender, clipCredits, stillCredits } from "./render-charge";
 
 export function bundledStudiosRoot() {
@@ -388,13 +389,15 @@ export async function stepDraftJob(input: {
 async function defaultStill(formatId: string) {
   const studio = studioForFormat(formatId);
   const stills = await runtimeImport(pathToFileURL(path.join(studio.directory, "graph/stills.mjs")).href);
-  return stills.nanoBananaStill({ apiKey: process.env.REPLICATE_API_TOKEN }) as (request: { prompt?: string; dest?: string; itemId?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
+  const token = process.env.REPLICATE_API_TOKEN?.trim() || await namedSecret("REPLICATE_API_TOKEN");
+  return stills.nanoBananaStill({ apiKey: token }) as (request: { prompt?: string; dest?: string; itemId?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
 }
 
 async function defaultClip(formatId: string) {
   const studio = studioForFormat(formatId);
   const customer = await runtimeImport(pathToFileURL(path.join(studio.directory, "scripts/run-customer.mjs")).href);
-  return customer.seedance480pRenderer({ apiKey: process.env.REPLICATE_API_TOKEN }) as (request: { itemId?: string; duration?: number }) => Promise<{ dest?: string; videoPath?: string }>;
+  const token = process.env.REPLICATE_API_TOKEN?.trim() || await namedSecret("REPLICATE_API_TOKEN");
+  return customer.seedance480pRenderer({ apiKey: token }) as (request: { itemId?: string; duration?: number }) => Promise<{ dest?: string; videoPath?: string }>;
 }
 
 export async function approveDraft(input: {
