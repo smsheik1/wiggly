@@ -97,6 +97,60 @@ test("storyboard is refused before the sheet assets are approved", async () => {
   assert.equal(job.ledger.exportState("user_1").monthlyCredits, 1900);
 });
 
+test("storyboard is refused before hero props are approved when heroProps exist", async () => {
+  const runsRoot = path.join(tmpdir(), `wiggly-gate-props-${Date.now()}`);
+  const job = openJob(runsRoot);
+  const story = fixture("good-stage-play.json");
+  const sheets = fixture("good-character-sheets.json");
+  const plates = fixture("good-location-plates.json");
+  const approvedAssets: Record<string, string> = {};
+  for (const character of sheets.characters ?? []) {
+    approvedAssets[character.imageTag] = "paid";
+  }
+  for (const loc of plates.locations ?? []) {
+    approvedAssets[loc.elementTag] = "paid";
+  }
+
+  await putState(job, {
+    status: "writing",
+    storyDirector: story,
+    characterArchitect: { output: sheets },
+    locationScout: { output: plates },
+    passed: { "story-director": true, "character-architect": true, "location-scout": true },
+    heroProps: [{ name: "Camry", propTag: "@Prop 1" }],
+    approvedAssets,
+  });
+  const blocked = await runWritingJob({
+    job: "storyboard-artist",
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    runsRoot,
+  });
+  assert.equal(blocked.ok, false);
+  assert.match(blocked.message ?? "", /@Prop 1/);
+
+  // Now approve the prop
+  approvedAssets["@Prop 1"] = "paid";
+  await putState(job, {
+    status: "writing",
+    storyDirector: story,
+    characterArchitect: { output: sheets },
+    locationScout: { output: plates },
+    passed: { "story-director": true, "character-architect": true, "location-scout": true },
+    heroProps: [{ name: "Camry", propTag: "@Prop 1" }],
+    approvedAssets,
+  });
+  const unblocked = await runWritingJob({
+    job: "storyboard-artist",
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    runsRoot,
+  });
+  assert.equal(unblocked.ok, true, unblocked.message);
+});
+
 test("the story director packet hides the photo path and the character architect returns the file", async () => {
   const runsRoot = path.join(tmpdir(), `wiggly-gate-photo-${Date.now()}`);
   const photo = path.join(runsRoot, "Leo.jpg");

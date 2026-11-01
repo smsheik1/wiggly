@@ -1,79 +1,135 @@
 ---
 name: my-pixar-story
-description: "My Pixar Story: A 3D Pixar-style animated memoir format for parents and grandparents to tell their life story to their kids or spouse across 5 high-voltage emotional chapters."
+description: Turn real questionnaire memories into a cinematic 3D animated memoir (Pixar-style) with consistent characters across life stages, hero props, and authentic parent voiceover.
+version: 2.1.0
+author: Wiggly Studio
 ---
 
-# My Pixar Story — Format Operating Guide
+# My Pixar Story — 3D Animated Family Memoir
 
-This format turns a parent's real-life memories into an emotional, cinematic 3D animated short film in the warm, whimsical aesthetic of a classic Pixar prologue (e.g. *Up*, *Coco*).
+Transform a family's questionnaire answers and real reference photos into an emotional 72-second 3D animated short film in the warm, whimsical visual aesthetic of a classic Pixar prologue (e.g. *Up*, *Coco*).
 
-## The Golden Rule
-**1 Question = 1 Story Beat = 1 Rendered Scene.**  
-Total video: exactly 5 scenes, ~60–75 seconds.
-
----
-
-## 1. Requirements
-
-### Local Tools
-* Node.js $\ge$ 20
-* `ffmpeg` (for local audio and video splicing)
-
-### Required Environment Keys
-* `CARTESIA_API_KEY`: Official voice cloning synthesis via Cartesia Sonic (from the user's 10-second reference clip).
-* `SEADANCE_API_KEY`: Video generation engine.
-  * **Draft & Building (Default):** SeaDance 2.0 Mini or SeaDance 2.5 @ 480p (low-cost, rapid preview).
-  * **Final Export (Paid Gate):** SeaDance 2.5 at Full Resolution (1080p+).
-
-*Note: In accordance with Wiggly policy, keys are read exclusively in memory from `secrets.env` (symlinked at repo root). Never commit keys or write them to `.env`.*
+## Trigger Phrases
+- "Make a Pixar-style story for my daughter"
+- "3D animated family memoir from our memories"
+- "Warm big-eyed feature-animation film about my dad"
+- "Pixar-style tribute for my mom's birthday"
+- "Create an animated storybook legacy film"
 
 ---
 
-## 2. The 5 Story Beats
-
-1. **Scene 1 (Ages 7–10): The Mischief & The Obsession**
-   * *Prompt:* Partner-in-crime, silly childhood trouble, weird obsessive hobby.
-   * *Visual:* Golden hour outdoor childhood adventure, wide curious eyes, messy bedroom packed with their specific obsession.
-2. **Scene 2 (Ages 15–18): The Freedom Machine & Secret Identity**
-   * *Prompt:* First vehicle/bike, night cruising, secret alter-ego / teen passion.
-   * *Visual:* Cinematic night cruise in beat-up car, neon dashboard glow, real retro hairstyle.
-3. **Scene 3 (Ages 19–25): The Leap of Faith**
-   * *Prompt:* Leaving the nest, biggest gamble, scrappy survival, breakthrough moment.
-   * *Visual:* Determined solitary figure stepping into the big city / studio apartment.
-4. **Scene 4 (Ages 26–32): Mom & Dad's Origin Story**
-   * *Prompt:* The meet-cute, clumsy/awkward first date laugh, the quiet moment they knew.
-   * *Visual:* Two characters sharing coffee or caught under an umbrella, string-light bokeh.
-5. **Scene 5 (Present Day): What I Wish You Knew & The Time-Machine Hug**
-   * *Prompt:* The unspoken truth to their kids + what they'd whisper to their 8-year-old child self.
-   * *Visual (The Tearjerker):* Adult character kneeling down to hug their 8-year-old self, transitioning into the modern family portrait.
+## 1. The Core Philosophy
+1. **Real Memories, Never Stock Avatars:** Every character, location, and hero prop is generated from authentic questionnaire answers and family reference photos. No borrowed characters or generic house mascots.
+2. **Character & Prop Continuity First:** A 4K character lineup sheet and hero prop turnaround sheet are locked *before* rendering any video. Once approved, all life stages and key objects maintain persistent identity across every scene.
+3. **The "Opening of Up" Audio Architecture:** Rather than risking uncanny AI lip-flap desync, characters act wordlessly with rich emotional expressions, set against a continuous 72-second emotional piano score, ambient foley, and the real parent's authentic voiceover narrating across the scene cuts.
+4. **Zero-Setup Studio MCP Interface:** The client agent acts as the Creative Director; heavy rendering (Seedance 2.5 on Replicate) and 1080p upscaling (`bytedance/video-upscaler`) run asynchronously on Wiggly's managed studio cloud GPUs via `@wiggly/mcp-server`.
 
 ---
 
-## 3. Command Loop
+## 2. The Intake Standard: The Golden 5
 
-### Step 1: Free Offline Smoke Test
-Run the deterministic smoke test with zero paid API calls:
-```bash
-npx tsx features/formats/my-pixar-story/tests/smoke.test.ts
+When interviewing the user for memories (or if the user asks for "all questions"), adapt **The Golden 5** to the story's core relationship archetype. Do not interrogate the user with technical camera, aspect ratio, or production checklists—YOU are the Creative Director and author those technical parameters from these 5 human answers:
+
+### Archetype A: Parent & Family Memoir (Life story for kids/parents)
+1. **Childhood (Age 8):** *"Take us back to you at 8 years old: who was your partner-in-crime, what silly trouble did you get into, and what was your weird obsession that you thought was the coolest thing on earth?"*
+2. **Teen Freedom:** *"What was your first real taste of freedom (what were you driving or riding), and what is one thing about teenage you that would shock your kids if they saw you back then?"*
+3. **The Leap of Faith:** *"What was the craziest risk or adventure you took when you first stepped out into the world on your own, and the moment you realized 'I actually did it'?"*
+4. **Partnership / Romance:** *"How did you meet Mom/Dad/Spouse, what was the most awkward or hilarious moment trying to impress them, and when did you know they were the one?"*
+5. **Legacy Finale:** *"What is one thing you wish your kids truly understood about who you are inside—and if you could walk up to that 8-year-old version of yourself and give them a hug today, what would you say?"*
+
+### Archetype B: Friendship & Brotherhood Memoir (Gym partners, best friends, farewells)
+1. **The Origin / First Rep:** *"How did you two first click or meet, what was the first impression that turned into an instant bond, and what was your signature inside joke or ritual?"*
+2. **The Freedom Machine & Late Nights:** *"What was your signature ride or late-night routine (cruising in the Camry, gas station snack runs, favourite diner), and the wildest conversation you had with the windows down?"*
+3. **The Grind & The Dream:** *"What were the big dreams you hyped each other up about when you were grinding late (buying the dream car, providing for family, making it big)?"*
+4. **The Crossroad / Goodbye:** *"What was the bittersweet moment things changed (moving away, the job offer, the packed car), and what keepsake or gesture marked the farewell?"*
+5. **The Timeless Bond:** *"What is the message you want them to feel every time they watch this—and how will you two still show up for each other no matter how many miles apart?"*
+
+### Archetype C: Romance & Anniversary Memoir
+1. **Before You:** *"What was your world like right before you met them, and what missing piece didn't you know you were looking for?"*
+2. **The Spark:** *"What was the clumsy, hilarious, or unforgettable first moment you two met, and the first time they made you laugh uncontrollably?"*
+3. **The Adventure:** *"What was your first big trip, late-night drive, or crazy shared hurdle where you looked at them and thought, 'we are unstoppable together'?"*
+4. **The Crucible:** *"What was a tough season you weathered hand-in-hand that cemented your trust?"*
+5. **The Vow:** *"Looking ahead at the next 50 years, what is the quiet promise you renew with them every single day?"*
+
+---
+
+## 3. The 7-Beat Screenplay Architecture (72 Seconds Total)
+
+| Beat | Timeline Stage | Timing | Universal Dramatic Purpose |
+|------|----------------|--------|----------------------------|
+| **Beat 1** | The Origin / Spark | 0:00–0:10 | **The Mischief & The Obsession:** Unfiltered joy, goofy partner-in-crime, early signature trait or keepsake. |
+| **Beat 2** | The First Ride / Freedom | 0:10–0:22 | **The Freedom Machine & Alter-Ego:** First vehicle, bike, late-night road trip, or creative passion. The feeling of infinite road ahead. |
+| **Beat 3** | The Fire / The Grind | 0:22–0:33 | **The Leap of Faith:** Stepping out into the world, scrappy survival, working late under neon or gym lights. |
+| **Beat 4** | The Anchor / The Bond | 0:33–0:44 | **The Connection & Partnership:** The spotter at the bench, the clumsy meet-cute, or the moment shared destiny is forged. |
+| **Beat 5** | The Heavy Lift & Trial | 0:44–0:54 | **The Sacrifice & Mutual Push:** Navigating struggle, self-doubt, long hours, or pushing each other through the final reps. |
+| **Beat 6** | The Turn & Arrival | 0:54–1:04 | **The Breakthrough & New Horizon:**<br>• *Parent:* The child is born; chaos turns to clarity.<br>• *Friendship:* The crossroad reached; new city/job embraced; mutual pride across the miles.<br>• *Romance:* The home built; the promise sealed.<br>• *Founder:* The milestone reached; vision proven. |
+| **Beat 7** | The Timeless Coda | 1:04–1:12 | **The Porch Light / Closing Thesis:** Protagonist reflects on the journey; closing heartfelt message whispered across time or distance ("still spotting you", "forever grateful"). |
+
+---
+
+## 4. Character & Hero Prop Prompt Recipes (Nano Banana 2.1)
+
+To guarantee visual consistency, generate a single 4K multi-character lineup sheet and hero prop turnaround before animating:
+
+### Character Lineup Prompt Formula:
+> `3D stylized character lineup compilation sheet, Pixar feature animation aesthetic, showcasing [CharacterName] across three distinct life stages from left to right: (1) 8-year-old child with messy hair, oversized graphic t-shirt, and oversized expressive round eyes with bright specular catchlights; (2) 17-year-old teenager in retro faded denim jacket, lean posture; (3) 34-year-old adult father with gentle smile, warm crow's feet, neatly groomed beard, and cozy olive knit sweater. Matching real-life facial features from reference photos: [PhotoURLs]. Neutral photographic studio backdrop, warm rim lighting, rich subsurface scattering on skin, tactile cloth textures, 8k resolution, cinematic character turn-around sheet.`
+
+### Hero Prop Sheet Formula:
+> `Multi-angle model sheet of a [Year Make Model Prop, e.g., 2000 Honda Accord coupe], Pixar-style 3D stylized vehicle turnaround: front 3/4 view, side profile, and rear 3/4 view. Characterized by slightly rounded exaggerated proportions, glossy slightly weathered paint, detailed dashboard with nostalgic air freshener. Neutral gray studio lighting, crisp shadows, feature animation production asset.`
+
+---
+
+## 5. Scene Prompting Architecture (Seedance 2.5 Negative Audio Lock)
+
+Every video prompt authors **Visual Action**, **Camera Direction**, and **Negative Audio Directives** to ensure diffusion video clips never clash with the continuous musical score:
+
+### Prompt Structure:
+> `[Framing & Camera Move]: Medium cinematic tracking shot, 16:9 widescreen, 24fps.`  
+> `[Visual Subject]: 3D Pixar stylized young father holding his baby daughter wrapped in a yellow blanket on the front porch.`  
+> `[Action & Acting]: Wordless acting. He gently sways, smiling down with tearful joyful eyes as a warm breeze rustles the trees behind them.`  
+> `[Audio Directives]: No background music, no spoken dialogue, atmospheric ambient room tone and foley effects only (gentle crickets, soft porch floorboard creak, night breeze).`
+
+---
+
+## 6. Wiggly writes nothing. You write the JSON. Wiggly checks it and renders.
+
+Call the tools in this order. Look at every image block. Fix every gate error and call the same tool again, up to three tries. Poll `wiggly_get_draft` while stills or clips are rendering, and show those pictures before you ask the person to approve. A rejection names `story-director` or `storyboard-artist`. Call that tool again with the notes. Do not write a still prompt or a clip prompt outside these tools. Do not approve assets, the animatic, or production yourself.
+
+1. `wiggly_open_upload`, then `wiggly_list_uploads`. You look at each photo and you write `skinTone` and `description`.
+2. `wiggly_submit_draft` with format `my-pixar-story`. This spends nothing.
+3. `wiggly_story_director`. Call it with no draft first. Send the JSON back as `draft`.
+4. `wiggly_character_architect` and `wiggly_location_scout`, in either order, after the story director passes. Look at the character photo.
+5. Poll `wiggly_get_draft` until the sheet stills are back. Show them. The person approves with `wiggly_approve_draft`.
+6. `wiggly_storyboard_artist` only after that approval.
+7. Poll `wiggly_get_draft` for the panel stills. The person approves the animatic. A rejection sends you back to step 3 or step 6.
+8. `wiggly_seedance_compiler` only after the animatic is approved.
+9. The person approves production. Clips render. Poll until `ready`, then the video URL is on `wiggly_get_draft`.
+
+A still costs 8 credits. A clip costs 21 credits per second. Credits are taken when that picture or clip is about to render. There is no quote. Text gates spend nothing.
+
+---
+
+## 7. Execution Options
+
+### Option A: Wiggly Studio Cloud MCP (Hosted Zero-Setup)
+Connect the official Wiggly MCP server to handle image generation (Nano Banana 2.1), Seedance 2.5 video synthesis, and audio/video assembly automatically:
+```json
+{
+  "mcpServers": {
+    "wiggly": {
+      "url": "https://wiggly.agentenamel.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_WIGGLY_ACCOUNT_TOKEN"
+      }
+    }
+  }
+}
 ```
 
-### Step 2: Input Validation
-Validate the raw user input JSON against the pre-flight gate:
-```typescript
-import { validateMyPixarStoryInputs } from "./validate";
-const result = validateMyPixarStoryInputs(inputPayload);
-if (!result.valid) throw new Error(result.errors.join(", "));
-```
-
-### Step 3: Compile Storyboard & Prompts
-Generate the complete 5-scene Pixar storyboard and SeaDance video prompts:
-```typescript
-import { compileStoryboard } from "./screenplay";
-const storyboard = compileStoryboard(validatedInputs);
-```
-
-### Step 4: Preview Render (Draft Tier)
-Submit the 5 scene video prompts to **SeaDance 2.0 Mini** (or **SeaDance 2.5 @ 480p**) and synthesize voiceover with **Cartesia Sonic**.
-
-### Step 5: Final Export Pass
-Upon user approval and checkout, trigger **SeaDance 2.5 Full Resolution (1080p+)** for final archival MP4 delivery.
+### Credits & Pricing:
+- $19 grants 1900 credits.
+- A still costs 8 credits (Nano Banana 2.1).
+- A clip costs 21 credits per second (Seedance 2.5 at 480p).
+- Credits are deducted just-in-time when that picture or clip is about to render.
+- Text gates spend 0 credits.
+- One job runs at a time. A short balance pauses and returns a top-up link. There is no quote.

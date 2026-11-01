@@ -122,7 +122,7 @@ function lockReason(job: WritingJob, state: Record<string, unknown>, crew: Crew)
     if (!passed["character-architect"] || !passed["location-scout"]) {
       return "Call wiggly_character_architect and wiggly_location_scout first. Both look jobs have to pass before the storyboard.";
     }
-    const missing = crew.requiredAssetTags(state).filter((tag) => !(state.approvedAssets as Record<string, unknown> | undefined)?.[tag]);
+    const missing = crew.requiredAssetTags(state, { includeProps: true }).filter((tag) => !(state.approvedAssets as Record<string, unknown> | undefined)?.[tag]);
     if (missing.length > 0) return `Approve the sheet assets first: ${missing.join(", ")}. Call wiggly_approve_draft.`;
   }
   if (job === "seedance-compiler") {
@@ -171,6 +171,11 @@ export async function ensureWritingState(input: {
       ...questionnaireFromStoryboard(storyboard),
       photoReferences: crewPhotoReferences(storyboard, input.photos ?? []),
     },
+    heroProps: (storyboard.hero_props ?? []).map((prop, index) => ({
+      name: prop.name,
+      propTag: `@Prop ${index + 1}`,
+      description: prop.name,
+    })),
     attempts: {},
     passed: {},
     pendingApproval: [],

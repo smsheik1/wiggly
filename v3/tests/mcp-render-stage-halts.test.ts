@@ -204,3 +204,105 @@ test("advanceRender removes checkpoint.json on fresh render passes but preserves
     await rm(runDir, { recursive: true, force: true });
   }
 });
+
+test("dueStage requires hero props when present in state.heroProps", async () => {
+  if (!existsSync(studioRoot)) return;
+  const stateWithHeroProp = {
+    status: "running",
+    passed: {
+      "character-architect": true,
+      "location-scout": true,
+    },
+    characterArchitect: {
+      output: {
+        characters: [{ imageTag: "@Image 1", characterId: "c1", name: "Leo" }],
+      },
+    },
+    locationScout: {
+      output: {
+        locations: [{ elementTag: "@Loc 1", locationId: "l1", name: "Kitchen" }],
+      },
+    },
+    heroProps: [{ name: "Camry", propTag: "@Prop 1" }],
+    approvedAssets: {
+      "@Image 1": "/tmp/img1.png",
+      "@Loc 1": "/tmp/loc1.png",
+    },
+    assetFiles: {
+      "@Image 1": "/tmp/img1.png",
+      "@Loc 1": "/tmp/loc1.png",
+    },
+  };
+
+  const stage = await dueStage(stateWithHeroProp, "my-pixar-story");
+  assert.equal(stage, "sheets", "dueStage must require 'sheets' when hero props are unapproved");
+});
+
+test("advanceRender with resume transitions status to 'running' and clears pendingApproval on approval", async () => {
+  if (!existsSync(studioRoot)) return;
+  const runDir = path.join(tmpdir(), `wiggly-resume-pass-${Date.now()}`);
+  await mkdir(path.join(runDir, "outputs"), { recursive: true });
+  await mkdir(path.join(runDir, "assets"), { recursive: true });
+
+  const { ledger, jobId } = createRunningJob("resume_user");
+
+  const story = JSON.parse(await readFile(path.join(studioRoot, "tests/fixtures/good-stage-play.json"), "utf8"));
+  const sheets = JSON.parse(await readFile(path.join(studioRoot, "tests/fixtures/good-character-sheets.json"), "utf8"));
+  const plates = JSON.parse(await readFile(path.join(studioRoot, "tests/fixtures/good-location-plates.json"), "utf8"));
+
+  const { selectStoryboardArtistInput } = await import(path.join(studioRoot, "crew/storyboard-artist/input.mjs"));
+  const { draftStoryboard } = await import(path.join(studioRoot, "tests/fixtures/storyboard-draft.mjs"));
+  const look = { storyDirector: story, characterArchitect: { output: sheets }, locationScout: { output: plates } };
+  const boardInput = selectStoryboardArtistInput(look);
+  const output = draftStoryboard(boardInput);
+
+  const state = {
+    status: "awaiting-approval",
+    renderStage: "panels",
+    pendingApproval: ["animatic"],
+    ...look,
+    storyboardArtist: { output },
+    approvedAssets: {},
+    assetFiles: {},
+  };
+
+  try {
+    // First invoke pauses at animatic-approval
+    const paused = await advanceRender({
+      state,
+      runDir,
+      ledger,
+      accountId: "resume_user",
+      jobId,
+      renderStill: async (req) => {
+        await mkdir(path.dirname(String(req.dest)), { recursive: true });
+        await writeFile(String(req.dest), "image_bytes");
+        return { dest: req.dest };
+      },
+      renderClip: async () => ({ dest: "/tmp/clip.mp4" }),
+    });
+    assert.equal(paused?.status, "awaiting-approval");
+    assert.deepEqual(paused?.pendingApproval, ["animatic"]);
+
+    // Second invoke resumes with approval
+    const approved = await advanceRender({
+      state: paused as Record<string, unknown>,
+      runDir,
+      ledger,
+      accountId: "resume_user",
+      jobId,
+      renderStill: async (req) => {
+        await mkdir(path.dirname(String(req.dest)), { recursive: true });
+        await writeFile(String(req.dest), "image_bytes");
+        return { dest: req.dest };
+      },
+      renderClip: async () => ({ dest: "/tmp/clip.mp4" }),
+      resume: { decision: "approve" },
+    });
+    assert.equal(approved?.status, "running", "approval resume must transition status to 'running'");
+    assert.deepEqual(approved?.pendingApproval, [], "approval resume must clear pendingApproval");
+    assert.equal(approved?.renderStage, undefined, "approval resume must clear renderStage when stage finishes");
+  } finally {
+    await rm(runDir, { recursive: true, force: true });
+  }
+});
