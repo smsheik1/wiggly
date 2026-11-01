@@ -37,7 +37,7 @@ export async function dueStage(state: Record<string, unknown>, formatId = "my-pi
   const { graph } = await studioModules(formatId);
   if (passed["character-architect"] && passed["location-scout"]) {
     const approved = (state.approvedAssets ?? {}) as Record<string, unknown>;
-    const missing = (graph.requiredAssetTags(state) as string[]).filter((tag) => !approved[tag]);
+    const missing = (graph.requiredAssetTags(state, { includeProps: true }) as string[]).filter((tag) => !approved[tag]);
     if (missing.length > 0) {
       if (status === "awaiting-approval") {
         const assetFiles = (state.assetFiles ?? {}) as Record<string, string>;
@@ -104,7 +104,7 @@ export async function advanceRender(input: {
   if (stage === "sheets") {
     graph = graph
       .addNode("render-sheets", modules.stills.makeSheetStillNode({ renderStill: billStill, runDir: input.runDir }))
-      .addNode("asset-approval", modules.graph.makeApprovalNode({ useInterrupt: true }))
+      .addNode("asset-approval", modules.graph.makeApprovalNode({ useInterrupt: true, includeProps: true }))
       .addEdge(START, "render-sheets")
       .addConditionalEdges("render-sheets", (s: Record<string, unknown>) => (halted(s) ? END : "asset-approval"), ["asset-approval", END])
       .addEdge("asset-approval", END);
@@ -164,17 +164,22 @@ export async function advanceRender(input: {
   };
   const master = merged.masterVideo as { videoPath?: string } | string | undefined;
   const masterPath = typeof master === "string" ? master : master?.videoPath;
-  if (!interrupts.length && stage === "clips" && masterPath) {
-    try {
-      await access(masterPath);
-      const secret = process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft";
-      const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
-      merged.videoUrl = `${publicOrigin()}${signRender(secret, input.jobId, "master-video", expiresAt)}`;
-      const assetFiles = { ...((merged.assetFiles ?? {}) as Record<string, string>), "master-video": masterPath };
-      merged.assetFiles = assetFiles;
-      merged.status = "done";
-    } catch {
-      merged.status = "failed";
+  if (!interrupts.length) {
+    if (stage === "clips" && masterPath) {
+      try {
+        await access(masterPath);
+        const secret = process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft";
+        const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
+        merged.videoUrl = `${publicOrigin()}${signRender(secret, input.jobId, "master-video", expiresAt)}`;
+        const assetFiles = { ...((merged.assetFiles ?? {}) as Record<string, string>), "master-video": masterPath };
+        merged.assetFiles = assetFiles;
+        merged.status = "done";
+      } catch {
+        merged.status = "failed";
+      }
+    } else if (input.resume) {
+      merged.status = "running";
+      merged.pendingApproval = [];
     }
   }
   return merged;
