@@ -190,11 +190,16 @@ test("an approval resumes the gate and leaves the still charge to the render", a
   assert.equal(job.ledger.exportState("user_1").monthlyCredits, 1900);
 });
 
-test("approveDraft normalizes array approvedAssets into an object map", async () => {
+test("approveDraft normalizes array approvedAssets into canonical local asset keys", async () => {
   const job = startedJob();
   const stateFile = path.join(tmpdir(), `wiggly-array-approve-${job.jobId}`, "outputs", "state.json");
   await mkdir(path.dirname(stateFile), { recursive: true });
-  await writeFile(stateFile, JSON.stringify({ status: "awaiting-approval", pendingApproval: ["@Image 1"], assetFiles: { "@Image 1": "/tmp/image1.png" } }));
+  await writeFile(stateFile, JSON.stringify({
+    status: "awaiting-approval",
+    pendingApproval: ["@Image 1"],
+    characterArchitect: { output: { characters: [{ imageTag: "@Image 1", characterId: "leo" }] } },
+    assetFiles: { "@Image 1": "/tmp/image1.png" },
+  }));
   job.ledger.setRun("user_1", job.jobId, { runId: job.jobId, stateFile });
   job.ledger.setStage("user_1", job.jobId, "awaiting-approval");
   let decision: Record<string, unknown> | undefined;
@@ -209,7 +214,9 @@ test("approveDraft normalizes array approvedAssets into an object map", async ()
     },
   });
   assert.equal(approved.ok, true);
-  assert.deepEqual(decision?.approvedAssets, { "@Image 1": "/tmp/image1.png" });
+  assert.deepEqual(decision?.approvedAssets, { "@Image 1": "asset:master-render:leo" });
+  assert.match(String(decision?.approvedAssets?.["@Image 1"]), /^[A-Za-z0-9][\w.:-]*$/);
+  assert.ok(!String(decision?.approvedAssets?.["@Image 1"]).includes("/"));
 });
 
 test("a credit pause stays paused until the balance covers the next item", async () => {

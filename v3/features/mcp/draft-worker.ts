@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { runtimeImport } from "./runtime-import";
 import { INSTALLED_FORMAT_IDS, MemoryFilmLedger, type Account, type Storyboard } from "./film-ledger";
+import { canonicalAssetKey } from "./gate-tools";
 import { namedSecret } from "./named-secret";
 import { AwaitingCredits, chargeThenRender, clipCredits, stillCredits } from "./render-charge";
 
@@ -421,9 +422,29 @@ export async function approveDraft(input: {
   const rawApproved = input.decision?.approvedAssets;
   let normalizedDecision = input.decision;
   if (Array.isArray(rawApproved)) {
-    const assetFiles = (state.assetFiles ?? {}) as Record<string, string>;
-    const approvedMap = Object.fromEntries(rawApproved.map((tag) => [tag, assetFiles[tag] ?? true]));
+    const approvedMap = Object.fromEntries(
+      rawApproved.map((tag) => [tag, canonicalAssetKey(tag, state as Record<string, unknown>)])
+    );
     normalizedDecision = { ...input.decision, approvedAssets: approvedMap };
+  } else if (rawApproved && typeof rawApproved === "object") {
+    const approvedMap = Object.fromEntries(
+      Object.entries(rawApproved).map(([tag, val]) => [
+        tag,
+        typeof val === "string" && /^[A-Za-z0-9][\w.:-]*$/.test(val) && !val.includes("/") && !val.startsWith("http")
+          ? val
+          : canonicalAssetKey(tag, state as Record<string, unknown>),
+      ])
+    );
+    normalizedDecision = { ...input.decision, approvedAssets: approvedMap };
+  }
+  if (normalizedDecision?.approvedAssets) {
+    const assetFiles = { ...((state.assetFiles as Record<string, string> | undefined) ?? {}) };
+    for (const [tag, key] of Object.entries(normalizedDecision.approvedAssets as Record<string, string>)) {
+      if (assetFiles[tag] && !assetFiles[key]) {
+        assetFiles[key] = assetFiles[tag];
+      }
+    }
+    state.assetFiles = assetFiles;
   }
   if (state.renderStage) {
     const { advanceRender, picturesReady } = await import("./render-stage");

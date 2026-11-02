@@ -144,6 +144,58 @@ async function photoImages(job: WritingJob, input: unknown, state: Record<string
   return images;
 }
 
+export function canonicalAssetKey(tag: string, state: Record<string, unknown>): string {
+  const isClean = (k: unknown): k is string => typeof k === "string" && /^[A-Za-z0-9][\w.:-]*$/.test(k) && !k.includes("/") && !k.startsWith("http");
+
+  const ca = (state.characterArchitect as { output?: { characters?: Array<{ imageTag?: string; elementTag?: string; characterId?: string; modelSheetPrompt?: { masterRenderRef?: string } }> } })?.output?.characters ?? [];
+  const char = ca.find((c) => c.imageTag === tag || c.elementTag === tag);
+  if (char) {
+    if (isClean(char.modelSheetPrompt?.masterRenderRef)) return char.modelSheetPrompt.masterRenderRef;
+    if (char.characterId) return `asset:master-render:${char.characterId.toLowerCase().replace(/[^a-z0-9_.-]/g, "-")}`;
+  }
+
+  const ls = (state.locationScout as { output?: { locations?: Array<{ elementTag?: string; locationId?: string }> } })?.output?.locations ?? [];
+  const loc = ls.find((l) => l.elementTag === tag);
+  if (loc?.locationId) return `asset:location-plate:${loc.locationId.toLowerCase().replace(/[^a-z0-9_.-]/g, "-")}`;
+
+  const props = (state.heroProps as Array<{ propTag?: string; elementTag?: string; name?: string }>) ?? [];
+  const prop = props.find((p) => p.propTag === tag || p.elementTag === tag);
+  if (prop) {
+    const name = prop.name || prop.elementTag || tag;
+    return `asset:prop-sheet:${name.replace(/^@/, "").toLowerCase().replace(/[^a-z0-9_.-]/g, "-")}`;
+  }
+
+  const cleanTag = tag.slice(1).replace(/\s+/g, "-").toLowerCase().replace(/[^a-z0-9_.-]/g, "-");
+  const kind = tag.startsWith("@Loc") ? "location-plate" : (tag.startsWith("@Prop") ? "prop-sheet" : "master-render");
+  return `asset:${kind}:${cleanTag}`;
+}
+
+export function sanitizeApprovedAssets(state: Record<string, unknown>): boolean {
+  if (!state.approvedAssets || typeof state.approvedAssets !== "object") return false;
+  const approved = state.approvedAssets as Record<string, unknown>;
+  const assetFiles = { ...((state.assetFiles as Record<string, string> | undefined) ?? {}) };
+  const cleaned: Record<string, string> = {};
+  let modified = false;
+  for (const [tag, val] of Object.entries(approved)) {
+    const isClean = typeof val === "string" && /^[A-Za-z0-9][\w.:-]*$/.test(val) && !val.includes("/") && !val.startsWith("http");
+    if (isClean) {
+      cleaned[tag] = val;
+    } else {
+      const key = canonicalAssetKey(tag, state);
+      cleaned[tag] = key;
+      if (assetFiles[tag] && !assetFiles[key]) {
+        assetFiles[key] = assetFiles[tag];
+      }
+      modified = true;
+    }
+  }
+  if (modified) {
+    state.approvedAssets = cleaned;
+    state.assetFiles = assetFiles;
+  }
+  return modified;
+}
+
 export async function ensureWritingState(input: {
   ledger: MemoryFilmLedger;
   accountId: string;
@@ -216,6 +268,9 @@ export async function runWritingJob(input: {
     return { ok: false, message: error instanceof Error ? error.message : "The film state could not be opened." };
   }
   const state = JSON.parse(await readFile(stateFile, "utf8")) as Record<string, unknown>;
+  if (sanitizeApprovedAssets(state)) {
+    await writeFile(stateFile, JSON.stringify(state));
+  }
   const passed = { ...((state.passed ?? {}) as Record<string, boolean>) };
   const attempts = { ...((state.attempts ?? {}) as Record<string, number>) };
   const target = rejectionTarget(state);
