@@ -611,3 +611,55 @@ test("a passed draft sent again does not burn an attempt", async () => {
   const state = JSON.parse(await readFile(stateFile, "utf8"));
   assert.equal(state.attempts["story-director"], 2);
 });
+
+test("seedance compiler select passes and resolves canonical asset keys when approvedAssets contains file paths or URLs", async () => {
+  const runsRoot = path.join(tmpdir(), `wiggly-gate-sc-keys-${Date.now()}`);
+  const job = openJob(runsRoot);
+  const story = fixture("good-stage-play.json");
+  const sheets = fixture("good-character-sheets.json");
+  const plates = fixture("good-location-plates.json");
+  const approvedAssets: Record<string, string> = {};
+  for (const character of sheets.characters ?? []) {
+    approvedAssets[character.imageTag] = `/var/folders/xyz/assets/${character.characterId}.png`;
+  }
+  for (const loc of plates.locations ?? []) {
+    approvedAssets[loc.elementTag] = `https://wiggly.agentenamel.com/api/mcp/renders/${loc.locationId}.png`;
+  }
+
+  const stateFile = await putState(job, {
+    status: "writing",
+    storyDirector: story,
+    characterArchitect: { output: sheets },
+    locationScout: { output: plates },
+    passed: { "story-director": true, "character-architect": true, "location-scout": true, "storyboard-artist": true },
+    approvedShotTimings: [{ shotId: "1.1", startSec: 0, endSec: 4, durationSec: 4 }],
+    approvedAssets,
+  });
+
+  const result = await runWritingJob({
+    job: "seedance-compiler",
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    runsRoot,
+  });
+
+  assert.equal(result.ok, true, result.ok ? "" : result.message);
+  const selected = result.data?.input as { characters: Array<{ assetKey: string }>; locations: Array<{ assetKey: string }>; references: Array<{ assetKey: string }> };
+  assert.ok(selected);
+  for (const c of selected.characters) {
+    assert.match(c.assetKey, /^[A-Za-z0-9][\w.:-]*$/);
+    assert.ok(!c.assetKey.includes("/"));
+  }
+  for (const l of selected.locations) {
+    assert.match(l.assetKey, /^[A-Za-z0-9][\w.:-]*$/);
+    assert.ok(!l.assetKey.includes("/"));
+  }
+
+  // Verify the stateFile on disk was also updated to clean asset keys
+  const savedState = JSON.parse(await readFile(stateFile, "utf8"));
+  for (const [tag, key] of Object.entries(savedState.approvedAssets as Record<string, string>)) {
+    assert.match(key, /^[A-Za-z0-9][\w.:-]*$/);
+    assert.ok(!key.includes("/"));
+  }
+});
