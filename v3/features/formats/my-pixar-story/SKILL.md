@@ -101,7 +101,9 @@ Call the tools in this order. Look at every image block. Fix every gate error an
 4. `wiggly_character_architect` and `wiggly_location_scout`, in either order, after the story director passes. Look at the character photo.
 5. Poll `wiggly_get_draft` until the sheet stills are back. Show them. The person approves with `wiggly_approve_draft`.
 6. `wiggly_storyboard_artist` only after that approval.
-7. Poll `wiggly_get_draft` for the panel stills. The person approves the animatic. A rejection sends you back to step 3 or step 6.
+7. Poll `wiggly_get_draft` until the animatic video preview is ready. You MUST show the playable animatic video (`videoUrl`) to the person so they can watch the paced cuts, timing, and scratch dialogue audio before approval.
+   - **Need to adjust or redo a bad panel?** Call `wiggly_reroll_panel` with `job_id`, `shot_id` (e.g. `'2.3'`), and optional `prompt_notes` (e.g. 'Make Dad smile warmly, softer lighting'). This rerolls ONLY that single frame for 8 credits, leaves all other 17 panels completely untouched (0 credits), and automatically re-stitches the animatic video preview. You can also call `wiggly_approve_draft` with `{ decision: "reject", rejectedShots: ["2.3"], notes: "..." }`. NEVER reject the whole animatic unless the entire visual storyboard needs a total structural restart.
+   - Once the person approves the animatic video (`videoUrl`) and panel frames, proceed with `wiggly_approve_draft` (`{ decision: "approve" }`).
 8. `wiggly_seedance_compiler` only after the animatic is approved.
 9. The person approves production. Clips render. Poll until `ready`, then the video URL is on `wiggly_get_draft`.
 
