@@ -215,7 +215,38 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
       });
       if (typeof direct.importState === "function") direct.importState(accountId, memory.exportState(accountId));
       else if (hooks?.saveAccount) await hooks.saveAccount(accountId, memory.exportState(accountId));
-      return result.ok ? toolResult(true, result.data) : toolResult(false, result.message);
+      return result.ok ? toolResult(true, result.data ?? {}) : toolResult(false, result.message ?? "Approval failed.");
+    });
+    server.registerTool("wiggly_reroll_panel", {
+      description: "Reroll or adjust a single storyboard panel still that looked bad (costs 8 credits). Pass job_id, shot_id (e.g. '2.3'), and optional prompt_notes. Only that one frame is re-rendered; the other 17 panels remain untouched and cost 0 credits. The animatic preview video is automatically re-stitched with the new frame.",
+      inputSchema: z.object({
+        job_id: z.string(),
+        shot_id: z.string(),
+        prompt_notes: z.string().optional(),
+      }),
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    }, async ({ job_id, shot_id, prompt_notes }) => {
+      if (!accountId) return toolResult(false, "Authorization needed.");
+      const memory = new MemoryFilmLedger();
+      const direct = ledger as MemoryFilmLedger;
+      if (typeof direct.exportState === "function") {
+        memory.importState(accountId, direct.exportState(accountId));
+      } else if (hooks?.loadAccount) {
+        memory.importState(accountId, await hooks.loadAccount(accountId));
+      } else {
+        return toolResult(false, "This server cannot load the film account.");
+      }
+      const { rerollPanel } = await import("./render-stage");
+      const result = await rerollPanel({
+        ledger: memory,
+        accountId,
+        jobId: job_id,
+        shotId: shot_id,
+        promptNotes: prompt_notes,
+      });
+      if (typeof direct.importState === "function") direct.importState(accountId, memory.exportState(accountId));
+      else if (hooks?.saveAccount) await hooks.saveAccount(accountId, memory.exportState(accountId));
+      return result.ok ? toolResult(true, result.data ?? {}) : toolResult(false, result.message ?? "Reroll failed.");
     });
     return server;
   }, { legacy: "reject" });

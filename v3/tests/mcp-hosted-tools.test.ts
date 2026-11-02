@@ -137,6 +137,7 @@ test("a signed WorkOS token is accepted and a token for another resource is reje
     "wiggly_seedance_compiler",
     "wiggly_get_draft",
     "wiggly_approve_draft",
+    "wiggly_reroll_panel",
   ]);
 });
 

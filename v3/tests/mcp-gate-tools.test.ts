@@ -9,7 +9,7 @@ import { approveDraft, runDraftTick } from "../features/mcp/draft-worker";
 import { runWritingJob } from "../features/mcp/gate-tools";
 import { signRender } from "../features/mcp/photo-store";
 import { publicOrigin } from "../features/mcp/public-origin";
-import { draftMedia } from "../features/mcp/render-stage";
+import { draftMedia, rerollPanel } from "../features/mcp/render-stage";
 import { MemoryFilmLedger, type Storyboard } from "../features/mcp/film-ledger";
 
 const studioParent = "/Users/shaz/Projects/wiggly-my-pixar-story-studio/public/format-repositories";
@@ -326,7 +326,7 @@ test("passed look jobs render one sheet and pause for the person's approval", as
   const lines = await runDraftTick({
     jobs: [{ accountId: "user_1", jobId: job.jobId, imageUrls: [] }],
     loadAccount: () => stored,
-    saveAccount: (_id, next) => { stored = next; },
+    saveAccount: (_id, next) => { stored = next; job.ledger.importState("user_1", next); },
     runsRoot,
     renderStill: async (request) => {
       calls += 1;
@@ -368,7 +368,7 @@ test("a short balance pauses the sheet and does not call the painter", async () 
   const lines = await runDraftTick({
     jobs: [{ accountId: "user_1", jobId: job.jobId, imageUrls: [] }],
     loadAccount: () => stored,
-    saveAccount: (_id, next) => { stored = next; },
+    saveAccount: (_id, next) => { stored = next; job.ledger.importState("user_1", next); },
     runsRoot,
     renderStill: async () => {
       calls += 1;
@@ -406,7 +406,7 @@ test("a topped-up balance resumes the paused sheet and charges one still", async
   const tick = (renderStill: (request: { dest?: string }) => Promise<{ dest?: string }>) => runDraftTick({
     jobs: [{ accountId: "user_1", jobId: job.jobId, imageUrls: [] }],
     loadAccount: () => stored,
-    saveAccount: (_id, next) => { stored = next; },
+    saveAccount: (_id, next) => { stored = next; job.ledger.importState("user_1", next); },
     runsRoot,
     renderStill,
     renderClip: async () => { throw new Error("no clip"); },
@@ -444,7 +444,7 @@ test("an approval with no picture is refused", async () => {
     resumeGraph: async () => { throw new Error("resume must not run"); },
   });
   assert.equal(result.ok, false);
-  assert.match(result.ok ? "" : result.message, /pictures are not ready/);
+  assert.match(result.ok ? "" : (result.message ?? ""), /pictures are not ready/);
   const media = await draftMedia(stateFile, job.jobId, "secret");
   assert.deepEqual(media.stills, []);
 });
@@ -462,6 +462,22 @@ test("a rendered sheet is returned as a signed url and an image", async () => {
   const exp = Number(new URL(media.stills[0]!.url).searchParams.get("exp"));
   assert.equal(media.stills[0]?.url, `${publicOrigin()}${signRender("secret", job.jobId, "@Image 1", exp)}`);
   assert.equal(media.images[0]?.data, png.toString("base64"));
+});
+
+test("draftMedia returns signed videoUrl for animatic-video before masterVideo exists", async () => {
+  const runsRoot = path.join(tmpdir(), `wiggly-gate-animatic-${Date.now()}`);
+  const job = openJob(runsRoot);
+  const animaticPath = path.join(runsRoot, job.jobId, "outputs", "animatic_preview.mp4");
+  await mkdir(path.dirname(animaticPath), { recursive: true });
+  await writeFile(animaticPath, "fake-mp4-data");
+  const stateFile = await putState(job, {
+    status: "awaiting-approval",
+    assetFiles: { "animatic-video": animaticPath },
+  });
+  const media = await draftMedia(stateFile, job.jobId, "secret");
+  assert.ok(media.videoUrl, "videoUrl should be populated for animatic-video");
+  assert.match(media.videoUrl, /\/animatic-video\?/);
+  assert.ok(!media.stills.some((s) => s.tag === "animatic-video"), "animatic-video should not be in stills");
 });
 
 test("a passed storyboard renders panels from the approved sheet files", async () => {
@@ -506,7 +522,7 @@ test("a passed storyboard renders panels from the approved sheet files", async (
   const lines = await runDraftTick({
     jobs: [{ accountId: "user_1", jobId: job.jobId, imageUrls: [] }],
     loadAccount: () => stored,
-    saveAccount: (_id, next) => { stored = next; },
+    saveAccount: (_id, next) => { stored = next; job.ledger.importState("user_1", next); },
     runsRoot,
     renderStill: async (request) => {
       refs.push(request.referencePaths ?? []);
@@ -522,6 +538,104 @@ test("a passed storyboard renders panels from the approved sheet files", async (
   assert.equal(stored.jobs[0]?.creditsCharged, refs.length * 8);
   const endState = JSON.parse(await readFile(path.join(runsRoot, job.jobId, "outputs", "state.json"), "utf8"));
   assert.ok(endState.assetFiles["1.1"], "rendered storyboard panels must be preserved in state.assetFiles on animatic pause");
+});
+
+test("rerollPanel resynthesizes a single panel still for 8 credits without touching other panels", async () => {
+  const runsRoot = path.join(tmpdir(), `wiggly-gate-reroll-${Date.now()}`);
+  const job = openJob(runsRoot);
+  const story = fixture("good-stage-play.json");
+  const sheets = fixture("good-character-sheets.json");
+  const plates = fixture("good-location-plates.json");
+  const { selectStoryboardArtistInput } = await import(pathToFileURL(path.join(studioRoot, "crew/storyboard-artist/input.mjs")).href);
+  const { draftStoryboard } = await import(pathToFileURL(path.join(studioRoot, "tests/fixtures/storyboard-draft.mjs")).href);
+  const look = { storyDirector: story, characterArchitect: { output: sheets }, locationScout: { output: plates } };
+  const boardInput = selectStoryboardArtistInput(look);
+  const output = draftStoryboard(boardInput);
+  const sheetFile = path.join(runsRoot, "sheet.png");
+  await mkdir(runsRoot, { recursive: true });
+  await writeFile(sheetFile, "png");
+  const approved: Record<string, string> = {};
+  const assetFiles: Record<string, string> = {};
+  for (const character of sheets.characters ?? []) {
+    approved[character.imageTag] = "paid";
+    assetFiles[character.imageTag] = sheetFile;
+  }
+  for (const location of plates.locations ?? []) {
+    approved[location.elementTag] = "paid";
+    assetFiles[location.elementTag] = sheetFile;
+  }
+  await putState(job, {
+    status: "writing",
+    ...look,
+    storyboardArtist: { output },
+    passed: {
+      "story-director": true,
+      "character-architect": true,
+      "location-scout": true,
+      "storyboard-artist": true,
+    },
+    approvedAssets: approved,
+    assetFiles,
+  });
+  let stored = job.ledger.exportState("user_1");
+  await runDraftTick({
+    jobs: [{ accountId: "user_1", jobId: job.jobId, imageUrls: [] }],
+    loadAccount: () => stored,
+    saveAccount: (_id, next) => { stored = next; job.ledger.importState("user_1", next); },
+    runsRoot,
+    renderStill: async (request) => {
+      await mkdir(path.dirname(String(request.dest)), { recursive: true });
+      await writeFile(String(request.dest), "png");
+      return { dest: request.dest };
+    },
+    renderClip: async () => { throw new Error("A clip must not render with the panels."); },
+  });
+
+  const creditsBefore = stored.jobs[0]?.creditsCharged ?? 0;
+  assert.ok(creditsBefore > 0);
+
+  let renderedShot = "";
+  const rerollRes = await rerollPanel({
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    shotId: "1.1",
+    promptNotes: "Make Leo look happier",
+    renderStill: async (req) => {
+      renderedShot = "1.1";
+      await writeFile(String(req.dest), "png-rerolled");
+      return { dest: req.dest };
+    },
+  });
+
+  assert.equal(rerollRes.ok, true);
+  assert.equal(renderedShot, "1.1");
+  const storedAfter = job.ledger.exportState("user_1");
+  assert.equal(storedAfter.jobs[0]?.creditsCharged, creditsBefore + 8, "exactly 8 credits charged for 1 rerolled still");
+  const stateAfter = JSON.parse(await readFile(path.join(runsRoot, job.jobId, "outputs", "state.json"), "utf8"));
+  assert.equal(stateAfter.panelNotes?.["1.1"], "Make Leo look happier");
+
+  // Now test granular rejection through approveDraft
+  let rejectedShotRendered = "";
+  const approveRes = await approveDraft({
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    decision: {
+      decision: "reject",
+      rejectedShots: ["1.2"],
+      notes: "Darker lighting",
+    },
+    renderStill: async (req) => {
+      rejectedShotRendered = "1.2";
+      await writeFile(String(req.dest), "png-rerolled-1.2");
+      return { dest: req.dest };
+    },
+  });
+  assert.equal(approveRes.ok, true);
+  assert.equal(rejectedShotRendered, "1.2");
+  const storedFinal = job.ledger.exportState("user_1");
+  assert.equal(storedFinal.jobs[0]?.creditsCharged, creditsBefore + 16, "exactly another 8 credits charged for rejectedShot");
 });
 
 test("an approved production renders a two-second clip for 42 credits and assembles the film", async () => {
@@ -552,7 +666,7 @@ test("an approved production renders a two-second clip for 42 credits and assemb
   const paused = await runDraftTick({
     jobs: [{ accountId: "user_1", jobId: job.jobId, imageUrls: [] }],
     loadAccount: () => stored,
-    saveAccount: (_id, next) => { stored = next; },
+    saveAccount: (_id, next) => { stored = next; job.ledger.importState("user_1", next); },
     runsRoot,
     renderStill: async () => { throw new Error("no still"); },
     renderClip: async () => {
