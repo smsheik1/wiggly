@@ -252,7 +252,7 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
       return result.ok ? toolResult(true, result.data ?? {}) : toolResult(false, result.message ?? "Reroll failed.");
     });
     server.registerTool("wiggly_render_clip", {
-      description: "Render or test a single video clip (e.g. clip 1) without rendering the entire film. Costs duration * 21 credits. Pass job_id, clip_id (e.g. 1 or 'clip-1'), and optional duration_sec.",
+      description: "Render or test a single video clip (e.g. clip 1) without rendering the entire film. Costs duration * 21 credits. Returns immediately with status 'rendering' so the tool call never times out. Poll wiggly_get_draft to check when finished. Pass job_id, clip_id (e.g. 1 or 'clip-1'), and optional duration_sec.",
       inputSchema: z.object({
         job_id: z.string(),
         clip_id: z.union([z.number(), z.string()]).default(1),
@@ -270,6 +270,7 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
       } else {
         return toolResult(false, "This server cannot load the film account.");
       }
+      const isTestSync = Boolean(hooks?.renderClip);
       const { renderSingleClip } = await import("./render-stage");
       const result = await renderSingleClip({
         ledger: memory,
@@ -277,7 +278,12 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
         jobId: job_id,
         clipId: clip_id,
         durationSec: duration_sec,
+        async: !isTestSync,
         ...(hooks?.renderClip ? { renderClip: hooks.renderClip } : {}),
+        onComplete: async () => {
+          if (typeof direct.importState === "function") direct.importState(accountId, memory.exportState(accountId));
+          else if (hooks?.saveAccount) await hooks.saveAccount(accountId, memory.exportState(accountId));
+        },
       });
       if (typeof direct.importState === "function") direct.importState(accountId, memory.exportState(accountId));
       else if (hooks?.saveAccount) await hooks.saveAccount(accountId, memory.exportState(accountId));

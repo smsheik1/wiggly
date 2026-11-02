@@ -319,4 +319,73 @@ test("wiggly_render_clip renders a single segment and charges duration * 21 cred
   assert.equal(updatedState.status, "awaiting-production");
   assert.ok(updatedState.assetFiles["clip-1"]);
   assert.equal(route.ledger.exportState("user_1").monthlyCredits, 1900 - 210);
+
+  // Calling wiggly_render_clip when already rendered returns status: ready immediately
+  const reCalled = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_render_clip",
+    arguments: { job_id: jobId, clip_id: 1 },
+  }, "wiggly_render_clip"));
+  const reBody = await reCalled.json();
+  assert.equal(reCalled.status, 200);
+  const reRes = JSON.parse(reBody.result.content[0].text);
+  assert.equal(reRes.status, "ready");
+  assert.equal(reRes.clipId, "1");
+  assert.ok(reRes.videoUrl);
+
+  // wiggly_get_draft returns production_preview and guidance
+  const polled = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_get_draft",
+    arguments: { job_id: jobId },
+  }, "wiggly_get_draft"));
+  const pollBody = await polled.json();
+  const content = pollBody.result.structuredContent;
+  assert.equal(content.studio_status, "awaiting-production");
+  assert.ok(content.production_preview);
+  assert.equal(content.production_preview.total_clips, 2);
+  assert.equal(content.production_preview.rendered_clips_count, 1);
+  assert.equal(content.production_preview.unrendered_clips_count, 1);
+  assert.ok(content.guidance);
+});
+
+test("wiggly_render_clip returns status rendering immediately in async mode", async () => {
+  const { token, route } = await signedRoute();
+  route.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 1900 });
+  route.ledger.attachPhotos("user_1", ["Leo", "Mom"]);
+  const started = route.ledger.submitDraft("user_1", { storyboard });
+  if (!started.ok) throw new Error("start failed");
+  const jobId = String(started.data.job_id);
+  const runDir = path.join(tmpdir(), `wiggly-async-clip-${jobId}`);
+  const stateFile = path.join(runDir, "outputs", "state.json");
+  await mkdir(path.dirname(stateFile), { recursive: true });
+  await writeFile(stateFile, JSON.stringify({
+    status: "awaiting-production",
+    pendingApproval: ["production"],
+    seedanceCompiler: {
+      output: {
+        segments: [
+          { segmentId: 1, generationPayload: { durationSec: 10 } },
+        ],
+      },
+    },
+  }));
+  route.ledger.setRun("user_1", jobId, { runId: jobId, stateFile });
+
+  const start = Date.now();
+  const called = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_render_clip",
+    arguments: { job_id: jobId, clip_id: 1 },
+  }, "wiggly_render_clip"));
+  const elapsed = Date.now() - start;
+  assert.ok(elapsed < 1000, `Expected fast async response under 1000ms, took ${elapsed}ms`);
+
+  const body = await called.json();
+  assert.equal(called.status, 200, JSON.stringify(body));
+  const res = JSON.parse(body.result.content[0].text);
+  assert.equal(res.status, "rendering");
+  assert.equal(res.clipId, "1");
+  assert.equal(res.retryAfterSec, 15);
+
+  const stateOnDisk = JSON.parse(await readFile(stateFile, "utf8"));
+  assert.ok(stateOnDisk.renderingClip);
+  assert.equal(stateOnDisk.renderingClip.clipId, "1");
 });

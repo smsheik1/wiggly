@@ -507,10 +507,71 @@ export async function approveDraft(input: {
 export async function studioStatusFromFile(stateFile: unknown) {
   if (typeof stateFile !== "string" || stateFile.length === 0) return {};
   try {
-    const state = JSON.parse(await readFile(stateFile, "utf8")) as StudioState;
+    const state = JSON.parse(await readFile(stateFile, "utf8")) as StudioState & Record<string, unknown>;
+    const renderingClip = state.renderingClip as { clipId?: string | number; startedAt?: number; durationSec?: number; credits?: number } | undefined;
+    let clipRenderStatus: Record<string, unknown> | undefined;
+    if (renderingClip) {
+      const elapsedSec = Math.round((Date.now() - (renderingClip.startedAt ?? 0)) / 1000);
+      clipRenderStatus = {
+        status: "rendering",
+        clip_id: renderingClip.clipId,
+        elapsed_sec: elapsedSec,
+        duration_sec: renderingClip.durationSec,
+        credits: renderingClip.credits,
+        retry_after_sec: 15,
+        message: `Clip ${renderingClip.clipId} is rendering on Replicate GPUs (~3-4 min, ${elapsedSec}s elapsed). Check back in 15 seconds.`,
+      };
+    }
+
+    const segments = (state.seedanceCompiler as { output?: { segments?: Array<{ segmentId: number | string; totalDurationSec?: number; generationPayload?: { durationSec?: number }; title?: string }> } } | undefined)?.output?.segments ?? [];
+    const renderedClips = (state.renderedClips ?? []) as Array<{ clipId?: number | string; videoPath?: string; durationSec?: number }>;
+
+    let productionPreview: Record<string, unknown> | undefined;
+    if (segments.length > 0) {
+      const clipItems = segments.map((s) => {
+        const duration = s.generationPayload?.durationSec ?? s.totalDurationSec ?? 10;
+        const isRendered = renderedClips.some((c) => String(c.clipId) === String(s.segmentId));
+        return {
+          clip_id: s.segmentId,
+          duration_sec: duration,
+          credits: duration * 21,
+          rendered: isRendered,
+          title: s.title,
+        };
+      });
+      const unrendered = clipItems.filter((c) => !c.rendered);
+      const totalCredits = unrendered.reduce((sum, c) => sum + c.credits, 0);
+      const totalSec = unrendered.reduce((sum, c) => sum + c.duration_sec, 0);
+
+      productionPreview = {
+        total_clips: segments.length,
+        rendered_clips_count: renderedClips.length,
+        unrendered_clips_count: unrendered.length,
+        remaining_duration_sec: totalSec,
+        remaining_credits: totalCredits,
+        clips: clipItems,
+      };
+    }
+
+    let guidance: string | undefined;
+    if (clipRenderStatus) {
+      guidance = clipRenderStatus.message as string;
+    } else if (state.pendingApproval?.includes("animatic")) {
+      guidance = "Animatic preview is ready. Show the videoUrl to the user. To tweak a frame, call wiggly_reroll_panel. When approved, call wiggly_approve_draft({ decision: 'approve' }).";
+    } else if (state.pendingApproval?.includes("production") || state.status === "awaiting-production") {
+      if (renderedClips.length > 0 && renderedClips.length < segments.length) {
+        guidance = `Clip ${renderedClips[renderedClips.length - 1].clipId} is rendered and ready to preview at videoUrl. You can render more clips individually with wiggly_render_clip(job_id, clip_id), or approve remaining clips with wiggly_approve_draft({ decision: 'approve' }).`;
+      } else {
+        guidance = "Production approval needed. You can render Clip 1 first as a quality test using wiggly_render_clip(job_id, 1), or approve all clips with wiggly_approve_draft({ decision: 'approve' }).";
+      }
+    }
+
     return {
       studio_status: state.status ?? "running",
       pending_approval: state.pendingApproval ?? [],
+      ...(clipRenderStatus ? { clip_render_status: clipRenderStatus } : {}),
+      ...(productionPreview ? { production_preview: productionPreview } : {}),
+      ...(guidance ? { guidance } : {}),
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "The state file could not be read.";

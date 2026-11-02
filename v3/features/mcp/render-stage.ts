@@ -420,13 +420,16 @@ export async function renderSingleClip(input: {
   clipId: string | number;
   durationSec?: number;
   renderClip?: RenderClip;
+  async?: boolean;
+  onComplete?: () => Promise<void> | void;
 }): Promise<{ ok: boolean; data?: Record<string, unknown>; message?: string }> {
   const job = input.ledger.exportState(input.accountId).jobs.find((item) => item.jobId === input.jobId);
   if (!job?.stateFile) return { ok: false, message: "This job has no state file to render clips from." };
+  const stateFile = job.stateFile;
 
-  const state = JSON.parse(await readFile(job.stateFile, "utf8")) as Record<string, unknown>;
+  const state = JSON.parse(await readFile(stateFile, "utf8")) as Record<string, unknown>;
   const formatId = requireFormatId(job.storyboard?.format);
-  const runDir = path.dirname(path.dirname(job.stateFile));
+  const runDir = path.dirname(path.dirname(stateFile));
 
   const compilerOut = (state.seedanceCompiler as { output?: { segments?: Array<{
     segmentId: number | string;
@@ -451,75 +454,169 @@ export async function renderSingleClip(input: {
   const duration = input.durationSec ?? targetSeg.generationPayload?.durationSec ?? targetSeg.totalDurationSec ?? 10;
   const credits = clipCredits(duration);
   const itemId = String(targetSeg.segmentId);
-
-  // If re-rendering a clip that was previously rendered, drop its paid item and charges
-  const paidFile = paidItemsPath(runDir);
-  try {
-    const paid = JSON.parse(await readFile(paidFile, "utf8")) as Record<string, string>;
-    delete paid[itemId];
-    await writeFile(paidFile, JSON.stringify(paid));
-  } catch {
-    // Paid file may not exist yet
-  }
-  await dropChargeKey(runDir, itemId);
-
-  const clipRenderer = input.renderClip ?? (await defaultClip(formatId));
-  const saved = await chargeThenRender({
-    ledger: input.ledger,
-    accountId: input.accountId,
-    jobId: input.jobId,
-    runDir,
-    itemId,
-    credits,
-    render: () => clipRenderer({
-      clip: targetSeg,
-      runDir,
-      state,
-      itemId,
-      engine: targetSeg.generationPayload?.engine ?? "seedance-2.5",
-      duration,
-    }),
-  });
-
-  const destFile = saved.dest ?? saved.videoPath;
-  if (!destFile) return { ok: false, message: `Render failed for clip ${itemId}.` };
-
-  // Update assetFiles and renderedClips in state
   const clipTag = `clip-${itemId}`;
-  const assetFiles = { ...((state.assetFiles as Record<string, string> | undefined) ?? {}), [clipTag]: destFile };
-  state.assetFiles = assetFiles;
 
-  const renderedClips = Array.isArray(state.renderedClips) ? [...(state.renderedClips as Array<{ clipId?: string | number }>)] : [];
-  const existingIdx = renderedClips.findIndex((c) => String(c.clipId) === itemId);
-  const entry = { clipId: targetSeg.segmentId, videoPath: destFile, durationSec: duration };
-  if (existingIdx >= 0) renderedClips[existingIdx] = entry;
-  else renderedClips.push(entry);
-  state.renderedClips = renderedClips;
-
-  // Sign URL for immediate viewing
-  const secret = process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft";
-  const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
-  const videoUrl = `${publicOrigin()}${signRender(secret, input.jobId, clipTag, expiresAt)}`;
-  state.videoUrl = videoUrl;
-
-  // If there are more clips remaining, keep at awaiting-production
-  if (renderedClips.length < segments.length) {
-    state.status = "awaiting-production";
-    state.pendingApproval = ["production"];
-    state.renderStage = "clips";
+  // 1. If clip is already rendered and exists on disk, return immediately
+  const existingPath = (state.assetFiles as Record<string, string> | undefined)?.[clipTag];
+  if (existingPath) {
+    try {
+      await access(existingPath);
+      const secret = process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft";
+      const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
+      const videoUrl = `${publicOrigin()}${signRender(secret, input.jobId, clipTag, expiresAt)}`;
+      return {
+        ok: true,
+        data: {
+          clipId: itemId,
+          status: "ready",
+          durationSec: duration,
+          videoPath: existingPath,
+          videoUrl,
+          message: `Clip ${itemId} is already rendered and ready to view. Preview URL: ${videoUrl}`,
+        },
+      };
+    } catch {
+      // File missing on disk, will re-render
+    }
   }
 
-  await writeFile(job.stateFile, JSON.stringify(state, null, 2));
+  // 2. If clip is currently rendering in background, return progress immediately
+  const active = (state.renderingClip as { clipId?: string | number; startedAt?: number; durationSec?: number; credits?: number } | undefined);
+  if (active && String(active.clipId) === itemId && (Date.now() - (active.startedAt ?? 0)) < 15 * 60 * 1000) {
+    const elapsedSec = Math.round((Date.now() - (active.startedAt ?? 0)) / 1000);
+    return {
+      ok: true,
+      data: {
+        clipId: itemId,
+        status: "rendering",
+        durationSec: duration,
+        elapsedSec,
+        retryAfterSec: 15,
+        message: `Clip ${itemId} is currently rendering on GPUs (~3-4 min, ${elapsedSec}s elapsed). Poll wiggly_get_draft in 15 seconds.`,
+      },
+    };
+  }
 
+  // 3. Check credit balance before starting
+  const account = input.ledger.exportState(input.accountId);
+  if (account.monthlyCredits + account.purchasedCredits < credits) {
+    return {
+      ok: false,
+      message: `Insufficient credits. Rendering clip ${itemId} (${duration}s) requires ${credits} credits, but current balance is ${account.monthlyCredits + account.purchasedCredits}.`,
+    };
+  }
+
+  // The actual render execution routine
+  const executeRender = async () => {
+    // If re-rendering a clip that was previously rendered, drop its paid item and charges
+    const paidFile = paidItemsPath(runDir);
+    try {
+      const paid = JSON.parse(await readFile(paidFile, "utf8")) as Record<string, string>;
+      delete paid[itemId];
+      await writeFile(paidFile, JSON.stringify(paid));
+    } catch {
+      // Paid file may not exist yet
+    }
+    await dropChargeKey(runDir, itemId);
+
+    const clipRenderer = input.renderClip ?? (await defaultClip(formatId));
+    const saved = await chargeThenRender({
+      ledger: input.ledger,
+      accountId: input.accountId,
+      jobId: input.jobId,
+      runDir,
+      itemId,
+      credits,
+      render: () => clipRenderer({
+        clip: targetSeg,
+        runDir,
+        state,
+        itemId,
+        engine: targetSeg.generationPayload?.engine ?? "seedance-2.5",
+        duration,
+      }),
+    });
+
+    const destFile = saved.dest ?? saved.videoPath;
+    if (!destFile) throw new Error(`Render failed for clip ${itemId}.`);
+
+    let latestState = state;
+    try {
+      latestState = JSON.parse(await readFile(stateFile, "utf8")) as Record<string, unknown>;
+    } catch {}
+    delete latestState.renderingClip;
+
+    const assetFiles = { ...((latestState.assetFiles as Record<string, string> | undefined) ?? {}), [clipTag]: destFile };
+    latestState.assetFiles = assetFiles;
+
+    const renderedClips = Array.isArray(latestState.renderedClips) ? [...(latestState.renderedClips as Array<{ clipId?: string | number }>)] : [];
+    const existingIdx = renderedClips.findIndex((c) => String(c.clipId) === itemId);
+    const entry = { clipId: targetSeg.segmentId, videoPath: destFile, durationSec: duration };
+    if (existingIdx >= 0) renderedClips[existingIdx] = entry;
+    else renderedClips.push(entry);
+    latestState.renderedClips = renderedClips;
+
+    // Sign URL for immediate viewing
+    const secret = process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft";
+    const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
+    const videoUrl = `${publicOrigin()}${signRender(secret, input.jobId, clipTag, expiresAt)}`;
+    latestState.videoUrl = videoUrl;
+
+    if (renderedClips.length < segments.length) {
+      latestState.status = "awaiting-production";
+      latestState.pendingApproval = ["production"];
+      latestState.renderStage = "clips";
+    }
+
+    await writeFile(stateFile, JSON.stringify(latestState, null, 2));
+    await input.onComplete?.();
+    return { destFile, videoUrl };
+  };
+
+  if (input.async) {
+    state.renderingClip = {
+      clipId: itemId,
+      startedAt: Date.now(),
+      durationSec: duration,
+      credits,
+    };
+    await writeFile(stateFile, JSON.stringify(state, null, 2));
+
+    // Launch in background
+    executeRender().catch(async (err) => {
+      console.error(`[renderSingleClip] Background render error:`, err);
+      try {
+        const latest = JSON.parse(await readFile(stateFile, "utf8")) as Record<string, unknown>;
+        delete latest.renderingClip;
+        await writeFile(stateFile, JSON.stringify(latest, null, 2));
+      } catch {}
+    });
+
+    return {
+      ok: true,
+      data: {
+        clipId: itemId,
+        status: "rendering",
+        durationSec: duration,
+        creditsReserved: credits,
+        retryAfterSec: 15,
+        message: `Clip ${itemId} (${duration}s) render started on Replicate GPUs (~3-4 minutes, ${credits} credits). Poll wiggly_get_draft in 15 seconds to check when it completes.`,
+      },
+    };
+  }
+
+  // Synchronous execution (for tests or explicit sync)
+  const result = await executeRender();
   return {
     ok: true,
     data: {
       clipId: itemId,
+      status: "ready",
       creditsSpent: credits,
       durationSec: duration,
-      videoPath: destFile,
-      videoUrl,
-      message: `Rendered clip ${itemId} (${duration}s) successfully for ${credits} credits. Preview URL: ${videoUrl}`,
+      videoPath: result.destFile,
+      videoUrl: result.videoUrl,
+      message: `Rendered clip ${itemId} (${duration}s) successfully for ${credits} credits. Preview URL: ${result.videoUrl}`,
     },
   };
 }
