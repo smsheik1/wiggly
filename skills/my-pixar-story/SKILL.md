@@ -105,7 +105,10 @@ Call the tools in this order. Look at every image block. Fix every gate error an
    - **Need to adjust or redo a bad panel?** Call `wiggly_reroll_panel` with `job_id`, `shot_id` (e.g. `'2.3'`), and optional `prompt_notes` (e.g. 'Make Dad smile warmly, softer lighting'). This rerolls ONLY that single frame for 8 credits, leaves all other 17 panels completely untouched (0 credits), and automatically re-stitches the animatic video preview. You can also call `wiggly_approve_draft` with `{ decision: "reject", rejectedShots: ["2.3"], notes: "..." }`. NEVER reject the whole animatic unless the entire visual storyboard needs a total structural restart.
    - Once the person approves the animatic video (`videoUrl`) and panel frames, proceed with `wiggly_approve_draft` (`{ decision: "approve" }`).
 8. `wiggly_seedance_compiler` only after the animatic is approved.
-9. The person approves production. Clips render. Poll until `ready`, then the video URL is on `wiggly_get_draft`.
+9. Production Clip Rendering & Approvals:
+   - **Render Just One Clip First (Quality Check):** Before committing to the full film render (~1,700+ credits / $17), you or the user can render just Clip 1 (Segment 1) first as a quality test! Call `wiggly_render_clip` with `job_id`, `clip_id: 1` (costs `duration * 21` credits, e.g. 28s = 588 credits), or call `wiggly_approve_draft` with `decision: { decision: "approve", clips: [1] }`. Show the resulting `videoUrl` to the user immediately.
+   - When the user is satisfied and approves the rest of the film, approving production will only render the remaining unrendered clips (Clip 1 is recorded in paid items and won't be charged again).
+   - Poll until `ready`, then the final assembled master film video URL is on `wiggly_get_draft`.
 
 A still costs 8 credits. A clip costs 21 credits per second. Credits are taken when that picture or clip is about to render. There is no quote. Text gates spend nothing.
 

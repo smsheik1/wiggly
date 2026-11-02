@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -54,6 +54,8 @@ async function signedRoute(resumeGraph?: (resume: { runId: string; decision: Rec
   loadAccount?: (accountId: string) => Promise<import("../features/mcp/film-ledger").Account>;
   saveAccount?: (accountId: string, account: import("../features/mcp/film-ledger").Account) => Promise<void>;
   listUploads?: (accountId: string) => Promise<Array<{ label: string; url: string }>>;
+  renderStill?: NonNullable<Parameters<typeof createMcpRoute>[0]>["renderStill"];
+  renderClip?: NonNullable<Parameters<typeof createMcpRoute>[0]>["renderClip"];
 }) {
   const { publicKey, privateKey } = await generateKeyPair("RS256", { extractable: true });
   const jwk = await exportJWK(publicKey);
@@ -73,6 +75,8 @@ async function signedRoute(resumeGraph?: (resume: { runId: string; decision: Rec
     loadAccount: extras?.loadAccount,
     saveAccount: extras?.saveAccount,
     listUploads: extras?.listUploads,
+    renderClip: extras?.renderClip,
+    renderStill: extras?.renderStill,
   });
   return { token, route };
 }
@@ -138,6 +142,7 @@ test("a signed WorkOS token is accepted and a token for another resource is reje
     "wiggly_get_draft",
     "wiggly_approve_draft",
     "wiggly_reroll_panel",
+    "wiggly_render_clip",
   ]);
 });
 
@@ -264,4 +269,54 @@ test("approve on a Convex ledger loads the account, resumes, and saves it back",
   const body = await approved.json();
   assert.equal(approved.status, 200, JSON.stringify(body));
   assert.equal(savedCredits, 1900);
+});
+
+test("wiggly_render_clip renders a single segment and charges duration * 21 credits", async () => {
+  let clipRenderedWithDuration = 0;
+  const { token, route } = await signedRoute(undefined, {
+    renderClip: async (req: { itemId?: string; duration?: number }) => {
+      clipRenderedWithDuration = req.duration ?? 0;
+      const dest = path.join(tmpdir(), `test-clip-${req.itemId}.mp4`);
+      await writeFile(dest, "fake-mp4-data");
+      return { videoPath: dest, dest };
+    },
+  });
+  route.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 1900 });
+  route.ledger.attachPhotos("user_1", ["Leo", "Mom"]);
+  const started = route.ledger.submitDraft("user_1", { storyboard });
+  if (!started.ok) throw new Error("start failed");
+  const jobId = String(started.data.job_id);
+  const runDir = path.join(tmpdir(), `wiggly-single-clip-${jobId}`);
+  const stateFile = path.join(runDir, "outputs", "state.json");
+  await mkdir(path.dirname(stateFile), { recursive: true });
+  await writeFile(stateFile, JSON.stringify({
+    status: "awaiting-production",
+    pendingApproval: ["production"],
+    seedanceCompiler: {
+      output: {
+        segments: [
+          { segmentId: 1, generationPayload: { durationSec: 10 } },
+          { segmentId: 2, generationPayload: { durationSec: 10 } },
+        ],
+      },
+    },
+  }));
+  route.ledger.setRun("user_1", jobId, { runId: jobId, stateFile });
+
+  const called = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_render_clip",
+    arguments: { job_id: jobId, clip_id: 1 },
+  }, "wiggly_render_clip"));
+  const body = await called.json();
+  assert.equal(called.status, 200, JSON.stringify(body));
+  const res = JSON.parse(body.result.content[0].text);
+  assert.equal(res.clipId, "1");
+  assert.equal(res.creditsSpent, 210); // 10s * 21 credits = 210
+  assert.equal(clipRenderedWithDuration, 10);
+  assert.ok(res.videoUrl);
+
+  const updatedState = JSON.parse(await readFile(stateFile, "utf8"));
+  assert.equal(updatedState.status, "awaiting-production");
+  assert.ok(updatedState.assetFiles["clip-1"]);
+  assert.equal(route.ledger.exportState("user_1").monthlyCredits, 1900 - 210);
 });

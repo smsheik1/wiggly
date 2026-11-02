@@ -4,13 +4,13 @@ import { pathToFileURL } from "node:url";
 import { runtimeImport } from "./runtime-import";
 import { signRender } from "./photo-store";
 import { publicOrigin } from "./public-origin";
-import { defaultStill, requireFormatId, studioForFormat } from "./draft-worker";
+import { defaultClip, defaultStill, requireFormatId, studioForFormat } from "./draft-worker";
 import { chargeThenRender, clipCredits, dropChargeKey, paidItemsPath, stillCredits } from "./render-charge";
 import type { MemoryFilmLedger } from "./film-ledger";
 
 type Stage = "sheets" | "panels" | "clips";
 type RenderStill = (request: { prompt?: string; dest?: string; itemId?: string; aspectRatio?: string; resolution?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
-type RenderClip = (request: { itemId?: string; duration?: number; dest?: string; videoPath?: string }) => Promise<{ dest?: string; videoPath?: string }>;
+type RenderClip = (request: { itemId?: string; duration?: number; dest?: string; videoPath?: string; clip?: unknown; state?: unknown; runDir?: string; engine?: string }) => Promise<{ dest?: string; videoPath?: string }>;
 
 async function studioModules(formatId: string) {
   const studio = studioForFormat(formatId);
@@ -177,6 +177,15 @@ export async function advanceRender(input: {
       } catch {
         merged.status = "failed";
       }
+    } else if (merged.status === "awaiting-production" || merged.status === "awaiting-approval") {
+      merged.renderStage = stage;
+      const clipTags = Object.keys((merged.assetFiles ?? {}) as Record<string, string>).filter((k) => k.startsWith("clip-"));
+      const latestClipTag = clipTags.sort().pop();
+      if (latestClipTag) {
+        const secret = process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft";
+        const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
+        merged.videoUrl = `${publicOrigin()}${signRender(secret, input.jobId, latestClipTag, expiresAt)}`;
+      }
     } else if (input.resume) {
       merged.status = "running";
       merged.pendingApproval = [];
@@ -210,7 +219,7 @@ export async function draftMedia(stateFile: string, jobId: string, secret: strin
   const images: Array<{ mimeType: string; data: string }> = [];
   const origin = publicOrigin();
   for (const [tag, file] of Object.entries(state.assetFiles ?? {})) {
-    if (tag === "master-video" || tag === "animatic-video") continue;
+    if (tag === "master-video" || tag === "animatic-video" || tag.startsWith("clip-")) continue;
     try {
       const bytes = await readFile(file);
       stills.push({ tag, url: `${origin}${signRender(secret, jobId, tag, expiresAt)}` });
@@ -227,10 +236,18 @@ export async function draftMedia(stateFile: string, jobId: string, secret: strin
       videoUrl = `${origin}${signRender(secret, jobId, "master-video", expiresAt)}`;
     }
   } else {
-    const animaticPath = state.assetFiles?.["animatic-video"] ?? state.animaticVideo;
-    if (animaticPath) {
+    const clipTags = Object.keys(state.assetFiles ?? {}).filter((k) => k.startsWith("clip-"));
+    const latestClipTag = clipTags.sort().pop();
+    if (latestClipTag && state.assetFiles?.[latestClipTag]) {
       if (!videoUrl || (!videoUrl.startsWith("http://") && !videoUrl.startsWith("https://"))) {
-        videoUrl = `${origin}${signRender(secret, jobId, "animatic-video", expiresAt)}`;
+        videoUrl = `${origin}${signRender(secret, jobId, latestClipTag, expiresAt)}`;
+      }
+    } else {
+      const animaticPath = state.assetFiles?.["animatic-video"] ?? state.animaticVideo;
+      if (animaticPath) {
+        if (!videoUrl || (!videoUrl.startsWith("http://") && !videoUrl.startsWith("https://"))) {
+          videoUrl = `${origin}${signRender(secret, jobId, "animatic-video", expiresAt)}`;
+        }
       }
     }
   }
@@ -394,4 +411,115 @@ export async function picturesReady(stateFile: string) {
     }
   }
   return true;
+}
+
+export async function renderSingleClip(input: {
+  ledger: MemoryFilmLedger;
+  accountId: string;
+  jobId: string;
+  clipId: string | number;
+  durationSec?: number;
+  renderClip?: RenderClip;
+}): Promise<{ ok: boolean; data?: Record<string, unknown>; message?: string }> {
+  const job = input.ledger.exportState(input.accountId).jobs.find((item) => item.jobId === input.jobId);
+  if (!job?.stateFile) return { ok: false, message: "This job has no state file to render clips from." };
+
+  const state = JSON.parse(await readFile(job.stateFile, "utf8")) as Record<string, unknown>;
+  const formatId = requireFormatId(job.storyboard?.format);
+  const runDir = path.dirname(path.dirname(job.stateFile));
+
+  const compilerOut = (state.seedanceCompiler as { output?: { segments?: Array<{
+    segmentId: number | string;
+    generationPayload?: { durationSec?: number; engine?: string; prompt?: string };
+    totalDurationSec?: number;
+    title?: string;
+    references?: Array<{ sourceTag?: string; assetKey?: string; tag?: string }>;
+  }> } } | undefined)?.output;
+
+  const segments = compilerOut?.segments ?? [];
+  if (!segments.length) {
+    return { ok: false, message: "This job has no compiled Seedance segments to render clips from. Call wiggly_seedance_compiler first." };
+  }
+
+  const normId = String(input.clipId).replace(/^(clip|segment|part)[-_\s]*/i, "").trim();
+  const targetSeg = segments.find((s) => String(s.segmentId) === normId);
+  if (!targetSeg) {
+    const validIds = segments.map((s) => s.segmentId).join(", ");
+    return { ok: false, message: `Clip "${input.clipId}" does not exist. Available clips in this film: ${validIds}.` };
+  }
+
+  const duration = input.durationSec ?? targetSeg.generationPayload?.durationSec ?? targetSeg.totalDurationSec ?? 10;
+  const credits = clipCredits(duration);
+  const itemId = String(targetSeg.segmentId);
+
+  // If re-rendering a clip that was previously rendered, drop its paid item and charges
+  const paidFile = paidItemsPath(runDir);
+  try {
+    const paid = JSON.parse(await readFile(paidFile, "utf8")) as Record<string, string>;
+    delete paid[itemId];
+    await writeFile(paidFile, JSON.stringify(paid));
+  } catch {
+    // Paid file may not exist yet
+  }
+  await dropChargeKey(runDir, itemId);
+
+  const clipRenderer = input.renderClip ?? (await defaultClip(formatId));
+  const saved = await chargeThenRender({
+    ledger: input.ledger,
+    accountId: input.accountId,
+    jobId: input.jobId,
+    runDir,
+    itemId,
+    credits,
+    render: () => clipRenderer({
+      clip: targetSeg,
+      runDir,
+      state,
+      itemId,
+      engine: targetSeg.generationPayload?.engine ?? "seedance-2.5",
+      duration,
+    }),
+  });
+
+  const destFile = saved.dest ?? saved.videoPath;
+  if (!destFile) return { ok: false, message: `Render failed for clip ${itemId}.` };
+
+  // Update assetFiles and renderedClips in state
+  const clipTag = `clip-${itemId}`;
+  const assetFiles = { ...((state.assetFiles as Record<string, string> | undefined) ?? {}), [clipTag]: destFile };
+  state.assetFiles = assetFiles;
+
+  const renderedClips = Array.isArray(state.renderedClips) ? [...(state.renderedClips as Array<{ clipId?: string | number }>)] : [];
+  const existingIdx = renderedClips.findIndex((c) => String(c.clipId) === itemId);
+  const entry = { clipId: targetSeg.segmentId, videoPath: destFile, durationSec: duration };
+  if (existingIdx >= 0) renderedClips[existingIdx] = entry;
+  else renderedClips.push(entry);
+  state.renderedClips = renderedClips;
+
+  // Sign URL for immediate viewing
+  const secret = process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft";
+  const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
+  const videoUrl = `${publicOrigin()}${signRender(secret, input.jobId, clipTag, expiresAt)}`;
+  state.videoUrl = videoUrl;
+
+  // If there are more clips remaining, keep at awaiting-production
+  if (renderedClips.length < segments.length) {
+    state.status = "awaiting-production";
+    state.pendingApproval = ["production"];
+    state.renderStage = "clips";
+  }
+
+  await writeFile(job.stateFile, JSON.stringify(state, null, 2));
+
+  return {
+    ok: true,
+    data: {
+      clipId: itemId,
+      creditsSpent: credits,
+      durationSec: duration,
+      videoPath: destFile,
+      videoUrl,
+      message: `Rendered clip ${itemId} (${duration}s) successfully for ${credits} credits. Preview URL: ${videoUrl}`,
+    },
+  };
 }
