@@ -1,11 +1,11 @@
-import { access, readFile, rm } from "node:fs/promises";
+import { access, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { runtimeImport } from "./runtime-import";
 import { signRender } from "./photo-store";
 import { publicOrigin } from "./public-origin";
-import { studioForFormat } from "./draft-worker";
-import { chargeThenRender, clipCredits, stillCredits } from "./render-charge";
+import { defaultStill, requireFormatId, studioForFormat } from "./draft-worker";
+import { chargeThenRender, clipCredits, dropChargeKey, paidItemsPath, stillCredits } from "./render-charge";
 import type { MemoryFilmLedger } from "./film-ledger";
 
 type Stage = "sheets" | "panels" | "clips";
@@ -111,7 +111,7 @@ export async function advanceRender(input: {
   } else if (stage === "panels") {
     graph = graph
       .addNode("render-panels", modules.stills.makePanelStillNode({ renderStill: billStill, runDir: input.runDir }))
-      .addNode("animatic-editor", modules.graph.makeAnimaticEditorNode())
+      .addNode("animatic-editor", modules.graph.makeAnimaticEditorNode({ runDir: input.runDir }))
       .addNode("animatic-approval", modules.graph.makeAnimaticApprovalNode({ useInterrupt: true }))
       .addEdge(START, "render-panels")
       .addConditionalEdges("render-panels", (s: Record<string, unknown>) => (halted(s) ? END : "animatic-editor"), ["animatic-editor", END])
@@ -158,7 +158,7 @@ export async function advanceRender(input: {
     assetFiles: {
       ...((input.state.assetFiles ?? {}) as Record<string, string>),
       ...((currentValues.assetFiles ?? {}) as Record<string, string>),
-      ...(last !== seed ? ((last.assetFiles ?? {}) as Record<string, string>) : {}),
+      ...(last !== seed ? (((last as Record<string, unknown>).assetFiles ?? {}) as Record<string, string>) : {}),
     },
     renderStage: interrupts.length ? stage : undefined,
   };
@@ -203,13 +203,14 @@ export async function draftMedia(stateFile: string, jobId: string, secret: strin
     assetFiles?: Record<string, string>;
     videoUrl?: string;
     masterVideo?: { videoPath?: string } | string;
+    animaticVideo?: string;
   };
   const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
   const stills: Array<{ tag: string; url: string }> = [];
   const images: Array<{ mimeType: string; data: string }> = [];
   const origin = publicOrigin();
   for (const [tag, file] of Object.entries(state.assetFiles ?? {})) {
-    if (tag === "master-video") continue;
+    if (tag === "master-video" || tag === "animatic-video") continue;
     try {
       const bytes = await readFile(file);
       stills.push({ tag, url: `${origin}${signRender(secret, jobId, tag, expiresAt)}` });
@@ -225,8 +226,160 @@ export async function draftMedia(stateFile: string, jobId: string, secret: strin
     if (!videoUrl || (!videoUrl.startsWith("http://") && !videoUrl.startsWith("https://"))) {
       videoUrl = `${origin}${signRender(secret, jobId, "master-video", expiresAt)}`;
     }
+  } else {
+    const animaticPath = state.assetFiles?.["animatic-video"] ?? state.animaticVideo;
+    if (animaticPath) {
+      if (!videoUrl || (!videoUrl.startsWith("http://") && !videoUrl.startsWith("https://"))) {
+        videoUrl = `${origin}${signRender(secret, jobId, "animatic-video", expiresAt)}`;
+      }
+    }
   }
   return { stills, images, videoUrl };
+}
+
+export function normalizeShotId(raw: string): string {
+  return raw.trim().replace(/^(shot|frame|panel)\s*/i, "").replace("-", ".");
+}
+
+export async function rerollPanel(input: {
+  ledger: MemoryFilmLedger;
+  accountId: string;
+  jobId: string;
+  shotId: string;
+  promptNotes?: string;
+  renderStill?: RenderStill;
+}) {
+  const job = input.ledger.exportState(input.accountId).jobs.find((item) => item.jobId === input.jobId);
+  if (!job?.stateFile) return { ok: false, message: "This job has no state file to reroll." };
+
+  const state = JSON.parse(await readFile(job.stateFile, "utf8")) as Record<string, unknown>;
+  const formatId = requireFormatId(job.storyboard?.format);
+  const runDir = path.dirname(path.dirname(job.stateFile));
+
+  const shotId = normalizeShotId(input.shotId);
+  const validShots = ((state.approvedShotTimings as Array<{ shotId?: string }> | undefined) ?? [])
+    .map((s) => s.shotId)
+    .filter(Boolean) as string[];
+
+  if (validShots.length > 0 && !validShots.includes(shotId)) {
+    return {
+      ok: false,
+      message: `Shot "${input.shotId}" does not exist. Available shots in this film: ${validShots.join(", ")}.`,
+    };
+  }
+
+  // 1. Invalidate item from paid-items.json and charges.json
+  const paidFile = paidItemsPath(runDir);
+  try {
+    const paid = JSON.parse(await readFile(paidFile, "utf8")) as Record<string, string>;
+    delete paid[shotId];
+    await writeFile(paidFile, JSON.stringify(paid));
+  } catch {
+    // Paid file may not exist yet
+  }
+  await dropChargeKey(runDir, shotId);
+
+  // Remove the old image file from disk
+  const oldPath = path.join(runDir, "storyboard-panels", `${shotId}.png`);
+  await rm(oldPath, { force: true });
+
+  // 2. Persist prompt notes
+  if (input.promptNotes?.trim()) {
+    const panelNotes = { ...((state.panelNotes as Record<string, string> | undefined) ?? {}) };
+    panelNotes[shotId] = input.promptNotes.trim();
+    state.panelNotes = panelNotes;
+  }
+
+  // 3. Compile panel prompt and references
+  const modules = await studioModules(formatId);
+  const output = (state.storyboardArtist as { output?: unknown } | undefined)?.output;
+  if (!output) return { ok: false, message: "This job has no storyboard output to render panels from." };
+
+  const studioDir = modules.directory;
+  const inputModule = await runtimeImport(pathToFileURL(path.join(studioDir, "crew/storyboard-artist/input.mjs")).href);
+  const compileModule = await runtimeImport(pathToFileURL(path.join(studioDir, "crew/storyboard-artist/compile.mjs")).href);
+
+  const storyboardInput = inputModule.selectStoryboardArtistInput(state);
+  const panels = compileModule.compilePanels(output, storyboardInput) as Array<{
+    shotId: string;
+    file: string;
+    fullPrompt: string;
+    aspect?: string;
+    resolution?: string;
+    references?: Array<{ tag?: string; imageTag?: string }>;
+  }>;
+
+  const targetPanel = panels.find((p) => p.shotId === shotId);
+  if (!targetPanel) return { ok: false, message: `Could not find panel configuration for shot ${shotId}.` };
+
+  const known = { ...((state.assetFiles as Record<string, string> | undefined) ?? {}) };
+  const referencePaths = (targetPanel.references ?? []).map((ref) => known[ref.imageTag ?? ""] || known[ref.tag ?? ""]).filter(Boolean);
+
+  let promptText = targetPanel.fullPrompt;
+  const note = (state.panelNotes as Record<string, string> | undefined)?.[shotId];
+  if (note) {
+    promptText += ` DIRECTIVE: ${note}`;
+  }
+
+  // 4. Render and charge only that one still (8 credits)
+  const stillRenderer = input.renderStill ?? (await defaultStill(formatId));
+  const saved = await chargeThenRender({
+    ledger: input.ledger,
+    accountId: input.accountId,
+    jobId: input.jobId,
+    runDir,
+    itemId: shotId,
+    credits: stillCredits(),
+    render: () => stillRenderer({
+      prompt: promptText,
+      aspectRatio: targetPanel.aspect || "16:9",
+      resolution: targetPanel.resolution || "2K",
+      dest: path.join(runDir, "storyboard-panels", targetPanel.file),
+      referencePaths,
+    }),
+  });
+
+  const destFile = saved.dest;
+  if (!destFile) return { ok: false, message: `Render failed for shot ${shotId}.` };
+
+  const assetFiles = { ...known, [shotId]: destFile };
+  state.assetFiles = assetFiles;
+
+  // 5. Recompile animatic preview video with the new frame in place
+  if (typeof modules.graph.buildAnimatic === "function") {
+    try {
+      const outPath = path.join(runDir, "animatic_preview.mp4");
+      const anim = await modules.graph.buildAnimatic({
+        sd: state.storyDirector,
+        runDir,
+        outPath,
+        framesDir: path.join(runDir, "storyboard-panels"),
+        framePaths: assetFiles,
+        allowMissingFrames: true,
+      });
+      if (anim?.outPath) {
+        state.assetFiles = { ...assetFiles, "animatic-video": anim.outPath };
+        state.animaticVideo = anim.outPath;
+      }
+      if (anim?.approvedShotTimings?.length) {
+        state.approvedShotTimings = anim.approvedShotTimings;
+      }
+    } catch (err) {
+      console.warn(`[rerollPanel] Warning: animatic video re-stitch failed (${(err as Error).message})`);
+    }
+  }
+
+  await writeFile(job.stateFile, JSON.stringify(state, null, 2));
+
+  return {
+    ok: true,
+    data: {
+      shotId,
+      creditsSpent: stillCredits(),
+      file: destFile,
+      message: `Rerolled shot ${shotId} successfully for ${stillCredits()} credits.`,
+    },
+  };
 }
 
 export async function picturesReady(stateFile: string) {

@@ -31,7 +31,7 @@ type Crew = {
   reviewerNotes: (state: Record<string, unknown>, agent: string) => string;
   keepValidCharacters: (out: unknown, issues: Issue[]) => Record<string, unknown>;
   mergeCharacters: (kept: Record<string, unknown> | null, out: unknown, state: Record<string, unknown>) => unknown;
-  requiredAssetTags: (state: Record<string, unknown>) => string[];
+  requiredAssetTags: (state: Record<string, unknown>, options?: { includeProps?: boolean }) => string[];
   photoFilesFor: (agent: string, input: unknown, state: Record<string, unknown>) => Record<string, string>;
   loadSkill: (agent: string) => string;
 };

@@ -389,14 +389,14 @@ export async function stepDraftJob(input: {
   return applyStudioState(input.ledger, input.accountId, input.jobId, state);
 }
 
-async function defaultStill(formatId: string) {
+export async function defaultStill(formatId: string) {
   const studio = studioForFormat(formatId);
   const stills = await runtimeImport(pathToFileURL(path.join(studio.directory, "graph/stills.mjs")).href);
   const token = process.env.REPLICATE_API_TOKEN?.trim() || await namedSecret("REPLICATE_API_TOKEN");
   return stills.nanoBananaStill({ apiKey: token }) as (request: { prompt?: string; dest?: string; itemId?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
 }
 
-async function defaultClip(formatId: string) {
+export async function defaultClip(formatId: string) {
   const studio = studioForFormat(formatId);
   const customer = await runtimeImport(pathToFileURL(path.join(studio.directory, "scripts/run-customer.mjs")).href);
   const token = process.env.REPLICATE_API_TOKEN?.trim() || await namedSecret("REPLICATE_API_TOKEN");
@@ -418,6 +418,26 @@ export async function approveDraft(input: {
   const state = JSON.parse(await readFile(job.stateFile, "utf8")) as StudioState;
   if (state.status === "awaiting-credits") {
     return { ok: false as const, message: "This run is paused for credits. Top up, then the worker resumes it. Do not call wiggly_approve_draft." };
+  }
+  if (input.decision?.decision === "reject" && Array.isArray(input.decision.rejectedShots) && input.decision.rejectedShots.length > 0) {
+    const { rerollPanel } = await import("./render-stage");
+    const notes = typeof input.decision.notes === "string" ? input.decision.notes : undefined;
+    const rerolled = [];
+    for (const rawShotId of input.decision.rejectedShots) {
+      const res = await rerollPanel({
+        ledger: input.ledger,
+        accountId: input.accountId,
+        jobId: input.jobId,
+        shotId: String(rawShotId),
+        promptNotes: notes,
+        renderStill: input.renderStill,
+      });
+      if (!res.ok) return res;
+      rerolled.push(res.data);
+    }
+    const updatedState = JSON.parse(await readFile(job.stateFile, "utf8")) as StudioState;
+    const stage = applyStudioState(input.ledger, input.accountId, input.jobId, updatedState);
+    return { ok: true as const, data: { stage, status: updatedState.status ?? stage, rerolled } };
   }
   const rawApproved = input.decision?.approvedAssets;
   let normalizedDecision = input.decision;
