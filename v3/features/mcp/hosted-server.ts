@@ -85,6 +85,8 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
   listUploads?: (accountId: string) => Promise<Array<{ label: string; url: string }>>;
   runsRoot?: string;
   photoRoot?: string;
+  renderStill?: (request: { prompt?: string; dest?: string; itemId?: string; aspectRatio?: string; resolution?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
+  renderClip?: (request: { itemId?: string; duration?: number; dest?: string; videoPath?: string; clip?: unknown; state?: unknown; runDir?: string; engine?: string }) => Promise<{ dest?: string; videoPath?: string }>;
 }) {
   return createMcpHandler(({ authInfo }) => {
     const accountId = String(authInfo?.extra?.sub ?? "");
@@ -243,10 +245,43 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
         jobId: job_id,
         shotId: shot_id,
         promptNotes: prompt_notes,
+        ...(hooks?.renderStill ? { renderStill: hooks.renderStill } : {}),
       });
       if (typeof direct.importState === "function") direct.importState(accountId, memory.exportState(accountId));
       else if (hooks?.saveAccount) await hooks.saveAccount(accountId, memory.exportState(accountId));
       return result.ok ? toolResult(true, result.data ?? {}) : toolResult(false, result.message ?? "Reroll failed.");
+    });
+    server.registerTool("wiggly_render_clip", {
+      description: "Render or test a single video clip (e.g. clip 1) without rendering the entire film. Costs duration * 21 credits. Pass job_id, clip_id (e.g. 1 or 'clip-1'), and optional duration_sec.",
+      inputSchema: z.object({
+        job_id: z.string(),
+        clip_id: z.union([z.number(), z.string()]).default(1),
+        duration_sec: z.number().int().min(3).max(30).optional(),
+      }),
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    }, async ({ job_id, clip_id, duration_sec }) => {
+      if (!accountId) return toolResult(false, "Authorization needed.");
+      const memory = new MemoryFilmLedger();
+      const direct = ledger as MemoryFilmLedger;
+      if (typeof direct.exportState === "function") {
+        memory.importState(accountId, direct.exportState(accountId));
+      } else if (hooks?.loadAccount) {
+        memory.importState(accountId, await hooks.loadAccount(accountId));
+      } else {
+        return toolResult(false, "This server cannot load the film account.");
+      }
+      const { renderSingleClip } = await import("./render-stage");
+      const result = await renderSingleClip({
+        ledger: memory,
+        accountId,
+        jobId: job_id,
+        clipId: clip_id,
+        durationSec: duration_sec,
+        ...(hooks?.renderClip ? { renderClip: hooks.renderClip } : {}),
+      });
+      if (typeof direct.importState === "function") direct.importState(accountId, memory.exportState(accountId));
+      else if (hooks?.saveAccount) await hooks.saveAccount(accountId, memory.exportState(accountId));
+      return result.ok ? toolResult(true, result.data ?? {}) : toolResult(false, result.message ?? "Clip render failed.");
     });
     return server;
   }, { legacy: "reject" });
@@ -261,6 +296,8 @@ export function createMcpRoute<T extends FilmLedger = MemoryFilmLedger>(options?
   listUploads?: (accountId: string) => Promise<Array<{ label: string; url: string }>>;
   runsRoot?: string;
   photoRoot?: string;
+  renderStill?: (request: { prompt?: string; dest?: string; itemId?: string; aspectRatio?: string; resolution?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
+  renderClip?: (request: { itemId?: string; duration?: number; dest?: string; videoPath?: string; clip?: unknown; state?: unknown; runDir?: string; engine?: string }) => Promise<{ dest?: string; videoPath?: string }>;
 }) {
   const ledger = (options?.ledger ?? new MemoryFilmLedger()) as T;
   const handler = createHostedMcp(ledger, options);
