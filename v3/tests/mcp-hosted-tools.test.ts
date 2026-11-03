@@ -143,6 +143,7 @@ test("a signed WorkOS token is accepted and a token for another resource is reje
     "wiggly_approve_draft",
     "wiggly_reroll_panel",
     "wiggly_render_clip",
+    "wiggly_reroll_clip",
   ]);
 });
 
@@ -320,7 +321,7 @@ test("wiggly_render_clip renders a single segment and charges duration * 21 cred
   assert.ok(updatedState.assetFiles["clip-1"]);
   assert.equal(route.ledger.exportState("user_1").monthlyCredits, 1900 - 210);
 
-  // Calling wiggly_render_clip when already rendered returns status: ready immediately
+  // Calling wiggly_render_clip again performs a fresh re-render and charges credits
   const reCalled = await route.POST(mcpRequest(token, "tools/call", {
     name: "wiggly_render_clip",
     arguments: { job_id: jobId, clip_id: 1 },
@@ -330,7 +331,24 @@ test("wiggly_render_clip renders a single segment and charges duration * 21 cred
   const reRes = JSON.parse(reBody.result.content[0].text);
   assert.equal(reRes.status, "ready");
   assert.equal(reRes.clipId, "1");
+  assert.equal(reRes.creditsSpent, 210);
+  assert.equal(route.ledger.exportState("user_1").monthlyCredits, 1900 - 420);
   assert.ok(reRes.videoUrl);
+
+  // wiggly_reroll_clip forces re-render with updated prompt
+  const rerolled = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_reroll_clip",
+    arguments: { job_id: jobId, clip_id: 1, prompt: "Updated high-energy camera prompt" },
+  }, "wiggly_reroll_clip"));
+  const rerollBody = await rerolled.json();
+  assert.equal(rerolled.status, 200);
+  const rerollRes = JSON.parse(rerollBody.result.content[0].text);
+  assert.equal(rerollRes.status, "ready");
+  assert.equal(rerollRes.clipId, "1");
+  assert.equal(route.ledger.exportState("user_1").monthlyCredits, 1900 - 630);
+
+  const stateAfterReroll = JSON.parse(await readFile(stateFile, "utf8"));
+  assert.equal(stateAfterReroll.seedanceCompiler.output.segments[0].compiledPrompt, "Updated high-energy camera prompt");
 
   // wiggly_get_draft returns production_preview and guidance
   const polled = await route.POST(mcpRequest(token, "tools/call", {

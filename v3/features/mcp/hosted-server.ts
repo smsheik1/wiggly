@@ -252,14 +252,18 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
       return result.ok ? toolResult(true, result.data ?? {}) : toolResult(false, result.message ?? "Reroll failed.");
     });
     server.registerTool("wiggly_render_clip", {
-      description: "Render or test a single video clip (e.g. clip 1) without rendering the entire film. Costs duration * 21 credits. Returns immediately with status 'rendering' so the tool call never times out. Poll wiggly_get_draft to check when finished. Pass job_id, clip_id (e.g. 1 or 'clip-1'), and optional duration_sec.",
+      description: "Render or re-render a single video clip (e.g. clip 1 or 2). Costs duration * 21 credits. Always renders a fresh take unless currently in-flight on GPUs. Returns immediately with status 'rendering' so the tool call never times out. Poll wiggly_get_draft to check when finished. Pass job_id, clip_id (e.g. 1 or 2), optional duration_sec, optional prompt, and optional prompt_notes.",
       inputSchema: z.object({
         job_id: z.string(),
         clip_id: z.union([z.number(), z.string()]).default(1),
         duration_sec: z.number().int().min(3).max(30).optional(),
+        force: z.boolean().optional().describe("Force a fresh re-render even if already in-flight."),
+        reroll: z.boolean().optional().describe("Alias for force: re-render this clip from scratch."),
+        prompt: z.string().optional().describe("Optional prompt override to render this clip with."),
+        prompt_notes: z.string().optional().describe("Optional director adjustment notes appended to the clip prompt."),
       }),
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
-    }, async ({ job_id, clip_id, duration_sec }) => {
+    }, async ({ job_id, clip_id, duration_sec, force, reroll, prompt, prompt_notes }) => {
       if (!accountId) return toolResult(false, "Authorization needed.");
       const memory = new MemoryFilmLedger();
       const direct = ledger as MemoryFilmLedger;
@@ -278,6 +282,10 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
         jobId: job_id,
         clipId: clip_id,
         durationSec: duration_sec,
+        force,
+        reroll,
+        prompt,
+        promptNotes: prompt_notes,
         async: !isTestSync,
         ...(hooks?.renderClip ? { renderClip: hooks.renderClip } : {}),
         onComplete: async () => {
@@ -288,6 +296,50 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
       if (typeof direct.importState === "function") direct.importState(accountId, memory.exportState(accountId));
       else if (hooks?.saveAccount) await hooks.saveAccount(accountId, memory.exportState(accountId));
       return result.ok ? toolResult(true, result.data ?? {}) : toolResult(false, result.message ?? "Clip render failed.");
+    });
+    server.registerTool("wiggly_reroll_clip", {
+      description: "Force a fresh re-render of an existing video clip (costs duration * 21 credits). Overwrites any previous take. Returns immediately with status 'rendering'. Poll wiggly_get_draft to check when finished. Pass job_id, clip_id (e.g. 2), optional duration_sec, optional prompt, and optional prompt_notes.",
+      inputSchema: z.object({
+        job_id: z.string(),
+        clip_id: z.union([z.number(), z.string()]),
+        duration_sec: z.number().int().min(3).max(30).optional(),
+        prompt: z.string().optional().describe("Optional prompt override to render this clip with."),
+        prompt_notes: z.string().optional().describe("Optional director adjustment notes appended to the clip prompt."),
+      }),
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    }, async ({ job_id, clip_id, duration_sec, prompt, prompt_notes }) => {
+      if (!accountId) return toolResult(false, "Authorization needed.");
+      const memory = new MemoryFilmLedger();
+      const direct = ledger as MemoryFilmLedger;
+      if (typeof direct.exportState === "function") {
+        memory.importState(accountId, direct.exportState(accountId));
+      } else if (hooks?.loadAccount) {
+        memory.importState(accountId, await hooks.loadAccount(accountId));
+      } else {
+        return toolResult(false, "This server cannot load the film account.");
+      }
+      const isTestSync = Boolean(hooks?.renderClip);
+      const { renderSingleClip } = await import("./render-stage");
+      const result = await renderSingleClip({
+        ledger: memory,
+        accountId,
+        jobId: job_id,
+        clipId: clip_id,
+        durationSec: duration_sec,
+        force: true,
+        reroll: true,
+        prompt,
+        promptNotes: prompt_notes,
+        async: !isTestSync,
+        ...(hooks?.renderClip ? { renderClip: hooks.renderClip } : {}),
+        onComplete: async () => {
+          if (typeof direct.importState === "function") direct.importState(accountId, memory.exportState(accountId));
+          else if (hooks?.saveAccount) await hooks.saveAccount(accountId, memory.exportState(accountId));
+        },
+      });
+      if (typeof direct.importState === "function") direct.importState(accountId, memory.exportState(accountId));
+      else if (hooks?.saveAccount) await hooks.saveAccount(accountId, memory.exportState(accountId));
+      return result.ok ? toolResult(true, result.data ?? {}) : toolResult(false, result.message ?? "Clip reroll failed.");
     });
     return server;
   }, { legacy: "reject" });

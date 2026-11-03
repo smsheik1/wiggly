@@ -419,6 +419,10 @@ export async function renderSingleClip(input: {
   jobId: string;
   clipId: string | number;
   durationSec?: number;
+  force?: boolean;
+  reroll?: boolean;
+  prompt?: string;
+  promptNotes?: string;
   renderClip?: RenderClip;
   async?: boolean;
   onComplete?: () => Promise<void> | void;
@@ -456,33 +460,9 @@ export async function renderSingleClip(input: {
   const itemId = String(targetSeg.segmentId);
   const clipTag = `clip-${itemId}`;
 
-  // 1. If clip is already rendered and exists on disk, return immediately
-  const existingPath = (state.assetFiles as Record<string, string> | undefined)?.[clipTag];
-  if (existingPath) {
-    try {
-      await access(existingPath);
-      const secret = process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft";
-      const expiresAt = Date.now() + 2 * 60 * 60 * 1000;
-      const videoUrl = `${publicOrigin()}${signRender(secret, input.jobId, clipTag, expiresAt)}`;
-      return {
-        ok: true,
-        data: {
-          clipId: itemId,
-          status: "ready",
-          durationSec: duration,
-          videoPath: existingPath,
-          videoUrl,
-          message: `Clip ${itemId} is already rendered and ready to view. Preview URL: ${videoUrl}`,
-        },
-      };
-    } catch {
-      // File missing on disk, will re-render
-    }
-  }
-
-  // 2. If clip is currently rendering in background, return progress immediately
+  // 1. If clip is currently rendering in background, return progress immediately (prevents duplicate simultaneous renders)
   const active = (state.renderingClip as { clipId?: string | number; startedAt?: number; durationSec?: number; credits?: number } | undefined);
-  if (active && String(active.clipId) === itemId && (Date.now() - (active.startedAt ?? 0)) < 15 * 60 * 1000) {
+  if (active && String(active.clipId) === itemId && (Date.now() - (active.startedAt ?? 0)) < 15 * 60 * 1000 && !input.force) {
     const elapsedSec = Math.round((Date.now() - (active.startedAt ?? 0)) / 1000);
     return {
       ok: true,
@@ -495,6 +475,50 @@ export async function renderSingleClip(input: {
         message: `Clip ${itemId} is currently rendering on GPUs (~3-4 min, ${elapsedSec}s elapsed). Poll wiggly_get_draft in 15 seconds.`,
       },
     };
+  }
+
+  // 2. Prepare render / re-render: invalidate any previous take on disk and in cache
+  const existingPath = (state.assetFiles as Record<string, string> | undefined)?.[clipTag];
+  const shouldReroll = Boolean(existingPath || input.reroll || input.force);
+  const paidFile = paidItemsPath(runDir);
+  try {
+    const paid = JSON.parse(await readFile(paidFile, "utf8")) as Record<string, string>;
+    delete paid[itemId];
+    await writeFile(paidFile, JSON.stringify(paid));
+  } catch {}
+  await dropChargeKey(runDir, itemId);
+
+  const assetFiles = { ...((state.assetFiles as Record<string, string> | undefined) ?? {}) };
+  delete assetFiles[clipTag];
+  state.assetFiles = assetFiles;
+
+  const renderedClips = Array.isArray(state.renderedClips)
+    ? (state.renderedClips as Array<{ clipId?: string | number }>).filter((c) => String(c.clipId) !== itemId)
+    : [];
+  state.renderedClips = renderedClips;
+
+  if (existingPath) {
+    try {
+      await rm(existingPath, { force: true });
+    } catch {}
+  }
+
+  if (input.prompt?.trim()) {
+    (targetSeg as { compiledPrompt?: string }).compiledPrompt = input.prompt.trim();
+    targetSeg.generationPayload = {
+      ...(targetSeg.generationPayload ?? {}),
+      prompt: input.prompt.trim(),
+    };
+  }
+
+  if (input.promptNotes?.trim()) {
+    const clipNotes = { ...((state.clipNotes as Record<string, string> | undefined) ?? {}) };
+    clipNotes[itemId] = input.promptNotes.trim();
+    state.clipNotes = clipNotes;
+    const currentPrompt = (targetSeg as { compiledPrompt?: string }).compiledPrompt ?? "";
+    (targetSeg as { compiledPrompt?: string }).compiledPrompt = currentPrompt
+      ? `${currentPrompt}\n\n[DIRECTOR NOTES]: ${input.promptNotes.trim()}`
+      : input.promptNotes.trim();
   }
 
   // 3. Check credit balance before starting
@@ -542,9 +566,10 @@ export async function renderSingleClip(input: {
 
     let latestState = state;
     try {
-      latestState = JSON.parse(await readFile(stateFile, "utf8")) as Record<string, unknown>;
+      latestState = { ...state, ...(JSON.parse(await readFile(stateFile, "utf8")) as Record<string, unknown>) };
     } catch {}
     delete latestState.renderingClip;
+    latestState.seedanceCompiler = state.seedanceCompiler;
 
     const assetFiles = { ...((latestState.assetFiles as Record<string, string> | undefined) ?? {}), [clipTag]: destFile };
     latestState.assetFiles = assetFiles;
@@ -600,7 +625,9 @@ export async function renderSingleClip(input: {
         durationSec: duration,
         creditsReserved: credits,
         retryAfterSec: 15,
-        message: `Clip ${itemId} (${duration}s) render started on Replicate GPUs (~3-4 minutes, ${credits} credits). Poll wiggly_get_draft in 15 seconds to check when it completes.`,
+        message: shouldReroll
+          ? `Clip ${itemId} (${duration}s) re-render started on Replicate GPUs with updated prompt (~3-4 minutes, ${credits} credits). Poll wiggly_get_draft in 15 seconds to check when it completes.`
+          : `Clip ${itemId} (${duration}s) render started on Replicate GPUs (~3-4 minutes, ${credits} credits). Poll wiggly_get_draft in 15 seconds to check when it completes.`,
       },
     };
   }
