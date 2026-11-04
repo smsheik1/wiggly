@@ -1,5 +1,7 @@
 import type { DiscoveryFormatProfile } from "./types";
 
+export const CONSUMER_CLIENTS = ["Claude Code"] as const;
+
 export type DiscoveryCliAgent =
   | "antigravity-cli"
   | "claude-code"
@@ -24,7 +26,8 @@ export function buildDiscoveryHandoffPrompt(
     const firstQuestion =
       format.handoff.firstQuestion ||
       "Who is this story for, and what is the one moment or lesson you want them to always remember?";
-    return `CODING AGENT REQUIRED: If you cannot access this computer's terminal, filesystem, and media files, do not analyze or simulate. Reply only: "Open this in Codex, Claude Code, Antigravity, Cursor, or Copilot CLI."
+    const clients = CONSUMER_CLIENTS.join(", ");
+    return `CODING AGENT REQUIRED: If you cannot access this computer's terminal, filesystem, and media files, do not analyze or simulate. Reply only: "Open this in ${clients}."
 
 Let's create a 3D animated family memoir with Wiggly Format: ${format.name}.
 
@@ -34,14 +37,14 @@ Skill: npx skills add wiggly-app/skills -s ${format.slug}
 
 Role: Creative Director. Work directly in this workspace. Do not clone developer repos, download zip archives, or run build/test suites.
 
-Photos: If the user has family reference photos, they can drop them into chat or put them in \`./photos\`. Photos are optional reference for character styling.
+Photos: Every character needs at least one reference photo before production. While we write the story and design the characters, the user can drop photos into chat or put them in \`./photos\`. The skill handles the upload step later.
 
 TURN 1 INSTRUCTION:
 1. Run \`npx skills add wiggly-app/skills -s ${format.slug}\` to install the creative director skill.
 2. In the same response, greet me warmly and ask:
 "${firstQuestion}"
 
-Note: Wiggly MCP (\`claude mcp add --transport http wiggly ${absoluteUrl(origin, "/mcp")}\` or add via native MCP settings) handles 4K character sheet generation and Seedance video rendering after the screenplay is approved.`;
+Note: Do not connect the Wiggly MCP in Turn 1. When the skill says production is next, connect it (\`claude mcp add --transport http wiggly ${absoluteUrl(origin, "/mcp")}\`, or add it in your MCP settings). It renders the character and location sheets, an animatic preview, and the final film after the screenplay is approved.`;
   }
 
   const mcpLine = format.slug === "my-pixar-story"
