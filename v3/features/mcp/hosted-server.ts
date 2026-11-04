@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { McpServer, createMcpHandler, type OAuthTokenVerifier } from "@modelcontextprotocol/server";
 import { requireBearerAuth } from "@modelcontextprotocol/server";
@@ -7,6 +8,7 @@ import { approveDraft, studioStatusFromFile, type CrewPhoto, type StudioState } 
 import { draftMedia } from "./render-stage";
 import { ensureWritingState, runWritingJob, WRITING_JOBS, type GateImage, type WritingJob } from "./gate-tools";
 import { MemoryFilmLedger, type Account, type LedgerResult, type Storyboard } from "./film-ledger";
+import { resizeImageToThumbnail } from "./image-resize";
 
 type FilmLedger = {
   openUpload(accountId: string): { uploadUrl: string; expiresAt: string } | Promise<{ uploadUrl: string; expiresAt: string }>;
@@ -20,11 +22,11 @@ const storyboardSchema = z.object({
   title: z.string(),
   subject: z.string(),
   beats: z.array(z.object({
-    duration_sec: z.number(),
-    action: z.string(),
-    camera: z.string(),
+    duration_sec: z.number().positive(),
+    action: z.string().min(1),
+    camera: z.string().min(1),
     narration_line: z.string().optional(),
-  })).describe("Exactly 7 beats. Wiggly does not add or remove beats."),
+  })).length(7, "storyboard.beats must have exactly 7 beats").describe("Exactly 7 beats. Wiggly does not add or remove beats."),
   characters: z.array(z.object({
     name: z.string(),
     skinTone: z.string().min(3).describe("Skin tone you write after looking at the photo. At least 3 characters. Do not ask the person to type this."),
@@ -37,7 +39,7 @@ const UPLOAD_DESCRIPTION = "Open a page where the person labels each photo. Retu
 const LIST_UPLOADS_DESCRIPTION = "After the person says the upload is done, return each label and a signed URL. Look at each photo. You write skinTone and description. Do not ask the person to type them. Then call wiggly_submit_draft.";
 const SUBMIT_DESCRIPTION = "Start one film. The person buys credits and creates. Each Nano Banana 2.1 still costs 8 credits and each Seedance 2.5 second at 480p costs 21 credits, taken when that call happens. Voice costs 1 credit per 100 characters. $19 grants 1900 credits. There is no quote. One job runs at a time. If the balance hits zero, the run pauses and the result is a top-up link.";
 const DRAFT_DESCRIPTION = "Read the latest draft, or the job_id you pass. The status comes from the v2 run's outputs/state.json. Poll no faster than retryAfterSec and never faster than every 15 seconds. Speak up only when the stage changes. awaiting-approval is a pause for the person. ready includes the video URL. failed includes an error you can repeat. A job that never reaches ready returns the credits it spent.";
-const APPROVE_DESCRIPTION = "Approve the paused v2 gate. Pass job_id and the gate decision. An asset approval sends approvedAssets. An animatic or production approval sends decision approve. The same run resumes. If the balance cannot cover the next stills or Seedance seconds, the run stays paused and the result is the top-up link.";
+const APPROVE_DESCRIPTION = "Approve or reject a human gate. Pass job_id, gate ('sheets' | 'animatic' | 'production'), decision ('approve' | 'reject'), and optional notes, shot_ids, asset_ids, or acknowledged_credits (required for gate 'production'). Legacy decision records are accepted for backward compatibility.";
 
 const WRITING_DESCRIPTIONS: Record<WritingJob, string> = {
   "story-director": "Write the stage play. Call with no draft first. The result is the skill and the input packet. Send the full JSON back as draft. Fix every gate error and resend. Three tries. This spends no credits.",
@@ -107,17 +109,35 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
       const direct = ledger as MemoryFilmLedger;
       if (typeof direct.exportState !== "function") return toolResult(false, "This server cannot list uploaded photos.");
       const photos = direct.exportState(accountId).photos ?? [];
-      return toolResult(true, { photos: photos.map((photo) => ({ label: photo.label, filename: photo.filename })) });
+      if (photos.length === 0) {
+        const upload = await ledger.openUpload(accountId);
+        return toolResult(true, `No photos yet. Open ${upload.uploadUrl} and label each photo, then call wiggly_list_uploads again. It expires at ${upload.expiresAt}.`);
+      }
+      const images: GateImage[] = [];
+      const photoRoot = hooks?.photoRoot ?? path.join(process.cwd(), "data", "mcp-uploads");
+      for (const photo of photos.slice(0, 8)) {
+        const photoPath = (photo as { path?: string }).path ?? path.join(photoRoot, accountId, photo.filename);
+        try {
+          const buf = await fs.promises.readFile(photoPath);
+          const thumb = resizeImageToThumbnail(buf, 512);
+          images.push(thumb);
+        } catch {
+          // If file not on disk, omit image block
+        }
+      }
+      return toolResult(true, { photos: photos.slice(0, 8).map((photo) => ({ label: photo.label, filename: photo.filename })) }, images);
     });
     server.registerTool("wiggly_submit_draft", {
       description: SUBMIT_DESCRIPTION,
       inputSchema: z.object({
         storyboard: storyboardSchema,
-        confirm: z.boolean().optional(),
-        quote_id: z.string().optional(),
-      }),
+      }).passthrough(),
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-    }, async ({ storyboard, confirm, quote_id }) => {
+    }, async (rawArgs) => {
+      const args = rawArgs as { storyboard: Storyboard; confirm?: boolean; quote_id?: string };
+      const storyboard = args.storyboard;
+      const confirm = args.confirm;
+      const quote_id = args.quote_id;
       if (!accountId) return toolResult(false, "Authorization needed.");
       const result = await ledger.submitDraft(accountId, {
         storyboard: storyboard as Storyboard,
@@ -263,11 +283,25 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
     server.registerTool("wiggly_approve_draft", {
       description: APPROVE_DESCRIPTION,
       inputSchema: z.object({
-        job_id: z.string(),
-        decision: z.record(z.string(), z.unknown()),
-      }),
+        job_id: z.string().describe("Active draft job id."),
+        gate: z.enum(["sheets", "animatic", "production"]).optional().describe("Current gate being approved or rejected."),
+        decision: z.union([z.enum(["approve", "reject"]), z.record(z.string(), z.unknown())]).describe("'approve' or 'reject' (or legacy decision record)."),
+        notes: z.string().optional().describe("Notes for rejected panels, clips, or storyboard revision."),
+        shot_ids: z.array(z.string()).optional().describe("Panel shot IDs to reroll on animatic rejection (e.g. ['2.3'])."),
+        asset_ids: z.array(z.string()).optional().describe("Asset tags to approve at sheets gate (optional, all sheets approved by default)."),
+        acknowledged_credits: z.number().optional().describe("Required for gate 'production': must match production credit estimate."),
+      }).passthrough(),
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
-    }, async ({ job_id, decision }) => {
+    }, async (rawArgs) => {
+      const args = rawArgs as {
+        job_id: string;
+        gate?: "sheets" | "animatic" | "production";
+        decision: "approve" | "reject" | Record<string, unknown>;
+        notes?: string;
+        shot_ids?: string[];
+        asset_ids?: string[];
+        acknowledged_credits?: number;
+      };
       if (!accountId) return toolResult(false, "Authorization needed.");
       const memory = new MemoryFilmLedger();
       const direct = ledger as MemoryFilmLedger;
@@ -281,8 +315,13 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
       const result = await approveDraft({
         ledger: memory,
         accountId,
-        jobId: job_id,
-        decision,
+        jobId: args.job_id,
+        gate: args.gate,
+        decision: args.decision,
+        notes: args.notes,
+        shot_ids: args.shot_ids,
+        asset_ids: args.asset_ids,
+        acknowledged_credits: args.acknowledged_credits,
         ...(hooks?.resumeGraph ? { resumeGraph: hooks.resumeGraph } : {}),
       });
       if (typeof direct.importState === "function") direct.importState(accountId, memory.exportState(accountId));

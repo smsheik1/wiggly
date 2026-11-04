@@ -681,7 +681,7 @@ test("an approved production renders a two-second clip for 42 credits and assemb
     ledger: job.ledger,
     accountId: "user_1",
     jobId: job.jobId,
-    decision: { decision: "approve" },
+    decision: { decision: "approve", acknowledged_credits: 42 },
     resumeGraph: async () => { throw new Error("the text crew must not resume"); },
     renderStill: async () => { throw new Error("no still"); },
     renderClip: async (request) => {
