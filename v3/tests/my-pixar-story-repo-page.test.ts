@@ -154,6 +154,10 @@ assert.match(handoffPrompt, /MCP Server: https:\/\/wiggly\.agentenamel\.com\/mcp
 assert.match(handoffPrompt, /Role: Creative Director/);
 assert.match(handoffPrompt, /TURN 1 INSTRUCTION:/);
 assert.match(handoffPrompt, /claude mcp add --transport http/);
+assert.match(handoffPrompt, /Do not connect the Wiggly MCP in Turn 1/);
+assert.match(handoffPrompt, /Open this in Claude Code\./);
+assert.doesNotMatch(handoffPrompt, /Codex|Antigravity|Cursor|Copilot CLI/);
+assert.doesNotMatch(handoffPrompt, /4K/);
 assert.doesNotMatch(handoffPrompt, /Continue until the Format's validation and quality checks pass/);
 
 // 4. Page Integration verification

@@ -233,9 +233,33 @@ const pixarPrompt = buildDiscoveryHandoffPrompt(pixar, origin);
 assert.match(pixarPrompt, /Role: Creative Director\./);
 assert.match(pixarPrompt, /TURN 1 INSTRUCTION:/);
 assert.match(pixarPrompt, /claude mcp add --transport http/);
+assert.match(pixarPrompt, /Do not connect the Wiggly MCP in Turn 1/);
+assert.doesNotMatch(pixarPrompt, /4K/);
+assert.doesNotMatch(pixarPrompt, /Codex|Antigravity|Cursor|Copilot CLI/);
 assert.doesNotMatch(pixarPrompt, /Use the packaged runtime; do not rebuild it/);
 assert.doesNotMatch(pixarPrompt, /Continue until the Format's validation and quality checks pass/);
 assert.doesNotMatch(pixarPrompt, /Runnable Repo:/);
 assert.doesNotMatch(pixarPrompt, /GitHub Repo:/);
+
+const expectedPixarPrompt = `CODING AGENT REQUIRED: If you cannot access this computer's terminal, filesystem, and media files, do not analyze or simulate. Reply only: "Open this in Claude Code."
+
+Let's create a 3D animated family memoir with Wiggly Format: My Pixar Story.
+
+Format Page: https://wiggly.agentenamel.com/formats/my-pixar-story
+MCP Server: https://wiggly.agentenamel.com/mcp (HTTP / WorkOS OAuth)
+Skill: npx skills add wiggly-app/skills -s my-pixar-story
+
+Role: Creative Director. Work directly in this workspace. Do not clone developer repos, download zip archives, or run build/test suites.
+
+Photos: Every character needs at least one reference photo before production. While we write the story and design the characters, the user can drop photos into chat or put them in \`./photos\`. The skill handles the upload step later.
+
+TURN 1 INSTRUCTION:
+1. Run \`npx skills add wiggly-app/skills -s my-pixar-story\` to install the creative director skill.
+2. In the same response, greet me warmly and ask:
+"Who is this story for, and what is the one moment or lesson you want them to always remember?"
+
+Note: Do not connect the Wiggly MCP in Turn 1. When the skill says production is next, connect it (\`claude mcp add --transport http wiggly https://wiggly.agentenamel.com/mcp\`, or add it in your MCP settings). It renders the character and location sheets, an animatic preview, and the final film after the screenplay is approved.`;
+
+assert.equal(pixarPrompt, expectedPixarPrompt);
 
 console.log("discovery handoff tests passed");
