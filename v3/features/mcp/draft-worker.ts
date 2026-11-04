@@ -419,6 +419,58 @@ export async function approveDraft(input: {
   if (state.status === "awaiting-credits") {
     return { ok: false as const, message: "This run is paused for credits. Top up, then the worker resumes it. Do not call wiggly_approve_draft." };
   }
+
+  const isProductionGate = state.status === "awaiting-production" || state.renderStage === "clips" || (Array.isArray(state.pendingApproval) && state.pendingApproval.includes("production"));
+
+  if (isProductionGate && input.decision?.decision === "reject") {
+    const notes = typeof input.decision.notes === "string" ? input.decision.notes : "";
+    if (notes) {
+      (state as Record<string, unknown>).productionNotes = notes;
+    }
+    state.status = "awaiting-production";
+    state.pendingApproval = ["production"];
+    state.renderStage = "clips";
+    await writeFile(job.stateFile, JSON.stringify(state, null, 2));
+    const stage = applyStudioState(input.ledger, input.accountId, input.jobId, state);
+    return {
+      ok: true as const,
+      data: {
+        stage,
+        status: "awaiting-production",
+        message: "Production notes recorded. Reroll clips individually with wiggly_reroll_clip(job_id, clip_id, prompt_notes), or approve with wiggly_approve_draft.",
+      },
+    };
+  }
+
+  if (isProductionGate && input.decision?.decision === "approve") {
+    const segments = ((state as Record<string, unknown>).seedanceCompiler as { output?: { segments?: Array<{ totalDurationSec?: number; generationPayload?: { durationSec?: number } }> } })?.output?.segments ?? [];
+    const targetClips = (input.decision.clips ?? input.decision.approvedClips ?? input.decision.targetClips) as unknown[] | undefined;
+    const activeSegments = Array.isArray(targetClips) && targetClips.length > 0
+      ? segments.filter((s, idx) => targetClips.map((c) => String(c).replace(/^(clip|segment|part)[-_\s]*/i, "")).includes(String(idx + 1)))
+      : segments;
+    const totalDurationSec = activeSegments.reduce((sum, seg) => sum + (seg.generationPayload?.durationSec ?? seg.totalDurationSec ?? 24), 0) || (job.storyboard?.beats?.reduce((sum, b) => sum + (b.duration_sec || 0), 0) ?? 72);
+    const productionEstimate = totalDurationSec * 21;
+
+    const rawAck = input.decision.acknowledged_credits ?? input.decision.acknowledgedCredits;
+    const acknowledged = typeof rawAck === "number" ? rawAck : Number(rawAck);
+    if (!acknowledged || acknowledged !== productionEstimate) {
+      return {
+        ok: false as const,
+        message: `Gate 3 (Production) approval requires acknowledged_credits: ${productionEstimate} (renders ${totalDurationSec}s of Seedance video @ 21 credits/sec). Please call wiggly_approve_draft with acknowledged_credits: ${productionEstimate}.`,
+      };
+    }
+
+    const account = input.ledger.exportState(input.accountId);
+    const currentBalance = account.monthlyCredits + account.purchasedCredits;
+    if (currentBalance < productionEstimate) {
+      const topUpUrl = `https://wiggly.agentenamel.com/billing/credits?${account.subscribed ? "pack=1900" : "plan=monthly"}&checkout=${crypto.randomUUID()}`;
+      return {
+        ok: false as const,
+        message: `Insufficient credits for production render. Requires ${productionEstimate} credits, but current balance is ${currentBalance}. Top up here: ${topUpUrl}`,
+      };
+    }
+  }
+
   if (input.decision?.decision === "reject" && Array.isArray(input.decision.rejectedShots) && input.decision.rejectedShots.length > 0) {
     const { rerollPanel } = await import("./render-stage");
     const notes = typeof input.decision.notes === "string" ? input.decision.notes : undefined;
@@ -568,6 +620,7 @@ export async function studioStatusFromFile(stateFile: unknown) {
 
     return {
       studio_status: state.status ?? "running",
+      render_stage: state.renderStage,
       pending_approval: state.pendingApproval ?? [],
       ...(clipRenderStatus ? { clip_render_status: clipRenderStatus } : {}),
       ...(productionPreview ? { production_preview: productionPreview } : {}),

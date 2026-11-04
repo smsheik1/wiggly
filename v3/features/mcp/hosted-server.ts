@@ -184,11 +184,81 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
       if (!accountId) return toolResult(false, "Authorization needed.");
       const result = await ledger.getDraft(accountId, job_id);
       if (!result.ok) return toolResult(false, result.message);
-      const status = await studioStatusFromFile(result.data.state_file);
+      const status: {
+        studio_status?: string;
+        render_stage?: string;
+        pending_approval?: string[];
+        production_preview?: Record<string, unknown>;
+        clip_render_status?: Record<string, unknown>;
+        guidance?: string;
+      } = await studioStatusFromFile(result.data.state_file);
       const media = typeof result.data.state_file === "string"
         ? await draftMedia(result.data.state_file, String(result.data.job_id ?? job_id ?? ""), process.env.MCP_PHOTO_SECRET || process.env.SESSION_SECRET || "wiggly-draft")
         : { stills: [], images: [], videoUrl: undefined };
-      return toolResult(true, { ...result.data, ...status, stills: media.stills, ...(media.videoUrl ? { videoUrl: media.videoUrl } : {}) }, media.images);
+
+      const direct = ledger as MemoryFilmLedger;
+      let account: Account | undefined;
+      if (typeof direct.exportState === "function") {
+        account = direct.exportState(accountId);
+      } else if (hooks?.loadAccount) {
+        account = await hooks.loadAccount(accountId);
+      }
+      const creditsBalance = account ? account.monthlyCredits + account.purchasedCredits : 0;
+
+      let gate: "sheets" | "animatic" | "production" | undefined;
+      let nextStepCost: number | undefined;
+
+      const isAwaiting = result.data.stage === "awaiting-approval" || status.studio_status === "awaiting-approval" || status.studio_status === "awaiting-production";
+      if (isAwaiting) {
+        const pending = Array.isArray(status.pending_approval) ? status.pending_approval : [];
+        if (status.render_stage === "sheets" || pending.includes("sheets")) {
+          gate = "sheets";
+          nextStepCost = 144;
+        } else if (status.render_stage === "panels" || pending.includes("animatic")) {
+          gate = "animatic";
+          nextStepCost = 0;
+        } else if (status.render_stage === "clips" || status.studio_status === "awaiting-production" || pending.includes("production")) {
+          gate = "production";
+          const prodEst = (status.production_preview as { remaining_credits?: number } | undefined)?.remaining_credits
+            ?? (result.data.estimatedCredits as { production?: number } | undefined)?.production
+            ?? 1512;
+          nextStepCost = prodEst;
+        }
+      }
+
+      return toolResult(true, {
+        ...result.data,
+        ...status,
+        ...(gate ? { gate } : {}),
+        ...(typeof nextStepCost === "number" ? { nextStepCost } : {}),
+        creditsBalance,
+        stills: media.stills,
+        ...(media.videoUrl ? { videoUrl: media.videoUrl } : {}),
+      }, media.images);
+    });
+    server.registerTool("wiggly_cancel_draft", {
+      description: "Cancel an active draft job (only valid in 'awaiting-approval' or 'awaiting-credits'). Frees the account slot so a new draft can be submitted. In running stage, answers wait for the current step to finish. Refunds 0 credits because generation calls are already billed.",
+      inputSchema: z.object({
+        job_id: z.string(),
+      }),
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    }, async ({ job_id }) => {
+      if (!accountId) return toolResult(false, "Authorization needed.");
+      const memory = new MemoryFilmLedger();
+      const direct = ledger as MemoryFilmLedger;
+      if (typeof direct.exportState === "function") {
+        memory.importState(accountId, direct.exportState(accountId));
+      } else if (hooks?.loadAccount) {
+        memory.importState(accountId, await hooks.loadAccount(accountId));
+      } else {
+        return toolResult(false, "This server cannot load the film account.");
+      }
+      const result = memory.cancelDraft(accountId, job_id);
+      if (result.ok) {
+        if (typeof direct.importState === "function") direct.importState(accountId, memory.exportState(accountId));
+        else if (hooks?.saveAccount) await hooks.saveAccount(accountId, memory.exportState(accountId));
+      }
+      return result.ok ? toolResult(true, result.data ?? { message: "Job cancelled." }) : toolResult(false, result.message ?? "Cancel failed.");
     });
     server.registerTool("wiggly_approve_draft", {
       description: APPROVE_DESCRIPTION,

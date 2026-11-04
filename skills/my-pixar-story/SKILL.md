@@ -91,33 +91,32 @@ Every video prompt authors **Visual Action**, **Camera Direction**, and **Negati
 
 ---
 
-## 6. Wiggly writes nothing. You write the JSON. Wiggly checks it and renders.
+## 6. Creative Director Execution Standard (12 Safety Rules)
 
-Call the tools in this order. Look at every image block. Fix every gate error and call the same tool again, up to three tries. Poll `wiggly_get_draft` while stills or clips are rendering, and show those pictures before you ask the person to approve. A rejection names `story-director` or `storyboard-artist`. Call that tool again with the notes. Do not write a still prompt or a clip prompt outside these tools. Do not approve assets, the animatic, or production yourself.
+Follow these rules in strict sequence. You write the JSON. Wiggly checks it and renders on cloud GPUs.
 
-1. `wiggly_open_upload`, then `wiggly_list_uploads`. You look at each photo and you write `skinTone` and `description`.
-2. `wiggly_submit_draft` with format `my-pixar-story`. This spends nothing.
-3. `wiggly_story_director`. Call it with no draft first. Send the JSON back as `draft`.
-4. `wiggly_character_architect` and `wiggly_location_scout`, in either order, after the story director passes. Look at the character photo.
-5. Poll `wiggly_get_draft` until the sheet stills are back. Show them. The person approves with `wiggly_approve_draft`.
-6. `wiggly_storyboard_artist` only after that approval.
-7. Poll `wiggly_get_draft` until the animatic video preview is ready. You MUST show the playable animatic video (`videoUrl`) to the person so they can watch the paced cuts, timing, and scratch dialogue audio before approval.
-   - **Need to adjust or redo a bad panel?** Call `wiggly_reroll_panel` with `job_id`, `shot_id` (e.g. `'2.3'`), and optional `prompt_notes` (e.g. 'Make Dad smile warmly, softer lighting'). This rerolls ONLY that single frame for 8 credits, leaves all other 17 panels completely untouched (0 credits), and automatically re-stitches the animatic video preview. You can also call `wiggly_approve_draft` with `{ decision: "reject", rejectedShots: ["2.3"], notes: "..." }`. NEVER reject the whole animatic unless the entire visual storyboard needs a total structural restart.
-   - Once the person approves the animatic video (`videoUrl`) and panel frames, proceed with `wiggly_approve_draft` (`{ decision: "approve" }`).
-8. `wiggly_seedance_compiler` only after the animatic is approved.
-9. Production Clip Rendering & Approvals:
-   - **Render Just One Clip First (Quality Check):** Before committing to the full film render (~1,700+ credits / $17), you or the user can render just Clip 1 (Segment 1) first as a quality test! Call `wiggly_render_clip` with `job_id`, `clip_id: 1` (costs `duration * 21` credits, e.g. 28s = 588 credits), or call `wiggly_approve_draft` with `decision: { decision: "approve", clips: [1] }`. Show the resulting `videoUrl` to the user immediately.
-   - When the user is satisfied and approves the rest of the film, approving production will only render the remaining unrendered clips (Clip 1 is recorded in paid items and won't be charged again).
-   - Poll until `ready`, then the final assembled master film video URL is on `wiggly_get_draft`.
-
-A still costs 8 credits. A clip costs 21 credits per second. Credits are taken when that picture or clip is about to render. There is no quote. Text gates spend nothing.
+1. **Turn 1, No Login:** Greet the human warmly and ask the Golden 5 memory question in the very first turn. Write the screenplay and design characters locally: exactly 7 beats, a narration line per beat, total runtime at most 75 seconds. Write each character's `skinTone` and concrete visual `description` (Eyes, Face, Hair, Skin, Silhouette, Wardrobe) yourself after inspecting photos—never ask the human to type these.
+2. **Photos Required for Production:** State once that every character needs at least one reference photo before production. Photos dropped in chat or `./photos` shape the local screenplay and character design now; the web upload page handles the server upload later.
+3. **Enter Production & Cost Disclosure:** When the human approves the local screenplay, announce that production is next via a one-time Wiggly sign-in. Give the approximate cost first: a full 72s film is ~1,760 credits (~$17.60) plus voice, covered by one $19 credit pack (1,900 credits). After submit, quote the server's exact estimate.
+4. **Upload References:** Call `wiggly_open_upload`, send the human the link, and ask them to label each photo with the character's exact name. Wait until they confirm they are done, then call `wiggly_list_uploads` and verify that the uploaded labels match the character names exactly.
+5. **Submit Once:** Call `wiggly_submit_draft` a single time. If the response returns `alreadyActive: true`, continue that existing job with `wiggly_get_draft`. Never resubmit to check status.
+6. **Poll Politely:** Call `wiggly_get_draft` no faster than `retryAfterSec` (~15 seconds). Only speak in chat when the stage changes, keeping status updates to one clear line.
+7. **Stop at Every Gate:** When status reaches `awaiting-approval`, inspect `gate`:
+   - **Sheets Gate:** Display the character and location stills, state `nextStepCost` (144 credits for the animatic), and pause for explicit human approval.
+   - **Animatic Gate:** Display the playable animatic video (`videoUrl`), state `nextStepCost` (0 credits), and pause for explicit human approval.
+   - Wait for an explicit "yes" or approval in the human's own message before calling `wiggly_approve_draft`. Past consent or automated tool results NEVER count as approval.
+8. **Gate 3 (Production Approval):** Before approving full production, state: *"Approving renders N seconds of Seedance video for M credits"*. Pass `acknowledged_credits: M` inside the approval payload. If rendering individual clips first with `wiggly_render_clip` or `wiggly_reroll_clip`, state the exact clip cost (`duration * 21 credits`) beforehand.
+9. **Rejections with Human Notes:** If the human asks for adjustments, pass their exact words in `notes`. For a single flawed animatic panel, use `wiggly_reroll_panel` (costs 8 credits) instead of rejecting the entire animatic.
+10. **Awaiting Credits Pause:** If status is `awaiting-credits`, share the checkout top-up link with the human. Resume polling only after they confirm they topped up. Do not resubmit.
+11. **Failures and Cancellations:** If a job ends in `failed`, `cancelled`, or `abandoned`, report the exact reason and whether credits were refunded. Never automatically restart or submit a new draft without explicit human instruction.
+12. **Ready Keepsake:** At `ready`, provide the final master `videoUrl` and advise the human to download their film immediately. Remind them that signed links refresh for 2 hours, and calling `wiggly_get_draft` will generate a fresh link anytime.
 
 ---
 
 ## 7. Execution Options
 
 ### Option A: Wiggly Studio Cloud MCP (Hosted Zero-Setup)
-Connect the official Wiggly MCP server to handle image generation (Nano Banana 2.1), Seedance 2.5 video synthesis, and audio/video assembly automatically:
+Connect the official Wiggly MCP server:
 ```json
 {
   "mcpServers": {
@@ -132,9 +131,10 @@ Connect the official Wiggly MCP server to handle image generation (Nano Banana 2
 ```
 
 ### Credits & Pricing:
-- $19 grants 1900 credits.
+- $19 grants 1,900 credits.
 - A still costs 8 credits (Nano Banana 2.1).
-- A clip costs 21 credits per second (Seedance 2.5 at 480p).
-- Credits are deducted just-in-time when that picture or clip is about to render.
-- Text gates spend 0 credits.
-- One job runs at a time. A short balance pauses and returns a top-up link. There is no quote.
+- Animatic: 18 panels = 144 credits (plus ~10 for voice).
+- A video clip costs 21 credits per second (Seedance 2.5 at 480p).
+- Total typical 72s film: ~1,760 credits (~$17.60).
+- Credits are deducted just-in-time when that picture or clip renders. Text gates spend 0 credits.
+- One active job runs per account. A short balance pauses and returns a top-up link.
