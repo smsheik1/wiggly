@@ -32,6 +32,8 @@ export const DRAFT_STAGES = [
 export type DraftStage = (typeof DRAFT_STAGES)[number];
 const ACTIVE_STAGES: DraftStage[] = ["queued", "running", "awaiting-approval", "awaiting-credits", "lineup", "beats", "assembly"];
 export const INSTALLED_FORMAT_IDS = ["my-pixar-story"] as const;
+export const MAX_RUNTIME_SEC = 75;
+export const IDLE_GATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const QUOTE_TTL_MS = 24 * 60 * 60 * 1000;
 const UPLOAD_TTL_MS = 60 * 60 * 1000;
 
@@ -117,6 +119,7 @@ export type DraftJob = {
   stateFile?: string;
   beatUrls?: string[];
   stillUrls?: string[];
+  updatedAt?: number;
 };
 
 export type Quote = {
@@ -191,6 +194,10 @@ function problems(storyboard: Storyboard, labels: string[]) {
   if (!storyboard.subject.trim()) issues.push("storyboard.subject is empty");
   if (storyboard.beats.length !== 7) {
     issues.push(`storyboard.beats has ${storyboard.beats.length} items and must have exactly 7`);
+  }
+  const totalSec = storyboard.beats.reduce((sum, b) => sum + (b.duration_sec || 0), 0);
+  if (totalSec > MAX_RUNTIME_SEC) {
+    issues.push(`storyboard.beats total ${totalSec}s exceeds the ${MAX_RUNTIME_SEC}s maximum`);
   }
   storyboard.beats.forEach((beat, index) => {
     if (!(beat.duration_sec > 0)) issues.push(`storyboard.beats[${index}].duration_sec must be greater than 0`);
@@ -275,14 +282,29 @@ export class MemoryFilmLedger {
   }
 
   private activeJob(account: Account) {
-    return account.jobs.find((job) => ACTIVE_STAGES.includes(job.stage));
+    const now = Date.now();
+    for (const job of account.jobs) {
+      if (ACTIVE_STAGES.includes(job.stage)) {
+        if ((job.stage === "awaiting-approval" || job.stage === "awaiting-credits") && job.updatedAt) {
+          if (now - job.updatedAt > IDLE_GATE_TTL_MS) {
+            job.stage = "abandoned";
+            continue;
+          }
+        }
+        return job;
+      }
+    }
+    return undefined;
   }
 
   private jobPayload(job: DraftJob): Record<string, unknown> {
     const estimate = job.storyboard ? estimateFilmCredits(job.storyboard) : undefined;
+    const exposedStage = (job.stage === "lineup" || job.stage === "beats" || job.stage === "assembly")
+      ? "running"
+      : job.stage;
     return {
       job_id: job.jobId,
-      stage: job.stage,
+      stage: exposedStage,
       retryAfterSec: 15,
       credits_charged: job.creditsCharged,
       ...(job.videoUrl ? { videoUrl: job.videoUrl } : {}),
@@ -291,6 +313,7 @@ export class MemoryFilmLedger {
       ...(job.storyboardHash ? { storyboardHash: job.storyboardHash } : {}),
       ...(estimate ? { estimatedCredits: estimate } : {}),
       ...(job.error ? { error: job.error, correlationId: job.correlationId, creditsRefunded: job.creditsRefunded } : {}),
+      ...(job.stage === "abandoned" ? { message: "Job was abandoned after 7 days of inactivity. Start a new draft with wiggly_submit_draft." } : {}),
     };
   }
 
@@ -331,13 +354,16 @@ export class MemoryFilmLedger {
             ...this.jobPayload(running),
             alreadyActive: true,
             creditsBalance: credits,
-            message: `Job ${running.jobId} is already active with this storyboard at stage "${running.stage}". Continue it with wiggly_get_draft or approve with wiggly_approve_draft.`,
+            message: `Job ${running.jobId} is already active with this storyboard at stage "${(running.stage === "lineup" || running.stage === "beats" || running.stage === "assembly") ? "running" : running.stage}". Continue it with wiggly_get_draft or approve with wiggly_approve_draft.`,
           },
         };
       } else {
+        const runningExposedStage = (running.stage === "lineup" || running.stage === "beats" || running.stage === "assembly")
+          ? "running"
+          : running.stage;
         return {
           ok: false,
-          message: `Job ${running.jobId} is at ${running.stage} with a different storyboard. Continue it with wiggly_get_draft or cancel it with wiggly_cancel_draft, then submit again.`,
+          message: `Job ${running.jobId} is at ${runningExposedStage} with a different storyboard. Continue it with wiggly_get_draft or cancel it with wiggly_cancel_draft, then submit again.`,
         };
       }
     }
@@ -356,6 +382,7 @@ export class MemoryFilmLedger {
       correlationId: crypto.randomUUID(),
       storyboard: input.storyboard,
       storyboardHash: inputHash,
+      updatedAt: Date.now(),
     };
     account.jobs.push(job);
     return {
@@ -428,6 +455,13 @@ export class MemoryFilmLedger {
     if (!job) {
       return { ok: false, message: jobId ? "That job_id is not on this account. Call wiggly_get_draft without job_id to see the latest job." : "No draft job yet. Call wiggly_open_upload, then wiggly_submit_draft." };
     }
+    const now = Date.now();
+    if ((job.stage === "awaiting-approval" || job.stage === "awaiting-credits") && job.updatedAt) {
+      if (now - job.updatedAt > IDLE_GATE_TTL_MS) {
+        job.stage = "abandoned";
+        job.updatedAt = now;
+      }
+    }
     return { ok: true, data: this.jobPayload(job) };
   }
 
@@ -489,6 +523,7 @@ export class MemoryFilmLedger {
     const job = this.account(accountId).jobs.find((item) => item.jobId === jobId);
     if (!job || job.stage === "failed" || job.stage === "ready") return;
     job.stage = stage;
+    job.updatedAt = Date.now();
     if (videoUrl) job.videoUrl = videoUrl;
   }
 

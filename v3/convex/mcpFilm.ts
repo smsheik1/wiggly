@@ -72,6 +72,7 @@ async function readAccount(ctx: QueryCtx | MutationCtx, workosUserId: string): P
       ...(job.runId ? { runId: job.runId } : {}),
       ...(job.stateFile ? { stateFile: job.stateFile } : {}),
       ...(job.storyboardHash ? { storyboardHash: job.storyboardHash } : {}),
+      ...(job.updatedAt ? { updatedAt: job.updatedAt } : {}),
     })),
   };
 }
@@ -158,6 +159,7 @@ async function writeAccount(ctx: MutationCtx, workosUserId: string, account: Acc
       ...(job.runId ? { runId: job.runId } : {}),
       ...(job.stateFile ? { stateFile: job.stateFile } : {}),
       ...(job.storyboardHash ? { storyboardHash: job.storyboardHash } : {}),
+      ...(job.updatedAt ? { updatedAt: job.updatedAt } : {}),
     });
   }
 }

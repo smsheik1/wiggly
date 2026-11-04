@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -56,6 +56,8 @@ async function signedRoute(resumeGraph?: (resume: { runId: string; decision: Rec
   listUploads?: (accountId: string) => Promise<Array<{ label: string; url: string }>>;
   renderStill?: NonNullable<Parameters<typeof createMcpRoute>[0]>["renderStill"];
   renderClip?: NonNullable<Parameters<typeof createMcpRoute>[0]>["renderClip"];
+  runsRoot?: string;
+  photoRoot?: string;
 }) {
   const { publicKey, privateKey } = await generateKeyPair("RS256", { extractable: true });
   const jwk = await exportJWK(publicKey);
@@ -77,6 +79,8 @@ async function signedRoute(resumeGraph?: (resume: { runId: string; decision: Rec
     listUploads: extras?.listUploads,
     renderClip: extras?.renderClip,
     renderStill: extras?.renderStill,
+    runsRoot: extras?.runsRoot,
+    photoRoot: extras?.photoRoot,
   });
   return { token, route };
 }
@@ -562,4 +566,324 @@ test("S2 & S3: Gate 3 cost estimate, acknowledged_credits enforcement, and rejec
   assert.equal(lowBalBody.result.isError, true);
   assert.match(lowBalBody.result.content[0].text, /Insufficient credits for production render/);
   assert.match(lowBalBody.result.content[0].text, /Top up here:/);
+});
+
+test("S4: typed approve schema with gate, gate mismatch rejection, and animatic reject routing", async () => {
+  const runsRoot = await mkdtemp(path.join(tmpdir(), "wiggly-s4-"));
+  const { token, route } = await signedRoute(async () => ({ state: { status: "running" } }), { runsRoot });
+  route.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 2000, purchasedCredits: 0 });
+  route.ledger.attachPhotos("user_1", ["Leo", "Mom"]);
+
+  const started = route.ledger.submitDraft("user_1", { storyboard });
+  if (!started.ok) throw new Error("Draft should submit");
+  const jobId = String(started.data.job_id);
+
+  // Setup state awaiting sheets
+  const runDir = path.join(runsRoot, "my-pixar-story", "runs", "run-1");
+  await mkdir(path.join(runDir, "outputs"), { recursive: true });
+  const stateFile = path.join(runDir, "outputs", "state.json");
+  await writeFile(stateFile, JSON.stringify({
+    runId: "run-1",
+    status: "awaiting-approval",
+    pendingApproval: ["sheets"],
+    characterArchitect: {
+      output: {
+        characters: [{ elementTag: "@Leo", characterId: "leo" }],
+      },
+    },
+    locationScout: {
+      output: {
+        locations: [{ elementTag: "@LivingRoom", locationId: "living-room" }],
+      },
+    },
+  }));
+  route.ledger.setRun("user_1", jobId, { runId: "run-1", stateFile });
+  route.ledger.setStage("user_1", jobId, "awaiting-approval");
+
+  // Gate mismatch: trying to approve "production" while at "sheets"
+  const mismatchRes = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_approve_draft",
+    arguments: {
+      job_id: jobId,
+      gate: "production",
+      decision: "approve",
+    },
+  }, "wiggly_approve_draft"));
+  const mismatchBody = await mismatchRes.json();
+  assert.equal(mismatchBody.result.isError, true);
+  assert.match(mismatchBody.result.content[0].text, /Mismatched gate: current gate is "sheets", received "production"/);
+
+  // Matching gate approval with typed schema without specifying asset_ids (auto-approves sheets)
+  const sheetsApprove = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_approve_draft",
+    arguments: {
+      job_id: jobId,
+      gate: "sheets",
+      decision: "approve",
+    },
+  }, "wiggly_approve_draft"));
+  const sheetsApproveBody = await sheetsApprove.json();
+  assert.ok(!sheetsApproveBody.result.isError, JSON.stringify(sheetsApproveBody));
+
+  // Now advance to animatic gate
+  await writeFile(stateFile, JSON.stringify({
+    runId: "run-1",
+    status: "awaiting-approval",
+    pendingApproval: ["animatic"],
+  }));
+
+  // Gate mismatch: trying to approve "sheets" while at "animatic"
+  const mismatchAnimatic = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_approve_draft",
+    arguments: {
+      job_id: jobId,
+      gate: "sheets",
+      decision: "approve",
+    },
+  }, "wiggly_approve_draft"));
+  const mismatchAnimBody = await mismatchAnimatic.json();
+  assert.equal(mismatchAnimBody.result.isError, true);
+  assert.match(mismatchAnimBody.result.content[0].text, /Mismatched gate: current gate is "animatic", received "sheets"/);
+
+  // Reject animatic without shot_ids -> routes to storyboard-artist
+  const rejectAnimatic = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_approve_draft",
+    arguments: {
+      job_id: jobId,
+      gate: "animatic",
+      decision: "reject",
+      notes: "Pacing is too fast in scene 2",
+    },
+  }, "wiggly_approve_draft"));
+  const rejectBody = await rejectAnimatic.json();
+  assert.ok(!rejectBody.result.isError);
+  const rejectParsed = JSON.parse(rejectBody.result.content[0].text);
+  assert.equal(rejectParsed.target, "storyboard-artist");
+});
+
+test("S5: bounded storyboard enforces exactly 7 beats and max 75 seconds", async () => {
+  const { token, route } = await signedRoute();
+  route.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 2000, purchasedCredits: 0 });
+  route.ledger.attachPhotos("user_1", ["Leo", "Mom"]);
+
+  // 1. 8 beats is rejected by schema
+  const eightBeats = {
+    ...storyboard,
+    beats: [
+      ...storyboard.beats,
+      { duration_sec: 10, action: "Extra beat", camera: "Wide" },
+    ],
+  };
+  const res8 = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_submit_draft",
+    arguments: { storyboard: eightBeats },
+  }, "wiggly_submit_draft"));
+  const body8 = await res8.json();
+  assert.equal(body8.result.isError, true);
+
+  // 2. 6 beats is rejected by schema
+  const sixBeats = {
+    ...storyboard,
+    beats: storyboard.beats.slice(0, 6),
+  };
+  const res6 = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_submit_draft",
+    arguments: { storyboard: sixBeats },
+  }, "wiggly_submit_draft"));
+  const body6 = await res6.json();
+  assert.equal(body6.result.isError, true);
+
+  // 3. 7 beats totaling > 75 seconds (e.g. 7 * 12 = 84s)
+  const longStory = {
+    ...storyboard,
+    beats: storyboard.beats.map((b) => ({ ...b, duration_sec: 12 })),
+  };
+  const resLong = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_submit_draft",
+    arguments: { storyboard: longStory },
+  }, "wiggly_submit_draft"));
+  const bodyLong = await resLong.json();
+  assert.equal(bodyLong.result.isError, true);
+  assert.match(bodyLong.result.content[0].text, /storyboard\.beats total 84s exceeds the 75s maximum/);
+});
+
+test("S6: wiggly_list_uploads returns JPEG thumbnails alongside labels and filenames", async () => {
+  const photoRoot = await mkdtemp(path.join(tmpdir(), "wiggly-photos-"));
+  const userUploads = path.join(photoRoot, "user_1");
+  await mkdir(userUploads, { recursive: true });
+
+  // Create a sample 100x100 JPEG image using jpeg-js
+  const jpeg = (await import("jpeg-js")).default;
+  const rawData = Buffer.alloc(100 * 100 * 4, 128);
+  const sampleJpeg = jpeg.encode({ width: 100, height: 100, data: rawData }, 80).data;
+  await writeFile(path.join(userUploads, "leo.jpg"), sampleJpeg);
+
+  const { token, route } = await signedRoute(undefined, { photoRoot });
+  route.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 2000, purchasedCredits: 0 });
+
+  // 1. Zero photos returns upload page hint
+  const resEmpty = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_list_uploads",
+    arguments: {},
+  }, "wiggly_list_uploads"));
+  const bodyEmpty = await resEmpty.json();
+  assert.ok(!bodyEmpty.result.isError);
+  assert.match(bodyEmpty.result.content[0].text, /No photos yet\. Open/);
+
+  // 2. Uploaded photos return labels, filenames, and image thumbnail blocks
+  route.ledger.attachPhotoFiles("user_1", [{ label: "Leo", filename: "leo.jpg" }]);
+  const resPhotos = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_list_uploads",
+    arguments: {},
+  }, "wiggly_list_uploads"));
+  const bodyPhotos = await resPhotos.json();
+  assert.ok(!bodyPhotos.result.isError);
+  const textContent = bodyPhotos.result.content.find((c: any) => c.type === "text");
+  assert.ok(textContent);
+  assert.match(textContent.text, /"label":"Leo"/);
+  assert.match(textContent.text, /"filename":"leo.jpg"/);
+
+  const imageContent = bodyPhotos.result.content.find((c: any) => c.type === "image");
+  assert.ok(imageContent);
+  assert.equal(imageContent.mimeType, "image/jpeg");
+  assert.ok(imageContent.data.length > 0);
+});
+
+test("S7: idle gates expire after 7 days, freeing slot and returning abandoned status", async () => {
+  const { token, route } = await signedRoute();
+  route.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 2000, purchasedCredits: 0 });
+  route.ledger.attachPhotos("user_1", ["Leo", "Mom"]);
+
+  const started = route.ledger.submitDraft("user_1", { storyboard });
+  if (!started.ok) throw new Error("Submit failed");
+  const jobId = String(started.data.job_id);
+
+  // Put in awaiting-approval
+  route.ledger.setStage("user_1", jobId, "awaiting-approval");
+
+  // 1. If idle for 6 days (6 * 24h), still blocks new submit
+  const sixDaysAgo = Date.now() - 6 * 24 * 60 * 60 * 1000;
+  const acc = route.ledger.exportState("user_1");
+  acc.jobs[0].updatedAt = sixDaysAgo;
+  route.ledger.importState("user_1", acc);
+
+  const diffStory = { ...storyboard, title: "Different Title" };
+  const blockedSubmit = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_submit_draft",
+    arguments: { storyboard: diffStory },
+  }, "wiggly_submit_draft"));
+  const blockedBody = await blockedSubmit.json();
+  assert.equal(blockedBody.result.isError, true);
+  assert.match(blockedBody.result.content[0].text, /is at awaiting-approval with a different storyboard/);
+
+  // 2. If idle for 7 days + 1 hour, expires to abandoned and frees slot
+  const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000 + 3600 * 1000);
+  acc.jobs[0].updatedAt = sevenDaysAgo;
+  route.ledger.importState("user_1", acc);
+
+  // Inspect via get_draft
+  const getDraftRes = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_get_draft",
+    arguments: { job_id: jobId },
+  }, "wiggly_get_draft"));
+  const getDraftBody = await getDraftRes.json();
+  assert.ok(!getDraftBody.result.isError);
+  assert.match(getDraftBody.result.content[0].text, /"stage":"abandoned"/);
+  assert.match(getDraftBody.result.content[0].text, /Job was abandoned after 7 days of inactivity/);
+
+  // New submit now succeeds because slot is freed!
+  const newSubmit = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_submit_draft",
+    arguments: { storyboard: diffStory },
+  }, "wiggly_submit_draft"));
+  const newSubmitBody = await newSubmit.json();
+  assert.ok(!newSubmitBody.result.isError);
+  const newJob = JSON.parse(newSubmitBody.result.content[0].text);
+  assert.notEqual(newJob.job_id, jobId);
+});
+
+test("S8: dead surface removed and legacy stages mapped to running", async () => {
+  const { token, route } = await signedRoute();
+  route.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 2000, purchasedCredits: 0 });
+  route.ledger.attachPhotos("user_1", ["Leo", "Mom"]);
+
+  // 1. Old client sending confirm and quote_id passes through without schema error
+  const legacySubmit = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_submit_draft",
+    arguments: {
+      storyboard,
+      confirm: true,
+      quote_id: "quote-legacy-123",
+    },
+  }, "wiggly_submit_draft"));
+  const legBody = await legacySubmit.json();
+  assert.ok(!legBody.result.isError);
+
+  // 2. Legacy stage values like lineup/beats/assembly are exposed as "running"
+  const jobId = JSON.parse(legBody.result.content[0].text).job_id;
+  route.ledger.setStage("user_1", jobId, "lineup");
+
+  const getLineup = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_get_draft",
+    arguments: { job_id: jobId },
+  }, "wiggly_get_draft"));
+  const lineupBody = await getLineup.json();
+  assert.ok(!lineupBody.result.isError);
+  assert.match(lineupBody.result.content[0].text, /"stage":"running"/);
+
+  route.ledger.setStage("user_1", jobId, "beats");
+  const getBeats = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_get_draft",
+    arguments: { job_id: jobId },
+  }, "wiggly_get_draft"));
+  const beatsBody = await getBeats.json();
+  assert.match(beatsBody.result.content[0].text, /"stage":"running"/);
+});
+
+test("S9: finished ready film remains retrievable indefinitely with fresh signed URLs", async () => {
+  const runsRoot = await mkdtemp(path.join(tmpdir(), "wiggly-s9-"));
+  const { token, route } = await signedRoute(undefined, { runsRoot });
+  route.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 2000, purchasedCredits: 0 });
+  route.ledger.attachPhotos("user_1", ["Leo", "Mom"]);
+
+  const started = route.ledger.submitDraft("user_1", { storyboard });
+  if (!started.ok) throw new Error("Submit failed");
+  const jobId = String(started.data.job_id);
+
+  const runDir = path.join(runsRoot, "my-pixar-story", "runs", "run-1");
+  await mkdir(path.join(runDir, "outputs"), { recursive: true });
+  const masterMp4 = path.join(runDir, "outputs", "master.mp4");
+  await writeFile(masterMp4, "fake mp4 content");
+  const stateFile = path.join(runDir, "outputs", "state.json");
+  await writeFile(stateFile, JSON.stringify({
+    runId: "run-1",
+    status: "ready",
+    assetFiles: { "master-video": masterMp4 },
+    masterVideo: masterMp4,
+  }));
+  route.ledger.setRun("user_1", jobId, { runId: "run-1", stateFile });
+  route.ledger.setStage("user_1", jobId, "ready");
+
+  // Call wiggly_get_draft
+  const res1 = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_get_draft",
+    arguments: { job_id: jobId },
+  }, "wiggly_get_draft"));
+  const body1 = await res1.json();
+  assert.ok(!body1.result.isError);
+  const data1 = JSON.parse(body1.result.content[0].text);
+  assert.equal(data1.stage, "ready");
+  assert.ok(data1.videoUrl);
+  assert.match(data1.videoUrl, /\/renders\/.*[?&]sig=/);
+
+  // Calling again later generates another valid signed URL
+  const res2 = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_get_draft",
+    arguments: { job_id: jobId },
+  }, "wiggly_get_draft"));
+  const body2 = await res2.json();
+  assert.ok(!body2.result.isError);
+  const data2 = JSON.parse(body2.result.content[0].text);
+  assert.equal(data2.stage, "ready");
+  assert.ok(data2.videoUrl);
 });

@@ -295,5 +295,6 @@ export default defineSchema({
     beatUrls: v.optional(v.array(v.string())),
     stillUrls: v.optional(v.array(v.string())),
     createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
   }).index("by_accountId", ["accountId"]).index("by_jobId", ["jobId"]).index("by_stage", ["stage"]),
 });

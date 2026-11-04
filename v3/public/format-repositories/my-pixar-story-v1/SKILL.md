@@ -130,6 +130,17 @@ Connect the official Wiggly MCP server:
 }
 ```
 
+### Option B: Developer Format Writing Tools (V2 Agent Pipeline)
+1. `wiggly_open_upload`, then `wiggly_list_uploads`.
+2. `wiggly_submit_draft` with format `my-pixar-story`.
+3. `wiggly_story_director`: Stage play drafting.
+4. `wiggly_character_architect` and `wiggly_location_scout`: Sheet creation.
+5. Poll `wiggly_get_draft` and approve sheets with `wiggly_approve_draft`.
+6. `wiggly_storyboard_artist`: Animatic panels.
+7. Poll `wiggly_get_draft` for panel stills and animatic video.
+8. `wiggly_seedance_compiler`: Production clip prompts.
+9. `wiggly_approve_draft` for production render.
+
 ### Credits & Pricing:
 - $19 grants 1,900 credits.
 - A still costs 8 credits (Nano Banana 2.1).

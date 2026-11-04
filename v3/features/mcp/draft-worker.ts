@@ -407,7 +407,12 @@ export async function approveDraft(input: {
   ledger: MemoryFilmLedger;
   accountId: string;
   jobId: string;
-  decision: Record<string, unknown>;
+  gate?: "sheets" | "animatic" | "production";
+  decision?: "approve" | "reject" | Record<string, unknown>;
+  notes?: string;
+  shot_ids?: string[];
+  asset_ids?: string[];
+  acknowledged_credits?: number;
   seconds?: number;
   resumeGraph?: (resume: { runId: string; decision: Record<string, unknown> }) => Promise<{ state: StudioState }>;
   renderStill?: (request: { prompt?: string; dest?: string; itemId?: string; referencePaths?: string[] }) => Promise<{ dest?: string }>;
@@ -420,10 +425,45 @@ export async function approveDraft(input: {
     return { ok: false as const, message: "This run is paused for credits. Top up, then the worker resumes it. Do not call wiggly_approve_draft." };
   }
 
-  const isProductionGate = state.status === "awaiting-production" || state.renderStage === "clips" || (Array.isArray(state.pendingApproval) && state.pendingApproval.includes("production"));
+  const rawDecisionObj = typeof input.decision === "object" && input.decision !== null ? input.decision as Record<string, unknown> : {};
+  const isLegacyShape = !input.gate && (
+    rawDecisionObj.approvedAssets !== undefined ||
+    rawDecisionObj.rejectedShots !== undefined ||
+    rawDecisionObj.target !== undefined ||
+    typeof rawDecisionObj.decision === "string"
+  );
+  if (isLegacyShape) {
+    console.warn("[wiggly_approve_draft] Legacy decision shape received:", JSON.stringify(rawDecisionObj));
+  }
 
-  if (isProductionGate && input.decision?.decision === "reject") {
-    const notes = typeof input.decision.notes === "string" ? input.decision.notes : "";
+  const passedGate = input.gate ?? (typeof rawDecisionObj.gate === "string" ? rawDecisionObj.gate as "sheets" | "animatic" | "production" : undefined);
+  const decisionType = (typeof input.decision === "string"
+    ? input.decision
+    : (typeof rawDecisionObj.decision === "string" ? rawDecisionObj.decision : "approve")) as "approve" | "reject";
+  const notes = input.notes ?? (typeof rawDecisionObj.notes === "string" ? rawDecisionObj.notes : undefined);
+  const shotIds = input.shot_ids ?? (Array.isArray(rawDecisionObj.shot_ids) ? rawDecisionObj.shot_ids as string[] : (Array.isArray(rawDecisionObj.rejectedShots) ? rawDecisionObj.rejectedShots as string[] : undefined));
+  const assetIds = input.asset_ids ?? (Array.isArray(rawDecisionObj.asset_ids) ? rawDecisionObj.asset_ids as string[] : (Array.isArray(rawDecisionObj.approvedAssets) ? rawDecisionObj.approvedAssets as string[] : undefined));
+  const rawAck = input.acknowledged_credits ?? rawDecisionObj.acknowledged_credits ?? rawDecisionObj.acknowledgedCredits;
+  const ackCredits = typeof rawAck === "number" ? rawAck : (rawAck ? Number(rawAck) : undefined);
+
+  const isProductionGate = state.status === "awaiting-production" || state.renderStage === "clips" || (Array.isArray(state.pendingApproval) && state.pendingApproval.includes("production"));
+  const isAnimaticGate = state.renderStage === "panels" || (Array.isArray(state.pendingApproval) && state.pendingApproval.includes("animatic"));
+  const currentGate: "sheets" | "animatic" | "production" = isProductionGate ? "production" : (isAnimaticGate ? "animatic" : "sheets");
+
+  if (passedGate && passedGate !== currentGate) {
+    const nextStep = currentGate === "sheets"
+      ? "Approve character & location sheets with wiggly_approve_draft(job_id, gate: 'sheets', decision: 'approve')."
+      : currentGate === "animatic"
+      ? "Approve animatic with wiggly_approve_draft(job_id, gate: 'animatic', decision: 'approve')."
+      : "Approve production with wiggly_approve_draft(job_id, gate: 'production', decision: 'approve', acknowledged_credits: ...).";
+    return {
+      ok: false as const,
+      message: `Mismatched gate: current gate is "${currentGate}", received "${passedGate}". ${nextStep}`,
+      current_gate: currentGate,
+    };
+  }
+
+  if (isProductionGate && decisionType === "reject") {
     if (notes) {
       (state as Record<string, unknown>).productionNotes = notes;
     }
@@ -437,23 +477,21 @@ export async function approveDraft(input: {
       data: {
         stage,
         status: "awaiting-production",
-        message: "Production notes recorded. Reroll clips individually with wiggly_reroll_clip(job_id, clip_id, prompt_notes), or approve with wiggly_approve_draft.",
+        message: "Production notes recorded. Reroll clips individually with wiggly_render_clip(job_id, clip_id, prompt_notes), or approve with wiggly_approve_draft.",
       },
     };
   }
 
-  if (isProductionGate && input.decision?.decision === "approve") {
+  if (isProductionGate && decisionType === "approve") {
     const segments = ((state as Record<string, unknown>).seedanceCompiler as { output?: { segments?: Array<{ totalDurationSec?: number; generationPayload?: { durationSec?: number } }> } })?.output?.segments ?? [];
-    const targetClips = (input.decision.clips ?? input.decision.approvedClips ?? input.decision.targetClips) as unknown[] | undefined;
+    const targetClips = (rawDecisionObj.clips ?? rawDecisionObj.approvedClips ?? rawDecisionObj.targetClips) as unknown[] | undefined;
     const activeSegments = Array.isArray(targetClips) && targetClips.length > 0
       ? segments.filter((s, idx) => targetClips.map((c) => String(c).replace(/^(clip|segment|part)[-_\s]*/i, "")).includes(String(idx + 1)))
       : segments;
     const totalDurationSec = activeSegments.reduce((sum, seg) => sum + (seg.generationPayload?.durationSec ?? seg.totalDurationSec ?? 24), 0) || (job.storyboard?.beats?.reduce((sum, b) => sum + (b.duration_sec || 0), 0) ?? 72);
     const productionEstimate = totalDurationSec * 21;
 
-    const rawAck = input.decision.acknowledged_credits ?? input.decision.acknowledgedCredits;
-    const acknowledged = typeof rawAck === "number" ? rawAck : Number(rawAck);
-    if (!acknowledged || acknowledged !== productionEstimate) {
+    if (!ackCredits || ackCredits !== productionEstimate) {
       return {
         ok: false as const,
         message: `Gate 3 (Production) approval requires acknowledged_credits: ${productionEstimate} (renders ${totalDurationSec}s of Seedance video @ 21 credits/sec). Please call wiggly_approve_draft with acknowledged_credits: ${productionEstimate}.`,
@@ -471,11 +509,28 @@ export async function approveDraft(input: {
     }
   }
 
-  if (input.decision?.decision === "reject" && Array.isArray(input.decision.rejectedShots) && input.decision.rejectedShots.length > 0) {
+  if (isAnimaticGate && decisionType === "reject" && (!shotIds || shotIds.length === 0)) {
+    (state as Record<string, unknown>).animaticNotes = notes ?? "";
+    (state as Record<string, unknown>).animaticRejected = true;
+    state.status = "awaiting-animatic";
+    state.pendingApproval = ["animatic"];
+    await writeFile(job.stateFile, JSON.stringify(state, null, 2));
+    const stage = applyStudioState(input.ledger, input.accountId, input.jobId, state);
+    return {
+      ok: true as const,
+      data: {
+        stage,
+        status: "awaiting-animatic",
+        target: "storyboard-artist",
+        message: `Animatic rejected with notes: "${notes ?? ""}". Reopening storyboard artist tool.`,
+      },
+    };
+  }
+
+  if (decisionType === "reject" && shotIds && shotIds.length > 0) {
     const { rerollPanel } = await import("./render-stage");
-    const notes = typeof input.decision.notes === "string" ? input.decision.notes : undefined;
     const rerolled = [];
-    for (const rawShotId of input.decision.rejectedShots) {
+    for (const rawShotId of shotIds) {
       const res = await rerollPanel({
         ledger: input.ledger,
         accountId: input.accountId,
@@ -491,13 +546,26 @@ export async function approveDraft(input: {
     const stage = applyStudioState(input.ledger, input.accountId, input.jobId, updatedState);
     return { ok: true as const, data: { stage, status: updatedState.status ?? stage, rerolled } };
   }
-  const rawApproved = input.decision?.approvedAssets;
-  let normalizedDecision = input.decision;
+
+  let rawApproved: unknown = assetIds ?? rawDecisionObj.approvedAssets;
+  if (!rawApproved && decisionType === "approve" && currentGate === "sheets") {
+    const rawState = state as Record<string, unknown>;
+    const charTags = ((rawState.characterArchitect as any)?.output?.characters ?? []).map((c: any) => c.elementTag || c.imageTag || c.characterId).filter(Boolean);
+    const locTags = ((rawState.locationScout as any)?.output?.locations ?? []).map((l: any) => l.elementTag || l.locationId).filter(Boolean);
+    const propTags = ((rawState.heroProps as any) ?? []).map((p: any) => p.elementTag || p.propTag || p.name).filter(Boolean);
+    rawApproved = [...charTags, ...locTags, ...propTags];
+  }
+
+  let normalizedDecision: Record<string, unknown> = {
+    decision: decisionType,
+    ...(notes ? { notes } : {}),
+    ...rawDecisionObj,
+  };
   if (Array.isArray(rawApproved)) {
     const approvedMap = Object.fromEntries(
-      rawApproved.map((tag) => [tag, canonicalAssetKey(tag, state as Record<string, unknown>)])
+      rawApproved.map((tag: string) => [tag, canonicalAssetKey(tag, state as Record<string, unknown>)])
     );
-    normalizedDecision = { ...input.decision, approvedAssets: approvedMap };
+    normalizedDecision = { ...normalizedDecision, approvedAssets: approvedMap };
   } else if (rawApproved && typeof rawApproved === "object") {
     const approvedMap = Object.fromEntries(
       Object.entries(rawApproved).map(([tag, val]) => [
@@ -507,7 +575,7 @@ export async function approveDraft(input: {
           : canonicalAssetKey(tag, state as Record<string, unknown>),
       ])
     );
-    normalizedDecision = { ...input.decision, approvedAssets: approvedMap };
+    normalizedDecision = { ...normalizedDecision, approvedAssets: approvedMap };
   }
   if (normalizedDecision?.approvedAssets) {
     const assetFiles = { ...((state.assetFiles as Record<string, string> | undefined) ?? {}) };
