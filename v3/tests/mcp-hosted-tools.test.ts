@@ -140,6 +140,7 @@ test("a signed WorkOS token is accepted and a token for another resource is reje
     "wiggly_storyboard_artist",
     "wiggly_seedance_compiler",
     "wiggly_get_draft",
+    "wiggly_cancel_draft",
     "wiggly_approve_draft",
     "wiggly_reroll_panel",
     "wiggly_render_clip",
@@ -406,4 +407,159 @@ test("wiggly_render_clip returns status rendering immediately in async mode", as
   const stateOnDisk = JSON.parse(await readFile(stateFile, "utf8"));
   assert.ok(stateOnDisk.renderingClip);
   assert.equal(stateOnDisk.renderingClip.clipId, "1");
+});
+
+test("S1: duplicate submit stops lying and cancel draft frees the slot", async () => {
+  const { token, route } = await signedRoute();
+  route.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 1900 });
+  route.ledger.attachPhotos("user_1", ["Leo", "Mom"]);
+
+  // 1. First submit
+  const first = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_submit_draft",
+    arguments: { storyboard },
+  }, "wiggly_submit_draft"));
+  const firstBody = await first.json();
+  assert.equal(first.status, 200);
+  const firstData = firstBody.result.structuredContent;
+  assert.ok(firstData.job_id);
+  assert.ok(firstData.estimatedCredits);
+  assert.equal(firstData.estimatedCredits.total, 1718); // 104 + 144 + 70s*21
+  const jobId = firstData.job_id;
+
+  // 2. Duplicate submit with same storyboard returns alreadyActive: true
+  const dup = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_submit_draft",
+    arguments: { storyboard },
+  }, "wiggly_submit_draft"));
+  const dupBody = await dup.json();
+  assert.equal(dup.status, 200, JSON.stringify(dupBody));
+  const dupData = dupBody.result.structuredContent;
+  assert.equal(dupData.alreadyActive, true);
+  assert.equal(dupData.job_id, jobId);
+
+  // 3. Duplicate submit with different storyboard is refused with helpful message
+  const differentStoryboard = {
+    ...storyboard,
+    title: "A Completely Different Film Title",
+  };
+  const diff = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_submit_draft",
+    arguments: { storyboard: differentStoryboard },
+  }, "wiggly_submit_draft"));
+  const diffBody = await diff.json();
+  assert.equal(diffBody.result.isError, true);
+  assert.match(diffBody.result.content[0].text, /with a different storyboard/);
+  assert.match(diffBody.result.content[0].text, /wiggly_cancel_draft/);
+
+  // 4. Cancel while running is refused
+  route.ledger.setStage("user_1", jobId, "running");
+  const cancelRunning = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_cancel_draft",
+    arguments: { job_id: jobId },
+  }, "wiggly_cancel_draft"));
+  const crBody = await cancelRunning.json();
+  assert.equal(crBody.result.isError, true);
+  assert.match(crBody.result.content[0].text, /Wait for the current step to finish/);
+
+  // 5. Cancel while awaiting-approval succeeds and frees the job slot
+  route.ledger.setStage("user_1", jobId, "awaiting-approval");
+  const cancelAwaiting = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_cancel_draft",
+    arguments: { job_id: jobId },
+  }, "wiggly_cancel_draft"));
+  const caBody = await cancelAwaiting.json();
+  assert.ok(!caBody.result.isError, JSON.stringify(caBody));
+  assert.equal(caBody.result.structuredContent.stage, "cancelled");
+
+  // 6. Account slot is now freed, new storyboard can be submitted!
+  const resubmit = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_submit_draft",
+    arguments: { storyboard: differentStoryboard },
+  }, "wiggly_submit_draft"));
+  const resubmitBody = await resubmit.json();
+  assert.equal(resubmit.status, 200);
+  assert.ok(!resubmitBody.result.isError);
+  assert.notEqual(resubmitBody.result.structuredContent.job_id, jobId);
+});
+
+test("S2 & S3: Gate 3 cost estimate, acknowledged_credits enforcement, and reject never sets failed", async () => {
+  const { token, route } = await signedRoute();
+  route.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 1900 });
+  route.ledger.attachPhotos("user_1", ["Leo", "Mom"]);
+
+  const started = route.ledger.submitDraft("user_1", { storyboard });
+  if (!started.ok) throw new Error("Draft submit failed");
+  const jobId = String(started.data.job_id);
+  const runDir = path.join(tmpdir(), `wiggly-gate3-test-${jobId}`);
+  const stateFile = path.join(runDir, "outputs", "state.json");
+  await mkdir(path.dirname(stateFile), { recursive: true });
+  await writeFile(stateFile, JSON.stringify({
+    status: "awaiting-production",
+    renderStage: "clips",
+    pendingApproval: ["production"],
+    seedanceCompiler: {
+      output: {
+        segments: [
+          { segmentId: 1, generationPayload: { durationSec: 24 } },
+          { segmentId: 2, generationPayload: { durationSec: 24 } },
+          { segmentId: 3, generationPayload: { durationSec: 24 } },
+        ],
+      },
+    },
+  }));
+  route.ledger.setRun("user_1", jobId, { runId: jobId, stateFile });
+  route.ledger.setStage("user_1", jobId, "awaiting-approval");
+
+  // 1. wiggly_get_draft returns gate: 'production' and nextStepCost: 1512
+  const polled = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_get_draft",
+    arguments: { job_id: jobId },
+  }, "wiggly_get_draft"));
+  const pollBody = await polled.json();
+  const draftContent = pollBody.result.structuredContent;
+  assert.equal(draftContent.gate, "production");
+  assert.equal(draftContent.nextStepCost, 1512); // 72s * 21
+
+  // 2. Rejecting Gate 3 records notes, stays in awaiting-production, and NEVER sets failed
+  const rejectGate3 = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_approve_draft",
+    arguments: {
+      job_id: jobId,
+      decision: { decision: "reject", notes: "Make lighting warmer and pacing slower" },
+    },
+  }, "wiggly_approve_draft"));
+  const rejBody = await rejectGate3.json();
+  assert.ok(!rejBody.result.isError, JSON.stringify(rejBody));
+  const rejData = rejBody.result.structuredContent;
+  assert.equal(rejData.status, "awaiting-production");
+  const stateAfterReject = JSON.parse(await readFile(stateFile, "utf8"));
+  assert.equal(stateAfterReject.status, "awaiting-production");
+  assert.equal(stateAfterReject.productionNotes, "Make lighting warmer and pacing slower");
+
+  // 3. Approving without acknowledged_credits is refused
+  const approveNoAck = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_approve_draft",
+    arguments: {
+      job_id: jobId,
+      decision: { decision: "approve" },
+    },
+  }, "wiggly_approve_draft"));
+  const noAckBody = await approveNoAck.json();
+  assert.equal(noAckBody.result.isError, true);
+  assert.match(noAckBody.result.content[0].text, /requires acknowledged_credits: 1512/);
+
+  // 4. Approving with insufficient balance is refused with top-up link
+  route.ledger.setAccount("user_1", { subscribed: true, monthlyCredits: 100, purchasedCredits: 0 });
+  const approveLowBalance = await route.POST(mcpRequest(token, "tools/call", {
+    name: "wiggly_approve_draft",
+    arguments: {
+      job_id: jobId,
+      decision: { decision: "approve", acknowledged_credits: 1512 },
+    },
+  }, "wiggly_approve_draft"));
+  const lowBalBody = await approveLowBalance.json();
+  assert.equal(lowBalBody.result.isError, true);
+  assert.match(lowBalBody.result.content[0].text, /Insufficient credits for production render/);
+  assert.match(lowBalBody.result.content[0].text, /Top up here:/);
 });

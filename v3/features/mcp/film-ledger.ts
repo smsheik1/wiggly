@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { CREDIT_PACK_GRANT, MONTHLY_CREDIT_GRANT, generationCredits } from "./credits";
 
 export function checkoutUrl(kind: CheckoutKind, token: string) {
@@ -15,7 +16,19 @@ function openCheckout(account: Account, kind: CheckoutKind) {
   return checkoutUrl(kind, account.checkoutToken);
 }
 
-export const DRAFT_STAGES = ["queued", "running", "awaiting-approval", "awaiting-credits", "lineup", "beats", "assembly", "ready", "failed"] as const;
+export const DRAFT_STAGES = [
+  "queued",
+  "running",
+  "awaiting-approval",
+  "awaiting-credits",
+  "lineup",
+  "beats",
+  "assembly",
+  "ready",
+  "failed",
+  "cancelled",
+  "abandoned",
+] as const;
 export type DraftStage = (typeof DRAFT_STAGES)[number];
 const ACTIVE_STAGES: DraftStage[] = ["queued", "running", "awaiting-approval", "awaiting-credits", "lineup", "beats", "assembly"];
 export const INSTALLED_FORMAT_IDS = ["my-pixar-story"] as const;
@@ -39,6 +52,41 @@ export type Storyboard = {
   /** How many lineup gates have already failed. Worker bookkeeping, persisted with the storyboard. */
   lineupGateAttempts?: number;
 };
+
+export function hashStoryboard(storyboard: Storyboard): string {
+  const canonical = {
+    format: storyboard.format?.trim() ?? "",
+    title: storyboard.title.trim(),
+    subject: storyboard.subject.trim(),
+    beats: (storyboard.beats ?? []).map((beat) => ({
+      duration_sec: beat.duration_sec,
+      action: beat.action.trim(),
+      camera: beat.camera.trim(),
+      narration_line: beat.narration_line?.trim() ?? "",
+    })),
+    characters: (storyboard.characters ?? []).map((character) => ({
+      name: character.name.trim(),
+      description: character.description?.trim() ?? "",
+      skinTone: character.skinTone?.trim() ?? "",
+    })),
+    hero_props: (storyboard.hero_props ?? []).map((prop) => prop.name.trim()),
+  };
+  return crypto.createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
+}
+
+export function estimateFilmCredits(storyboard: Storyboard): {
+  sheets: number;
+  animatic: number;
+  production: number;
+  total: number;
+} {
+  const sheets = 104; // standard 13 stills x 8 credits
+  const animatic = 144; // 18 panels x 8 credits
+  const totalSec = storyboard.beats.reduce((sum, b) => sum + (b.duration_sec || 0), 0);
+  const production = totalSec * 21;
+  const total = sheets + animatic + production;
+  return { sheets, animatic, production, total };
+}
 
 export const CHARACTER_DESIGN_LABELS = ["Eyes", "Face", "Hair", "Skin", "Silhouette", "Wardrobe"] as const;
 
@@ -64,6 +112,7 @@ export type DraftJob = {
   error?: string;
   correlationId: string;
   storyboard?: Storyboard;
+  storyboardHash?: string;
   runId?: string;
   stateFile?: string;
   beatUrls?: string[];
@@ -230,6 +279,7 @@ export class MemoryFilmLedger {
   }
 
   private jobPayload(job: DraftJob): Record<string, unknown> {
+    const estimate = job.storyboard ? estimateFilmCredits(job.storyboard) : undefined;
     return {
       job_id: job.jobId,
       stage: job.stage,
@@ -238,6 +288,8 @@ export class MemoryFilmLedger {
       ...(job.videoUrl ? { videoUrl: job.videoUrl } : {}),
       ...(job.runId ? { run_id: job.runId } : {}),
       ...(job.stateFile ? { state_file: job.stateFile } : {}),
+      ...(job.storyboardHash ? { storyboardHash: job.storyboardHash } : {}),
+      ...(estimate ? { estimatedCredits: estimate } : {}),
       ...(job.error ? { error: job.error, correlationId: job.correlationId, creditsRefunded: job.creditsRefunded } : {}),
     };
   }
@@ -269,14 +321,33 @@ export class MemoryFilmLedger {
       };
     }
 
+    const inputHash = hashStoryboard(input.storyboard);
     const running = this.activeJob(account);
-    if (running) return { ok: true, data: this.jobPayload(running) };
+    if (running) {
+      if (running.storyboardHash && running.storyboardHash === inputHash) {
+        return {
+          ok: true,
+          data: {
+            ...this.jobPayload(running),
+            alreadyActive: true,
+            creditsBalance: credits,
+            message: `Job ${running.jobId} is already active with this storyboard at stage "${running.stage}". Continue it with wiggly_get_draft or approve with wiggly_approve_draft.`,
+          },
+        };
+      } else {
+        return {
+          ok: false,
+          message: `Job ${running.jobId} is at ${running.stage} with a different storyboard. Continue it with wiggly_get_draft or cancel it with wiggly_cancel_draft, then submit again.`,
+        };
+      }
+    }
 
     const issues = problems(input.storyboard, account.labels);
     if (issues.length > 0) {
       return { ok: false, message: `${issues.join(" ")} Next tool: wiggly_submit_draft.` };
     }
 
+    const estimate = estimateFilmCredits(input.storyboard);
     const job: DraftJob = {
       jobId: crypto.randomUUID(),
       stage: "queued",
@@ -284,9 +355,40 @@ export class MemoryFilmLedger {
       creditsRefunded: false,
       correlationId: crypto.randomUUID(),
       storyboard: input.storyboard,
+      storyboardHash: inputHash,
     };
     account.jobs.push(job);
-    return { ok: true, data: this.jobPayload(job) };
+    return {
+      ok: true,
+      data: {
+        ...this.jobPayload(job),
+        creditsBalance: credits,
+        estimatedCredits: estimate,
+        ...(credits < estimate.total
+          ? {
+              shortfall: estimate.total - credits,
+              topUpUrl: openCheckout(account, account.subscribed ? "pack" : "subscription"),
+            }
+          : {}),
+      },
+    };
+  }
+
+  cancelDraft(accountId: string, jobId: string): LedgerResult {
+    const account = this.account(accountId);
+    const job = account.jobs.find((item) => item.jobId === jobId);
+    if (!job) return { ok: false, message: `Job ${jobId} not found.` };
+    if (job.stage === "ready") return { ok: false, message: "Job is already completed and cannot be cancelled." };
+    if (job.stage === "cancelled") return { ok: false, message: "Job is already cancelled." };
+    if (job.stage === "failed") return { ok: false, message: "Job has already failed." };
+    if (job.stage === "running" || job.stage === "queued") {
+      return { ok: false, message: "Wait for the current step to finish before cancelling." };
+    }
+    if (job.stage === "awaiting-approval" || job.stage === "awaiting-credits") {
+      job.stage = "cancelled";
+      return { ok: true, data: { job_id: jobId, stage: "cancelled", message: `Job ${jobId} cancelled.` } };
+    }
+    return { ok: false, message: `Cannot cancel job in stage "${job.stage}".` };
   }
 
   spendCredits(accountId: string, jobId: string, credits: number): LedgerResult {
@@ -390,14 +492,17 @@ export class MemoryFilmLedger {
     if (videoUrl) job.videoUrl = videoUrl;
   }
 
-  failJob(accountId: string, jobId: string, error: string) {
+  failJob(accountId: string, jobId: string, error: string, stageCreditsCharged?: number) {
     const account = this.account(accountId);
     const job = account.jobs.find((item) => item.jobId === jobId);
     if (!job || job.stage === "ready" || job.creditsRefunded) return;
     job.stage = "failed";
     job.error = error;
     job.creditsRefunded = true;
-    account.purchasedCredits += job.creditsCharged;
+    const refundAmount = typeof stageCreditsCharged === "number" && stageCreditsCharged >= 0
+      ? stageCreditsCharged
+      : job.creditsCharged;
+    account.purchasedCredits += refundAmount;
   }
 
   markFailed(accountId: string, jobId: string, error: string) {

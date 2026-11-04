@@ -71,6 +71,7 @@ async function readAccount(ctx: QueryCtx | MutationCtx, workosUserId: string): P
       ...(job.stillUrls ? { stillUrls: job.stillUrls } : {}),
       ...(job.runId ? { runId: job.runId } : {}),
       ...(job.stateFile ? { stateFile: job.stateFile } : {}),
+      ...(job.storyboardHash ? { storyboardHash: job.storyboardHash } : {}),
     })),
   };
 }
@@ -156,6 +157,7 @@ async function writeAccount(ctx: MutationCtx, workosUserId: string, account: Acc
       ...(job.stillUrls ? { stillUrls: job.stillUrls } : {}),
       ...(job.runId ? { runId: job.runId } : {}),
       ...(job.stateFile ? { stateFile: job.stateFile } : {}),
+      ...(job.storyboardHash ? { storyboardHash: job.storyboardHash } : {}),
     });
   }
 }
@@ -316,5 +318,24 @@ export const failJob = internalMutation({
     });
     await writeAccount(ctx, args.workosUserId, next);
     return null;
+  },
+});
+
+export const cancelDraft = internalMutation({
+  args: { workosUserId: v.string(), jobId: v.string() },
+  returns: v.object({
+    ok: v.boolean(),
+    message: v.optional(v.string()),
+    data: v.optional(v.record(v.string(), v.any())),
+  }),
+  handler: async (ctx, args) => {
+    const account = await readAccount(ctx, args.workosUserId);
+    const { result, next } = apply(account, args.workosUserId, (ledger) => {
+      return ledger.cancelDraft(args.workosUserId, args.jobId);
+    });
+    if ((result as { ok?: boolean })?.ok) {
+      await writeAccount(ctx, args.workosUserId, next);
+    }
+    return result as { ok: boolean; message?: string; data?: Record<string, unknown> };
   },
 });
