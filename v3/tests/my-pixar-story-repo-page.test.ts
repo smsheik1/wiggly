@@ -10,10 +10,13 @@ const profile = getDiscoveryFormatProfile("my-pixar-story");
 assert.ok(profile, "my-pixar-story format profile must exist");
 assert.equal(profile.name, "My Pixar Story");
 assert.equal(profile.version, "2.0.0");
-assert.equal(profile.proofEntries.length, 1);
+assert.equal(profile.proofEntries.length, 2);
 assert.equal(profile.proofEntries[0].id, "my-pixar-story-shaz-for-mia");
 assert.equal(profile.proofEntries[0].media.kind, "video");
 assert.equal(profile.proofEntries[0].media.src, "/format-repositories/my-pixar-story-v1/examples/shaz-for-mia-web.mp4");
+assert.equal(profile.proofEntries[1].id, "my-pixar-story-my-friend-z");
+assert.equal(profile.proofEntries[1].media.kind, "video");
+assert.equal(profile.proofEntries[1].media.src, "/format-repositories/my-pixar-story-v1/examples/my-friend-z-web.mp4");
 
 const pixarShelf = discoveryShelfDefinitions.find((s) => s.id === "my-pixar-story");
 assert.ok(pixarShelf, "my-pixar-story shelf must exist in discoveryShelfDefinitions");
@@ -23,14 +26,19 @@ assert.deepEqual(pixarShelf.formats, ["my-pixar-story"]);
 const publishedEntries = getPublishedDiscoveryEntries();
 const publishedPixarEntry = publishedEntries.find((e) => e.id === "my-pixar-story-shaz-for-mia");
 assert.ok(publishedPixarEntry, "my-pixar-story-shaz-for-mia must be published and visible on the Discover page");
+const publishedFriendZEntry = publishedEntries.find((e) => e.id === "my-pixar-story-my-friend-z");
+assert.ok(publishedFriendZEntry, "my-pixar-story-my-friend-z must be published and visible on the Discover page");
 
 const discoveryShelves = groupDiscoveryEntriesByShelf(publishedEntries);
 assert.equal(discoveryShelves[0]?.id, "my-pixar-story", "My Pixar Story must be the first shelf at the top of the Discover page");
+assert.equal(discoveryShelves[0]?.entries.length, 2, "My Pixar Story shelf must include both published video memoirs");
 
 // 2. Physical Asset Parity verification
 const publicAssets = [
   "public/format-repositories/my-pixar-story-v1/examples/shaz-for-mia-web.mp4",
   "public/format-repositories/my-pixar-story-v1/examples/shaz-for-mia-poster.jpg",
+  "public/format-repositories/my-pixar-story-v1/examples/my-friend-z-web.mp4",
+  "public/format-repositories/my-pixar-story-v1/examples/my-friend-z-poster.jpg",
   "public/format-repositories/my-pixar-story-v1/examples/character-lineup.png",
   "public/format-repositories/my-pixar-story-v1/examples/story-grid.png",
   "public/format-repositories/my-pixar-story-v1/downloads/wiggly-my-pixar-story-format-kit.zip",

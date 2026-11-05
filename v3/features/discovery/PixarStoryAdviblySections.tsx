@@ -300,11 +300,17 @@ function PortraitClip({
 
 export function PixarStoryAdviblySections({
   film,
+  films,
 }: {
-  film: DiscoveryFormatProfile["proofEntries"][number];
+  film?: DiscoveryFormatProfile["proofEntries"][number];
+  films?: DiscoveryFormatProfile["proofEntries"];
 }) {
-  const clipSrc = film?.media.kind === "video" ? film.media.src : filmSrc;
-  const clipPoster = film?.media.kind === "video" ? film.media.poster : poster;
+  const allFilms = films && films.length > 0 ? films : film ? [film] : [];
+  const initialIndex = film ? Math.max(0, allFilms.findIndex((f) => f.id === film.id)) : 0;
+  const [selectedFilmIndex, setSelectedFilmIndex] = useState(initialIndex);
+  const activeFilm = allFilms[selectedFilmIndex] || film;
+  const clipSrc = activeFilm?.media.kind === "video" ? activeFilm.media.src : filmSrc;
+  const clipPoster = activeFilm?.media.kind === "video" ? activeFilm.media.poster : poster;
   const pipelineSteps = [
     {
       num: 1,
@@ -529,13 +535,32 @@ export function PixarStoryAdviblySections({
         <div className="mx-auto max-w-[1040px]">
           <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8d897f]">Finished memoir</p>
           <h2 className="pixar-display mt-3 text-center text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">
-            {film?.title ?? "The film."}
+            {activeFilm?.title ?? "The film."}
           </h2>
-          {film?.media.kind === "video" ? (
+          {allFilms.length > 1 ? (
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+              {allFilms.map((entry, idx) => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => setSelectedFilmIndex(idx)}
+                  className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${
+                    idx === selectedFilmIndex
+                      ? "bg-[#171614] text-white shadow-sm"
+                      : "border border-black/10 bg-white text-[#5c5850] hover:bg-black/[0.04]"
+                  }`}
+                >
+                  {entry.title.split(" — ")[0] || entry.brand}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {activeFilm?.media.kind === "video" ? (
             <video
-              className="mt-10 block aspect-video w-full rounded-2xl bg-black object-contain shadow-[0_24px_60px_rgba(0,0,0,0.14)]"
-              src={film.media.src}
-              poster={film.media.poster}
+              key={activeFilm.media.src}
+              className="mt-8 block aspect-video w-full rounded-2xl bg-black object-contain shadow-[0_24px_60px_rgba(0,0,0,0.14)]"
+              src={activeFilm.media.src}
+              poster={activeFilm.media.poster}
               controls
               playsInline
               preload="metadata"
