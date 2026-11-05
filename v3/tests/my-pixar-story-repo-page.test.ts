@@ -12,9 +12,11 @@ assert.equal(profile.name, "My Pixar Story");
 assert.equal(profile.version, "2.0.0");
 assert.equal(profile.proofEntries.length, 2);
 assert.equal(profile.proofEntries[0].id, "my-pixar-story-shaz-for-mia");
+assert.equal(profile.proofEntries[0].title, "For Mia — I Still Leave the Porch Light On");
 assert.equal(profile.proofEntries[0].media.kind, "video");
 assert.equal(profile.proofEntries[0].media.src, "/format-repositories/my-pixar-story-v1/examples/shaz-for-mia-web.mp4");
 assert.equal(profile.proofEntries[1].id, "my-pixar-story-my-friend-z");
+assert.equal(profile.proofEntries[1].title, "My Friend Z — Still Spotting You");
 assert.equal(profile.proofEntries[1].media.kind, "video");
 assert.equal(profile.proofEntries[1].media.src, "/format-repositories/my-pixar-story-v1/examples/my-friend-z-web.mp4");
 
