@@ -290,7 +290,7 @@ export default async function FormatPage({
       ) : null}
 
       {slug === "my-pixar-story" ? (
-        <PixarStoryAdviblySections film={format.proofEntries[0]} />
+        <PixarStoryAdviblySections film={format.proofEntries[0]} films={format.proofEntries} />
       ) : (
         <>
           {repoPage.kind === "shared" ? (

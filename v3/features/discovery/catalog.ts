@@ -2150,6 +2150,23 @@ export const discoveryCatalog: DiscoveryEntry[] = [
     format: { slug: "my-pixar-story", name: "My Pixar Story", version: "2.0.0", owner: "Wiggly Studio" },
   },
   {
+    id: "my-pixar-story-my-friend-z",
+    status: "published",
+    order: 2,
+    brand: "Pixar-Style Memoir · Brotherhood & Late Nights",
+    title: "My Friend Z — Still Spotting You",
+    curatorNote: "An 87-second 3D animated friendship memoir written from real memories. Features continuous character identity across the grind (the bench press, late-night diner runs, gas station snacks), hero lighting, and an authentic brotherhood tribute.",
+    goal: "story",
+    media: {
+      kind: "video",
+      src: "/format-repositories/my-pixar-story-v1/examples/my-friend-z-web.mp4",
+      poster: "/format-repositories/my-pixar-story-v1/examples/my-friend-z-poster.jpg",
+      durationLabel: "87 sec",
+      aspectRatio: "16:9",
+    },
+    format: { slug: "my-pixar-story", name: "My Pixar Story", version: "2.0.0", owner: "Wiggly Studio" },
+  },
+  {
     id: "character-gameplay-how-batman-sleeps",
     status: "published",
     order: 16,

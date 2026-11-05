@@ -1,9 +1,15 @@
 {
   "assets": [
     {
-      "label": "Master 1080p Movie",
+      "label": "Master 1080p Movie (Father Memoir)",
       "description": "72-second widescreen master film with native synchronized dialogue, Foley, and score.",
       "href": "/format-repositories/my-pixar-story-v1/examples/shaz-for-mia-web.mp4",
+      "image": false
+    },
+    {
+      "label": "Master 1080p Movie (Friendship Memoir)",
+      "description": "87-second widescreen master film with native synchronized dialogue, Foley, and score.",
+      "href": "/format-repositories/my-pixar-story-v1/examples/my-friend-z-web.mp4",
       "image": false
     },
     {
