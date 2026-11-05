@@ -2137,7 +2137,7 @@ export const discoveryCatalog: DiscoveryEntry[] = [
     status: "published",
     order: 1,
     brand: "Pixar-Style Family Memoir · A Father's Promise",
-    title: "For Mia — I Still Leave the Porch Light On",
+    title: "For Mia",
     curatorNote: "The complete 72-second 3D animated memoir written from a father's questionnaire answers. Features continuous character continuity across life stages (young Shaz, adult Shaz, sister, Mia), hero prop locks (2000 Honda Accord coupe), and 100% native Seedance 2.5 emergent dialogue and acoustic score.",
     goal: "story",
     media: {
