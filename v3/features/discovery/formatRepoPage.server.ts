@@ -128,7 +128,7 @@ export async function getFormatRepoPagePresentation(
           ? "The workflow & its evidence."
           : "Examples & references.",
         examplesDescription: slug === "my-pixar-story"
-          ? "Watch complete 1080p master movies ('For Mia' and 'My Friend Z'), with 100% native Seedance dialogue and acoustic score."
+          ? "Two finished 1080p memoir films — 'For Mia' (72 sec) and 'My Friend Z' (87 sec) — with native Seedance emergent dialogue and room tone."
           : slug === "repo-builder"
           ? "The diagram explains the workflow. The benchmark below records what was actually tested—and what still needs creative validation. It is not a finished Batman recreation."
           : `${format.proofEntries.length} saved examples for this recipe—not ${format.proofEntries.length} separate Repos. Each example keeps its original version and provenance.`,
