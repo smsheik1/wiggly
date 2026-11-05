@@ -371,13 +371,13 @@ export function DesktopChatShowcase() {
                         <p className="flex items-center gap-2">
                           <Check className="size-3.5" />
                           <span>
-                            Continuous piano score &amp; authentic voiceover mixed
+                            Native Seedance dialogue &amp; ambient Foley mixed
                           </span>
                         </p>
                       </div>
 
                       <p className="mt-2 text-xs font-black text-white">
-                        Done. 72-second master film ready to watch &amp; download.
+                        Done. Master film ready to watch &amp; download.
                       </p>
 
                       {/* Video Player Card */}
