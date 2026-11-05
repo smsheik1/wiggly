@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import { CREDIT_PACK_GRANT, MONTHLY_CREDIT_GRANT, generationCredits } from "./credits";
 
 export function checkoutUrl(kind: CheckoutKind, token: string) {
@@ -10,7 +9,7 @@ function openCheckout(account: Account, kind: CheckoutKind) {
   if (account.checkoutStatus === "open" && account.checkoutKind === kind && account.checkoutToken) {
     return checkoutUrl(kind, account.checkoutToken);
   }
-  account.checkoutToken = crypto.randomUUID();
+  account.checkoutToken = globalThis.crypto.randomUUID();
   account.checkoutKind = kind;
   account.checkoutStatus = "open";
   return checkoutUrl(kind, account.checkoutToken);
@@ -73,7 +72,17 @@ export function hashStoryboard(storyboard: Storyboard): string {
     })),
     hero_props: (storyboard.hero_props ?? []).map((prop) => prop.name.trim()),
   };
-  return crypto.createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
+  const str = JSON.stringify(canonical);
+  let h1 = 0xdeadbeef ^ 0;
+  let h2 = 0x41c6ce57 ^ 0;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(16).padStart(8, "0") + (h1 >>> 0).toString(16).padStart(8, "0");
 }
 
 export function estimateFilmCredits(storyboard: Storyboard): {
@@ -263,7 +272,7 @@ export class MemoryFilmLedger {
 
   openUpload(accountId: string): { uploadUrl: string; expiresAt: string } {
     const account = this.account(accountId);
-    const uploadId = crypto.randomUUID();
+    const uploadId = globalThis.crypto.randomUUID();
     account.uploadId = uploadId;
     account.uploadExpiresAt = Date.now() + UPLOAD_TTL_MS;
     return {
@@ -375,11 +384,11 @@ export class MemoryFilmLedger {
 
     const estimate = estimateFilmCredits(input.storyboard);
     const job: DraftJob = {
-      jobId: crypto.randomUUID(),
+      jobId: globalThis.crypto.randomUUID(),
       stage: "queued",
       creditsCharged: 0,
       creditsRefunded: false,
-      correlationId: crypto.randomUUID(),
+      correlationId: globalThis.crypto.randomUUID(),
       storyboard: input.storyboard,
       storyboardHash: inputHash,
       updatedAt: Date.now(),
