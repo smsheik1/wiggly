@@ -74,7 +74,7 @@ const formatConfigs: FormatProfileConfig[] = [
         { label: "ByteDance 1080p upscaling", cost: "Included with theatrical master", time: "about 3 min" },
       ],
       totalEstimate: "$19 per screening draft ($69 theatrical master); ~15-20 minutes end-to-end.",
-      output: "One 1920 × 1080 widescreen MP4 (16:9), 72 seconds, with continuous piano score, parent voiceover narration, and 4K character sheet",
+      output: "One 1920 × 1080 widescreen MP4 (16:9), 60–90 seconds, with native emergent dialogue, room tone, and 4K character sheet",
       firstQuestion: "Who is this story for, and what is the one moment or lesson you want them to always remember?",
     },
   },

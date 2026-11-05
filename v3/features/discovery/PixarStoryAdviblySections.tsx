@@ -338,7 +338,7 @@ export function PixarStoryAdviblySections({
     },
     {
       num: 5,
-      short: "Animate and score",
+      short: "Animate and mix",
       title: "Seedance 2.5 Emergent Multimodal Audio",
       desc: "ByteDance Seedance 2.5 generates expressive 3D character acting with emergent native dialogue and ambient Foley in the visual latent space, then clips are conformed and mixed with lossless FFmpeg.",
     },
@@ -346,7 +346,7 @@ export function PixarStoryAdviblySections({
       num: 6,
       short: "Stitch the film",
       title: "Lossless FFmpeg Concat & Dailies",
-      desc: "Lossless FFmpeg assembly stitches the clips into a master 72-second 1080p film with automated dailies contact sheets.",
+      desc: "Lossless FFmpeg assembly stitches the clips into a master 60–90 second 1080p film with automated dailies contact sheets.",
     },
   ];
 
@@ -395,9 +395,9 @@ export function PixarStoryAdviblySections({
       text: "Scene prompt structure, camera locks, and what the shot is allowed to do.",
     },
     {
-      file: "score",
+      file: "sound",
       href: `${sourceHref}#1-the-core-philosophy`,
-      text: "Parent voiceover, the piano bed, and why a weak still is re-rolled instead of repaired in video.",
+      text: "Native dialogue balance, room tone, and why a weak still is re-rolled instead of repaired in video.",
     },
   ];
 

@@ -123,7 +123,20 @@ assert.doesNotMatch(adviblySectionsSource, /\$19/);
 assert.doesNotMatch(adviblySectionsSource, /\$69/);
 assert.doesNotMatch(adviblySectionsSource, /wiggly_submit_film/);
 assert.doesNotMatch(adviblySectionsSource, /WIGGLY_API_KEY/);
+assert.doesNotMatch(adviblySectionsSource, /piano bed/i);
+assert.doesNotMatch(adviblySectionsSource, /parent voiceover/i);
 assert.ok(!adviblySectionsSource.includes("mcpServers"), "Raw JSON mcpServers block must be removed");
+
+const desktopShowcaseSource = readFileSync("features/discovery/DesktopChatShowcase.tsx", "utf8");
+assert.doesNotMatch(desktopShowcaseSource, /piano score/i);
+assert.doesNotMatch(desktopShowcaseSource, /authentic voiceover/i);
+assert.doesNotMatch(desktopShowcaseSource, /72-second master/i);
+
+const formatProofSource = readFileSync("features/discovery/formatProof.server.ts", "utf8");
+const pixarProofMatch = formatProofSource.match(/slug:\s*"my-pixar-story"[\s\S]*?output:\s*"([^"]+)"/);
+assert.ok(pixarProofMatch, "my-pixar-story proof output must exist");
+assert.doesNotMatch(pixarProofMatch[1], /piano score/i);
+assert.doesNotMatch(pixarProofMatch[1], /voiceover/i);
 
 assert.match(adviblySectionsSource, /npx skills add wiggly-app\/skills -s my-pixar-story/);
 assert.match(adviblySectionsSource, /Make a Pixar-style story from our family memories\./);
