@@ -308,7 +308,7 @@ export function DesktopChatShowcase() {
                         <p className="flex items-center gap-2 text-emerald-400">
                           <Check className="size-3.5" />
                           <span>
-                            7-Beat screenplay → &quot;I Still Leave the Porch Light On&quot;
+                            7-Beat screenplay → &quot;For Mia&quot;
                           </span>
                         </p>
                         <p className="flex items-center gap-2 text-emerald-400">

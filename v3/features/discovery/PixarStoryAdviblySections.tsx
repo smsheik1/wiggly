@@ -30,7 +30,7 @@ const heroCards = [
   { label: "Young Shaz", className: "left-[2%] top-[8%] h-[280px] w-[168px] -rotate-6", position: "object-[8%_center]" },
   { label: "The Accord", className: "left-[7%] top-[46%] h-[220px] w-[140px] rotate-3", position: "object-[28%_40%]" },
   { label: "Mia", className: "right-[2%] top-[6%] h-[300px] w-[176px] rotate-6", position: "object-[78%_center]" },
-  { label: "The porch", className: "right-[8%] top-[48%] h-[230px] w-[146px] -rotate-3", position: "object-[62%_30%]" },
+  { label: "Home", className: "right-[8%] top-[48%] h-[230px] w-[146px] -rotate-3", position: "object-[62%_30%]" },
 ];
 
 const castClips = [
