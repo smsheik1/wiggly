@@ -30,7 +30,7 @@ const heroCards = [
   { label: "Young Shaz", className: "left-[2%] top-[8%] h-[280px] w-[168px] -rotate-6", position: "object-[8%_center]" },
   { label: "The Accord", className: "left-[7%] top-[46%] h-[220px] w-[140px] rotate-3", position: "object-[28%_40%]" },
   { label: "Mia", className: "right-[2%] top-[6%] h-[300px] w-[176px] rotate-6", position: "object-[78%_center]" },
-  { label: "Home", className: "right-[8%] top-[48%] h-[230px] w-[146px] -rotate-3", position: "object-[62%_30%]" },
+  { label: "The grind", className: "right-[8%] top-[48%] h-[230px] w-[146px] -rotate-3", position: "object-[62%_30%]" },
 ];
 
 const castClips = [
@@ -125,7 +125,7 @@ export function PixarStoryHeroAction({
           My Pixar Story
         </h1>
         <p className="mx-auto mt-5 max-w-[34rem] text-[17px] leading-7 text-[#4d4a44]">
-          Give your agent your family&apos;s memories. It builds a consistent 3D cast and hands back a narrated widescreen film of about 72 seconds. The film on this page is one it made.
+          Give your agent your family&apos;s memories. It builds a consistent 3D cast and hands back a narrated widescreen film of about 60–90 seconds. The films on this page are ones it made.
         </p>
 
         {format ? (
@@ -340,7 +340,7 @@ export function PixarStoryAdviblySections({
       num: 5,
       short: "Animate and score",
       title: "Seedance 2.5 Emergent Multimodal Audio",
-      desc: "ByteDance Seedance 2.5 generates expressive 3D character acting and ambient Foley in the visual latent space, mixed with a continuous 72-second emotional piano score and authentic parent voiceover narrating across the scene cuts.",
+      desc: "ByteDance Seedance 2.5 generates expressive 3D character acting with emergent native dialogue and ambient Foley in the visual latent space, then clips are conformed and mixed with lossless FFmpeg.",
     },
     {
       num: 6,
@@ -405,7 +405,7 @@ export function PixarStoryAdviblySections({
     "The look is original feature-film 3D animation. “Pixar-style” is shorthand for warm light, large eyes, and tactile materials, not a studio's characters or logo.",
     "The lineup sheet is locked before any video. Character drift is fixed by regenerating the still, not by adding motion.",
     "Hands, eyes, and small text can garble. The still is regenerated with a tighter constraint.",
-    "The parent voiceover and piano score carry the 72 seconds. Animation waits until the storyboard is approved.",
+    "Audio is native Seedance emergent dialogue and room tone. The characters speak in the film — there is no separate voiceover or piano score layer.",
     "Every family gets its own cast. Nothing is reused as a house mascot.",
   ];
 
@@ -420,7 +420,7 @@ export function PixarStoryAdviblySections({
     },
     {
       q: "How long is the film, and how long does it take?",
-      a: "About 72 seconds, widescreen 16:9. You approve the cast sheet and the storyboard stills. Animation, voice, and the score run after that yes.",
+      a: "About 60–90 seconds, widescreen 16:9. You approve the cast sheet and the storyboard stills. Animation, voice, and the score run after that yes.",
     },
     {
       q: "What does it cost?",
@@ -582,10 +582,10 @@ export function PixarStoryAdviblySections({
             <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d897f]">What you get</p>
             <ul className="mt-3 space-y-2 text-sm leading-6 text-[#3a3834]">
               {[
-                "A finished widescreen 3D memoir, about 72 seconds",
+                "A finished widescreen 3D memoir, 60–90 seconds",
                 "An approved cast sheet and 5–7 beat script",
                 "Storyboard panels locked before any animation",
-                "Parent voiceover and a piano score, mixed in",
+                "Native emergent Seedance dialogue and room tone",
                 "A 1080p master and a dailies contact sheet",
               ].map((item) => (
                 <li key={item} className="flex gap-2">

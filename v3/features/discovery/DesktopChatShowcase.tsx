@@ -94,7 +94,7 @@ const SIDEBAR_THREADS = [
   },
   {
     id: "mom",
-    title: "Mom's Porch Light Film",
+    title: "Mom's Birthday Film",
     status: "Cast approved",
     color: "#0284c7",
     active: false,
