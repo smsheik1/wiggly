@@ -16,6 +16,10 @@ export async function POST(request: Request, context: { params: Promise<{ upload
     const session = await getUploadSession(uploadId);
     if (!session) return new Response("This upload link has expired. Call wiggly_open_upload again.", { status: 410 });
     const form = await request.formData();
+    const consent = form.get("consent");
+    if (consent !== "on" && consent !== "true") {
+      return new Response("Consent attestation is required to upload photos. Confirm you have rights/consent for identifiable individuals.", { status: 400 });
+    }
     const labels: string[] = [];
     const photos: Array<{ label: string; filename: string }> = [];
     const labelCounts = new Map<string, number>();

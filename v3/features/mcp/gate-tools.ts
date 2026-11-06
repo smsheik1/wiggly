@@ -8,6 +8,44 @@ import { MemoryFilmLedger, type Storyboard } from "./film-ledger";
 export const WRITING_JOBS = ["story-director", "character-architect", "location-scout", "storyboard-artist", "seedance-compiler"] as const;
 export type WritingJob = (typeof WRITING_JOBS)[number];
 const MAX_ATTEMPTS = 3;
+export const MAX_DRAFT_CALLS_PER_JOB = 10;
+export const MAX_DRAFT_CALLS_PER_DAY = 25;
+
+const accountDailyDraftCalls = new Map<string, { date: string; count: number }>();
+
+export function resetDraftLimitsForTest() {
+  accountDailyDraftCalls.clear();
+}
+
+function checkDraftLimits(accountId: string, state: Record<string, unknown>): { ok: true } | { ok: false; message: string } {
+  const jobCalls = Number(state.draftCallCount ?? 0);
+  if (jobCalls >= MAX_DRAFT_CALLS_PER_JOB) {
+    return {
+      ok: false,
+      message: `Drafting call limit reached for this job (max ${MAX_DRAFT_CALLS_PER_JOB} calls). Please proceed with the current script or submit a fresh draft with wiggly_submit_draft.`,
+    };
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const currentDaily = accountDailyDraftCalls.get(accountId);
+  if (currentDaily && currentDaily.date === today && currentDaily.count >= MAX_DRAFT_CALLS_PER_DAY) {
+    return {
+      ok: false,
+      message: `Daily drafting limit reached (max ${MAX_DRAFT_CALLS_PER_DAY} calls per day). Please review your current script or resume tomorrow.`,
+    };
+  }
+  return { ok: true };
+}
+
+function incrementDraftLimits(accountId: string, state: Record<string, unknown>) {
+  state.draftCallCount = Number(state.draftCallCount ?? 0) + 1;
+  const today = new Date().toISOString().slice(0, 10);
+  const currentDaily = accountDailyDraftCalls.get(accountId);
+  if (!currentDaily || currentDaily.date !== today) {
+    accountDailyDraftCalls.set(accountId, { date: today, count: 1 });
+  } else {
+    currentDaily.count += 1;
+  }
+}
 
 const TOOL_NAME: Record<WritingJob, string> = {
   "story-director": "wiggly_story_director",
@@ -312,6 +350,9 @@ export async function runWritingJob(input: {
       },
     };
   }
+  const limitCheck = checkDraftLimits(input.accountId, state);
+  if (!limitCheck.ok) return limitCheck;
+  incrementDraftLimits(input.accountId, state);
   const used = attempts[input.job] ?? 0;
   if (used >= MAX_ATTEMPTS) {
     state.status = "failed";
