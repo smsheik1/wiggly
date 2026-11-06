@@ -229,10 +229,12 @@ export async function draftMedia(stateFile: string, jobId: string, secret: strin
     }
   }
   let videoUrl: string | undefined;
+  let downloadUrl: string | undefined;
   const master = typeof state.masterVideo === "string" ? state.masterVideo : state.masterVideo?.videoPath;
   const masterPath = state.assetFiles?.["master-video"] ?? master;
   if (masterPath) {
     videoUrl = `${origin}${signRender(secret, jobId, "master-video", expiresAt)}`;
+    downloadUrl = `${origin}/api/mcp/renders/${encodeURIComponent(jobId)}/download`;
   } else {
     const clipTags = Object.keys(state.assetFiles ?? {}).filter((k) => k.startsWith("clip-"));
     const latestClipTag = clipTags.sort().pop();
@@ -247,7 +249,7 @@ export async function draftMedia(stateFile: string, jobId: string, secret: strin
       }
     }
   }
-  return { stills, images, videoUrl };
+  return { stills, images, videoUrl, ...(downloadUrl ? { downloadUrl } : {}) };
 }
 
 export function normalizeShotId(raw: string): string {

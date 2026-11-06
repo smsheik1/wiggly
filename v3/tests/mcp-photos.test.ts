@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { GET as getRender } from "../app/api/mcp/renders/[jobId]/[tag]/route";
 import { GET as getPhoto } from "../app/api/mcp/photos/[accountId]/[filename]/route";
 import { MemoryFilmLedger } from "../features/mcp/film-ledger";
-import { cleanExpiredUploads, containedPath, photoFilename, photoSignatureValid, savePhoto, signPhoto, signRender } from "../features/mcp/photo-store";
+import { cleanExpiredUploads, containedPath, deleteAccountPhotos, photoFilename, photoSignatureValid, savePhoto, signPhoto, signRender } from "../features/mcp/photo-store";
 import { draftMedia } from "../features/mcp/render-stage";
 
 test("an upload session keeps labels on that account and photos stay inside its directory", async () => {
@@ -74,6 +74,12 @@ test("the render route serves stills and master-video with proper Content-Type h
     const missingUrl = `https://wiggly.agentenamel.com${signRender("test-secret", jobId, "unknown-tag", expiresAt)}`;
     const missingRes = await getRender(new Request(missingUrl), { params: Promise.resolve({ jobId, tag: "unknown-tag" }) });
     assert.equal(missingRes.status, 404);
+
+    const downloadRes = await getRender(new Request(`https://wiggly.agentenamel.com/api/mcp/renders/${jobId}/download`), { params: Promise.resolve({ jobId, tag: "download" }) });
+    const downloadBody = await downloadRes.text();
+    assert.equal(downloadRes.status, 302, `Expected 302 but got ${downloadRes.status}: ${downloadBody}`);
+    const location = downloadRes.headers.get("location");
+    assert.ok(location?.includes("master-video?exp="), "Download route must 302 redirect to freshly-signed master-video");
   } finally {
     await rm(jobDir, { recursive: true, force: true });
   }
@@ -113,17 +119,40 @@ test("photoFilename handles multiple photos of the same label without overwritin
 test("cleanExpiredUploads prunes accounts older than TTL and preserves recent accounts", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "wiggly-prune-"));
   const oldDir = path.join(root, "old_account");
-  const newDir = path.join(root, "new_account");
+  const freshDir = path.join(root, "fresh_account");
+  const activeDir = path.join(root, "active_account");
   await mkdir(oldDir, { recursive: true });
-  await mkdir(newDir, { recursive: true });
-  await writeFile(path.join(oldDir, "test.jpg"), "photo");
-  await writeFile(path.join(newDir, "test.jpg"), "photo");
+  await mkdir(freshDir, { recursive: true });
+  await mkdir(activeDir, { recursive: true });
+
+  const oldFile = path.join(oldDir, "test.jpg");
+  const freshFile = path.join(freshDir, "test.jpg");
+  const activeFile = path.join(activeDir, "test.jpg");
+
+  await writeFile(oldFile, "photo");
+  await writeFile(freshFile, "photo");
+  await writeFile(activeFile, "photo");
+
+  // Backdate old_account and active_account files by 10 seconds
+  const pastSec = (Date.now() - 10000) / 1000;
+  await utimes(oldFile, pastSec, pastSec);
+  await utimes(oldDir, pastSec, pastSec);
+  await utimes(activeFile, pastSec, pastSec);
+  await utimes(activeDir, pastSec, pastSec);
 
   try {
-    // Prune with a maxAgeMs of 0 to simulate expired accounts
-    const pruned = await cleanExpiredUploads(root, 0);
-    assert.ok(pruned.includes("old_account"));
-    assert.ok(pruned.includes("new_account"));
+    // Prune accounts older than 5000ms, while active_account is protected by activeAccountIds
+    const pruned = await cleanExpiredUploads(root, { maxAgeMs: 5000, activeAccountIds: new Set(["active_account"]) });
+    assert.ok(pruned.includes("old_account"), "Old inactive account must be pruned");
+    assert.ok(!pruned.includes("fresh_account"), "Fresh account must be preserved");
+    assert.ok(!pruned.includes("active_account"), "Active account photos must never be pruned regardless of age");
+
+    const deleted = await deleteAccountPhotos(root, "active_account");
+    assert.equal(deleted, true);
+
+    await assert.rejects(async () => {
+      await deleteAccountPhotos(root, "../escaped");
+    }, /Invalid account id/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -151,6 +180,7 @@ test("draftMedia dynamically generates fresh signatures on every read even if vi
   try {
     const media = await draftMedia(stateFile, "job_1", "test-secret");
     assert.ok(media.videoUrl, "videoUrl must exist");
+    assert.ok(media.downloadUrl?.includes("/api/mcp/renders/job_1/download"), "downloadUrl permalink must exist for master-video");
     assert.notEqual(media.videoUrl, expiredUrl, "videoUrl must be dynamically re-signed with fresh expiration");
 
     const parsed = new URL(media.videoUrl!);

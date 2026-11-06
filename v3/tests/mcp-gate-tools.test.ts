@@ -805,3 +805,36 @@ test("drafting call limit halts runaway agent loops after 10 calls on a single j
   assert.equal(result.ok, false);
   assert.match(result.message ?? "", /Drafting call limit reached for this job/);
 });
+
+test("daily drafting limit persists in the ledger account and halts after 25 calls", async () => {
+  const runsRoot = path.join(tmpdir(), `wiggly-daily-limit-${Date.now()}`);
+  const job = openJob(runsRoot);
+  const today = new Date().toISOString().slice(0, 10);
+  // Seed ledger account with 25 daily calls
+  const state = job.ledger.exportState("user_1");
+  state.dailyDraftCalls = { date: today, count: 25 };
+  job.ledger.importState("user_1", state);
+
+  await putState(job, {
+    status: "writing",
+    draftCallCount: 0,
+    inputs: { subject: "Leo", answers: {}, photoReferences: [] },
+    attempts: {},
+    passed: {},
+  });
+
+  const result = await runWritingJob({
+    job: "story-director",
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    draft: { some: "draft" },
+    runsRoot,
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.message ?? "", /Daily drafting limit reached/);
+
+  // When exported, dailyDraftCalls is preserved in the ledger state
+  assert.equal(job.ledger.exportState("user_1").dailyDraftCalls?.count, 25);
+});
