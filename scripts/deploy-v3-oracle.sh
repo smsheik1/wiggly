@@ -77,7 +77,7 @@ export NEXT_PUBLIC_RENDERER_VERSION="$RENDERER_VERSION"
 # Native packages like esbuild validate downloaded binaries during install.
 # Keep v3's deploy install standalone even though the repo root has workspaces,
 # otherwise npm can mix root workspace metadata with v3's nested lockfile.
-rm -rf node_modules
+rm -rf node_modules .next
 unset ESBUILD_BINARY_PATH
 
 if [ -f package-lock.json ]; then

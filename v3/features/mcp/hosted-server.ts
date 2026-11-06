@@ -114,11 +114,11 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
         return toolResult(true, `No photos yet. Open ${upload.uploadUrl} and label each photo, then call wiggly_list_uploads again. It expires at ${upload.expiresAt}.`);
       }
       const images: GateImage[] = [];
-      const photoRoot = hooks?.photoRoot ?? path.join(process.cwd(), "data", "mcp-uploads");
+      const photoRoot = hooks?.photoRoot ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "mcp-uploads");
       for (const photo of photos.slice(0, 8)) {
-        const photoPath = (photo as { path?: string }).path ?? path.join(photoRoot, accountId, photo.filename);
+        const photoPath = (photo as { path?: string }).path || path.join(/*turbopackIgnore: true*/ photoRoot, accountId, photo.filename);
         try {
-          const buf = await fs.promises.readFile(photoPath);
+          const buf = await fs.promises.readFile(/*turbopackIgnore: true*/ photoPath);
           const thumb = resizeImageToThumbnail(buf, 512);
           images.push(thumb);
         } catch {
@@ -150,14 +150,14 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
         const account = memory.exportState(accountId);
         const photos: CrewPhoto[] = (account.photos ?? []).map((photo) => ({
           label: photo.label,
-          path: path.join(hooks?.photoRoot ?? path.join(process.cwd(), "data", "mcp-uploads"), accountId, photo.filename),
+          path: path.join(/*turbopackIgnore: true*/ hooks?.photoRoot ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "mcp-uploads"), accountId, photo.filename),
         }));
         try {
           await ensureWritingState({
             ledger: memory,
             accountId,
             jobId,
-            runsRoot: hooks?.runsRoot ?? path.join(process.cwd(), "data", "format-runs"),
+            runsRoot: hooks?.runsRoot ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "format-runs"),
             photos,
           });
         } catch {
@@ -181,7 +181,7 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
         const account = loaded.memory.exportState(accountId);
         const photos: CrewPhoto[] = (account.photos ?? []).map((photo) => ({
           label: photo.label,
-          path: path.join(hooks?.photoRoot ?? path.join(process.cwd(), "data", "mcp-uploads"), accountId, photo.filename),
+          path: path.join(/*turbopackIgnore: true*/ hooks?.photoRoot ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "mcp-uploads"), accountId, photo.filename),
         }));
         const gate = await runWritingJob({
           job,
@@ -190,7 +190,7 @@ export function createHostedMcp(ledger: FilmLedger, hooks?: {
           jobId: job_id,
           draft,
           photos,
-          runsRoot: hooks?.runsRoot ?? path.join(process.cwd(), "data", "format-runs"),
+          runsRoot: hooks?.runsRoot ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "format-runs"),
         });
         await loaded.save();
         return gate.ok ? toolResult(true, gate.data ?? {}, gate.images) : toolResult(false, gate.message ?? "The gate refused this draft.");
