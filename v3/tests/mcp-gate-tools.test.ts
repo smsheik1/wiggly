@@ -12,9 +12,12 @@ import { publicOrigin } from "../features/mcp/public-origin";
 import { draftMedia, rerollPanel } from "../features/mcp/render-stage";
 import { MemoryFilmLedger, type Storyboard } from "../features/mcp/film-ledger";
 
-const studioParent = "/Users/shaz/Projects/wiggly-my-pixar-story-studio/public/format-repositories";
+const defaultStudioParent = "/Users/shaz/Projects/wiggly-my-pixar-story-studio/public/format-repositories";
+const studioParent = process.env.WIGGLY_FORMAT_STUDIOS || (existsSync(defaultStudioParent) ? defaultStudioParent : path.resolve(process.cwd(), "../studios"));
 const studioRoot = path.join(studioParent, "my-pixar-story-v2");
-process.env.WIGGLY_FORMAT_STUDIOS = studioParent;
+if (existsSync(studioRoot)) {
+  process.env.WIGGLY_FORMAT_STUDIOS = studioParent;
+}
 
 const storyboard: Storyboard = {
   format: "my-pixar-story",
@@ -776,4 +779,29 @@ test("seedance compiler select passes and resolves canonical asset keys when app
     assert.match(key, /^[A-Za-z0-9][\w.:-]*$/);
     assert.ok(!key.includes("/"));
   }
+});
+
+test("drafting call limit halts runaway agent loops after 10 calls on a single job", async () => {
+  const runsRoot = path.join(tmpdir(), `wiggly-limit-${Date.now()}`);
+  const job = openJob(runsRoot);
+  // Seed with draftCallCount at 10
+  await putState(job, {
+    status: "writing",
+    draftCallCount: 10,
+    inputs: { subject: "Leo", answers: {}, photoReferences: [] },
+    attempts: {},
+    passed: {},
+  });
+
+  const result = await runWritingJob({
+    job: "story-director",
+    ledger: job.ledger,
+    accountId: "user_1",
+    jobId: job.jobId,
+    draft: { some: "draft" },
+    runsRoot,
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.message ?? "", /Drafting call limit reached for this job/);
 });

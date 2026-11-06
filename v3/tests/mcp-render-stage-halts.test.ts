@@ -7,7 +7,8 @@ import { test } from "node:test";
 import { MemoryFilmLedger, type Storyboard } from "../features/mcp/film-ledger";
 import { advanceRender, dueStage } from "../features/mcp/render-stage";
 
-const studioParent = "/Users/shaz/Projects/wiggly-my-pixar-story-studio/public/format-repositories";
+const defaultStudioParent = "/Users/shaz/Projects/wiggly-my-pixar-story-studio/public/format-repositories";
+const studioParent = process.env.WIGGLY_FORMAT_STUDIOS || (existsSync(defaultStudioParent) ? defaultStudioParent : path.resolve(process.cwd(), "../studios"));
 const studioRoot = path.join(studioParent, "my-pixar-story-v2");
 if (existsSync(studioRoot)) {
   process.env.WIGGLY_FORMAT_STUDIOS = studioParent;

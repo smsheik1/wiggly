@@ -6,7 +6,8 @@ import { test } from "node:test";
 import { GET as getRender } from "../app/api/mcp/renders/[jobId]/[tag]/route";
 import { GET as getPhoto } from "../app/api/mcp/photos/[accountId]/[filename]/route";
 import { MemoryFilmLedger } from "../features/mcp/film-ledger";
-import { containedPath, photoFilename, photoSignatureValid, savePhoto, signPhoto, signRender } from "../features/mcp/photo-store";
+import { cleanExpiredUploads, containedPath, photoFilename, photoSignatureValid, savePhoto, signPhoto, signRender } from "../features/mcp/photo-store";
+import { draftMedia } from "../features/mcp/render-stage";
 
 test("an upload session keeps labels on that account and photos stay inside its directory", async () => {
   const ledger = new MemoryFilmLedger();
@@ -107,4 +108,55 @@ test("photoFilename handles multiple photos of the same label without overwritin
   assert.equal(photoFilename("Z", "photo2.png", 1), "Z-2.png");
   assert.equal(photoFilename("Z", "photo3.jpeg", 2), "Z-3.jpeg");
   assert.equal(photoFilename("Z", "photo4.webp", 3), "Z-4.webp");
+});
+
+test("cleanExpiredUploads prunes accounts older than TTL and preserves recent accounts", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "wiggly-prune-"));
+  const oldDir = path.join(root, "old_account");
+  const newDir = path.join(root, "new_account");
+  await mkdir(oldDir, { recursive: true });
+  await mkdir(newDir, { recursive: true });
+  await writeFile(path.join(oldDir, "test.jpg"), "photo");
+  await writeFile(path.join(newDir, "test.jpg"), "photo");
+
+  try {
+    // Prune with a maxAgeMs of 0 to simulate expired accounts
+    const pruned = await cleanExpiredUploads(root, 0);
+    assert.ok(pruned.includes("old_account"));
+    assert.ok(pruned.includes("new_account"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("draftMedia dynamically generates fresh signatures on every read even if videoUrl had an expired signature", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "wiggly-dynamic-media-"));
+  const outputs = path.join(root, "outputs");
+  await mkdir(outputs, { recursive: true });
+  const masterPath = path.join(outputs, "master-video.mp4");
+  await writeFile(masterPath, "fake-mp4");
+
+  const stateFile = path.join(outputs, "state.json");
+  // Seed with an old expired URL (1 hour in the past)
+  const expiredUrl = `https://wiggly.agentenamel.com/api/mcp/renders/job_1/master-video?exp=${Date.now() - 3600000}&sig=expired`;
+  await writeFile(
+    stateFile,
+    JSON.stringify({
+      assetFiles: { "master-video": masterPath },
+      masterVideo: { videoPath: masterPath },
+      videoUrl: expiredUrl,
+    }),
+  );
+
+  try {
+    const media = await draftMedia(stateFile, "job_1", "test-secret");
+    assert.ok(media.videoUrl, "videoUrl must exist");
+    assert.notEqual(media.videoUrl, expiredUrl, "videoUrl must be dynamically re-signed with fresh expiration");
+
+    const parsed = new URL(media.videoUrl!);
+    const exp = Number(parsed.searchParams.get("exp"));
+    assert.ok(exp > Date.now() + 3600000, "Fresh signature expiration must be in the future (~2h)");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

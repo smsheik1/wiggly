@@ -49,6 +49,18 @@ export default async function UploadPage({
             <input id={`label-${index}`} name={`label-${index}`} type="text" placeholder="Mom" className="h-9 rounded-md border px-3" />
           </fieldset>
         ))}
+        <div className="flex items-start gap-2.5 rounded-md border border-neutral-800 bg-neutral-900/50 p-3 text-left">
+          <input
+            id="consent"
+            name="consent"
+            type="checkbox"
+            required
+            className="mt-0.5 size-4 rounded border-neutral-700 accent-primary"
+          />
+          <label htmlFor="consent" className="text-xs text-neutral-300 leading-snug">
+            I confirm I have the right to upload these photos, and have explicit consent from all identifiable individuals (or parental/guardian consent for minors) to generate stylized 3D memoir characters.
+          </label>
+        </div>
         <Button type="submit">Save labels</Button>
       </form>
     </main>

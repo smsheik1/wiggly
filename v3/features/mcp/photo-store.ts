@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const SAFE_ID = /^[A-Za-z0-9_-]+$/;
@@ -66,4 +66,30 @@ export function photoSignatureValid(secret: string, accountId: string, filename:
   const left = Buffer.from(expected);
   const right = Buffer.from(signature);
   return left.length === right.length && timingSafeEqual(left, right);
+}
+
+export const PHOTO_RETENTION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+export async function cleanExpiredUploads(root: string, maxAgeMs = PHOTO_RETENTION_TTL_MS): Promise<string[]> {
+  const pruned: string[] = [];
+  try {
+    const entries = await readdir(root, { withFileTypes: true });
+    const now = Date.now();
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const accountDir = path.join(root, entry.name);
+      try {
+        const stats = await stat(accountDir);
+        if (now - stats.mtimeMs > maxAgeMs) {
+          await rm(accountDir, { recursive: true, force: true });
+          pruned.push(entry.name);
+        }
+      } catch {
+        // Skip directory if stat/rm fails
+      }
+    }
+  } catch {
+    // Root directory might not exist yet
+  }
+  return pruned;
 }

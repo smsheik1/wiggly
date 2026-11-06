@@ -2,7 +2,7 @@ import path from "node:path";
 import { exportAccount, importAccount, listActiveJobs } from "../features/mcp/convex-ledger";
 import { releasePreflight, runDraftTick, studioForFormat, type CrewPhoto } from "../features/mcp/draft-worker";
 import { namedSecret } from "../features/mcp/named-secret";
-import { signPhoto } from "../features/mcp/photo-store";
+import { cleanExpiredUploads, signPhoto } from "../features/mcp/photo-store";
 
 const studio = studioForFormat("my-pixar-story");
 const openRouterKey = await namedSecret("OPENROUTER_API_KEY");
@@ -39,6 +39,11 @@ async function accountPhotos(accountId: string): Promise<CrewPhoto[]> {
 }
 
 async function tick() {
+  try {
+    await cleanExpiredUploads(photoRoot);
+  } catch {
+    // Non-blocking upload pruning
+  }
   const jobs = await listActiveJobs();
   if (jobs.length === 0) {
     console.error("No queued, running, awaiting-approval, or awaiting-credits drafts.");

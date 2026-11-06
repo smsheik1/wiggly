@@ -228,26 +228,22 @@ export async function draftMedia(stateFile: string, jobId: string, secret: strin
       // A missing file is not a picture the person can approve.
     }
   }
-  let videoUrl = state.videoUrl;
+  let videoUrl: string | undefined;
   const master = typeof state.masterVideo === "string" ? state.masterVideo : state.masterVideo?.videoPath;
   const masterPath = state.assetFiles?.["master-video"] ?? master;
   if (masterPath) {
-    if (!videoUrl || (!videoUrl.startsWith("http://") && !videoUrl.startsWith("https://"))) {
-      videoUrl = `${origin}${signRender(secret, jobId, "master-video", expiresAt)}`;
-    }
+    videoUrl = `${origin}${signRender(secret, jobId, "master-video", expiresAt)}`;
   } else {
     const clipTags = Object.keys(state.assetFiles ?? {}).filter((k) => k.startsWith("clip-"));
     const latestClipTag = clipTags.sort().pop();
     if (latestClipTag && state.assetFiles?.[latestClipTag]) {
-      if (!videoUrl || (!videoUrl.startsWith("http://") && !videoUrl.startsWith("https://"))) {
-        videoUrl = `${origin}${signRender(secret, jobId, latestClipTag, expiresAt)}`;
-      }
+      videoUrl = `${origin}${signRender(secret, jobId, latestClipTag, expiresAt)}`;
     } else {
       const animaticPath = state.assetFiles?.["animatic-video"] ?? state.animaticVideo;
       if (animaticPath) {
-        if (!videoUrl || (!videoUrl.startsWith("http://") && !videoUrl.startsWith("https://"))) {
-          videoUrl = `${origin}${signRender(secret, jobId, "animatic-video", expiresAt)}`;
-        }
+        videoUrl = `${origin}${signRender(secret, jobId, "animatic-video", expiresAt)}`;
+      } else if (state.videoUrl && (state.videoUrl.startsWith("http://") || state.videoUrl.startsWith("https://"))) {
+        videoUrl = state.videoUrl;
       }
     }
   }
