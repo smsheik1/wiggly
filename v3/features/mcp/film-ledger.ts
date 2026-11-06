@@ -156,6 +156,7 @@ export type Account = {
   stripeCustomerId?: string;
   uploadId?: string;
   uploadExpiresAt?: number;
+  dailyDraftCalls?: { date: string; count: number };
 };
 
 export type LedgerResult =
@@ -501,6 +502,16 @@ export class MemoryFilmLedger {
     const job = this.account(accountId).jobs.find((item) => item.jobId === jobId);
     if (!job?.storyboard || job.stage === "failed" || job.stage === "ready") return;
     job.storyboard.lineupGateAttempts = attempts;
+  }
+
+  recordDraftCall(accountId: string) {
+    const account = this.account(accountId);
+    const today = new Date().toISOString().slice(0, 10);
+    if (!account.dailyDraftCalls || account.dailyDraftCalls.date !== today) {
+      account.dailyDraftCalls = { date: today, count: 1 };
+    } else {
+      account.dailyDraftCalls.count += 1;
+    }
   }
 
   clearStillUrls(accountId: string, jobId: string) {

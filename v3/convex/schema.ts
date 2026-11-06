@@ -243,6 +243,7 @@ export default defineSchema({
     stripeCustomerId: v.optional(v.string()),
     uploadId: v.optional(v.string()),
     uploadExpiresAt: v.optional(v.number()),
+    dailyDraftCalls: v.optional(v.object({ date: v.string(), count: v.number() })),
     updatedAt: v.number(),
   }).index("by_workosUserId", ["workosUserId"]).index("by_checkoutToken", ["checkoutToken"]).index("by_stripeCustomerId", ["stripeCustomerId"]).index("by_uploadId", ["uploadId"]),
 

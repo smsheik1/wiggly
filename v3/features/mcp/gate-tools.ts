@@ -3,7 +3,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { runtimeImport } from "./runtime-import";
 import { crewPhotoReferences, questionnaireFromStoryboard, studioForFormat, type CrewPhoto } from "./draft-worker";
-import { MemoryFilmLedger, type Storyboard } from "./film-ledger";
+import { MemoryFilmLedger, type Account, type Storyboard } from "./film-ledger";
 
 export const WRITING_JOBS = ["story-director", "character-architect", "location-scout", "storyboard-artist", "seedance-compiler"] as const;
 export type WritingJob = (typeof WRITING_JOBS)[number];
@@ -11,13 +11,7 @@ const MAX_ATTEMPTS = 3;
 export const MAX_DRAFT_CALLS_PER_JOB = 10;
 export const MAX_DRAFT_CALLS_PER_DAY = 25;
 
-const accountDailyDraftCalls = new Map<string, { date: string; count: number }>();
-
-export function resetDraftLimitsForTest() {
-  accountDailyDraftCalls.clear();
-}
-
-function checkDraftLimits(accountId: string, state: Record<string, unknown>): { ok: true } | { ok: false; message: string } {
+function checkDraftLimits(account: Account, state: Record<string, unknown>): { ok: true } | { ok: false; message: string } {
   const jobCalls = Number(state.draftCallCount ?? 0);
   if (jobCalls >= MAX_DRAFT_CALLS_PER_JOB) {
     return {
@@ -26,7 +20,7 @@ function checkDraftLimits(accountId: string, state: Record<string, unknown>): { 
     };
   }
   const today = new Date().toISOString().slice(0, 10);
-  const currentDaily = accountDailyDraftCalls.get(accountId);
+  const currentDaily = account.dailyDraftCalls;
   if (currentDaily && currentDaily.date === today && currentDaily.count >= MAX_DRAFT_CALLS_PER_DAY) {
     return {
       ok: false,
@@ -36,15 +30,9 @@ function checkDraftLimits(accountId: string, state: Record<string, unknown>): { 
   return { ok: true };
 }
 
-function incrementDraftLimits(accountId: string, state: Record<string, unknown>) {
+function incrementDraftLimits(ledger: MemoryFilmLedger, accountId: string, state: Record<string, unknown>) {
   state.draftCallCount = Number(state.draftCallCount ?? 0) + 1;
-  const today = new Date().toISOString().slice(0, 10);
-  const currentDaily = accountDailyDraftCalls.get(accountId);
-  if (!currentDaily || currentDaily.date !== today) {
-    accountDailyDraftCalls.set(accountId, { date: today, count: 1 });
-  } else {
-    currentDaily.count += 1;
-  }
+  ledger.recordDraftCall(accountId);
 }
 
 const TOOL_NAME: Record<WritingJob, string> = {
@@ -350,9 +338,9 @@ export async function runWritingJob(input: {
       },
     };
   }
-  const limitCheck = checkDraftLimits(input.accountId, state);
+  const limitCheck = checkDraftLimits(account, state);
   if (!limitCheck.ok) return limitCheck;
-  incrementDraftLimits(input.accountId, state);
+  incrementDraftLimits(input.ledger, input.accountId, state);
   const used = attempts[input.job] ?? 0;
   if (used >= MAX_ATTEMPTS) {
     state.status = "failed";

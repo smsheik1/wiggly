@@ -51,6 +51,7 @@ async function readAccount(ctx: QueryCtx | MutationCtx, workosUserId: string): P
     ...(row.stripeCustomerId ? { stripeCustomerId: row.stripeCustomerId } : {}),
     ...(row.uploadId ? { uploadId: row.uploadId } : {}),
     ...(row.uploadExpiresAt ? { uploadExpiresAt: row.uploadExpiresAt } : {}),
+    ...(row.dailyDraftCalls ? { dailyDraftCalls: row.dailyDraftCalls } : {}),
     quotes: quotes.map((quote) => ({
       quoteId: quote.quoteId,
       key: quote.key,
@@ -94,6 +95,7 @@ async function writeAccount(ctx: MutationCtx, workosUserId: string, account: Acc
       ...(account.stripeCustomerId ? { stripeCustomerId: account.stripeCustomerId } : {}),
       ...(account.uploadId ? { uploadId: account.uploadId } : {}),
       ...(account.uploadExpiresAt ? { uploadExpiresAt: account.uploadExpiresAt } : {}),
+      ...(account.dailyDraftCalls ? { dailyDraftCalls: account.dailyDraftCalls } : {}),
       updatedAt: now,
     });
   if (existing) {
@@ -108,6 +110,7 @@ async function writeAccount(ctx: MutationCtx, workosUserId: string, account: Acc
       ...(account.stripeCustomerId ? { stripeCustomerId: account.stripeCustomerId } : {}),
       ...(account.uploadId ? { uploadId: account.uploadId } : {}),
       ...(account.uploadExpiresAt ? { uploadExpiresAt: account.uploadExpiresAt } : {}),
+      ...(account.dailyDraftCalls ? { dailyDraftCalls: account.dailyDraftCalls } : {}),
       updatedAt: now,
     });
   }

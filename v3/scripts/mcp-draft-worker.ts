@@ -39,12 +39,13 @@ async function accountPhotos(accountId: string): Promise<CrewPhoto[]> {
 }
 
 async function tick() {
+  const jobs = await listActiveJobs();
+  const activeAccounts = new Set(jobs.map((j) => j.workosUserId));
   try {
-    await cleanExpiredUploads(photoRoot);
+    await cleanExpiredUploads(photoRoot, { activeAccountIds: activeAccounts });
   } catch {
     // Non-blocking upload pruning
   }
-  const jobs = await listActiveJobs();
   if (jobs.length === 0) {
     console.error("No queued, running, awaiting-approval, or awaiting-credits drafts.");
     return;

@@ -70,19 +70,61 @@ export function photoSignatureValid(secret: string, accountId: string, filename:
 
 export const PHOTO_RETENTION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-export async function cleanExpiredUploads(root: string, maxAgeMs = PHOTO_RETENTION_TTL_MS): Promise<string[]> {
+export type CleanUploadsOptions = {
+  maxAgeMs?: number;
+  activeAccountIds?: Set<string> | string[];
+};
+
+export async function deleteAccountPhotos(root: string, accountId: string): Promise<boolean> {
+  if (!SAFE_ID.test(accountId)) throw new Error("Invalid account id.");
+  const accountDir = path.resolve(root, accountId);
+  const rootPath = path.resolve(root);
+  if (!accountDir.startsWith(rootPath + path.sep)) throw new Error("Account path escaped root.");
+  try {
+    await rm(accountDir, { recursive: true, force: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function cleanExpiredUploads(
+  root: string,
+  optionsOrMaxAge: CleanUploadsOptions | number = PHOTO_RETENTION_TTL_MS
+): Promise<string[]> {
+  const options: CleanUploadsOptions =
+    typeof optionsOrMaxAge === "number" ? { maxAgeMs: optionsOrMaxAge } : optionsOrMaxAge;
+  const maxAgeMs = options.maxAgeMs ?? PHOTO_RETENTION_TTL_MS;
+  const activeSet = options.activeAccountIds
+    ? (options.activeAccountIds instanceof Set ? options.activeAccountIds : new Set(options.activeAccountIds))
+    : new Set<string>();
+
   const pruned: string[] = [];
   try {
     const entries = await readdir(root, { withFileTypes: true });
     const now = Date.now();
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
-      const accountDir = path.join(root, entry.name);
+      const accountId = entry.name;
+      // Never delete photos for an account with active, rendering, or awaiting-credit jobs
+      if (activeSet.has(accountId)) continue;
+
+      const accountDir = path.join(root, accountId);
       try {
         const stats = await stat(accountDir);
-        if (now - stats.mtimeMs > maxAgeMs) {
+        let newestFileMtime = stats.mtimeMs;
+        const files = await readdir(accountDir);
+        for (const file of files) {
+          try {
+            const fstat = await stat(path.join(accountDir, file));
+            if (fstat.mtimeMs > newestFileMtime) newestFileMtime = fstat.mtimeMs;
+          } catch {
+            // Ignore individual file stat error
+          }
+        }
+        if (now - newestFileMtime >= maxAgeMs) {
           await rm(accountDir, { recursive: true, force: true });
-          pruned.push(entry.name);
+          pruned.push(accountId);
         }
       } catch {
         // Skip directory if stat/rm fails

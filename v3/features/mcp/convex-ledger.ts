@@ -50,7 +50,13 @@ export class ConvexFilmLedger {
   }
 }
 
+export let uploadSessionHookForTest: ((uploadId: string) => Promise<{ accountId: string; expiresAt: string } | null>) | null = null;
+export function setUploadSessionHookForTest(hook: typeof uploadSessionHookForTest) {
+  uploadSessionHookForTest = hook;
+}
+
 export function getUploadSession(uploadId: string) {
+  if (uploadSessionHookForTest) return uploadSessionHookForTest(uploadId);
   return callInternal<{ accountId: string; expiresAt: string } | null>("query", internal.mcpFilm.getUpload, { uploadId });
 }
 
