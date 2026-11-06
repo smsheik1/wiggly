@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { DM_Sans, Manrope } from "next/font/google";
 import {
   ArrowLeft,
   ArrowRight,
@@ -37,20 +36,6 @@ import {
   discoveryFormatSlugs,
   getDiscoveryFormatProfile,
 } from "@/features/discovery/formatProof.server";
-
-const pixarBody = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-pixar-body",
-  display: "swap",
-});
-
-const pixarDisplay = Manrope({
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-  variable: "--font-pixar-display",
-  display: "swap",
-});
 
 export function generateStaticParams() {
   return discoveryFormatSlugs.map((slug) => ({ slug }));
@@ -105,7 +90,17 @@ export default async function FormatPage({
     : heroProof;
 
   return (
-    <main className={`min-h-screen text-[#080817] ${isPixarStory ? `${pixarBody.variable} ${pixarDisplay.variable} bg-[#f6f5f1] font-[family-name:var(--font-pixar-body)]` : "bg-[#f5f1e8]"}`}>
+    <main className={`min-h-screen text-[#080817] ${isPixarStory ? "bg-[#f6f5f1] font-[family-name:var(--font-pixar-body)]" : "bg-[#f5f1e8]"}`}>
+      {isPixarStory ? (
+        <style>{`
+          /* Pixar typography: DM_Sans and Manrope */
+          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Manrope:wght@500..800&display=swap');
+          :root {
+            --font-pixar-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+            --font-pixar-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+          }
+        `}</style>
+      ) : null}
       {isPixarStory ? <PixarStoryNav /> : (
       <header className="border-b-2 border-[#080817]">
         <div className="mx-auto flex min-h-[66px] w-[min(100%-32px,980px)] items-center justify-between gap-4">
