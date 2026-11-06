@@ -232,7 +232,8 @@ export async function draftMedia(stateFile: string, jobId: string, secret: strin
   const master = typeof state.masterVideo === "string" ? state.masterVideo : state.masterVideo?.videoPath;
   const masterPath = state.assetFiles?.["master-video"] ?? master;
   if (masterPath) {
-    videoUrl = `${origin}${signRender(secret, jobId, "master-video", expiresAt)}`;
+    const masterExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days for delivered master film
+    videoUrl = `${origin}${signRender(secret, jobId, "master-video", masterExpiresAt)}`;
   } else {
     const clipTags = Object.keys(state.assetFiles ?? {}).filter((k) => k.startsWith("clip-"));
     const latestClipTag = clipTags.sort().pop();

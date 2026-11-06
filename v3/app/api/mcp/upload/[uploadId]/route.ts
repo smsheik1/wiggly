@@ -37,7 +37,7 @@ export async function POST(request: Request, context: { params: Promise<{ upload
     if (labels.length === 0) {
       return new Response("Add a photo and a label for each person, such as Mom or Leo.", { status: 400 });
     }
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() || request.headers.get("x-real-ip") || undefined;
+    const ip = request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined;
     const userAgent = request.headers.get("user-agent") || undefined;
     const consentRecord = { consentedAt: Date.now(), ip, userAgent };
     await saveUploadLabels(uploadId, labels, photos, consentRecord);
