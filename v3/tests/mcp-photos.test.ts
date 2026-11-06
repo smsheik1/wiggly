@@ -75,11 +75,8 @@ test("the render route serves stills and master-video with proper Content-Type h
     const missingRes = await getRender(new Request(missingUrl), { params: Promise.resolve({ jobId, tag: "unknown-tag" }) });
     assert.equal(missingRes.status, 404);
 
-    const downloadRes = await getRender(new Request(`https://wiggly.agentenamel.com/api/mcp/renders/${jobId}/download`), { params: Promise.resolve({ jobId, tag: "download" }) });
-    const downloadBody = await downloadRes.text();
-    assert.equal(downloadRes.status, 302, `Expected 302 but got ${downloadRes.status}: ${downloadBody}`);
-    const location = downloadRes.headers.get("location");
-    assert.ok(location?.includes("master-video?exp="), "Download route must 302 redirect to freshly-signed master-video");
+    const unauthenticatedRes = await getRender(new Request(`https://wiggly.agentenamel.com/api/mcp/renders/${jobId}/download`), { params: Promise.resolve({ jobId, tag: "download" }) });
+    assert.equal(unauthenticatedRes.status, 401, "Unauthenticated access without valid HMAC signature must return 401");
   } finally {
     await rm(jobDir, { recursive: true, force: true });
   }
@@ -141,12 +138,18 @@ test("cleanExpiredUploads prunes accounts older than TTL and preserves recent ac
   await utimes(activeDir, pastSec, pastSec);
 
   try {
-    // Prune accounts older than 5000ms, while active_account is protected by activeAccountIds
-    const pruned = await cleanExpiredUploads(root, { maxAgeMs: 5000, activeAccountIds: new Set(["active_account"]) });
+    // Prune accounts older than 5000ms, while active_account is protected by activeAccountIds up to maxActiveAgeMs (20000ms)
+    const pruned = await cleanExpiredUploads(root, { maxAgeMs: 5000, maxActiveAgeMs: 20000, activeAccountIds: new Set(["active_account"]) });
     assert.ok(pruned.includes("old_account"), "Old inactive account must be pruned");
     assert.ok(!pruned.includes("fresh_account"), "Fresh account must be preserved");
-    assert.ok(!pruned.includes("active_account"), "Active account photos must never be pruned regardless of age");
+    assert.ok(!pruned.includes("active_account"), "Active account photos must be preserved during active grace period");
 
+    // But when an active job is stalled beyond maxActiveAgeMs (e.g. 5000ms), it is purged
+    const stalledPruned = await cleanExpiredUploads(root, { maxAgeMs: 5000, maxActiveAgeMs: 5000, activeAccountIds: new Set(["active_account"]) });
+    assert.ok(stalledPruned.includes("active_account"), "Stalled active account must be pruned once maxActiveAgeMs is reached");
+
+    await mkdir(path.join(root, "active_account"), { recursive: true });
+    await writeFile(path.join(root, "active_account", "test.jpg"), "photo");
     const deleted = await deleteAccountPhotos(root, "active_account");
     assert.equal(deleted, true);
 
@@ -180,7 +183,6 @@ test("draftMedia dynamically generates fresh signatures on every read even if vi
   try {
     const media = await draftMedia(stateFile, "job_1", "test-secret");
     assert.ok(media.videoUrl, "videoUrl must exist");
-    assert.ok(media.downloadUrl?.includes("/api/mcp/renders/job_1/download"), "downloadUrl permalink must exist for master-video");
     assert.notEqual(media.videoUrl, expiredUrl, "videoUrl must be dynamically re-signed with fresh expiration");
 
     const parsed = new URL(media.videoUrl!);

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
-import { renderSignatureValid, signRender } from "../../../../../../features/mcp/photo-store";
+import { renderSignatureValid } from "../../../../../../features/mcp/photo-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,29 +26,6 @@ export async function GET(request: Request, context: { params: Promise<{ jobId: 
   const decodedJobId = decodeURIComponent(jobId);
   const decodedTag = decodeURIComponent(tag);
   const url = new URL(request.url);
-
-  // Permanent download redirect route: dynamically re-signs fresh 2-hour URL on access
-  if (decodedTag === "download") {
-    try {
-      const stateFile = path.join(process.cwd(), "data", "format-runs", decodedJobId, "outputs", "state.json");
-      const state = JSON.parse(await readFile(stateFile, "utf8")) as {
-        assetFiles?: Record<string, string>;
-        masterVideo?: { videoPath?: string } | string;
-        videoUrl?: string;
-      };
-      const master = typeof state.masterVideo === "string" ? state.masterVideo : state.masterVideo?.videoPath;
-      const file = state.assetFiles?.["master-video"] ?? master;
-      const runDir = path.join(process.cwd(), "data", "format-runs", decodedJobId);
-      if (!file || !path.resolve(file).startsWith(path.resolve(runDir) + path.sep)) {
-        return new Response("Master video not ready.", { status: 404 });
-      }
-      const freshExp = Date.now() + 2 * 60 * 60 * 1000;
-      const freshSigned = signRender(signingSecret(), decodedJobId, "master-video", freshExp);
-      return Response.redirect(new URL(freshSigned, request.url), 302);
-    } catch {
-      return new Response("Render not found.", { status: 404 });
-    }
-  }
 
   const expiresAt = Number(url.searchParams.get("exp"));
   const signature = url.searchParams.get("sig") ?? "";

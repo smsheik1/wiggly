@@ -52,6 +52,7 @@ async function readAccount(ctx: QueryCtx | MutationCtx, workosUserId: string): P
     ...(row.uploadId ? { uploadId: row.uploadId } : {}),
     ...(row.uploadExpiresAt ? { uploadExpiresAt: row.uploadExpiresAt } : {}),
     ...(row.dailyDraftCalls ? { dailyDraftCalls: row.dailyDraftCalls } : {}),
+    ...(row.consentRecord ? { consentRecord: row.consentRecord } : {}),
     quotes: quotes.map((quote) => ({
       quoteId: quote.quoteId,
       key: quote.key,
@@ -96,6 +97,7 @@ async function writeAccount(ctx: MutationCtx, workosUserId: string, account: Acc
       ...(account.uploadId ? { uploadId: account.uploadId } : {}),
       ...(account.uploadExpiresAt ? { uploadExpiresAt: account.uploadExpiresAt } : {}),
       ...(account.dailyDraftCalls ? { dailyDraftCalls: account.dailyDraftCalls } : {}),
+      ...(account.consentRecord ? { consentRecord: account.consentRecord } : {}),
       updatedAt: now,
     });
   if (existing) {
@@ -111,6 +113,7 @@ async function writeAccount(ctx: MutationCtx, workosUserId: string, account: Acc
       ...(account.uploadId ? { uploadId: account.uploadId } : {}),
       ...(account.uploadExpiresAt ? { uploadExpiresAt: account.uploadExpiresAt } : {}),
       ...(account.dailyDraftCalls ? { dailyDraftCalls: account.dailyDraftCalls } : {}),
+      ...(account.consentRecord ? { consentRecord: account.consentRecord } : {}),
       updatedAt: now,
     });
   }
@@ -296,6 +299,11 @@ export const setPhotoLabels = internalMutation({
     uploadId: v.string(),
     labels: v.array(v.string()),
     photos: v.optional(v.array(v.object({ label: v.string(), filename: v.string() }))),
+    consent: v.optional(v.object({
+      consentedAt: v.number(),
+      ip: v.optional(v.string()),
+      userAgent: v.optional(v.string()),
+    })),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -308,6 +316,14 @@ export const setPhotoLabels = internalMutation({
       if (args.photos && args.photos.length > 0) ledger.attachPhotoFiles(row.workosUserId, args.photos);
       else ledger.attachPhotos(row.workosUserId, args.labels);
     });
+    if (args.consent) {
+      next.consentRecord = {
+        consentedAt: args.consent.consentedAt,
+        ...(args.consent.ip ? { ip: args.consent.ip } : {}),
+        ...(args.consent.userAgent ? { userAgent: args.consent.userAgent } : {}),
+        uploadId: args.uploadId,
+      };
+    }
     await writeAccount(ctx, row.workosUserId, next);
     return null;
   },
