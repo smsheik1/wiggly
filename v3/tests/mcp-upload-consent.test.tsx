@@ -160,6 +160,21 @@ test("upload API route rejects submissions without consent attestation with HTTP
     assert.equal(capturedConsent.ip, "198.51.100.42", "Must capture client IP from x-forwarded-for header");
     assert.equal(capturedConsent.userAgent, "Mozilla/5.0 TestBrowser", "Must capture user-agent header");
     assert.ok(capturedConsent.consentedAt > 0, "Must record timestamp of consent");
+
+    // 4. Verify x-real-ip takes precedence over spoofed x-forwarded-for
+    const realIpReq = new Request("https://wiggly.agentenamel.com/api/mcp/upload/session-12345", {
+      method: "POST",
+      headers: {
+        "x-real-ip": "203.0.113.195",
+        "x-forwarded-for": "1.1.1.1, 10.0.0.1",
+        "user-agent": "Mozilla/5.0 TestBrowser",
+      },
+      body: validForm,
+    });
+    await handleUploadPost(realIpReq, {
+      params: Promise.resolve({ uploadId: "session-12345" }),
+    });
+    assert.equal(capturedConsent?.ip, "203.0.113.195", "Must prioritize x-real-ip over spoofed x-forwarded-for");
   } finally {
     setUploadSessionHookForTest(null);
     setSaveUploadLabelsHookForTest(null);

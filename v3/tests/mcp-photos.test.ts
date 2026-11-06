@@ -187,7 +187,7 @@ test("draftMedia dynamically generates fresh signatures on every read even if vi
 
     const parsed = new URL(media.videoUrl!);
     const exp = Number(parsed.searchParams.get("exp"));
-    assert.ok(exp > Date.now() + 3600000, "Fresh signature expiration must be in the future (~2h)");
+    assert.ok(exp > Date.now() + 29 * 24 * 3600 * 1000, "Delivered master video expiration must be ~30 days in the future");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
