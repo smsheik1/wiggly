@@ -244,6 +244,12 @@ export default defineSchema({
     uploadId: v.optional(v.string()),
     uploadExpiresAt: v.optional(v.number()),
     dailyDraftCalls: v.optional(v.object({ date: v.string(), count: v.number() })),
+    consentRecord: v.optional(v.object({
+      consentedAt: v.number(),
+      ip: v.optional(v.string()),
+      userAgent: v.optional(v.string()),
+      uploadId: v.string(),
+    })),
     updatedAt: v.number(),
   }).index("by_workosUserId", ["workosUserId"]).index("by_checkoutToken", ["checkoutToken"]).index("by_stripeCustomerId", ["stripeCustomerId"]).index("by_uploadId", ["uploadId"]),
 

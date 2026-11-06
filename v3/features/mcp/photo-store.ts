@@ -69,10 +69,12 @@ export function photoSignatureValid(secret: string, accountId: string, filename:
 }
 
 export const PHOTO_RETENTION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+export const PHOTO_STALLED_RETENTION_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days maximum grace for stalled/active accounts
 
 export type CleanUploadsOptions = {
   maxAgeMs?: number;
   activeAccountIds?: Set<string> | string[];
+  maxActiveAgeMs?: number;
 };
 
 export async function deleteAccountPhotos(root: string, accountId: string): Promise<boolean> {
@@ -95,6 +97,7 @@ export async function cleanExpiredUploads(
   const options: CleanUploadsOptions =
     typeof optionsOrMaxAge === "number" ? { maxAgeMs: optionsOrMaxAge } : optionsOrMaxAge;
   const maxAgeMs = options.maxAgeMs ?? PHOTO_RETENTION_TTL_MS;
+  const maxActiveAgeMs = options.maxActiveAgeMs ?? PHOTO_STALLED_RETENTION_TTL_MS;
   const activeSet = options.activeAccountIds
     ? (options.activeAccountIds instanceof Set ? options.activeAccountIds : new Set(options.activeAccountIds))
     : new Set<string>();
@@ -106,8 +109,8 @@ export async function cleanExpiredUploads(
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
       const accountId = entry.name;
-      // Never delete photos for an account with active, rendering, or awaiting-credit jobs
-      if (activeSet.has(accountId)) continue;
+      const isActive = activeSet.has(accountId);
+      const effectiveMaxAge = isActive ? maxActiveAgeMs : maxAgeMs;
 
       const accountDir = path.join(root, accountId);
       try {
@@ -122,7 +125,7 @@ export async function cleanExpiredUploads(
             // Ignore individual file stat error
           }
         }
-        if (now - newestFileMtime >= maxAgeMs) {
+        if (now - newestFileMtime >= effectiveMaxAge) {
           await rm(accountDir, { recursive: true, force: true });
           pruned.push(accountId);
         }

@@ -72,6 +72,17 @@ export function importAccount(workosUserId: string, account: import("./film-ledg
   return callInternal<null>("mutation", internal.mcpFilm.importAccount, { workosUserId, account });
 }
 
-export function saveUploadLabels(uploadId: string, labels: string[], photos?: Array<{ label: string; filename: string }>) {
-  return callInternal<null>("mutation", internal.mcpFilm.setPhotoLabels, { uploadId, labels, photos });
+export let saveUploadLabelsHookForTest: ((uploadId: string, labels: string[], photos?: Array<{ label: string; filename: string }>, consent?: { consentedAt: number; ip?: string; userAgent?: string }) => Promise<void>) | null = null;
+export function setSaveUploadLabelsHookForTest(hook: typeof saveUploadLabelsHookForTest) {
+  saveUploadLabelsHookForTest = hook;
+}
+
+export function saveUploadLabels(
+  uploadId: string,
+  labels: string[],
+  photos?: Array<{ label: string; filename: string }>,
+  consent?: { consentedAt: number; ip?: string; userAgent?: string }
+) {
+  if (saveUploadLabelsHookForTest) return saveUploadLabelsHookForTest(uploadId, labels, photos, consent);
+  return callInternal<null>("mutation", internal.mcpFilm.setPhotoLabels, { uploadId, labels, photos, consent });
 }

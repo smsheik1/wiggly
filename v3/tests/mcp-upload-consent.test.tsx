@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { chromium } from "playwright";
 import UploadPage from "../app/upload/[uploadId]/page";
 import { POST as handleUploadPost } from "../app/api/mcp/upload/[uploadId]/route";
-import { setUploadSessionHookForTest } from "../features/mcp/convex-ledger";
+import { setSaveUploadLabelsHookForTest, setUploadSessionHookForTest } from "../features/mcp/convex-ledger";
 
 async function launchBrowser() {
   try {
@@ -130,7 +130,38 @@ test("upload API route rejects submissions without consent attestation with HTTP
     const photoErr = await resWithConsent.text();
     assert.equal(photoErr, "Add a photo and a label for each person, such as Mom or Leo.");
     assert.notEqual(photoErr, errText, "Consent check passed successfully when consent='on'");
+
+    // 3. Submit valid photos WITH consent and verify consentRecord audit trail is passed to ledger
+    let capturedConsent: { consentedAt: number; ip?: string; userAgent?: string } | undefined;
+    setSaveUploadLabelsHookForTest(async (_id, _labels, _photos, consent) => {
+      capturedConsent = consent;
+    });
+
+    const validForm = new FormData();
+    validForm.append("consent", "on");
+    validForm.append("label-0", "Mom");
+    validForm.append("photo-0", new Blob(["valid-photo-data"], { type: "image/jpeg" }), "mom.jpg");
+
+    const validReq = new Request("https://wiggly.agentenamel.com/api/mcp/upload/session-12345", {
+      method: "POST",
+      headers: {
+        "x-forwarded-for": "198.51.100.42, 10.0.0.1",
+        "user-agent": "Mozilla/5.0 TestBrowser",
+      },
+      body: validForm,
+    });
+
+    const validRes = await handleUploadPost(validReq, {
+      params: Promise.resolve({ uploadId: "session-12345" }),
+    });
+
+    assert.equal(validRes.status, 303, "Valid submission redirects with 303");
+    assert.ok(capturedConsent, "Consent audit record must be passed to ledger");
+    assert.equal(capturedConsent.ip, "198.51.100.42", "Must capture client IP from x-forwarded-for header");
+    assert.equal(capturedConsent.userAgent, "Mozilla/5.0 TestBrowser", "Must capture user-agent header");
+    assert.ok(capturedConsent.consentedAt > 0, "Must record timestamp of consent");
   } finally {
     setUploadSessionHookForTest(null);
+    setSaveUploadLabelsHookForTest(null);
   }
 });

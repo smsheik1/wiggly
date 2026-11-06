@@ -2,7 +2,7 @@ import path from "node:path";
 import { exportAccount, importAccount, listActiveJobs } from "../features/mcp/convex-ledger";
 import { releasePreflight, runDraftTick, studioForFormat, type CrewPhoto } from "../features/mcp/draft-worker";
 import { namedSecret } from "../features/mcp/named-secret";
-import { cleanExpiredUploads, signPhoto } from "../features/mcp/photo-store";
+import { cleanExpiredUploads, deleteAccountPhotos, signPhoto } from "../features/mcp/photo-store";
 
 const studio = studioForFormat("my-pixar-story");
 const openRouterKey = await namedSecret("OPENROUTER_API_KEY");
@@ -64,6 +64,20 @@ async function tick() {
     saveAccount: importAccount,
   });
   for (const line of lines) console.error(line);
+
+  // Data Retention: Delete reference photos for any accounts whose active jobs completed
+  try {
+    const remainingActive = await listActiveJobs();
+    const remainingAccounts = new Set(remainingActive.map((j) => j.workosUserId));
+    for (const accountId of activeAccounts) {
+      if (!remainingAccounts.has(accountId)) {
+        console.error(`Jobs completed for account ${accountId}; purging uploaded reference photos per retention policy.`);
+        await deleteAccountPhotos(photoRoot, accountId);
+      }
+    }
+  } catch (cleanError) {
+    console.error("Non-blocking post-completion photo cleanup error:", cleanError);
+  }
 }
 
 if (!photoSecret) {

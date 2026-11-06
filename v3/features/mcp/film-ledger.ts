@@ -157,6 +157,7 @@ export type Account = {
   uploadId?: string;
   uploadExpiresAt?: number;
   dailyDraftCalls?: { date: string; count: number };
+  consentRecord?: { consentedAt: number; ip?: string; userAgent?: string; uploadId: string };
 };
 
 export type LedgerResult =
