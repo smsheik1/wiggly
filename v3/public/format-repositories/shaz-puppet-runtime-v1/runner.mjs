@@ -273,11 +273,15 @@ async function init(args) {
           audioDurationSeconds: sequenceAudioFrames / 24,
           defaultBackgroundId: input.defaultBackgroundId ?? "sisters-room",
           brollMediaList: Array.isArray(input.brollMedia) ? input.brollMedia : [],
+          script: input.script ?? null,
         });
         input.title = input.title ?? derived.title;
         input.totalDurationFrames = sequenceAudioFrames;
         input.shots = derived.shots;
         delete input.defaultBackgroundId;
+        delete input.brollMedia;
+        delete input.headline;
+        delete input.script;
       }
 
       const shouldGenerateLipSync = (isAudioSequence && lipSyncMode !== "off")

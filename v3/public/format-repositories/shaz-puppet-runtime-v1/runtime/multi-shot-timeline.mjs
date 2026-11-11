@@ -267,7 +267,22 @@ export function analyzeSentenceSemantics(text) {
   let chibiPose = "present-open";
   let badge = "KEY POINT";
 
-  if (/\b(food|eat|eating|dinner|cook|cooking|greet|burger|burgers|snack|pizza|mom|kitchen)\b/i.test(lower)) {
+  if (/\b(price|cost|dollar|money|expensive|charge|fee|wallet|retail|msrp|tag|discount|deal|sales)\b/i.test(lower)) {
+    theme = "cold-blue";
+    icon = "trophy";
+    badge = "PRICE TAG";
+    chibiPose = "think-chin";
+  } else if (/\b(catch|ruin|tradeoff|warning|beware|trap|fine print|worst-case|clickbait|fake|scam)\b/i.test(lower)) {
+    theme = "warm-red";
+    icon = "star";
+    badge = "THE CATCH";
+    chibiPose = "shrug-open";
+  } else if (/\b(leak|leaks|rumor|insider|report|sources|scoop|unconfirmed)\b/i.test(lower)) {
+    theme = "energy-orange";
+    icon = "clash";
+    badge = "INSIDER SCOOP";
+    chibiPose = "point-emphasis";
+  } else if (/\b(food|eat|eating|dinner|cook|cooking|greet|burger|burgers|snack|pizza|mom|kitchen)\b/i.test(lower)) {
     theme = "warm-red";
     icon = "burger";
     badge = "HOMEMADE";
@@ -304,9 +319,22 @@ export function analyzeSentenceSemantics(text) {
     chibiPose = "point-emphasis";
   }
 
-  // Derive a punchy 2-4 word uppercase headline
+  // Derive a punchy 2-4 word uppercase headline by filtering out weak stop words
+  const STOP_WORDS = new Set([
+    "a", "an", "the", "with", "to", "of", "and", "in", "for", "on", "is", "are",
+    "just", "from", "that", "this", "they", "you", "we", "our", "your", "it", "its",
+    "be", "been", "being", "have", "has", "had", "do", "does", "did", "but", "if",
+    "or", "because", "as", "until", "while", "by", "about", "into", "through", "during",
+    "before", "after", "above", "below", "between", "under", "then", "once", "here",
+    "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more",
+    "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so",
+    "than", "too", "very", "can", "will", "should", "now", "everyone", "nobody", "already"
+  ]);
+
   const cleanWords = text.replace(/[^\w\s]/g, "").split(/\s+/).filter(Boolean);
-  const headline = cleanWords.slice(0, Math.min(4, cleanWords.length)).join(" ").toUpperCase() || "TAKEAWAY";
+  const meaningfulWords = cleanWords.filter((w) => !STOP_WORDS.has(w.toLowerCase()));
+  const chosenWords = meaningfulWords.length >= 2 ? meaningfulWords : cleanWords;
+  const headline = chosenWords.slice(0, Math.min(4, chosenWords.length)).join(" ").toUpperCase() || "TAKEAWAY";
 
   return { theme, icon, badge, headline, chibiPose };
 }
@@ -353,6 +381,7 @@ export function deriveMultiShotPlan({
   audioDurationSeconds,
   defaultBackgroundId = "sisters-room",
   brollMediaList = [],
+  script = null,
 }) {
   const totalFrames = Math.max(1, Math.round(audioDurationSeconds * 24));
 
@@ -393,6 +422,27 @@ export function deriveMultiShotPlan({
     };
   }
 
+  // Attach authored script headlines and badges to transcript beats if available
+  if (script && (script.hook || Array.isArray(script.beats))) {
+    const authoredBeats = [
+      script.hook,
+      ...(Array.isArray(script.beats) ? script.beats : []),
+      script.landing,
+    ].filter(Boolean);
+
+    for (let i = 0; i < beats.length; i += 1) {
+      const authored = authoredBeats[Math.min(i, authoredBeats.length - 1)];
+      if (authored) {
+        if (!beats[i].cardHeadline && authored.cardHeadline) {
+          beats[i].cardHeadline = authored.cardHeadline;
+        }
+        if (!beats[i].cardBadge && authored.cardBadge) {
+          beats[i].cardBadge = authored.cardBadge;
+        }
+      }
+    }
+  }
+
   // Plan shots from beats with natural video commentary pacing:
   // - talk-to-camera is the primary anchor (~75% of runtime)
   // - neutral-listening is the home baseline, alternating with active punctuation
@@ -416,8 +466,27 @@ export function deriveMultiShotPlan({
     chibiIndices.add(Math.floor(beats.length * 0.7));
   }
   if (brollMediaList && brollMediaList.length > 0) {
-    const brollIdx = Math.floor(beats.length * 0.55);
-    if (!chibiIndices.has(brollIdx)) brollIndices.add(brollIdx);
+    // Distribute b-roll cutaways across the video so all media is showcased
+    if (beats.length >= 7) {
+      const broll1 = Math.floor(beats.length * 0.22);
+      const broll2 = Math.floor(beats.length * 0.55);
+      if (broll1 > 0 && !chibiIndices.has(broll1)) brollIndices.add(broll1);
+      if (broll2 > 0 && !chibiIndices.has(broll2) && broll2 < beats.length - 1) brollIndices.add(broll2);
+      if (beats.length >= 9 && brollMediaList.length >= 3) {
+        const broll3 = Math.floor(beats.length * 0.80);
+        if (broll3 > 0 && !chibiIndices.has(broll3) && broll3 < beats.length - 1) brollIndices.add(broll3);
+      }
+    } else if (beats.length >= 4) {
+      const broll1 = Math.floor(beats.length * 0.55);
+      if (broll1 > 0 && !chibiIndices.has(broll1)) brollIndices.add(broll1);
+      if (beats.length >= 5 && brollMediaList.length >= 2) {
+        const broll2 = Math.floor(beats.length * 0.75);
+        if (broll2 > 0 && !chibiIndices.has(broll2) && broll2 < beats.length - 1) brollIndices.add(broll2);
+      }
+    } else {
+      const broll1 = 1;
+      if (!chibiIndices.has(broll1) && broll1 < beats.length - 1) brollIndices.add(broll1);
+    }
   } else if (beats.length >= 5) {
     const textIdx = Math.floor(beats.length * 0.55);
     if (!chibiIndices.has(textIdx)) textCardIndices.add(textIdx);
@@ -435,6 +504,9 @@ export function deriveMultiShotPlan({
     "present",
   ];
   let activePoseIndex = 0;
+  let brollCount = 0;
+  let otsCount = 0;
+  let chibiCardCount = 0;
 
   for (let bIndex = 0; bIndex < beats.length; bIndex += 1) {
     const beat = beats[bIndex];
@@ -470,6 +542,25 @@ export function deriveMultiShotPlan({
       }
       lastPoseId = chosenPose;
 
+      // Attach OTS graphic to talk-to-camera shots when media is available
+      let otsGraphic = undefined;
+      const prevWasOts = Boolean(shots.at(-1)?.otsGraphic);
+      const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
+      const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || semantics.badge;
+      if (!isFirst && !isLast && brollMediaList && brollMediaList.length > 0 && !prevWasOts) {
+        const otsMedia = brollMediaList[otsCount % brollMediaList.length];
+        otsCount += 1;
+        const shotDuration = endFrame - currentFrame;
+        otsGraphic = {
+          badge: effectiveBadge || "KEY POINT",
+          headline: effectiveHeadline,
+          image: otsMedia,
+          subtext: beat.text.length > 45 ? beat.text.slice(0, 42) + "..." : beat.text,
+          entranceDelayFrames: 4,
+          durationFrames: Math.max(1, shotDuration - 4),
+        };
+      }
+
       shots.push({
         id: shotId,
         shotType: "talk-to-camera",
@@ -477,10 +568,18 @@ export function deriveMultiShotPlan({
         endFrameExclusive: endFrame,
         backgroundId: defaultBackgroundId,
         poseId: chosenPose,
+        ...(otsGraphic ? { otsGraphic } : {}),
       });
     } else if (shotType === "chibi-commentary") {
       lastPoseId = null;
       const shotDuration = endFrame - currentFrame;
+      const cardMedia = brollMediaList && brollMediaList.length > 0
+        ? brollMediaList[chibiCardCount % brollMediaList.length]
+        : null;
+      if (cardMedia) chibiCardCount += 1;
+      const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
+      const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || semantics.badge;
+
       shots.push({
         id: shotId,
         shotType: "chibi-commentary",
@@ -490,17 +589,19 @@ export function deriveMultiShotPlan({
         chibiPose: semantics.chibiPose,
         chibiRoutine: deriveChibiRoutine(semantics.chibiPose, shotDuration),
         card: {
-          badge: semantics.badge,
-          headline: semantics.headline,
+          badge: effectiveBadge,
+          headline: effectiveHeadline,
           quote: beat.text.length > 60 ? beat.text.slice(0, 57) + "..." : beat.text,
           theme: semantics.theme,
           icon: semantics.icon,
+          ...(cardMedia ? { image: cardMedia } : {}),
         },
       });
     } else if (shotType === "b-roll") {
       lastPoseId = null;
       const motions = ["zoom-in", "pan-right", "zoom-out", "pan-left"];
-      const brollMedia = brollMediaList[bIndex % brollMediaList.length] ?? null;
+      const brollMedia = brollMediaList[brollCount % brollMediaList.length] ?? null;
+      brollCount += 1;
       shots.push({
         id: shotId,
         shotType: "b-roll",
@@ -508,7 +609,7 @@ export function deriveMultiShotPlan({
         endFrameExclusive: endFrame,
         backgroundId: defaultBackgroundId,
         brollMedia,
-        motion: motions[bIndex % motions.length],
+        motion: motions[brollCount % motions.length],
       });
     } else if (shotType === "text-card") {
       lastPoseId = null;
@@ -552,6 +653,7 @@ export async function deriveMultiShotPlanWithJev({
   audioDurationSeconds,
   defaultBackgroundId = "sisters-room",
   brollMediaList = [],
+  script = null,
   apiKey,
   fetchFn,
 }) {
@@ -585,6 +687,27 @@ export async function deriveMultiShotPlanWithJev({
     throw new Error("deriveMultiShotPlanWithJev could not extract any speech beats from transcript");
   }
 
+  // Attach authored script headlines and badges to transcript beats if available
+  if (script && (script.hook || Array.isArray(script.beats))) {
+    const authoredBeats = [
+      script.hook,
+      ...(Array.isArray(script.beats) ? script.beats : []),
+      script.landing,
+    ].filter(Boolean);
+
+    for (let i = 0; i < beats.length; i += 1) {
+      const authored = authoredBeats[Math.min(i, authoredBeats.length - 1)];
+      if (authored) {
+        if (!beats[i].cardHeadline && authored.cardHeadline) {
+          beats[i].cardHeadline = authored.cardHeadline;
+        }
+        if (!beats[i].cardBadge && authored.cardBadge) {
+          beats[i].cardBadge = authored.cardBadge;
+        }
+      }
+    }
+  }
+
   const totalFrames = Math.max(1, Math.round(audioDurationSeconds * 24));
   const shots = [];
   let currentFrame = 0;
@@ -611,6 +734,10 @@ export async function deriveMultiShotPlanWithJev({
   const usedPuppetPoses = [];
   let chibiCount = 0;
   let textCardCount = 0;
+  let brollCount = 0;
+  let otsCount = 0;
+  let chibiCardCount = 0;
+  let consecutiveTalkCount = 0;
   const maxChibi = beats.length >= 7 ? 2 : 1;
   const maxTextCards = brollMediaList?.length > 0 ? 0 : 1;
 
@@ -640,7 +767,8 @@ export async function deriveMultiShotPlanWithJev({
       // - First shot is always talk-to-camera
       // - Last shot is always talk-to-camera
       // - Chibi commentary is reserved for comedic cutaways (max 1-2 per video)
-      // - Text card is reserved for key quote/stats (max 1 per video)
+      // - B-roll is used for full-screen visual subject cutaways
+      // - Ensure frequent visual support when brollMediaList is provided
       let shotType = "talk-to-camera";
       if (isFirst || isLast) {
         shotType = "talk-to-camera";
@@ -653,10 +781,15 @@ export async function deriveMultiShotPlanWithJev({
           chibiCount += 1;
         }
       } else if (
-        jevChoice?.shotType === "text-card" ||
-        (brollMediaList?.length > 0 && bIndex === Math.floor(beats.length * 0.5))
+        jevChoice?.shotType === "b-roll" ||
+        (brollMediaList?.length > 0 && (
+          jevChoice?.shotType === "text-card" ||
+          consecutiveTalkCount >= 2 ||
+          (brollCount === 0 && bIndex >= Math.floor(beats.length * 0.25) && bIndex <= Math.floor(beats.length * 0.5)) ||
+          (brollCount === 1 && beats.length >= 6 && bIndex >= Math.floor(beats.length * 0.65))
+        ))
       ) {
-        if (brollMediaList?.length > 0) {
+        if (brollMediaList?.length > 0 && shots.at(-1)?.shotType !== "b-roll") {
           shotType = "b-roll";
         } else if (textCardCount < maxTextCards && shots.at(-1)?.shotType !== "text-card") {
           shotType = "text-card";
@@ -665,6 +798,7 @@ export async function deriveMultiShotPlanWithJev({
       }
 
       if (shotType === "talk-to-camera") {
+        consecutiveTalkCount += 1;
         let chosenPose = "neutral-listening";
         let rationale = "Natural conversational anchor";
 
@@ -701,6 +835,28 @@ export async function deriveMultiShotPlanWithJev({
           usedPuppetPoses.push(chosenPose);
         }
 
+        // Attach OTS graphic card to talk-to-camera shots when media is available
+        let otsGraphic = undefined;
+        const prevWasOts = Boolean(shots.at(-1)?.otsGraphic);
+        const hasActivePose = chosenPose !== "neutral-listening";
+        const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
+        const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || jevChoice?.badge || semantics.badge;
+        if (!isFirst && !isLast && brollMediaList && brollMediaList.length > 0 && !prevWasOts) {
+          if (hasActivePose || shots.at(-1)?.shotType === "talk-to-camera" || otsCount === 0) {
+            const otsMedia = brollMediaList[otsCount % brollMediaList.length];
+            otsCount += 1;
+            const shotDuration = endFrame - currentFrame;
+            otsGraphic = {
+              badge: effectiveBadge || "KEY POINT",
+              headline: effectiveHeadline,
+              image: otsMedia,
+              subtext: beat.text.length > 45 ? beat.text.slice(0, 42) + "..." : beat.text,
+              entranceDelayFrames: 4,
+              durationFrames: Math.max(1, shotDuration - 4),
+            };
+          }
+        }
+
         shots.push({
           id: shotId,
           shotType: "talk-to-camera",
@@ -709,8 +865,10 @@ export async function deriveMultiShotPlanWithJev({
           backgroundId: defaultBackgroundId,
           poseId: chosenPose,
           rationale,
+          ...(otsGraphic ? { otsGraphic } : {}),
         });
       } else if (shotType === "chibi-commentary") {
+        consecutiveTalkCount = 0;
         lastPuppetPose = null;
         let chosenPose = jevChoice?.chibiPose ?? semantics.chibiPose;
         let chosenBadge = jevChoice?.badge ?? semantics.badge;
@@ -724,7 +882,15 @@ export async function deriveMultiShotPlanWithJev({
         lastChibiPose = chosenPose;
         lastBadge = chosenBadge;
 
+        const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
+        const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || chosenBadge;
+
         const shotDuration = endFrame - currentFrame;
+        const cardMedia = brollMediaList && brollMediaList.length > 0
+          ? brollMediaList[chibiCardCount % brollMediaList.length]
+          : null;
+        if (cardMedia) chibiCardCount += 1;
+
         shots.push({
           id: shotId,
           shotType: "chibi-commentary",
@@ -734,19 +900,24 @@ export async function deriveMultiShotPlanWithJev({
           chibiPose: chosenPose,
           chibiRoutine: deriveChibiRoutine(chosenPose, shotDuration),
           card: {
-            badge: chosenBadge,
-            headline: semantics.headline,
+            badge: effectiveBadge,
+            headline: effectiveHeadline,
             quote: beat.text.length > 60 ? beat.text.slice(0, 57) + "..." : beat.text,
             theme: semantics.theme,
             icon: semantics.icon,
+            ...(cardMedia ? { image: cardMedia } : {}),
           },
           rationale: jevChoice
             ? `Jev cutaway comedic instinct: ${chosenPose} (${Math.round((jevChoice.chibiConfidence || 0.8) * 100)}% conf)`
             : undefined,
         });
       } else if (shotType === "b-roll") {
+        consecutiveTalkCount = 0;
         lastPuppetPose = null;
-        const brollMedia = brollMediaList[bIndex % brollMediaList.length] ?? null;
+        const brollMedia = brollMediaList[brollCount % brollMediaList.length] ?? null;
+        brollCount += 1;
+        const motions = ["zoom-in", "pan-right", "zoom-out", "pan-left"];
+        const chosenMotion = jevChoice?.cameraMotion || motions[brollCount % motions.length];
         shots.push({
           id: shotId,
           shotType: "b-roll",
@@ -754,7 +925,7 @@ export async function deriveMultiShotPlanWithJev({
           endFrameExclusive: endFrame,
           backgroundId: defaultBackgroundId,
           brollMedia,
-          motion: jevChoice?.cameraMotion ?? "zoom-in",
+          motion: chosenMotion,
         });
       } else if (shotType === "text-card") {
         lastPuppetPose = null;
