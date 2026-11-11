@@ -7,6 +7,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { AgentUnavailableError, askActiveAgent } from "../../v3/lib/agent-bridge.ts";
+import { ArticleFetchError, fetchArticleForTopic } from "./article-fetch.mjs";
 import { fetchNewsMcpEvents, NewsMcpError, pickDistinctEvents } from "./newsmcp.mjs";
 import {
   filterFreshTopics,
@@ -15,7 +16,7 @@ import {
   recordShown,
   recordTopic,
 } from "./content-ledger.mjs";
-import { validateScript } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/validate-script.mjs";
+import { countWords, validateScript } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/validate-script.mjs";
 import { synthesizeShazVoice } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/voice.mjs";
 import { composeVerticalVideo, formatSafeHeadline } from "./vertical-letterbox.mjs";
 import { sendApprovalVideo, pollApprovalDecision, pollBatchDecision, sendTelegramMessage } from "./telegram-approval.mjs";
@@ -269,92 +270,137 @@ Rules:
 9. headline: A crisp 3-5 word uppercase title (max 32 chars) for the top video card. NEVER slice words mid-syllable.`;
 }
 
+const AUTHOR_RECEIPT_SYMBOL = Symbol("shazAuthorReceipt");
+
+export class ScriptAuthorError extends Error {
+  constructor(message, attempts = [], options) {
+    super(message, options);
+    this.name = "ScriptAuthorError";
+    this.attempts = attempts;
+  }
+}
+
+function buildRetrySuffix({ attempt, maxAttempts, errorMessage, previousPayload }) {
+  const payloadPreview = previousPayload
+    ? JSON.stringify(previousPayload, null, 2).slice(0, 3500)
+    : "";
+  return (
+    `\n\nRETRY REVISION REQUIRED (ATTEMPT ${attempt}/${maxAttempts}):\n` +
+    `Your previous script failed validation with this EXACT error:\n${errorMessage}\n` +
+    (payloadPreview ? `\nPrevious JSON output to repair:\n${payloadPreview}\n` : "") +
+    `Fix the error cleanly while keeping every grounding quote verbatim from SOURCE ARTICLE TEXT and total spoken words strictly 70–88.`
+  );
+}
+
 /**
- * Authors an authentic 5-beat script following writer-playbook.md for the selected topic.
- * Follows Wiggly Rule 13 (Operating Agent is the Author): queries the active host agent bridge
- * to craft genuine, creative scripts tailored to the breaking news topic with temporal anchoring.
+ * Authors an authentic 5-beat script using ONLY the pinned active operating agent (Rule 13).
+ * Retries transient output/validation errors up to `cfg.maxScriptAttempts` (default 3) with exact error feedback.
+ * Never falls back to a canned template script; aborts immediately on `AgentUnavailableError`.
  */
-export async function authorShazScript(topic, { now = new Date() } = {}) {
-  const title = topic.title || "Breaking Story";
-  const snippet = topic.snippet || "";
-
-  // 1. Author with Active Host Agent Bridge (Wiggly Rule 13)
-  try {
-    const bridgePath = path.resolve(root, "../../../lib/agent-bridge.ts");
-    const { askActiveAgent } = await import(bridgePath);
-
-    const prompt = buildAuthorPrompt(topic, { now });
-    const script = await askActiveAgent(prompt);
-    if (script && script.hook && Array.isArray(script.beats)) {
-      validateScript(script, { topic, now });
-      return script;
-    }
-  } catch (err) {
-    console.warn(`[Author Warning] Agent bridge authoring error: ${err.message}`);
+export async function authorShazScript(
+  topic,
+  {
+    now = new Date(),
+    article = null,
+    config = null,
+    askAgentFn = askActiveAgent,
+    allowUngroundedCustomTopic = false,
+  } = {},
+) {
+  const cfg = config || await loadStudioConfig();
+  const requireGroundedClaims = !allowUngroundedCustomTopic;
+  if (requireGroundedClaims && !article?.text) {
+    throw new ScriptAuthorError(
+      `Cannot author script for "${topic?.title || "topic"}" without fetched source article text.`,
+      [],
+    );
   }
 
-  // 2. Procedural contextual fallback if agent bridge is unreachable
-  const cleanSnippet = (snippet || title).replace(/\s+/g, " ").trim();
-  const safeTitle = formatSafeHeadline(title, 45);
-  const safeHeadline = formatSafeHeadline(title, 32).toUpperCase();
-  const script = {
-    schemaVersion: "shaz-script-v1",
-    title: safeTitle,
-    headline: safeHeadline,
-    targetDurationSeconds: 30,
-    research: {
-      primaryInsight: cleanSnippet.slice(0, 100),
-      counterintuitiveAngle: "Every major gaming headline sounds incredible until players realize the hidden tradeoff.",
-      concreteFactOrStory: cleanSnippet.slice(0, 120),
-    },
-    hook: {
-      formula: "uncomfortable-truth",
-      text: `Everyone is buzzing about ${formatSafeHeadline(title, 35)}, but almost nobody is talking about the one catch that ruins it.`,
-      cardHeadline: "CRUSTY USED CONSOLES",
-      cardBadge: "REALITY CHECK",
-    },
-    visualQueries: [
-      `${title.slice(0, 40)} official announcement press key art 16:9`,
-      `${title.slice(0, 40)} official retail product photo screenshot`,
-      `${title.slice(0, 40)} high resolution editorial feature`,
-    ],
-    beats: [
-      {
-        id: "beat-01",
-        connector: "THEREFORE",
-        shotTypeSuggestion: "talk-to-camera",
-        cardHeadline: "READ THE FINE PRINT",
-        cardBadge: "THE CATCH",
-        text: "The headline sounds amazing until you actually read what the fine print says.",
-        impliedQuestion: "What is the catch?",
-      },
-      {
-        id: "beat-02",
-        connector: "BUT",
-        shotTypeSuggestion: "b-roll",
-        cardHeadline: "HYPE VS PRICE TAG",
-        cardBadge: "PRICE TAG",
-        text: "Publishers know that dropping a hype trailer distracts everyone from the real price tag.",
-        impliedQuestion: "Why did they do this?",
-      },
-      {
-        id: "beat-03",
-        connector: "THEREFORE",
-        shotTypeSuggestion: "chibi-commentary",
-        cardHeadline: "PREPARE FOR THE WORST",
-        cardBadge: "COMMUNITY ROAST",
-        text: "Therefore the entire community is already preparing for the worst-case scenario.",
-        impliedQuestion: "What is the verdict?",
-      },
-    ],
-    landing: {
-      type: "question",
-      text: "Tell me in the comments: are you jumping in early or waiting for reviews?",
-    },
-  };
+  const basePrompt = buildAuthorPrompt(topic, { now, article });
+  const attempts = [];
+  let lastError = null;
+  let lastPayload = null;
 
-  validateScript(script, { topic, now });
-  return script;
+  for (let attempt = 1; attempt <= cfg.maxScriptAttempts; attempt += 1) {
+    const startedAt = Date.now();
+    const prompt = lastError
+      ? `${basePrompt}${buildRetrySuffix({
+        attempt,
+        maxAttempts: cfg.maxScriptAttempts,
+        errorMessage: lastError,
+        previousPayload: lastPayload,
+      })}`
+      : basePrompt;
+
+    let script;
+    try {
+      script = await askAgentFn(prompt, {
+        agent: cfg.writerAgent,
+        timeoutMs: cfg.agentTimeoutMs,
+        requireJson: true,
+      });
+    } catch (err) {
+      attempts.push({
+        attempt,
+        ok: false,
+        errorType: err?.name || "Error",
+        error: err?.message || String(err),
+        durationMs: Date.now() - startedAt,
+      });
+      if (err instanceof AgentUnavailableError) {
+        throw err;
+      }
+      lastError = err?.message || String(err);
+      lastPayload = null;
+      console.warn(`  ⚠️ Script authoring attempt ${attempt}/${cfg.maxScriptAttempts} failed (${err?.name}): ${lastError}`);
+      continue;
+    }
+
+    lastPayload = script;
+    try {
+      validateScript(script, {
+        topic,
+        now,
+        minWords: 70,
+        maxWords: 88,
+        articleText: article?.text ?? null,
+        requireGroundedClaims,
+      });
+      const dialogueText = compileDialogueText(script);
+      const durationMs = Date.now() - startedAt;
+      attempts.push({ attempt, ok: true, durationMs });
+      const receipt = {
+        schemaVersion: 1,
+        writerAgent: cfg.writerAgent,
+        finalAttempt: attempt,
+        maxAttempts: cfg.maxScriptAttempts,
+        finalWordCount: countWords(dialogueText),
+        authoredAt: new Date().toISOString(),
+        attempts,
+      };
+      Object.defineProperty(script, AUTHOR_RECEIPT_SYMBOL, {
+        value: receipt,
+        enumerable: false,
+        configurable: true,
+      });
+      return script;
+    } catch (err) {
+      lastError = err?.message || String(err);
+      attempts.push({
+        attempt,
+        ok: false,
+        errorType: "ValidationError",
+        error: lastError,
+        durationMs: Date.now() - startedAt,
+      });
+      console.warn(`  ⚠️ Script validation attempt ${attempt}/${cfg.maxScriptAttempts} failed: ${lastError}`);
+    }
+  }
+
+  throw new ScriptAuthorError(
+    `Failed authoring grounded script for "${topic?.title || "topic"}" after ${cfg.maxScriptAttempts} attempts: ${lastError}`,
+    attempts,
+  );
 }
 
 /**
@@ -554,6 +600,8 @@ function resolveStudioDeps(deps = {}) {
     loadStudioConfig,
     findNextStory,
     findTopStories,
+    fetchArticleForTopic,
+    askAgentFn: askActiveAgent,
     authorShazScript,
     compileDialogueText,
     sourceStoryMedia,
@@ -578,6 +626,151 @@ function resolveStudioDeps(deps = {}) {
     bufferPollIntervalMs: 10_000,
     ...deps,
   };
+}
+
+/**
+ * Produces one grounded video candidate from story -> article -> grounded script -> media/voice -> render -> vertical MP4,
+ * persisting `story.json`, `article.json`, `script.json`, and `author-receipt.json` into `runDirectory` after `init`.
+ */
+async function produceGroundedCandidateRun({
+  story,
+  runId,
+  cfg,
+  isCustomTopic = false,
+  d,
+}) {
+  const runDirectory = d.resolveRunDirectory(root, runId);
+  const stageDir = await fs.mkdtemp(path.join(os.tmpdir(), `wiggly-stage-${runId}-`));
+
+  try {
+    const article = isCustomTopic ? null : await d.fetchArticleForTopic(story.topic);
+    const script = await d.authorShazScript(story.topic, {
+      article,
+      config: cfg,
+      askAgentFn: d.askAgentFn,
+      allowUngroundedCustomTopic: isCustomTopic,
+    });
+    const dialogueText = d.compileDialogueText(script);
+    const receipt = script?.[AUTHOR_RECEIPT_SYMBOL] || {
+      schemaVersion: 1,
+      writerAgent: cfg.writerAgent,
+      finalAttempt: 1,
+      maxAttempts: cfg.maxScriptAttempts,
+      finalWordCount: countWords(dialogueText),
+      authoredAt: new Date().toISOString(),
+      attempts: [{ attempt: 1, ok: true }],
+    };
+
+    const storyRecord = {
+      schemaVersion: 1,
+      eventId: story.topic?.eventId ?? story.topic?.event_id ?? null,
+      title: story.topic?.title || script.title,
+      link: article?.url ?? story.topic?.link ?? null,
+      sourceUrl: script.sourceUrl ?? article?.url ?? story.topic?.link ?? null,
+      sources: Array.isArray(story.topic?.sources) ? story.topic.sources : [],
+      source: story.source || null,
+      pickReason: story.pickReason ?? null,
+      writerAgent: cfg.writerAgent,
+      runId,
+    };
+    const articleRecord = article
+      ? {
+          url: article.url,
+          fetchedAt: article.fetchedAt,
+          sha256: article.sha256,
+          title: article.title,
+          text: article.text,
+        }
+      : null;
+
+    await d.writeJson(path.join(stageDir, "story.json"), storyRecord);
+    if (articleRecord) {
+      await d.writeJson(path.join(stageDir, "article.json"), articleRecord);
+    }
+    await d.writeJson(path.join(stageDir, "script.json"), script);
+    await d.writeJson(path.join(stageDir, "author-receipt.json"), receipt);
+
+    const downloadedMediaList = await d.sourceStoryMedia({
+      topic: story.topic,
+      script,
+      stageDir,
+    });
+
+    const audioFile = path.join(stageDir, "user-audio.wav");
+    await d.synthesizeShazVoice({
+      text: dialogueText,
+      outputPath: audioFile,
+    });
+
+    const allowedBgs = ["living-room", "map-photo-zone", "sisters-room", "pure-white"];
+    const chosenBg = allowedBgs.includes(script.backgroundId) ? script.backgroundId : "living-room";
+    const multiShotInput = {
+      schemaVersion: "shaz-multi-shot-v1",
+      title: script.headline || formatSafeHeadline(script.title, 36),
+      headline: script.headline || formatSafeHeadline(script.title, 32),
+      defaultBackgroundId: chosenBg,
+      brollMedia: downloadedMediaList,
+      script,
+    };
+    const inputJsonPath = path.join(stageDir, "input.json");
+    await d.writeJson(inputJsonPath, multiShotInput);
+
+    d.execute("node", [
+      path.join(root, "runner.mjs"),
+      "init",
+      `--run=${runId}`,
+      `--input=${inputJsonPath}`,
+      `--audio=${audioFile}`,
+    ], { cwd: root });
+
+    // Write traceability records into runDirectory ONLY after `runner.mjs init` creates it
+    await fs.mkdir(runDirectory, { recursive: true });
+    await d.writeJson(path.join(runDirectory, "story.json"), storyRecord);
+    if (articleRecord) {
+      await d.writeJson(path.join(runDirectory, "article.json"), articleRecord);
+    }
+    await d.writeJson(path.join(runDirectory, "script.json"), script);
+    await d.writeJson(path.join(runDirectory, "author-receipt.json"), receipt);
+
+    if (downloadedMediaList.length > 0) {
+      const runMediaDir = path.join(runDirectory, "media");
+      await fs.mkdir(runMediaDir, { recursive: true });
+      for (const rel of downloadedMediaList) {
+        const src = path.join(stageDir, rel);
+        const dst = path.join(runDirectory, rel);
+        if (fsSync.existsSync(src) && !fsSync.existsSync(dst)) {
+          await fs.copyFile(src, dst);
+        }
+      }
+    }
+
+    d.execute("node", [path.join(root, "runner.mjs"), "validate", `--run=${runId}`], { cwd: root });
+    d.execute("node", [path.join(root, "runner.mjs"), "render", `--run=${runId}`], { cwd: root });
+
+    const rawMasterVideo = path.join(runDirectory, "final.mp4");
+    const transcriptPath = path.join(runDirectory, "transcript.json");
+    const verticalVideoPath = path.join(runDirectory, "final-vertical.mp4");
+    await d.composeVerticalVideo({
+      sourceVideoPath: rawMasterVideo,
+      transcriptPath,
+      headline: script.headline || formatSafeHeadline(script.title, 36),
+      outputPath: verticalVideoPath,
+    });
+
+    return {
+      runId,
+      runDirectory,
+      rawMasterVideo,
+      verticalVideoPath,
+      script,
+      article,
+      receipt,
+      dialogueText,
+      story,
+    };
+  } finally {
+    await fs.rm(stageDir, { recursive: true, force: true }).catch(() => {});
+  }
 }
 
 async function notifyFatalStudioAlert(sendTelegramMessageFn, headline, err) {
@@ -716,181 +909,128 @@ export async function runDailyStudio({
   console.log("================================================================================\n");
 
   const runId = `daily-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
-  const runDirectory = d.resolveRunDirectory(root, runId);
-  const stageDir = await fs.mkdtemp(path.join(os.tmpdir(), "studio-stage-"));
 
   try {
-    // 1. Topic Ingestion & Deduplication
+    const cfg = await d.loadStudioConfig();
     console.log("📡 STEP 1: Scouting Breaking Topics & Content Ledger...");
-    let story;
-    if (customTopic) {
-      story = { topic: { title: customTopic, snippet: customTopic }, source: "manual-override" };
+    const isCustomTopic = Boolean(customTopic);
+    let candidatePool;
+    if (isCustomTopic) {
+      candidatePool = [{ topic: { title: customTopic, snippet: customTopic }, source: "manual-override" }];
+    } else if (deps.findNextStory && !deps.findTopStories) {
+      const next = await d.findNextStory({ ledgerPath, env });
+      candidatePool = next ? [next] : [];
     } else {
-      story = await d.findNextStory({ ledgerPath, env });
-      if (!story) {
-        const msg = "No fresh stories available from NewsMCP today.";
-        await notifyFatalStudioAlert(d.sendTelegramMessage, "No Fresh Stories Today", new Error(msg));
-        throw new Error(msg);
-      }
+      candidatePool = await d.findTopStories({ count: 3, ledgerPath, env, config: cfg });
     }
-    console.log(`  Selected Story: "${story.topic.title}" (${story.source})`);
 
-    // 2. Creative Script Synthesis
-    console.log("\n✍️  STEP 2: Synthesizing Script (Enforcing Therefore/But & AI Tell Linter)...");
-    const script = await d.authorShazScript(story.topic);
-    const dialogueText = d.compileDialogueText(script);
-    console.log(`  Title: ${script.title}`);
-    console.log(`  Dialogue: "${dialogueText}"`);
-    await d.writeJson(path.join(stageDir, "script.json"), script);
+    if (candidatePool.length === 0) {
+      const msg = "No fresh stories available from NewsMCP today.";
+      await notifyFatalStudioAlert(d.sendTelegramMessage, "No Fresh Stories Today", new Error(msg));
+      throw new Error(msg);
+    }
 
-    // 2b. Sourcing Authentic Subject Imagery via Google Images
-    console.log("\n🖼️  STEP 2b: Sourcing Authentic Topic Imagery via Google Images...");
-    const downloadedMediaList = await d.sourceStoryMedia({
-      topic: story.topic,
-      script,
-      stageDir,
-    });
-
-    // 3. Cloned Shaz Voice Synthesis
-    console.log("\n🎙️  STEP 3: Synthesizing Shaz Voice (Cartesia Sonic-3.6 Clone @ -16 LUFS)...");
-    const audioFile = path.join(stageDir, "user-audio.wav");
-    await d.synthesizeShazVoice({
-      text: dialogueText,
-      outputPath: audioFile,
-    });
-    console.log(`  Audio generated: ${audioFile}`);
-
-    // 4. Multi-Shot Animation & Jev Actor Direction
-    console.log("\n🎬 STEP 4: Initializing Multi-Shot Puppet Timeline with Jev Director...");
-    const allowedBgs = ["living-room", "map-photo-zone", "sisters-room", "pure-white"];
-    const chosenBg = allowedBgs.includes(script.backgroundId) ? script.backgroundId : "living-room";
-
-    const multiShotInput = {
-      schemaVersion: "shaz-multi-shot-v1",
-      title: script.headline || formatSafeHeadline(script.title, 36),
-      headline: script.headline || formatSafeHeadline(script.title, 32),
-      defaultBackgroundId: chosenBg,
-      brollMedia: downloadedMediaList,
-      script,
-    };
-    const inputJsonPath = path.join(stageDir, "input.json");
-    await d.writeJson(inputJsonPath, multiShotInput);
-
-    // Run official format workflow: init -> validate -> render
-    console.log("  Running runner init...");
-    d.execute("node", [
-      path.join(root, "runner.mjs"),
-      "init",
-      `--run=${runId}`,
-      `--input=${inputJsonPath}`,
-      `--audio=${audioFile}`,
-    ], { cwd: root });
-
-    // Ensure staged media files are present in runDirectory/media
-    if (downloadedMediaList.length > 0) {
-      const runMediaDir = path.join(runDirectory, "media");
-      await fs.mkdir(runMediaDir, { recursive: true });
-      for (const rel of downloadedMediaList) {
-        const src = path.join(stageDir, rel);
-        const dst = path.join(runDirectory, rel);
-        if (fsSync.existsSync(src) && !fsSync.existsSync(dst)) {
-          await fs.copyFile(src, dst);
+    let produced = null;
+    const skips = [];
+    for (const story of candidatePool) {
+      console.log(`  Selected Story: "${story.topic.title}" (${story.source})`);
+      try {
+        produced = await produceGroundedCandidateRun({
+          story,
+          runId,
+          cfg,
+          isCustomTopic,
+          d,
+        });
+        break;
+      } catch (err) {
+        if (err instanceof AgentUnavailableError) throw err;
+        if (err instanceof ArticleFetchError || err instanceof ScriptAuthorError) {
+          skips.push({ title: story.topic.title, reason: err.message });
+          console.warn(`  ⏭️ Skipping "${story.topic.title}": ${err.message}`);
+          continue;
         }
+        throw err;
       }
     }
 
-  console.log("  Running runner validate...");
-  d.execute("node", [path.join(root, "runner.mjs"), "validate", `--run=${runId}`], { cwd: root });
+    if (!produced) {
+      const msg = `No usable candidate stories succeeded (${skips.length} skipped).`;
+      await notifyFatalStudioAlert(d.sendTelegramMessage, "All Candidates Skipped", new Error(msg));
+      throw new Error(msg);
+    }
 
-  console.log("  Rendering 1280x720 multi-shot video...");
-  d.execute("node", [path.join(root, "runner.mjs"), "render", `--run=${runId}`], { cwd: root });
+    const { runDirectory, rawMasterVideo, verticalVideoPath, script, dialogueText, story } = produced;
+    console.log(`  Vertical video ready: ${verticalVideoPath}`);
 
-  const rawMasterVideo = path.join(runDirectory, "final.mp4");
-  const transcriptPath = path.join(runDirectory, "transcript.json");
+    if (dryRun) {
+      console.log("\n[DRY RUN COMPLETE] Staged run assets preserved at:", runDirectory);
+      return { status: "dry-run-success", runDirectory, verticalVideoPath };
+    }
 
-  // 5. Vertical Letterboxing (1080x1920) + Animated Karaoke Subtitles
-  console.log("\n📐 STEP 5: Packaging 1080x1920 Vertical Letterbox for Instagram Reels...");
-  const verticalVideoPath = path.join(runDirectory, "final-vertical.mp4");
-  await d.composeVerticalVideo({
-    sourceVideoPath: rawMasterVideo,
-    transcriptPath,
-    headline: script.headline || formatSafeHeadline(script.title, 36),
-    outputPath: verticalVideoPath,
-  });
-  console.log(`  Vertical video ready: ${verticalVideoPath}`);
+    console.log("\n📱 STEP 6: Dispatching Preview to Telegram for One-Click Approval...");
+    const approval = await d.sendApprovalVideo({
+      videoPath: verticalVideoPath,
+      title: script.title,
+      runId,
+      captionText: dialogueText,
+    });
+    console.log(`  Preview sent to Telegram Chat ${approval.chatId}`);
+    await d.recordShown(story.topic, { ledgerPath, env });
 
-  if (dryRun) {
-    console.log("\n[DRY RUN COMPLETE] Staged run assets preserved at:", runDirectory);
-    return { status: "dry-run-success", runDirectory, verticalVideoPath };
+    let decision = "approved";
+    if (!autoApprove) {
+      console.log("  Waiting for operator approval on Telegram...");
+      decision = await d.pollApprovalDecision({ runId });
+    }
+
+    if (decision !== "approved") {
+      console.log("  ❌ Video rejected by operator. Publication aborted.");
+      return { status: "rejected", runDirectory };
+    }
+
+    console.log("\n✍️  STEP 7: Signing Human Review Gate & Finalizing Deliverables...");
+    const { postResult } = await finalizeUploadPublishAndCleanup({
+      runId,
+      runDirectory,
+      rawMasterVideo,
+      verticalVideoPath,
+      title: script.title,
+      dialogueText,
+      tags: script.hashtags || null,
+      story,
+      reviewNote: `Approved via Telegram one-click dispatch for ${script.title}`,
+      ledgerPath,
+      env,
+      deps: d,
+    });
+    const publishedChannels = Object.keys(postResult.channels).join(", ");
+    console.log(`  ✅ Successfully published to: ${publishedChannels}!`);
+    if (postResult.pending.length > 0) {
+      console.log(`  ℹ️ Pending channels: ${postResult.pending.map((p) => p.service).join(", ")}`);
+    }
+    console.log(`  Logged to published-topics.json`);
+
+    console.log("\n================================================================================");
+    console.log("🎉 DAILY STUDIO RUN FINISHED SUCCESSFULLY!");
+    console.log("================================================================================\n");
+
+    return {
+      status: "published",
+      runId,
+      postResult,
+      verticalVideoPath,
+    };
+  } catch (err) {
+    if (err instanceof AgentUnavailableError || err instanceof NewsMcpError) {
+      await notifyFatalStudioAlert(
+        d.sendTelegramMessage,
+        err instanceof AgentUnavailableError ? "Agent Unavailable" : "NewsMCP Failure",
+        err,
+      );
+    }
+    throw err;
   }
-
-  // 6. Telegram Bot Interactive Approval
-  console.log("\n📱 STEP 6: Dispatching Preview to Telegram for One-Click Approval...");
-  const approval = await d.sendApprovalVideo({
-    videoPath: verticalVideoPath,
-    title: script.title,
-    runId,
-    captionText: dialogueText,
-  });
-  console.log(`  Preview sent to Telegram Chat ${approval.chatId}`);
-  await d.recordShown(story.topic, { ledgerPath, env });
-
-  let decision = "approved";
-  if (!autoApprove) {
-    console.log("  Waiting for operator approval on Telegram...");
-    decision = await d.pollApprovalDecision({ runId });
-  }
-
-  if (decision !== "approved") {
-    console.log("  ❌ Video rejected by operator. Publication aborted.");
-    return { status: "rejected", runDirectory };
-  }
-
-  // 7–8. Finalize -> Upload to Convex -> Publish via Buffer -> Delete on "sent"
-  console.log("\n✍️  STEP 7: Signing Human Review Gate & Finalizing Deliverables...");
-  const { postResult } = await finalizeUploadPublishAndCleanup({
-    runId,
-    runDirectory,
-    rawMasterVideo,
-    verticalVideoPath,
-    title: script.title,
-    dialogueText,
-    tags: script.hashtags || null,
-    story,
-    reviewNote: `Approved via Telegram one-click dispatch for ${script.title}`,
-    ledgerPath,
-    env,
-    deps: d,
-  });
-  const publishedChannels = Object.keys(postResult.channels).join(", ");
-  console.log(`  ✅ Successfully published to: ${publishedChannels}!`);
-  if (postResult.pending.length > 0) {
-    console.log(`  ℹ️ Pending channels: ${postResult.pending.map((p) => p.service).join(", ")}`);
-  }
-  console.log(`  Logged to published-topics.json`);
-
-  console.log("\n================================================================================");
-  console.log("🎉 DAILY STUDIO RUN FINISHED SUCCESSFULLY!");
-  console.log("================================================================================\n");
-
-  return {
-    status: "published",
-    runId,
-    postResult,
-    verticalVideoPath,
-  };
-} catch (err) {
-  if (err instanceof AgentUnavailableError || err instanceof NewsMcpError) {
-    await notifyFatalStudioAlert(
-      d.sendTelegramMessage,
-      err instanceof AgentUnavailableError ? "Agent Unavailable" : "NewsMCP Failure",
-      err,
-    );
-  }
-  throw err;
-} finally {
-  await fs.rm(stageDir, { recursive: true, force: true }).catch(() => {});
-}
 }
 
 /**
@@ -923,116 +1063,61 @@ export async function runDailyBatch({
     console.log(`🎬 WIGGLY ANIMATE SHAZ DAILY STUDIO: BATCH MODE (${targetCount} CANDIDATES)`);
     console.log("================================================================================\n");
 
-    const allStories = customTopics && customTopics.length > 0
+    const isCustomTopics = Array.isArray(customTopics) && customTopics.length > 0;
+    const candidatePool = isCustomTopics
       ? customTopics.map((t) => ({ topic: typeof t === "string" ? { title: t } : t, source: "custom" }))
       : await d.findTopStories({ count: targetCount, ledgerPath, env, config: cfg });
 
-    const stories = allStories.slice(0, targetCount);
-
-    if (stories.length === 0) {
+    if (candidatePool.length === 0) {
       const msg = "No fresh stories available from NewsMCP today.";
       await notifyFatalStudioAlert(d.sendTelegramMessage, "No Fresh Stories Today", new Error(msg));
       throw new Error(msg);
     }
 
-  console.log(`Found ${stories.length} breaking candidate stories:`);
-  stories.forEach((s, idx) => {
-    console.log(`  ${idx + 1}. [${s.source}] ${s.topic.title}`);
-  });
+    console.log(`Found ${candidatePool.length} ranked candidate stories (target ${targetCount}):`);
+    candidatePool.forEach((s, idx) => {
+      console.log(`  ${idx + 1}. [${s.source}] ${s.topic.title}`);
+    });
 
-  const candidates = [];
+    const candidates = [];
+    const skips = [];
 
-  for (let i = 0; i < stories.length; i++) {
-    const candidateNumber = i + 1;
-    const story = stories[i];
-    console.log(`\n--------------------------------------------------------------------------------`);
-    console.log(`🛠️  PRODUCING CANDIDATE ${candidateNumber}/${stories.length}: "${story.topic.title}"`);
-    console.log(`--------------------------------------------------------------------------------`);
+    for (const story of candidatePool) {
+      if (candidates.length >= targetCount) break;
+      const candidateNumber = candidates.length + 1;
+      console.log(`\n--------------------------------------------------------------------------------`);
+      console.log(`🛠️  PRODUCING CANDIDATE ${candidateNumber}/${targetCount}: "${story.topic.title}"`);
+      console.log(`--------------------------------------------------------------------------------`);
 
-    const runId = `daily-${new Date().toISOString().slice(0, 10)}-${Math.random().toString(36).slice(2, 10)}`;
-    const runDirectory = d.resolveRunDirectory(root, runId);
-    const stageDir = path.join(os.tmpdir(), `wiggly-daily-batch-${runId}`);
-    await fs.mkdir(stageDir, { recursive: true });
-
-    try {
-      // 1. Script authoring
-      const script = await d.authorShazScript(story.topic);
-      const dialogueText = d.compileDialogueText(script);
-      await d.writeJson(path.join(stageDir, "script.json"), script);
-
-      // 2. Sourcing Authentic Subject Imagery via Google Images
-      const downloadedMediaList = await d.sourceStoryMedia({
-        topic: story.topic,
-        script,
-        stageDir,
-      });
-
-      // 3. Voice synthesis
-      const audioFile = path.join(stageDir, "user-audio.wav");
-      await d.synthesizeShazVoice({
-        text: dialogueText,
-        outputPath: audioFile,
-      });
-
-      // 4. Multi-shot animation & render
-      const allowedBgs = ["living-room", "map-photo-zone", "sisters-room", "pure-white"];
-      const chosenBg = allowedBgs.includes(script.backgroundId) ? script.backgroundId : "living-room";
-
-      const multiShotInput = {
-        schemaVersion: "shaz-multi-shot-v1",
-        title: script.headline || formatSafeHeadline(script.title, 36),
-        headline: script.headline || formatSafeHeadline(script.title, 32),
-        defaultBackgroundId: chosenBg,
-        brollMedia: downloadedMediaList,
-        script,
-      };
-      const inputJsonPath = path.join(stageDir, "input.json");
-      await d.writeJson(inputJsonPath, multiShotInput);
-
-      d.execute("node", [
-        path.join(root, "runner.mjs"),
-        "init",
-        `--run=${runId}`,
-        `--input=${inputJsonPath}`,
-        `--audio=${audioFile}`,
-      ], { cwd: root });
-
-      if (downloadedMediaList.length > 0) {
-        const runMediaDir = path.join(runDirectory, "media");
-        await fs.mkdir(runMediaDir, { recursive: true });
-        for (const rel of downloadedMediaList) {
-          const src = path.join(stageDir, rel);
-          const dst = path.join(runDirectory, rel);
-          if (fsSync.existsSync(src) && !fsSync.existsSync(dst)) {
-            await fs.copyFile(src, dst);
-          }
+      const runId = `daily-${new Date().toISOString().slice(0, 10)}-${Math.random().toString(36).slice(2, 10)}`;
+      let produced;
+      try {
+        produced = await produceGroundedCandidateRun({
+          story,
+          runId,
+          cfg,
+          isCustomTopic: isCustomTopics,
+          d,
+        });
+      } catch (err) {
+        if (err instanceof AgentUnavailableError) throw err;
+        if (err instanceof ArticleFetchError || err instanceof ScriptAuthorError) {
+          const stage = err instanceof ArticleFetchError ? "article-fetch" : "script-author";
+          skips.push({ title: story.topic.title, stage, reason: err.message });
+          console.warn(`  ⏭️ Skipping "${story.topic.title}" [${stage}]: ${err.message}`);
+          continue;
         }
+        throw err;
       }
 
-      d.execute("node", [path.join(root, "runner.mjs"), "validate", `--run=${runId}`], { cwd: root });
-      d.execute("node", [path.join(root, "runner.mjs"), "render", `--run=${runId}`], { cwd: root });
-
-      const rawMasterVideo = path.join(runDirectory, "final.mp4");
-      const transcriptPath = path.join(runDirectory, "transcript.json");
-
-      // 5. Vertical letterbox
-      const verticalVideoPath = path.join(runDirectory, "final-vertical.mp4");
-      await d.composeVerticalVideo({
-        sourceVideoPath: rawMasterVideo,
-        transcriptPath,
-        headline: script.headline || formatSafeHeadline(script.title, 36),
-        outputPath: verticalVideoPath,
-      });
-
-      // 6. Send preview to Telegram
-      console.log(`  Dispatching Candidate ${candidateNumber}/${stories.length} to Telegram...`);
+      console.log(`  Dispatching Candidate ${candidateNumber} to Telegram...`);
       const approval = await d.sendApprovalVideo({
-        videoPath: verticalVideoPath,
-        title: script.title,
+        videoPath: produced.verticalVideoPath,
+        title: produced.script.title,
         runId,
-        captionText: dialogueText,
+        captionText: produced.dialogueText,
         candidateNumber,
-        totalCandidates: stories.length,
+        totalCandidates: targetCount,
       });
 
       if (!dryRun) {
@@ -1041,40 +1126,44 @@ export async function runDailyBatch({
 
       candidates.push({
         candidateNumber,
-        runId,
-        runDirectory,
-        rawMasterVideo,
-        verticalVideoPath,
-        script,
-        dialogueText,
-        story,
+        ...produced,
         approval,
       });
       console.log(`  ✅ Candidate ${candidateNumber} dispatched to Telegram.`);
-    } finally {
-      await fs.rm(stageDir, { recursive: true, force: true }).catch(() => {});
     }
-  }
 
-  // Send batch summary banner message to Telegram
-  try {
-    const countLabel = candidates.length === 1 ? "CANDIDATE" : "CANDIDATES";
-    const shortfallNote = candidates.length < targetCount
-      ? `\n\nℹ️ Only ${candidates.length}/${targetCount} fresh distinct stories were available today.`
-      : "";
-    await d.sendTelegramMessage({
-      text:
-        `🌅 *${candidates.length} DAILY ${countLabel} READY FOR REVIEW*\n\n` +
-        `Hey Shaz! Above are your ${candidates.length} daily candidate videos for today.\n\n` +
-        `Watch each cut above and tap *🚀 Pick & Post* on your favorite. Wiggly will immediately push it live across *Instagram Reels* (@shazskits), *YouTube Shorts* (Shaz), and *TikTok*!` +
-        shortfallNote,
-    });
-  } catch {}
+    if (candidates.length === 0) {
+      const skipDetail = skips.map((s) => `• ${s.title} (${s.stage}): ${s.reason}`).join("\n");
+      const msg = `No usable candidates produced today (${skips.length} skipped):\n${skipDetail}`;
+      await notifyFatalStudioAlert(d.sendTelegramMessage, "All Candidates Skipped", new Error(msg));
+      throw new Error(msg);
+    }
 
-  if (dryRun) {
-    console.log("\n[DRY RUN COMPLETE] Staged candidates preserved.");
-    return { status: "dry-run-success", candidates };
-  }
+    // Send batch summary banner message to Telegram
+    try {
+      const countLabel = candidates.length === 1 ? "CANDIDATE" : "CANDIDATES";
+      const shortfallNote = candidates.length < targetCount
+        ? `\n\nℹ️ Only ${candidates.length}/${targetCount} fresh distinct stories succeeded today.`
+        : "";
+      const skipNote = skips.length > 0
+        ? `\n\n⏭️ *Skipped ${skips.length} candidate${skips.length === 1 ? "" : "s"}:*\n` +
+          skips.map((s) => `• _${s.title}_ (${s.stage})`).join("\n")
+        : "";
+      await d.sendTelegramMessage({
+        text:
+          `🌅 *${candidates.length} DAILY ${countLabel} READY FOR REVIEW*\n` +
+          `Writer: \`${cfg.writerAgent}\`\n\n` +
+          `Hey Shaz! Above are your ${candidates.length} daily candidate videos for today.\n\n` +
+          `Watch each cut above and tap *🚀 Pick & Post* on your favorite. Wiggly will immediately push it live across *Instagram Reels* (@shazskits), *YouTube Shorts* (Shaz), and *TikTok*!` +
+          shortfallNote +
+          skipNote,
+      });
+    } catch {}
+
+    if (dryRun) {
+      console.log("\n[DRY RUN COMPLETE] Staged candidates preserved.");
+      return { status: "dry-run-success", candidates, skips };
+    }
 
   let winner = candidates[0];
   if (!autoApprove) {
