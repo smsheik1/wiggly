@@ -13,6 +13,7 @@ import {
   renderSubtitlePhrase,
   composeVerticalVideo,
   formatSafeHeadline,
+  VERTICAL_ENCODE_ARGS,
 } from "../vertical-letterbox.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -246,4 +247,36 @@ test("formatSafeHeadline snaps to whole word boundaries and never slices words m
 
   const shortHeadline = "GTA 6 Release Date";
   assert.equal(formatSafeHeadline(shortHeadline, 36), "GTA 6 Release Date");
+});
+
+test("composeVerticalVideo enforces capped bitrate encode flags without ultrafast", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "shaz-vert-args-"));
+  const inputVideo = path.join(tempDir, "input.mp4");
+  const outputVideo = path.join(tempDir, "output-vertical.mp4");
+  await fs.writeFile(inputVideo, Buffer.from("dummy-input"));
+
+  let capturedCmd = null;
+  let capturedArgs = null;
+  try {
+    await composeVerticalVideo({
+      sourceVideoPath: inputVideo,
+      headline: "Bitrate Cap Guardrail",
+      outputPath: outputVideo,
+      execFileFn: async (cmd, args) => {
+        capturedCmd = cmd;
+        capturedArgs = args;
+      },
+    });
+
+    assert.equal(capturedCmd, "ffmpeg");
+    assert.ok(Array.isArray(capturedArgs));
+    assert.equal(capturedArgs.includes("-maxrate"), true, "ffmpeg args must include -maxrate");
+    assert.equal(capturedArgs.includes("3M"), true, "ffmpeg args must cap bitrate at 3M");
+    assert.equal(capturedArgs.includes("-crf"), true);
+    assert.equal(capturedArgs.includes("23"), true);
+    assert.equal(capturedArgs.includes("ultrafast"), false, "ultrafast must not regress");
+    assert.equal(VERTICAL_ENCODE_ARGS.includes("-maxrate"), true);
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+  }
 });

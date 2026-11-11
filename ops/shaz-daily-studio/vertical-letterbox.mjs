@@ -202,6 +202,15 @@ export async function renderSubtitlePhrase({
   return sharp(Buffer.from(svg)).png().toBuffer();
 }
 
+export const VERTICAL_ENCODE_ARGS = [
+  "-c:v", "libx264",
+  "-preset", "veryfast",
+  "-crf", "23",
+  "-maxrate", "3M",
+  "-bufsize", "6M",
+  "-movflags", "+faststart",
+];
+
 /**
  * Composes a 1280x720 video into a 1080x1920 vertical video with header and kinetic subtitles.
  *
@@ -212,6 +221,7 @@ export async function renderSubtitlePhrase({
  * @param {string} options.headline - Top hook headline
  * @param {string} [options.badge=null] - Top tag badge (omitted if null/empty)
  * @param {string} options.outputPath - Destination 1080x1920 MP4
+ * @param {Function} [options.execFileFn] - Optional ffmpeg runner injection for unit tests
  */
 export async function composeVerticalVideo({
   sourceVideoPath,
@@ -220,6 +230,7 @@ export async function composeVerticalVideo({
   headline,
   badge = null,
   outputPath,
+  execFileFn = execFileAsync,
 }) {
   if (!fsSync.existsSync(sourceVideoPath)) {
     throw new Error(`sourceVideoPath not found: ${sourceVideoPath}`);
@@ -310,14 +321,11 @@ export async function composeVerticalVideo({
       "-filter_complex", filterComplex,
       "-map", "[vfinal]",
       ...audioMap,
-      "-c:v", "libx264",
-      "-preset", "ultrafast",
-      "-crf", "22",
-      "-movflags", "+faststart",
+      ...VERTICAL_ENCODE_ARGS,
       outputPath,
     ];
 
-    await execFileAsync("ffmpeg", ffmpegArgs);
+    await execFileFn("ffmpeg", ffmpegArgs);
 
     return {
       outputPath,

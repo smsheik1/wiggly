@@ -1,6 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
 import process from "node:process";
+import { getSecretKey, redactSecrets } from "./secrets.mjs";
 
 const BUFFER_GRAPHQL_ENDPOINT = "https://api.buffer.com";
 
@@ -9,34 +8,24 @@ export const CANONICAL_YOUTUBE_CHANNEL = "Shaz";
 export const CANONICAL_TWITTER_HANDLE = "shazDrools";
 
 /**
+ * Ensures the video URL passed to Buffer is a clean HTTPS link with no Telegram bot token.
+ */
+export function assertValidPublicVideoUrl(videoUrl, caller = "publishVideo") {
+  if (!videoUrl || typeof videoUrl !== "string" || !videoUrl.startsWith("https://")) {
+    throw new Error(`${caller} requires a publicly accessible HTTPS videoUrl`);
+  }
+  if (/api\.telegram\.org\/file\/bot/i.test(videoUrl)) {
+    throw new Error(
+      `${caller} refused an api.telegram.org bot file URL because it leaks the Telegram bot token and expires before social platforms fetch it.`
+    );
+  }
+}
+
+/**
  * Loads BUFFER_API_KEY from secrets.env or environment variables.
  */
 export function getBufferApiKey() {
-  const envKey = process.env.SHAZSKISBUFFER_API_KEY?.trim() || process.env.BUFFER_API_KEY?.trim();
-  if (envKey) return envKey;
-
-  const candidateKeyNames = ["SHAZSKISBUFFER_API_KEY", "BUFFER_API_KEY"];
-  let currentDir = process.cwd();
-  for (let i = 0; i < 7; i += 1) {
-    const candidate = path.join(currentDir, "secrets.env");
-    if (fs.existsSync(candidate)) {
-      try {
-        const lines = fs.readFileSync(candidate, "utf8").split("\n");
-        for (const name of candidateKeyNames) {
-          for (const line of lines) {
-            if (line.startsWith(`${name}=`)) {
-              const val = line.split("=")[1]?.trim();
-              if (val) return val;
-            }
-          }
-        }
-      } catch {}
-    }
-    const parent = path.dirname(currentDir);
-    if (parent === currentDir) break;
-    currentDir = parent;
-  }
-  return null;
+  return getSecretKey("SHAZSKISBUFFER_API_KEY") || getSecretKey("BUFFER_API_KEY");
 }
 
 /**
@@ -69,13 +58,13 @@ export async function executeBufferGraphQL({ query, variables = {}, apiKey: expl
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    throw new Error(`Buffer API HTTP ${response.status}: ${text.slice(0, 300)}`);
+    throw new Error(redactSecrets(`Buffer API HTTP ${response.status}: ${text.slice(0, 300)}`, [key]));
   }
 
   const result = await response.json();
   if (result.errors && result.errors.length > 0) {
     const msg = result.errors.map((e) => e.message).join(", ");
-    throw new Error(`Buffer GraphQL error: ${msg}`);
+    throw new Error(redactSecrets(`Buffer GraphQL error: ${msg}`, [key]));
   }
 
   return result.data;
@@ -142,9 +131,7 @@ export async function publishVideoToInstagram({
   apiKey,
   fetchFn = fetch,
 }) {
-  if (!videoUrl || !videoUrl.startsWith("https://")) {
-    throw new Error("publishVideoToInstagram requires a publicly accessible HTTPS videoUrl");
-  }
+  assertValidPublicVideoUrl(videoUrl, "publishVideoToInstagram");
   if (!caption || !caption.trim()) {
     throw new Error("publishVideoToInstagram requires non-empty caption text");
   }
@@ -243,9 +230,7 @@ export async function publishVideoToYouTube({
   apiKey,
   fetchFn = fetch,
 }) {
-  if (!videoUrl || !videoUrl.startsWith("https://")) {
-    throw new Error("publishVideoToYouTube requires a publicly accessible HTTPS videoUrl");
-  }
+  assertValidPublicVideoUrl(videoUrl, "publishVideoToYouTube");
   if (!title || !title.trim()) {
     throw new Error("publishVideoToYouTube requires title text");
   }
@@ -343,9 +328,7 @@ export async function publishVideoToTikTok({
   apiKey,
   fetchFn = fetch,
 }) {
-  if (!videoUrl || !videoUrl.startsWith("https://")) {
-    throw new Error("publishVideoToTikTok requires a publicly accessible HTTPS videoUrl");
-  }
+  assertValidPublicVideoUrl(videoUrl, "publishVideoToTikTok");
   if (!title || !title.trim()) {
     throw new Error("publishVideoToTikTok requires title text");
   }
@@ -467,6 +450,7 @@ export async function publishVideoToAllChannels({
   apiKey,
   fetchFn = fetch,
 }) {
+  assertValidPublicVideoUrl(videoUrl, "publishVideoToAllChannels");
   const { channels } = await getBufferChannels({ apiKey, fetchFn });
   const cleanTitle = title.trim();
   const effectiveTags = Array.isArray(tags) && tags.length > 0 ? tags : deriveStoryHashtags(cleanTitle);
@@ -532,5 +516,52 @@ export async function publishVideoToAllChannels({
     success: true,
     channels: results,
     pending: pendingChannels,
+  };
+}
+
+/**
+ * Fetches delivery status (`sent`, `sending`, `scheduled`, `error`) for created Buffer posts.
+ */
+export async function getBufferPostsStatus({
+  postIds = [],
+  apiKey,
+  fetchFn = fetch,
+}) {
+  const uniqueIds = [...new Set(postIds.filter((id) => typeof id === "string" && id.trim()))];
+  const query = `query GetPostStatus($input: PostInput!) {
+    post(input: $input) {
+      id
+      status
+      error {
+        message
+      }
+    }
+  }`;
+
+  const posts = [];
+  for (const id of uniqueIds) {
+    const data = await executeBufferGraphQL({
+      query,
+      variables: { input: { id } },
+      apiKey,
+      fetchFn,
+    });
+    const post = data?.post;
+    if (post) {
+      posts.push({
+        id: post.id || id,
+        status: post.status || "unknown",
+        error: post.error?.message || null,
+      });
+    } else {
+      posts.push({ id, status: "unknown", error: null });
+    }
+  }
+
+  return {
+    posts,
+    allSent: posts.length > 0 && posts.every((p) => p.status === "sent"),
+    hasError: posts.some((p) => p.status === "error"),
+    pendingIds: posts.filter((p) => p.status !== "sent").map((p) => p.id),
   };
 }
