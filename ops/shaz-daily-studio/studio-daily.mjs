@@ -121,9 +121,11 @@ export async function findNextStory(options = {}) {
  * Builds an authentic, temporally anchored authoring prompt for the active coding agent.
  * Enforces current-year calendar grounding to prevent outdated AI slop and timeframe hallucinations.
  */
-export function buildAuthorPrompt(topic, { now = new Date() } = {}) {
+export function buildAuthorPrompt(topic, { now = new Date(), article = null } = {}) {
   const title = topic.title || "Breaking Story";
   const snippet = topic.snippet || "";
+  const sourceUrl = String(article?.url || topic.link || topic?.sources?.[0] || "").trim();
+  const articleText = String(article?.text || snippet || "").trim().slice(0, 12_000);
   const publishedAt = topic.publishedAt || topic.updated || null;
   const formattedToday = now.toLocaleDateString("en-US", {
     weekday: "long",
@@ -148,7 +150,7 @@ export function buildAuthorPrompt(topic, { now = new Date() } = {}) {
 
   // Detect explicit dates in snippet or title to calculate exact relative countdowns
   let dateMathHint = "";
-  const dateMatch = (title + " " + snippet).match(
+  const dateMatch = (title + " " + snippet + " " + articleText).match(
     /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(202\d)?/i
   );
   if (dateMatch) {
@@ -167,8 +169,14 @@ export function buildAuthorPrompt(topic, { now = new Date() } = {}) {
 
   return `You are Shaz, an internet-native animator and gaming commentator.
 Write an authentic, punchy, funny 30-second script about this breaking news:
-Title: "${title}"
+Headline: "${title}"
+Source URL: ${sourceUrl || "(none)"}
 Snippet: "${snippet}"${pubString}
+
+SOURCE ARTICLE TEXT (GROUNDING REQUIREMENT — ONLY STATE FACTS SUPPORTED BY THIS ARTICLE):
+"""
+${articleText}
+"""
 
 CURRENT DATE CONTEXT & TEMPORAL ANCHORING (CRITICAL — PREVENTS AI SLOP):
 - TODAY IS: ${formattedToday} (${isoToday}).
@@ -176,77 +184,89 @@ CURRENT DATE CONTEXT & TEMPORAL ANCHORING (CRITICAL — PREVENTS AI SLOP):
 - Calculate all release countdowns, dates, and relative timeframes strictly relative to TODAY (${formattedToday}).
 - Under NO circumstance assume the current year is 2023, 2024, or 2025.
 - If the story discusses an upcoming release or event in ${currentYear}, calculate the exact days or weeks remaining relative to today. If an event is in ${currentYear}, it is happening in DAYS or WEEKS, NOT YEARS.
-- If gamers are scrambling or hoarding hardware right now, frame it as the immediate last-minute scramble right before launch.
-- Never claim that an event in ${currentYear} is "years away", "two years in advance", or "a year early". Check your math before outputting!
+- Only state prices, specs, platforms, dates, sales numbers, and concrete details that appear in the SOURCE ARTICLE TEXT above. If a detail isn't in the article, do NOT invent it.
 
 Output ONLY valid JSON following this exact schema:
 {
   "schemaVersion": "shaz-script-v1",
-  "title": "${formatSafeHeadline(title, 45).replace(/"/g, "")}",
-  "headline": "PUNCHY 3-5 WORD UPPERCASE TITLE",
+  "sourceUrl": "${sourceUrl.replace(/"/g, "")}",
+  "title": "<STORY TITLE>",
+  "headline": "<PUNCHY 3-5 WORD UPPERCASE TOP CARD TITLE>",
   "targetDurationSeconds": 30,
   "research": {
-    "primaryInsight": "string (>10 chars)",
-    "counterintuitiveAngle": "string (>10 chars)",
-    "concreteFactOrStory": "string (>10 chars)"
+    "primaryInsight": "<string >10 chars>",
+    "counterintuitiveAngle": "<string >10 chars>",
+    "concreteFactOrStory": "<string >10 chars>"
   },
+  "claims": [
+    {
+      "target": "hook",
+      "says": "<what the hook claims factually>",
+      "quote": "<exact 4-30 word verbatim quote copied from SOURCE ARTICLE TEXT>"
+    },
+    {
+      "target": "beat-01",
+      "says": "<what beat-01 claims factually>",
+      "quote": "<exact 4-30 word verbatim quote copied from SOURCE ARTICLE TEXT>"
+    }
+  ],
   "hook": {
-    "formula": "uncomfortable-truth",
-    "text": "string (15-25 words, no AI buzzwords like delve/revolutionize/game-changer)",
-    "cardHeadline": "CRUSTY USED HARDWARE",
-    "cardBadge": "REALITY CHECK"
+    "formula": "<CHOOSE: uncomfortable-truth | surprising-stat | personal-confession | setup-payoff-tease>",
+    "text": "<string: 15-25 words, zero AI buzzwords like delve/revolutionize/game-changer>",
+    "cardHeadline": "<3-5 WORD CARD HEADLINE>",
+    "cardBadge": "<1-2 WORD BADGE>"
   },
   "visualQueries": [
-    "string: exact, high-intent Google image search query for the primary subject/hardware/game in this story",
-    "string: exact visual query for the secondary subject, storefront, or real-world evidence",
-    "string: exact visual query for keyart, reaction meme, or gameplay screenshot"
+    "<exact high-intent Google image search query for the primary subject/hardware/game>",
+    "<exact visual query for the secondary subject, storefront, or real-world evidence>",
+    "<exact visual query for keyart, reaction meme, or gameplay screenshot>"
   ],
   "beats": [
     {
       "id": "beat-01",
       "connector": "THEREFORE",
       "shotTypeSuggestion": "talk-to-camera",
-      "cardHeadline": "ZERO ACTUAL DISCOUNTS",
-      "cardBadge": "REALITY CHECK",
-      "text": "string (10-18 words)",
-      "impliedQuestion": "string"
+      "cardHeadline": "<3-5 WORD CARD HEADLINE>",
+      "cardBadge": "<1-2 WORD BADGE>",
+      "text": "<string: 12-18 words>",
+      "impliedQuestion": "<string>"
     },
     {
       "id": "beat-02",
       "connector": "BUT",
       "shotTypeSuggestion": "b-roll",
-      "cardHeadline": "UNCONFIRMED DEAL RUMORS",
-      "cardBadge": "THE CATCH",
-      "text": "string (10-18 words)",
-      "impliedQuestion": "string"
+      "cardHeadline": "<3-5 WORD CARD HEADLINE>",
+      "cardBadge": "<1-2 WORD BADGE>",
+      "text": "<string: 12-18 words>",
+      "impliedQuestion": "<string>"
     },
     {
       "id": "beat-03",
       "connector": "THEREFORE",
       "shotTypeSuggestion": "chibi-commentary",
-      "cardHeadline": "PURE ALGORITHM CLICKBAIT",
-      "cardBadge": "COMMUNITY ROAST",
-      "text": "string (10-18 words)",
-      "impliedQuestion": "string"
+      "cardHeadline": "<3-5 WORD CARD HEADLINE>",
+      "cardBadge": "<1-2 WORD BADGE>",
+      "text": "<string: 12-18 words>",
+      "impliedQuestion": "<string>"
     }
   ],
   "landing": {
     "type": "question",
-    "text": "string (10-18 words)"
+    "text": "<string: 10-18 words>"
   },
-  "backgroundId": "living-room",
-  "hashtags": ["#gaming", "#videogames", "#shaz", "#shorts"]
+  "backgroundId": "<CHOOSE: living-room | map-photo-zone | sisters-room>",
+  "hashtags": ["#<topic1>", "#<topic2>", "#<topic3>"]
 }
 Rules:
-1. Total words across hook + beats + landing MUST be strictly between 55 and 88 words.
-2. Causality connectors for beats 2 and 3 MUST be 'THEREFORE' or 'BUT'.
-3. visualQueries MUST contain 3 distinct, high-intent image search queries tailored specifically to the entities in this story.
-4. Pacing: write short, punchy sentences tailored for rapid voiceover delivery.
-5. Voice: irreverent, funny, relatable gamer cynicism. Never sound like corporate PR.
+1. Total spoken words across hook + beats + landing MUST be strictly between 70 and 85 words (hard validation gate rejects under 70 or over 88 words).
+2. Grounding: include 2 to 5 claims in "claims", with at least one targeting "hook". Every "quote" must appear verbatim (4–30 words) in the SOURCE ARTICLE TEXT.
+3. Causality connectors for beats 2 and 3 MUST be 'THEREFORE' or 'BUT'.
+4. visualQueries MUST contain 3 distinct, high-intent image search queries tailored specifically to the entities in this story.
+5. Pacing & Voice: write short, punchy sentences in Shaz's irreverent gaming commentary voice. Never sound like corporate PR.
 6. Temporal grounding: All timeframes must be accurate relative to ${formattedToday}.
-7. backgroundId: Choose the environment that best fits the vibe: "living-room" (warm lounge/couch gaming news), "map-photo-zone" (clean purple studio for specs/hardware leaks), or "sisters-room" (pink comic room).
-8. hashtags: 3-5 lowercase hashtags starting with #, tailored to the story topic.
-9. headline: A crisp 3-5 word uppercase title (max 32 chars) for the top video card (e.g. '€40 OFF REFURBISHED PS5'). NEVER slice words mid-syllable.`;
+7. backgroundId: Choose one of "living-room" (warm lounge gaming news), "map-photo-zone" (clean purple studio for specs/hardware), or "sisters-room" (pink comic room).
+8. hashtags: 3-5 lowercase hashtags starting with #, tailored specifically to this story.
+9. headline: A crisp 3-5 word uppercase title (max 32 chars) for the top video card. NEVER slice words mid-syllable.`;
 }
 
 /**

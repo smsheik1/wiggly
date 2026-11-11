@@ -38,10 +38,172 @@ export function countWords(text) {
   return (text.trim().match(/\S+/g) || []).length;
 }
 
+function normalizeGroundingText(value) {
+  return String(value ?? "")
+    .replace(/[\u2018\u2019\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u2033]/g, "\"")
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/[\u00A0\u200B-\u200D\uFEFF]/g, " ")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function collectAllowedCountdownNumbers(sourceText, now) {
+  const days = new Set();
+  const weeks = new Set();
+  const dateRegex = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s*(202\d))?\b/gi;
+  const currentYear = now.getFullYear();
+  let match;
+  while ((match = dateRegex.exec(sourceText)) !== null) {
+    const year = match[3] ? parseInt(match[3], 10) : currentYear;
+    const parsed = new Date(`${match[1]} ${match[2]}, ${year}`);
+    if (!Number.isNaN(parsed.getTime())) {
+      const diffDays = Math.round((parsed.getTime() - now.getTime()) / 86_400_000);
+      if (diffDays >= 0 && diffDays <= 365) {
+        days.add(diffDays - 1);
+        days.add(diffDays);
+        days.add(diffDays + 1);
+        weeks.add(Math.floor(diffDays / 7));
+        weeks.add(Math.round(diffDays / 7));
+        weeks.add(Math.ceil(diffDays / 7));
+      }
+    }
+  }
+  return { days, weeks };
+}
+
+function hasNumericToken(articleDigitsText, rawNum) {
+  const normalizedNum = rawNum.replace(/,/g, "");
+  const escaped = normalizedNum.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?:^|[^\\d.])${escaped}(?:$|[^\\d.])`).test(articleDigitsText);
+}
+
 /**
- * Validates a Shaz script against the contract, pacing bounds, causality, AI buzzword linter, and temporal grounding.
+ * Validates that grounded scripts cite a sourceUrl, anchor claims with verbatim article quotes
+ * (4–30 words each, including >=1 covering the hook), and do not invent spoken prices/years/specs.
  */
-export function validateScript(script, { topic = null, now = new Date() } = {}) {
+export function validateGroundedClaims(script, fullText, { topic = null, now = new Date(), articleText = null } = {}) {
+  if (typeof articleText !== "string" || articleText.trim().length === 0) {
+    throw new Error("Grounded script validation requires non-empty articleText.");
+  }
+
+  let validSourceUrl = false;
+  if (typeof script.sourceUrl === "string" && script.sourceUrl.trim()) {
+    try {
+      const parsed = new URL(script.sourceUrl.trim());
+      validSourceUrl = parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {}
+  }
+  if (!validSourceUrl) {
+    throw new Error("script.sourceUrl must be a valid http:// or https:// URL pointing to the fetched source article.");
+  }
+
+  if (!Array.isArray(script.claims) || script.claims.length < 2 || script.claims.length > 5) {
+    throw new Error(
+      `script.claims must contain between 2 and 5 grounded claim objects (found ${Array.isArray(script.claims) ? script.claims.length : 0}).`,
+    );
+  }
+
+  const validTargets = new Set(["hook", ...script.beats.map((b) => b.id), "landing"]);
+  const normalizedArticle = normalizeGroundingText(articleText);
+  let hasHookClaim = false;
+
+  for (let i = 0; i < script.claims.length; i += 1) {
+    const claim = script.claims[i];
+    if (!claim || typeof claim !== "object" || Array.isArray(claim)) {
+      throw new Error(`script.claims[${i}] must be an object with { target, says, quote }.`);
+    }
+    if (!validTargets.has(claim.target)) {
+      throw new Error(`script.claims[${i}].target '${claim.target}' must be one of: ${Array.from(validTargets).join(", ")}.`);
+    }
+    if (claim.target === "hook") hasHookClaim = true;
+    if (typeof claim.says !== "string" || claim.says.trim().length < 5) {
+      throw new Error(`script.claims[${i}].says must summarize what the script claims.`);
+    }
+    if (typeof claim.quote !== "string" || !claim.quote.trim()) {
+      throw new Error(`script.claims[${i}].quote must contain a verbatim quote from the article.`);
+    }
+    const quoteWords = countWords(claim.quote);
+    if (quoteWords < 4 || quoteWords > 30) {
+      throw new Error(
+        `script.claims[${i}].quote has ${quoteWords} words; verbatim article quotes must be strictly 4 to 30 words.`,
+      );
+    }
+    const normalizedQuote = normalizeGroundingText(claim.quote);
+    if (!normalizedArticle.includes(normalizedQuote)) {
+      throw new Error(
+        `script.claims[${i}].quote ("${claim.quote.trim()}") did not appear verbatim in the fetched article text.`,
+      );
+    }
+  }
+
+  if (!hasHookClaim) {
+    throw new Error("script.claims must include at least one claim targeting 'hook'.");
+  }
+
+  // Cross-check spoken prices, years, and concrete spec/count figures against the article (allowing derived relative date math)
+  const spokenNormalized = normalizeGroundingText(fullText);
+  const articleDigitsText = normalizedArticle.replace(/(\d),(\d)/g, "$1$2");
+  const { days: allowedDays, weeks: allowedWeeks } = collectAllowedCountdownNumbers(
+    `${topic?.title || ""} ${articleText}`,
+    now,
+  );
+  const currentYearStr = String(now.getFullYear());
+
+  const priceRegex = /(?:[$€£¥]\s?(\d[\d,]*(?:\.\d+)?)|(\d[\d,]*(?:\.\d+)?)\s?(?:dollars?|bucks|euros?|pounds?))/gi;
+  let priceMatch;
+  while ((priceMatch = priceRegex.exec(spokenNormalized)) !== null) {
+    const num = priceMatch[1] || priceMatch[2];
+    if (num && !hasNumericToken(articleDigitsText, num)) {
+      throw new Error(
+        `Unfounded numeric claim in speech: "${priceMatch[0]}" does not appear in the fetched article.`,
+      );
+    }
+  }
+
+  const yearRegex = /\b(19\d\d|20[0-3]\d)\b/g;
+  let yearMatch;
+  while ((yearMatch = yearRegex.exec(spokenNormalized)) !== null) {
+    const yr = yearMatch[1];
+    if (yr !== currentYearStr && !hasNumericToken(articleDigitsText, yr)) {
+      throw new Error(
+        `Unfounded year in speech: "${yr}" does not appear in the fetched article.`,
+      );
+    }
+  }
+
+  const specRegex = /\b(\d+(?:,\d+)*(?:\.\d+)?)\s?(gb|tb|mb|fps|hz|mph|million|billion|thousand|copies|players|percent|%|days?|weeks?|months?|years?)\b/gi;
+  let specMatch;
+  while ((specMatch = specRegex.exec(spokenNormalized)) !== null) {
+    const rawNum = specMatch[1];
+    const unit = specMatch[2].toLowerCase();
+    const numericVal = Number(rawNum.replace(/,/g, ""));
+    if (/^days?$/.test(unit) && allowedDays.has(numericVal)) continue;
+    if (/^weeks?$/.test(unit) && allowedWeeks.has(numericVal)) continue;
+    if (!hasNumericToken(articleDigitsText, rawNum)) {
+      throw new Error(
+        `Unfounded numeric spec/count in speech: "${specMatch[0]}" does not appear in the fetched article.`,
+      );
+    }
+  }
+}
+
+/**
+ * Validates a Shaz script against the contract, pacing bounds, causality, AI buzzword linter,
+ * temporal grounding, and (optionally) article grounding claims.
+ */
+export function validateScript(
+  script,
+  {
+    topic = null,
+    now = new Date(),
+    minWords: customMinWords,
+    maxWords: customMaxWords,
+    articleText = null,
+    requireGroundedClaims = false,
+  } = {},
+) {
   if (!script || typeof script !== "object") {
     throw new Error("Script must be a JSON object");
   }
@@ -193,9 +355,13 @@ export function validateScript(script, { topic = null, now = new Date() } = {}) 
     );
   }
 
-  // 3. Pacing check: 110 to 175 words per minute
-  const minWords = Math.floor((targetDuration / 60) * 110);
-  const maxWords = Math.ceil((targetDuration / 60) * 175);
+  // 3. Pacing check: default 110 to 175 WPM (55–88 words at 30s); studio can pass tighter bounds (70–88)
+  const minWords = Number.isFinite(customMinWords)
+    ? customMinWords
+    : Math.floor((targetDuration / 60) * 110);
+  const maxWords = Number.isFinite(customMaxWords)
+    ? customMaxWords
+    : Math.ceil((targetDuration / 60) * 175);
 
   if (totalWords < minWords || totalWords > maxWords) {
     throw new Error(
@@ -205,6 +371,11 @@ export function validateScript(script, { topic = null, now = new Date() } = {}) 
 
   // 4. Temporal consistency & AI Slop Gate
   validateTemporalGrounding(fullText, { topic, now });
+
+  // 5. Article grounding gate (opt-in for Phase 2 daily studio; keeps legacy kit fixtures unaffected)
+  if (requireGroundedClaims || articleText != null) {
+    validateGroundedClaims(script, fullText, { topic, now, articleText });
+  }
 
   return {
     valid: true,
