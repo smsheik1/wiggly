@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
 import os from "node:os";
@@ -316,7 +317,9 @@ export async function authorShazScript(
     );
   }
 
+  const authoringStartedAt = Date.now();
   const basePrompt = buildAuthorPrompt(topic, { now, article });
+  const promptSha256 = crypto.createHash("sha256").update(basePrompt, "utf8").digest("hex");
   const attempts = [];
   let lastError = null;
   let lastPayload = null;
@@ -371,12 +374,18 @@ export async function authorShazScript(
       attempts.push({ attempt, ok: true, durationMs });
       const receipt = {
         schemaVersion: 1,
+        agent: cfg.writerAgent,
         writerAgent: cfg.writerAgent,
         finalAttempt: attempt,
         maxAttempts: cfg.maxScriptAttempts,
         finalWordCount: countWords(dialogueText),
         authoredAt: new Date().toISOString(),
+        durationMs: Date.now() - authoringStartedAt,
+        promptSha256,
         attempts,
+        errors: attempts
+          .filter((entry) => !entry.ok)
+          .map((entry) => ({ attempt: entry.attempt, errorType: entry.errorType, error: entry.error })),
       };
       Object.defineProperty(script, AUTHOR_RECEIPT_SYMBOL, {
         value: receipt,
@@ -653,12 +662,16 @@ async function produceGroundedCandidateRun({
     const dialogueText = d.compileDialogueText(script);
     const receipt = script?.[AUTHOR_RECEIPT_SYMBOL] || {
       schemaVersion: 1,
+      agent: cfg.writerAgent,
       writerAgent: cfg.writerAgent,
       finalAttempt: 1,
       maxAttempts: cfg.maxScriptAttempts,
       finalWordCount: countWords(dialogueText),
       authoredAt: new Date().toISOString(),
+      durationMs: 0,
+      promptSha256: null,
       attempts: [{ attempt: 1, ok: true }],
+      errors: [],
     };
 
     const storyRecord = {

@@ -156,8 +156,12 @@ test("runDailyBatch never touches runDirectory before runner.mjs init and persis
     assert.equal(articleJson.url, article.url);
     assert.equal(articleJson.sha256, article.sha256);
     assert.equal(scriptJson.claims.length, 2);
+    assert.equal(receiptJson.agent, "agy");
     assert.equal(receiptJson.writerAgent, "agy");
     assert.equal(receiptJson.finalAttempt, 1);
+    assert.ok(typeof receiptJson.durationMs === "number" && receiptJson.durationMs >= 0);
+    assert.match(receiptJson.promptSha256, /^[a-f0-9]{64}$/);
+    assert.deepEqual(receiptJson.errors, []);
     assert.ok(receiptJson.finalWordCount >= 70 && receiptJson.finalWordCount <= 88);
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
