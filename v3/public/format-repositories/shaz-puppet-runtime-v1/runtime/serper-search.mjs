@@ -54,8 +54,21 @@ export async function searchGoogleImages(query, { count = 5, apiKey: explicitKey
   }
 
   const key = explicitKey !== undefined ? explicitKey : getSerperApiKey();
-  if (!key) {
+  if (key === null) {
     return null;
+  }
+  if (!key) {
+    throw new Error(
+      `\n================================================================================\n` +
+      `❌ SERPER API ERROR: SERPER_API_KEY IS MISSING\n` +
+      `================================================================================\n` +
+      `Cannot source authentic visual imagery: SERPER_API_KEY is not configured.\n\n` +
+      `Baby steps to fix:\n` +
+      `1. Open https://serper.dev/ and sign in to your dashboard.\n` +
+      `2. Copy your API Key.\n` +
+      `3. Open 'secrets.env' at repo root and add: SERPER_API_KEY=your_key_here\n` +
+      `================================================================================\n`
+    );
   }
 
   const response = await fetchFn(SERPER_IMAGES_URL, {
@@ -72,7 +85,16 @@ export async function searchGoogleImages(query, { count = 5, apiKey: explicitKey
 
   if (!response.ok) {
     const errText = await response.text().catch(() => "");
-    throw new Error(`Serper API error (HTTP ${response.status}): ${errText.slice(0, 240)}`);
+    throw new Error(
+      `\n================================================================================\n` +
+      `❌ SERPER API ERROR (HTTP ${response.status})\n` +
+      `================================================================================\n` +
+      `Search query "${query}" failed: ${errText.slice(0, 240)}\n\n` +
+      `Baby steps to fix:\n` +
+      `1. Visit https://serper.dev/dashboard to check remaining query credits or payment status.\n` +
+      `2. Verify that your SERPER_API_KEY in 'secrets.env' is active.\n` +
+      `================================================================================\n`
+    );
   }
 
   const data = await response.json();

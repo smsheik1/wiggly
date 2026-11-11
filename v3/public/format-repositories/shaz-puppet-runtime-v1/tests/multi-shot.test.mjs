@@ -558,5 +558,111 @@ test("OTS_GRAPHIC_ZONE respects 90% broadcast action-safe and Shaz staging bound
   });
 });
 
+test("deriveMultiShotPlan distributes b-roll, attaches OTS graphics, and assigns card images when brollMediaList is provided", async () => {
+  const assets = JSON.parse(await fs.readFile(path.join(root, "assets.json"), "utf8"));
+  const sampleTranscript = {
+    text: "Sentence one here. Sentence two here. Sentence three is about games. Sentence four explains deals. Sentence five discusses consoles. Sentence six has jokes. Sentence seven is another point. Sentence eight asks question.",
+    words: [
+      { text: "Sentence", startMs: 0, endMs: 500 },
+      { text: "one", startMs: 550, endMs: 900 },
+      { text: "here.", startMs: 950, endMs: 2000 },
+      { text: "Sentence", startMs: 2100, endMs: 2600 },
+      { text: "two", startMs: 2650, endMs: 3000 },
+      { text: "here.", startMs: 3050, endMs: 4200 },
+      { text: "Sentence", startMs: 4300, endMs: 4800 },
+      { text: "three", startMs: 4850, endMs: 5200 },
+      { text: "is", startMs: 5250, endMs: 5500 },
+      { text: "about", startMs: 5550, endMs: 5800 },
+      { text: "games.", startMs: 5850, endMs: 6500 },
+      { text: "Sentence", startMs: 6600, endMs: 7000 },
+      { text: "four", startMs: 7050, endMs: 7400 },
+      { text: "explains", startMs: 7450, endMs: 7800 },
+      { text: "deals.", startMs: 7850, endMs: 8800 },
+      { text: "Sentence", startMs: 8900, endMs: 9300 },
+      { text: "five", startMs: 9350, endMs: 9700 },
+      { text: "discusses", startMs: 9750, endMs: 10100 },
+      { text: "consoles.", startMs: 10150, endMs: 11000 },
+      { text: "Sentence", startMs: 11100, endMs: 11500 },
+      { text: "six", startMs: 11550, endMs: 11900 },
+      { text: "has", startMs: 11950, endMs: 12200 },
+      { text: "jokes.", startMs: 12250, endMs: 13000 },
+      { text: "Sentence", startMs: 13100, endMs: 13500 },
+      { text: "seven", startMs: 13550, endMs: 13900 },
+      { text: "is", startMs: 13950, endMs: 14200 },
+      { text: "another", startMs: 14250, endMs: 14500 },
+      { text: "point.", startMs: 14550, endMs: 15500 },
+      { text: "Sentence", startMs: 15600, endMs: 16000 },
+      { text: "eight", startMs: 16050, endMs: 16400 },
+      { text: "asks", startMs: 16450, endMs: 16800 },
+      { text: "question.", startMs: 16850, endMs: 18000 },
+    ],
+  };
+
+  const brollMediaList = ["media/broll-01.png", "media/broll-02.png", "media/broll-03.png"];
+  const plan = deriveMultiShotPlan({
+    transcript: sampleTranscript,
+    audioDurationSeconds: 18.0,
+    defaultBackgroundId: "sisters-room",
+    brollMediaList,
+  });
+
+  const brollShots = plan.shots.filter((s) => s.shotType === "b-roll");
+  assert.ok(brollShots.length >= 2, `must schedule multiple b-roll shots, got ${brollShots.length}`);
+
+  const otsShots = plan.shots.filter((s) => s.otsGraphic);
+  assert.ok(otsShots.length >= 1, `must attach OTS graphics on talk-to-camera shots, got ${otsShots.length}`);
+
+  const chibiShotsWithImage = plan.shots.filter((s) => s.shotType === "chibi-commentary" && s.card?.image);
+  assert.ok(chibiShotsWithImage.length >= 1, "must assign media image to chibi commentary cards");
+
+  // Verify all shots validate cleanly against official schema
+  const validated = validateMultiShotPlan(plan, {
+    audioDurationSeconds: 18.0,
+    defaultBackgroundId: "sisters-room",
+    assets,
+    transcript: sampleTranscript,
+  });
+  assert.equal(validated.shots.length, plan.shots.length);
+});
+
+test("deriveMultiShotPlan respects authored beat.cardHeadline and beat.cardBadge without falling back to stop-word slicing", () => {
+  const sampleTranscript = {
+    text: "Dropping shopping guides with zero actual prices. Entire guide pure algorithmic clickbait.",
+    words: [
+      { text: "Dropping", startMs: 0, endMs: 400 },
+      { text: "shopping", startMs: 450, endMs: 800 },
+      { text: "guides", startMs: 850, endMs: 1200 },
+      { text: "with", startMs: 1250, endMs: 1400 },
+      { text: "zero", startMs: 1450, endMs: 1800 },
+      { text: "actual", startMs: 1850, endMs: 2200 },
+      { text: "prices.", startMs: 2250, endMs: 2800 },
+      { text: "Entire", startMs: 3000, endMs: 3400 },
+      { text: "guide", startMs: 3450, endMs: 3800 },
+      { text: "pure", startMs: 3850, endMs: 4200 },
+      { text: "algorithmic", startMs: 4250, endMs: 4800 },
+      { text: "clickbait.", startMs: 4850, endMs: 5500 },
+    ],
+  };
+
+  const brollMediaList = ["media/broll-01.png"];
+  const plan = deriveMultiShotPlan({
+    transcript: sampleTranscript,
+    audioDurationSeconds: 6.0,
+    brollMediaList,
+  });
+
+  // Check fallback headline extraction avoids weak prepositions like "with"
+  const fallbackHeadlines = plan.shots
+    .map((s) => s.otsGraphic?.headline || s.card?.headline)
+    .filter(Boolean);
+
+  for (const h of fallbackHeadlines) {
+    // Must NOT be the old blind 4-word slice that ended with "WITH"
+    assert.notEqual(h, "DROPPING SHOPPING GUIDES WITH");
+  }
+});
+
+
+
 
 

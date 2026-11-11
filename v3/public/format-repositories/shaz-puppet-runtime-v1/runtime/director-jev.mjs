@@ -148,7 +148,8 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn, beat
       type: "choice",
       instructions: "What visual shot format best serves this sentence in a video commentary? Default to talk-to-camera unless there is a strong comedic cutaway or statistical quote.",
       criteria: {
-        "talk-to-camera": "Standard anchor: Shaz speaking directly to the viewer on camera. Use this for 75%+ of sentences.",
+        "talk-to-camera": "Standard anchor: Shaz speaking directly to the viewer on camera. Use this for punchy personal commentary.",
+        "b-roll": "Full-screen visual b-roll cutaway: Cinematic screenshot, keyart, product photo, or gameplay footage illustrating the topic. Essential for showing the subject being discussed.",
         "chibi-commentary": "Comedic cutaway: Chibi animated character with pop card for an exaggerated roast, funny tangent, or sarcastic aside.",
         "text-card": "Graphic card: Big bold full-screen kinetic text card to highlight an astonishing quote, statistic, or critical takeaway.",
       },
@@ -188,7 +189,7 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn, beat
   const chosenMotion = answers.camera_motion?.choice;
   const cameraMotion = allowedMotions.includes(chosenMotion) ? chosenMotion : "zoom-in";
 
-  const allowedShotTypes = ["talk-to-camera", "chibi-commentary", "text-card"];
+  const allowedShotTypes = ["talk-to-camera", "b-roll", "chibi-commentary", "text-card"];
   const chosenShotType = answers.shot_type?.choice;
   const shotType = allowedShotTypes.includes(chosenShotType) ? chosenShotType : "talk-to-camera";
 

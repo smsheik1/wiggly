@@ -117,3 +117,13 @@ When running `npm run lint:script`, `TYPESAFE_API_KEY` must be configured in `se
 - **Check:** Measures probability of corporate PR speak, soulless buzzword density, and conversational authenticity.
 - **Fail Boundary:** Automatically blocks scripts if Jev identifies a corporate/PR probability ≥ 75%, flagging the text to be rewritten with more direct, personal human phrasing before voice synthesis.
 - **Zero Fallback Policy:** If `TYPESAFE_API_KEY` is missing or fails, execution halts immediately with clear setup instructions.
+
+---
+
+## 9. Temporal Grounding & Current Reality Rule (Mandatory Gate)
+
+To prevent outdated AI slop and inaccurate timeframes:
+1. **Present-Moment Grounding:** All scripts must be strictly calculated against the current calendar date (`new Date()`).
+2. **Relative Countdown Accuracy:** If a headline or event lists a date (e.g. November 19, 2026), calculate exact days or weeks remaining relative to today. Never say "two years away", "years in advance", or "a year early" for an event in the same year or month.
+3. **No Outdated Year References:** Past years (e.g. 2023, 2024, 2025) must never be framed as future launch targets.
+4. **Automated Gate:** The script validator will automatically reject scripts containing hallucinated relative timeframes conflicting with the topic timeline.

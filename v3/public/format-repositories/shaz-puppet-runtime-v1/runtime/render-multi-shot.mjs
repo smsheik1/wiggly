@@ -8,8 +8,12 @@ import { execute, sha256, writeJson } from "./run-common.mjs";
 import { renderRigFrame } from "./rig-v2-renderer.mjs";
 import { renderTextCardFrame, wordsVisibleAtFrame } from "./text-card-renderer.mjs";
 import { renderTopicCard } from "./topic-card-renderer.mjs";
-import { renderKenBurnsFrame } from "./broll-renderer.mjs";
+import { renderKenBurnsFrame, normalizeBrollMedia } from "./broll-renderer.mjs";
 import { renderOtsCardFrame } from "./ots-card-renderer.mjs";
+import {
+  getCinematicVignetteBuffer,
+  getStreamerStudioForegroundBuffer,
+} from "./studio-staging.mjs";
 import { buildChibiSchedule, getChibiFrameTransform } from "./chibi-choreography.mjs";
 import { resolvePuppetPoseId } from "./multi-shot-timeline.mjs";
 import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
@@ -46,6 +50,10 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
     const buffer = await sharp(bgPath).resize(1280, 720, { fit: "fill" }).png().toBuffer();
     bgCache.set(bg.id, buffer);
   }
+
+  // Pre-render streamer studio staging assets (cinematic depth & foreground desk/mic)
+  const vignetteBuffer = await getCinematicVignetteBuffer();
+  const studioForegroundBuffer = await getStreamerStudioForegroundBuffer();
 
   let outputFrame = 0;
   const shotReports = [];
@@ -176,8 +184,16 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
             puppetCache.set(puppetKey, puppetBuffer);
           }
 
-          // Composite OTS card if active on this frame
+          // Composite layers:
+          // 1. Cinematic vignette overlay on background
+          // 2. OTS card (if active)
+          // 3. Puppet rig
+          // 4. Streamer studio desk & microphone foreground
           const composites = [];
+          if (vignetteBuffer) {
+            composites.push({ input: vignetteBuffer, left: 0, top: 0 });
+          }
+
           if (ots && f >= otsEntranceDelay && f < otsEntranceDelay + otsDuration) {
             const cardEntranceFrame = f - otsEntranceDelay;
             const cardCacheKey = Math.min(cardEntranceFrame, 4);
@@ -202,6 +218,11 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
 
           // Puppet rig layer in front of OTS card
           composites.push({ input: puppetBuffer });
+
+          // Streamer studio desk and broadcast microphone in foreground
+          if (studioForegroundBuffer) {
+            composites.push({ input: studioForegroundBuffer, left: 0, top: 0 });
+          }
 
           const composedBuffer = await sharp(bgBuffer)
             .composite(composites)
@@ -304,10 +325,8 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
         if (shot.brollMedia) {
           const brollPath = path.resolve(runDirectory, shot.brollMedia);
           if (await fs.access(brollPath).then(() => true).catch(() => false)) {
-            sourceBrollBuffer = await sharp(brollPath)
-              .resize(1280, 720, { fit: "cover" })
-              .png()
-              .toBuffer();
+            const raw = await fs.readFile(brollPath);
+            sourceBrollBuffer = await normalizeBrollMedia(raw);
           }
         }
 

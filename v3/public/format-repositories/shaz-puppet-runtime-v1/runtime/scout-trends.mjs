@@ -8,6 +8,12 @@ export const DEFAULT_SUBREDDITS = [
   "LocalLLaMA"
 ];
 
+export const NICHE_SUBREDDITS = {
+  gaming: ["GamingLeaksAndRumours", "games", "pcgaming", "PS5", "XboxSeriesX", "NintendoSwitch"],
+  tech: ["apple", "technology", "hardware", "LocalLLaMA"],
+  entertainment: ["MarvelStudiosSpoilers", "boxoffice", "television"],
+};
+
 export const KNOWN_CURATORS = [
   "Jason Schreier",
   "Mark Gurman",
@@ -178,4 +184,74 @@ export function createCandidateCard(post, topComments = []) {
     suggestedHook: topComments.length > 0 ? topComments[0] : post.title,
     scoutedAt: new Date().toISOString()
   };
+}
+
+/**
+ * Loads secret key from secrets.env or environment variables.
+ */
+function loadSecretKey(name) {
+  if (process.env[name]?.trim()) return process.env[name].trim();
+  try {
+    const fs = globalThis.fs || null;
+  } catch {}
+  return null;
+}
+
+/**
+ * Fetches deduplicated breaking news events from NewsMCP.
+ */
+export async function fetchNewsMcpStories({
+  query = "playstation OR xbox OR nintendo OR gta OR steam",
+  limit = 10,
+  apiKey = null,
+  fetchFn = fetch,
+} = {}) {
+  let key = apiKey || process.env.NEWSMCP_API_KEY?.trim();
+  if (!key) {
+    try {
+      const fsSync = await import("node:fs");
+      const path = await import("node:path");
+      let currentDir = process.cwd();
+      for (let i = 0; i < 7; i += 1) {
+        const candidate = path.join(currentDir, "secrets.env");
+        if (fsSync.existsSync(candidate)) {
+          const match = fsSync.readFileSync(candidate, "utf8").match(/NEWSMCP_API_KEY=([^\r\n]+)/);
+          if (match && match[1]?.trim()) {
+            key = match[1].trim();
+            break;
+          }
+        }
+        const parent = path.dirname(currentDir);
+        if (parent === currentDir) break;
+        currentDir = parent;
+      }
+    } catch {}
+  }
+
+  if (!key) return [];
+
+  const headers = {
+    "Authorization": `Bearer ${key}`,
+    "Accept": "application/json",
+  };
+
+  try {
+    const url = `https://api.newsmcp.com/v0/news?q=${encodeURIComponent(query)}&limit=${limit}`;
+    const response = await fetchFn(url, { headers });
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    if (!Array.isArray(data?.events)) return [];
+
+    return data.events.map((evt) => ({
+      title: evt.headline,
+      snippet: evt.abstract || "",
+      link: evt.sources?.[0] || "",
+      source: "newsmcp",
+      newsrooms: evt.newsrooms || evt.source_count || 1,
+      publishedAt: evt.last_seen || evt.first_seen,
+    }));
+  } catch {
+    return [];
+  }
 }
