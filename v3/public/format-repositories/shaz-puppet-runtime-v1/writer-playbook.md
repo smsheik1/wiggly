@@ -60,7 +60,7 @@ Write beats with the Wiggly 4-shot studio palette in mind:
 ## 5. Pacing & Word Count Bounds
 
 Speaking rate in animation is **140 to 160 words per minute** (approx. 2.4 to 2.6 words per second):
-- **30-Second Short:** **70 to 85 words maximum**. (Scripts over 90 words will spill over or sound rushed).
+- **30-Second Short:** **70 to 85 words recommended** (`70–88` words hard gate in daily studio grounding; `55–88` words / `110–175 WPM` baseline kit validator range). Over 90 words sounds rushed.
 - **60-Second Video:** **140 to 165 words maximum**.
 
 ---
