@@ -6,134 +6,114 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-import { fetchSubredditRss, DEFAULT_SUBREDDITS, parseRedditRss, fetchNewsMcpStories } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/scout-trends.mjs";
-import { loadLedger, isTopicCovered, recordTopic, filterFreshTopics } from "./content-ledger.mjs";
+import { AgentUnavailableError, askActiveAgent } from "../../v3/lib/agent-bridge.ts";
+import { fetchNewsMcpEvents, NewsMcpError, pickDistinctEvents } from "./newsmcp.mjs";
+import {
+  filterFreshTopics,
+  getRecentPublishedTitles,
+  loadLedger,
+  recordShown,
+  recordTopic,
+} from "./content-ledger.mjs";
 import { validateScript } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/validate-script.mjs";
 import { synthesizeShazVoice } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/voice.mjs";
 import { composeVerticalVideo, formatSafeHeadline } from "./vertical-letterbox.mjs";
 import { sendApprovalVideo, pollApprovalDecision, pollBatchDecision, sendTelegramMessage } from "./telegram-approval.mjs";
-import { publishVideoToInstagram, publishVideoToAllChannels, getBufferPostsStatus } from "./buffer-publisher.mjs";
+import { publishVideoToAllChannels, getBufferPostsStatus } from "./buffer-publisher.mjs";
 import { uploadPublishVideo, deletePublishVideo } from "./media-host.mjs";
 import { redactSecrets } from "./secrets.mjs";
-import { execute, parseArgs, resolveRunDirectory, sha256, writeJson } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/run-common.mjs";
+import { execute, resolveRunDirectory, sha256, writeJson } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/run-common.mjs";
 import { searchGoogleImages } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/serper-search.mjs";
-import { curateImageCandidatesDeterministic } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/director-jev.mjs";
 import { normalizeBrollMedia } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/broll-renderer.mjs";
 import sharp from "sharp";
 
 export const STUDIO_ROOT = path.dirname(fileURLToPath(import.meta.url));
 export const KIT_ROOT = path.resolve(STUDIO_ROOT, "../../v3/public/format-repositories/shaz-puppet-runtime-v1");
+export const DEFAULT_CONFIG_PATH = path.join(STUDIO_ROOT, "studio.config.json");
 const root = KIT_ROOT;
 
-export const DEFAULT_BACKLOG_PATH = path.join(STUDIO_ROOT, "editorial-backlog.json");
-
 /**
- * Loads editorial backlog topics from external JSON file or returns clean default items.
+ * Loads and validates studio runtime configuration (`writerAgent`, timeouts, retry limits, batch size).
  */
-export async function loadEditorialBacklog(backlogPath = DEFAULT_BACKLOG_PATH) {
-  try {
-    const raw = await fs.readFile(backlogPath, "utf8");
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-  } catch {}
-  return [
-    {
-      title: "Community Plugins Bring Modern Interfaces to Handheld Gaming PCs",
-      snippet: "Community-made plugins allow players to customize portable game dashboards with bespoke modern console layouts.",
-      source: "editorial-backlog",
-    },
-    {
-      title: "Next-Gen Console Pricing Debate for PS6 and Xbox Next",
-      snippet: "Industry analysts debate whether next-generation consoles will exceed $1,000 due to rising memory and silicon fabrication costs.",
-      source: "editorial-backlog",
-    },
-    {
-      title: "Nintendo Switch 2 Ecosystem and Physical Media",
-      snippet: "Nintendo confirms cross-generational digital libraries and game compatibility as players prepare for the next platform cycle.",
-      source: "editorial-backlog",
-    },
-  ];
-}
-
-/**
- * Scouts for multiple distinct, high-priority breaking topics not yet covered in the ledger.
- */
-export async function findTopStories({ count = 3, subreddits = DEFAULT_SUBREDDITS, ledgerPath, backlogPath } = {}) {
-  const ledger = await loadLedger(ledgerPath);
-  const stories = [];
-  const seenTitles = new Set();
-  const editorialBacklog = await loadEditorialBacklog(backlogPath);
-
-  const addStory = (topic, source) => {
-    if (!topic || !topic.title) return;
-    const norm = topic.title.toLowerCase().trim();
-    if (seenTitles.has(norm)) return;
-    if (isTopicCovered(topic, ledger)) return;
-    seenTitles.add(norm);
-    stories.push({ topic, source });
+export async function loadStudioConfig(configPath = DEFAULT_CONFIG_PATH) {
+  const raw = await fs.readFile(configPath, "utf8");
+  const parsed = JSON.parse(raw);
+  const writerAgent = parsed?.writerAgent;
+  if (writerAgent !== "agy" && writerAgent !== "claude") {
+    throw new Error(`Invalid studio.config.json writerAgent '${writerAgent}': expected "agy" or "claude".`);
+  }
+  const agentTimeoutMs = Number(parsed?.agentTimeoutMs);
+  const maxScriptAttempts = Number(parsed?.maxScriptAttempts);
+  const batchSize = Number(parsed?.batchSize);
+  if (!Number.isFinite(agentTimeoutMs) || agentTimeoutMs < 1000) {
+    throw new Error(`Invalid studio.config.json agentTimeoutMs '${parsed?.agentTimeoutMs}': expected >= 1000.`);
+  }
+  if (!Number.isInteger(maxScriptAttempts) || maxScriptAttempts < 1) {
+    throw new Error(`Invalid studio.config.json maxScriptAttempts '${parsed?.maxScriptAttempts}': expected integer >= 1.`);
+  }
+  if (!Number.isInteger(batchSize) || batchSize < 1) {
+    throw new Error(`Invalid studio.config.json batchSize '${parsed?.batchSize}': expected integer >= 1.`);
+  }
+  return {
+    writerAgent,
+    agentTimeoutMs,
+    maxScriptAttempts,
+    batchSize,
   };
-
-  // 1. Scout live breaking events from NewsMCP (corroborated by independent newsrooms)
-  try {
-    const newsStories = await fetchNewsMcpStories({ limit: count * 3 });
-    for (const item of newsStories) {
-      if (stories.length >= count) break;
-      addStory(item, `newsmcp (${item.newsrooms} newsrooms)`);
-    }
-  } catch {}
-
-  // 2. Scout Reddit enthusiast nodes in parallel
-  if (stories.length < count) {
-    try {
-      const scoutPromises = subreddits.map(async (sub) => {
-        try {
-          const xml = await fetchSubredditRss(sub, "hot", 0);
-          const entries = parseRedditRss(xml);
-          return { sub, entries: filterFreshTopics(entries, ledger) };
-        } catch {
-          return { sub, entries: [] };
-        }
-      });
-
-      const results = await Promise.allSettled(scoutPromises);
-      for (const r of results) {
-        if (r.status === "fulfilled" && r.value.entries.length > 0) {
-          for (const item of r.value.entries) {
-            addStory(item, `r/${r.value.sub}`);
-            if (stories.length >= count) break;
-          }
-        }
-        if (stories.length >= count) break;
-      }
-    } catch {}
-  }
-
-  // 3. Backfill from curated editorial backlog
-  for (const candidate of editorialBacklog) {
-    if (stories.length >= count) break;
-    addStory(candidate, "editorial-backlog");
-  }
-
-  // Ensure at least count items are returned
-  let index = 0;
-  while (stories.length < count && index < editorialBacklog.length) {
-    const candidate = editorialBacklog[index];
-    if (!stories.some((s) => s.topic.title === candidate.title)) {
-      stories.push({ topic: candidate, source: "editorial-backlog" });
-    }
-    index += 1;
-  }
-
-  return stories.slice(0, count);
 }
 
 /**
- * Scouts for a high-priority breaking topic not yet covered in the ledger.
+ * Scouts fresh distinct gaming/tech news events strictly from NewsMCP, filtered by the v2 ledger
+ * and deduplicated by the pinned operating agent.
  */
-export async function findNextStory({ ledgerPath, subreddits, backlogPath } = {}) {
-  const stories = await findTopStories({ count: 1, ledgerPath, subreddits, backlogPath });
-  const editorialBacklog = await loadEditorialBacklog(backlogPath);
-  return stories[0] || { topic: editorialBacklog[0], source: "editorial-backlog" };
+export async function findTopStories({
+  count = 3,
+  query,
+  limit = 15,
+  ledgerPath,
+  env = process.env,
+  configPath = DEFAULT_CONFIG_PATH,
+  config = null,
+  deps = {},
+} = {}) {
+  const cfg = config || await loadStudioConfig(configPath);
+  const loadLedgerFn = deps.loadLedger || loadLedger;
+  const fetchEventsFn = deps.fetchNewsMcpEvents || fetchNewsMcpEvents;
+  const pickEventsFn = deps.pickDistinctEvents || pickDistinctEvents;
+
+  const [ledger, events] = await Promise.all([
+    loadLedgerFn(ledgerPath, { env }),
+    fetchEventsFn({
+      ...(query ? { query } : {}),
+      limit,
+      apiKey: deps.newsMcpApiKey,
+      env,
+      secretsPath: deps.secretsPath,
+      fetchFn: deps.fetchFn,
+    }),
+  ]);
+
+  const eligible = filterFreshTopics(events, ledger);
+  if (eligible.length === 0) {
+    return [];
+  }
+
+  return pickEventsFn({
+    candidates: eligible,
+    recentPublishedTitles: getRecentPublishedTitles(ledger, 30),
+    maxPicks: Math.min(eligible.length, count * 3),
+    writerAgent: cfg.writerAgent,
+    timeoutMs: cfg.agentTimeoutMs,
+    askAgentFn: deps.askAgentFn || askActiveAgent,
+  });
+}
+
+/**
+ * Scouts the highest-ranked fresh NewsMCP event not yet covered or retired in the ledger.
+ */
+export async function findNextStory(options = {}) {
+  const stories = await findTopStories({ ...options, count: 1 });
+  return stories[0] || null;
 }
 
 /**
@@ -550,6 +530,7 @@ export async function sourceStoryMedia({ topic, script, stageDir, searchFn = sea
 
 function resolveStudioDeps(deps = {}) {
   return {
+    loadStudioConfig,
     findNextStory,
     findTopStories,
     authorShazScript,
@@ -569,12 +550,22 @@ function resolveStudioDeps(deps = {}) {
     deletePublishVideo,
     publishVideoToAllChannels,
     getBufferPostsStatus,
+    recordShown,
     recordTopic,
     sleepFn: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
     bufferPollMaxAttempts: 24,
     bufferPollIntervalMs: 10_000,
     ...deps,
   };
+}
+
+async function notifyFatalStudioAlert(sendTelegramMessageFn, headline, err) {
+  try {
+    const safeMsg = redactSecrets(err?.message || String(err));
+    await sendTelegramMessageFn({
+      text: `🚨 *Shaz Daily Studio stopped: ${headline}*\n\n\`\`\`\n${safeMsg.slice(0, 2800)}\n\`\`\``,
+    });
+  } catch {}
 }
 
 /**
@@ -629,6 +620,8 @@ async function finalizeUploadPublishAndCleanup({
   tags,
   story,
   reviewNote,
+  ledgerPath,
+  env = process.env,
   deps,
 }) {
   deps.execute("node", [path.join(root, "runner.mjs"), "inspect", `--run=${runId}`], { cwd: root });
@@ -671,6 +664,8 @@ async function finalizeUploadPublishAndCleanup({
   await deps.recordTopic(story.topic, {
     runId,
     channels: postResult.channels,
+    ledgerPath,
+    env,
   });
 
   const cleanup = await deleteMediaAfterBufferSent({
@@ -690,6 +685,8 @@ export async function runDailyStudio({
   dryRun = false,
   autoApprove = false,
   customTopic = null,
+  ledgerPath,
+  env = process.env,
   deps = {},
 } = {}) {
   const d = resolveStudioDeps(deps);
@@ -708,7 +705,12 @@ export async function runDailyStudio({
     if (customTopic) {
       story = { topic: { title: customTopic, snippet: customTopic }, source: "manual-override" };
     } else {
-      story = await d.findNextStory();
+      story = await d.findNextStory({ ledgerPath, env });
+      if (!story) {
+        const msg = "No fresh stories available from NewsMCP today.";
+        await notifyFatalStudioAlert(d.sendTelegramMessage, "No Fresh Stories Today", new Error(msg));
+        throw new Error(msg);
+      }
     }
     console.log(`  Selected Story: "${story.topic.title}" (${story.source})`);
 
@@ -810,6 +812,7 @@ export async function runDailyStudio({
     captionText: dialogueText,
   });
   console.log(`  Preview sent to Telegram Chat ${approval.chatId}`);
+  await d.recordShown(story.topic, { ledgerPath, env });
 
   let decision = "approved";
   if (!autoApprove) {
@@ -834,6 +837,8 @@ export async function runDailyStudio({
     tags: script.hashtags || null,
     story,
     reviewNote: `Approved via Telegram one-click dispatch for ${script.title}`,
+    ledgerPath,
+    env,
     deps: d,
   });
   const publishedChannels = Object.keys(postResult.channels).join(", ");
@@ -853,6 +858,15 @@ export async function runDailyStudio({
     postResult,
     verticalVideoPath,
   };
+} catch (err) {
+  if (err instanceof AgentUnavailableError || err instanceof NewsMcpError) {
+    await notifyFatalStudioAlert(
+      d.sendTelegramMessage,
+      err instanceof AgentUnavailableError ? "Agent Unavailable" : "NewsMCP Failure",
+      err,
+    );
+  }
+  throw err;
 } finally {
   await fs.rm(stageDir, { recursive: true, force: true }).catch(() => {});
 }
@@ -870,24 +884,35 @@ export async function runDailyStudio({
  * @param {Array} [options.customTopics=null]
  */
 export async function runDailyBatch({
-  count = 3,
+  count,
   dryRun = false,
   autoApprove = false,
   customTopics = null,
+  ledgerPath,
+  env = process.env,
   deps = {},
 } = {}) {
   const d = resolveStudioDeps(deps);
-  console.log("\n================================================================================");
-  console.log(`🎬 WIGGLY ANIMATE SHAZ DAILY STUDIO: BATCH MODE (${count} CANDIDATES)`);
-  console.log("================================================================================\n");
 
-  const stories = customTopics && customTopics.length > 0
-    ? customTopics.map((t) => ({ topic: typeof t === "string" ? { title: t } : t, source: "custom" }))
-    : await d.findTopStories({ count });
+  try {
+    const cfg = await d.loadStudioConfig();
+    const targetCount = count ?? cfg.batchSize;
 
-  if (stories.length === 0) {
-    throw new Error("No fresh candidate stories found for batch generation.");
-  }
+    console.log("\n================================================================================");
+    console.log(`🎬 WIGGLY ANIMATE SHAZ DAILY STUDIO: BATCH MODE (${targetCount} CANDIDATES)`);
+    console.log("================================================================================\n");
+
+    const allStories = customTopics && customTopics.length > 0
+      ? customTopics.map((t) => ({ topic: typeof t === "string" ? { title: t } : t, source: "custom" }))
+      : await d.findTopStories({ count: targetCount, ledgerPath, env, config: cfg });
+
+    const stories = allStories.slice(0, targetCount);
+
+    if (stories.length === 0) {
+      const msg = "No fresh stories available from NewsMCP today.";
+      await notifyFatalStudioAlert(d.sendTelegramMessage, "No Fresh Stories Today", new Error(msg));
+      throw new Error(msg);
+    }
 
   console.log(`Found ${stories.length} breaking candidate stories:`);
   stories.forEach((s, idx) => {
@@ -989,6 +1014,10 @@ export async function runDailyBatch({
         totalCandidates: stories.length,
       });
 
+      if (!dryRun) {
+        await d.recordShown(story.topic, { ledgerPath, env });
+      }
+
       candidates.push({
         candidateNumber,
         runId,
@@ -1009,11 +1038,15 @@ export async function runDailyBatch({
   // Send batch summary banner message to Telegram
   try {
     const countLabel = candidates.length === 1 ? "CANDIDATE" : "CANDIDATES";
+    const shortfallNote = candidates.length < targetCount
+      ? `\n\nℹ️ Only ${candidates.length}/${targetCount} fresh distinct stories were available today.`
+      : "";
     await d.sendTelegramMessage({
       text:
         `🌅 *${candidates.length} DAILY ${countLabel} READY FOR REVIEW*\n\n` +
         `Hey Shaz! Above are your ${candidates.length} daily candidate videos for today.\n\n` +
-        `Watch each cut above and tap *🚀 Pick & Post* on your favorite. Wiggly will immediately push it live across *Instagram Reels* (@shazskits), *YouTube Shorts* (Shaz), and *TikTok*!`,
+        `Watch each cut above and tap *🚀 Pick & Post* on your favorite. Wiggly will immediately push it live across *Instagram Reels* (@shazskits), *YouTube Shorts* (Shaz), and *TikTok*!` +
+        shortfallNote,
     });
   } catch {}
 
@@ -1049,6 +1082,8 @@ export async function runDailyBatch({
     tags: winner.script.hashtags || null,
     story: winner.story,
     reviewNote: `Selected as daily winner from ${candidates.length}-candidate batch for ${winner.script.title}`,
+    ledgerPath,
+    env,
     deps: d,
   });
 
@@ -1079,6 +1114,16 @@ export async function runDailyBatch({
     winnerTitle: winner.script.title,
     postResult,
   };
+  } catch (err) {
+    if (err instanceof AgentUnavailableError || err instanceof NewsMcpError) {
+      await notifyFatalStudioAlert(
+        d.sendTelegramMessage,
+        err instanceof AgentUnavailableError ? "Agent Unavailable" : "NewsMCP Failure",
+        err,
+      );
+    }
+    throw err;
+  }
 }
 
 // CLI Execution entrypoint
@@ -1098,7 +1143,8 @@ if (isDirectRun) {
   const isAutoApprove = rawArgs.includes("--auto-approve") || rawArgs.includes("--auto-approve=true");
   const isSingle = rawArgs.includes("--single");
   const batchArg = rawArgs.find((a) => a.startsWith("--batch="))?.split("=")[1];
-  const count = batchArg ? parseInt(batchArg, 10) : 3;
+  const parsedBatch = batchArg ? parseInt(batchArg, 10) : Number.NaN;
+  const count = Number.isNaN(parsedBatch) ? undefined : parsedBatch;
   const topicArg = rawArgs.find((a) => a.startsWith("--topic="))?.split("=").slice(1).join("=");
 
   if (isSingle) {
@@ -1112,7 +1158,7 @@ if (isDirectRun) {
     });
   } else {
     runDailyBatch({
-      count: isNaN(count) ? 3 : count,
+      count,
       dryRun: isDryRun,
       autoApprove: isAutoApprove,
       customTopics: topicArg ? [topicArg] : null,

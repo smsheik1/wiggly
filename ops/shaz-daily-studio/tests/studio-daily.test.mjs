@@ -1,13 +1,18 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
+import { loadLedger, recordTopic } from "../content-ledger.mjs";
 import {
   buildAuthorPrompt,
   buildTargetedImageQueries,
   findTopStories,
-  loadEditorialBacklog,
+  runDailyBatch,
   sourceStoryMedia,
 } from "../studio-daily.mjs";
+import { AgentUnavailableError } from "../../../v3/lib/agent-bridge.ts";
 
 test("buildAuthorPrompt includes current date, relative countdown, and temporal grounding instructions", () => {
   const topic = {
@@ -46,7 +51,6 @@ test("buildTargetedImageQueries generates clean story-specific queries without h
   const ps5Topic = "Back Market offers €40 off refurbished PlayStation 5 consoles";
   const ps5Queries = buildTargetedImageQueries(ps5Topic, {});
 
-  // Must NOT contain hardcoded Spider-Man or disc drive IGN searches
   for (const q of ps5Queries) {
     assert.doesNotMatch(q, /Spider-Man/i);
     assert.doesNotMatch(q, /disc drive/i);
@@ -57,7 +61,6 @@ test("buildTargetedImageQueries generates clean story-specific queries without h
   const appleTopic = "Apple announces new iPad Air with M3 chip";
   const appleQueries = buildTargetedImageQueries(appleTopic, {});
 
-  // Must NOT contain hardcoded John Ternus or Steve Jobs Theater searches
   for (const q of appleQueries) {
     assert.doesNotMatch(q, /Steve Jobs Theater/i);
     assert.doesNotMatch(q, /John Ternus/i);
@@ -65,14 +68,127 @@ test("buildTargetedImageQueries generates clean story-specific queries without h
   }
 });
 
-test("loadEditorialBacklog loads external JSON topics and findTopStories supports custom subreddits", async () => {
-  const backlog = await loadEditorialBacklog();
-  assert.ok(Array.isArray(backlog) && backlog.length >= 3);
-  assert.ok(backlog.some((item) => item.title.includes("Steam Deck") || item.title.includes("Console")));
+test("findTopStories uses NewsMCP only, applies v2 ledger filters, and delegates event deduplication to pinned agent", async () => {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "studio-scout-test-"));
+  const ledgerPath = path.join(tmpDir, "published-topics.json");
+  try {
+    await recordTopic(
+      { eventId: "evt_old", link: "https://example.com/old", title: "Already Published Event" },
+      { ledgerPath, runId: "run-0" },
+    );
 
-  // findTopStories accepts custom subreddits array
-  const stories = await findTopStories({ count: 2, subreddits: ["NintendoSwitch"] });
-  assert.equal(stories.length, 2);
+    let capturedAgentOpts = null;
+    const picks = await findTopStories({
+      count: 2,
+      ledgerPath,
+      deps: {
+        newsMcpApiKey: "test-key",
+        fetchFn: async () => ({
+          ok: true,
+          json: async () => ({
+            events: [
+              { event_id: "evt_old", headline: "Already Published Event", sources: ["https://example.com/old"], newsrooms: 3 },
+              { event_id: "evt_new_a", headline: "Switch 2 Sales Milestone", sources: ["https://example.com/a"], newsrooms: 5 },
+              { event_id: "evt_new_b", headline: "Valve Steam Frame Headset Pricing", sources: ["https://example.com/b"], newsrooms: 2 },
+            ],
+          }),
+        }),
+        askAgentFn: async (_prompt, opts) => {
+          capturedAgentOpts = opts;
+          return {
+            picks: [
+              { eventId: "evt_new_b", reason: "Hardware pricing drama" },
+              { eventId: "evt_new_a", reason: "Sales milestone" },
+            ],
+          };
+        },
+      },
+    });
+
+    assert.equal(capturedAgentOpts.agent, "agy");
+    assert.equal(capturedAgentOpts.requireJson, true);
+    assert.deepEqual(picks.map((p) => p.topic.eventId), ["evt_new_b", "evt_new_a"]);
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("runDailyBatch alerts Telegram & stops on 0 fresh stories or AgentUnavailableError, and skips ledger writes during dryRun", async () => {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "studio-batch-guards-"));
+  const ledgerPath = path.join(tmpDir, "published-topics.json");
+  const telegramMessages = [];
+
+  try {
+    // Zero fresh stories -> Telegram alert + throw
+    await assert.rejects(
+      () =>
+        runDailyBatch({
+          count: 3,
+          ledgerPath,
+          deps: {
+            findTopStories: async () => [],
+            sendTelegramMessage: async ({ text }) => {
+              telegramMessages.push(text);
+              return {};
+            },
+          },
+        }),
+      /No fresh stories available/,
+    );
+    assert.match(telegramMessages[0], /No Fresh Stories Today/);
+
+    // AgentUnavailableError -> Telegram alert + rethrow
+    telegramMessages.length = 0;
+    await assert.rejects(
+      () =>
+        runDailyBatch({
+          count: 3,
+          ledgerPath,
+          deps: {
+            findTopStories: async () => {
+              throw new AgentUnavailableError("Pinned agent CLI 'agy' is unavailable");
+            },
+            sendTelegramMessage: async ({ text }) => {
+              telegramMessages.push(text);
+              return {};
+            },
+          },
+        }),
+      AgentUnavailableError,
+    );
+    assert.match(telegramMessages[0], /Agent Unavailable/);
+
+    // dryRun must never write shown or published into ledger
+    const res = await runDailyBatch({
+      count: 3,
+      dryRun: true,
+      ledgerPath,
+      deps: {
+        findTopStories: async () => [{ source: "mock", topic: { eventId: "evt_dry", title: "Dry Run Only" } }],
+        authorShazScript: async () => ({ title: "Dry Run Only", backgroundId: "living-room" }),
+        compileDialogueText: () => "Short dry run script.",
+        sourceStoryMedia: async () => [],
+        synthesizeShazVoice: async ({ outputPath }) => fs.writeFile(outputPath, Buffer.from("wav")),
+        resolveRunDirectory: (_root, runId) => path.join(tmpDir, runId),
+        execute: () => {},
+        composeVerticalVideo: async ({ outputPath }) => {
+          await fs.mkdir(path.dirname(outputPath), { recursive: true });
+          await fs.writeFile(path.join(path.dirname(outputPath), "final.mp4"), Buffer.from("mp4"));
+          await fs.writeFile(path.join(path.dirname(outputPath), "transcript.json"), JSON.stringify({ words: [] }));
+          await fs.writeFile(outputPath, Buffer.from("vert"));
+        },
+        sendApprovalVideo: async () => ({ messageId: 1 }),
+        sendTelegramMessage: async ({ text }) => {
+          telegramMessages.push(text);
+          return {};
+        },
+      },
+    });
+    assert.equal(res.status, "dry-run-success");
+    assert.equal((await loadLedger(ledgerPath)).entries.length, 0);
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  }
 });
 
 test("sourceStoryMedia throws loud Rule 12 error on 0 results rather than silently falling back to PS5 images", async () => {
@@ -91,13 +207,12 @@ test("sourceStoryMedia throws loud Rule 12 error on 0 results rather than silent
         topic: { title: "Obscure Unsearchable Widget" },
         script: mockScript,
         stageDir: "/tmp",
-        searchFn: async () => [], // Simulates 0 results from image provider
+        searchFn: async () => [],
       });
     },
     (err) => {
-      // Must follow Rule 12: fail loudly with diagnostic info rather than silently copying ps5-pro-hero.jpg
       assert.match(err.message, /IMAGE SOURCING ERROR|0 CANDIDATES RETURNED/i);
       return true;
-    }
+    },
   );
 });
