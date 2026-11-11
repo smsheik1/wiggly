@@ -2,12 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   getBufferChannels,
+  getBufferPostsStatus,
   publishVideoToInstagram,
   publishVideoToYouTube,
   publishVideoToTikTok,
   publishVideoToAllChannels,
   deriveStoryHashtags,
 } from "../buffer-publisher.mjs";
+
+const CONVEX_VIDEO_URL = "https://wry-viper-639.convex.cloud/api/storage/test-video.mp4";
 
 test("getBufferChannels parses organization and channels from GraphQL", async () => {
   const mockFetch = async (url, options) => {
@@ -74,7 +77,7 @@ test("publishVideoToInstagram constructs correct mutation and assets payload", a
 
   const result = await publishVideoToInstagram({
     channelId: "ch_ig",
-    videoUrl: "https://api.telegram.org/file/bot123/videos/test.mp4",
+    videoUrl: CONVEX_VIDEO_URL,
     caption: "The PS5 Pro price is ridiculous. What do you think?",
     mode: "shareNow",
     apiKey: "test-token",
@@ -86,7 +89,7 @@ test("publishVideoToInstagram constructs correct mutation and assets payload", a
   assert.equal(capturedBody.variables.input.channelId, "ch_ig");
   assert.equal(capturedBody.variables.input.metadata.instagram.type, "reel");
   assert.equal(capturedBody.variables.input.metadata.instagram.shouldShareToFeed, true);
-  assert.equal(capturedBody.variables.input.assets[0].video.url, "https://api.telegram.org/file/bot123/videos/test.mp4");
+  assert.equal(capturedBody.variables.input.assets[0].video.url, CONVEX_VIDEO_URL);
 });
 
 test("publishVideoToYouTube constructs correct mutation with #Shorts and metadata", async () => {
@@ -111,7 +114,7 @@ test("publishVideoToYouTube constructs correct mutation with #Shorts and metadat
 
   const result = await publishVideoToYouTube({
     channelId: "ch_yt",
-    videoUrl: "https://api.telegram.org/file/bot123/videos/test.mp4",
+    videoUrl: CONVEX_VIDEO_URL,
     title: "GTA 6 Release Secret",
     description: "Take-Two confirmed the window is locked.",
     apiKey: "test-token",
@@ -150,7 +153,7 @@ test("publishVideoToTikTok constructs correct mutation with title", async () => 
 
   const result = await publishVideoToTikTok({
     channelId: "ch_tt",
-    videoUrl: "https://api.telegram.org/file/bot123/videos/test.mp4",
+    videoUrl: CONVEX_VIDEO_URL,
     title: "GTA 6 Release Secret #gaming",
     apiKey: "test-token",
     fetchFn: mockFetch,
@@ -214,7 +217,7 @@ test("publishVideoToAllChannels broadcasts to Instagram and YouTube, reports pen
   };
 
   const result = await publishVideoToAllChannels({
-    videoUrl: "https://api.telegram.org/file/bot123/videos/test.mp4",
+    videoUrl: CONVEX_VIDEO_URL,
     title: "Apple Foldable Reality",
     caption: "The repair bill is insane.",
     apiKey: "test-token",
@@ -244,4 +247,71 @@ test("deriveStoryHashtags extracts contextual tags from title and honors script 
     hashtags: ["#MyCustomTag", "#DeepTech", "#ViralDeal"],
   });
   assert.deepEqual(customScriptTags, ["#mycustomtag", "#deeptech", "#viraldeal"]);
+});
+
+test("Buffer publishers reject api.telegram.org bot file URLs", async () => {
+  const tgUrl = "https://api.telegram.org/file/bot123456:SECRET/videos/test.mp4";
+  const neverFetch = async () => {
+    throw new Error("fetch must not run for leaked Telegram URLs");
+  };
+
+  await assert.rejects(
+    () => publishVideoToInstagram({ channelId: "ch_ig", videoUrl: tgUrl, caption: "test", apiKey: "k", fetchFn: neverFetch }),
+    /refused an api\.telegram\.org bot file URL/,
+  );
+  await assert.rejects(
+    () => publishVideoToYouTube({ channelId: "ch_yt", videoUrl: tgUrl, title: "test", apiKey: "k", fetchFn: neverFetch }),
+    /refused an api\.telegram\.org bot file URL/,
+  );
+  await assert.rejects(
+    () => publishVideoToTikTok({ channelId: "ch_tt", videoUrl: tgUrl, title: "test", apiKey: "k", fetchFn: neverFetch }),
+    /refused an api\.telegram\.org bot file URL/,
+  );
+  await assert.rejects(
+    () => publishVideoToAllChannels({ videoUrl: tgUrl, title: "test", apiKey: "k", fetchFn: neverFetch }),
+    /refused an api\.telegram\.org bot file URL/,
+  );
+});
+
+test("getBufferPostsStatus reports sending, sent, and error states across posts", async () => {
+  const statusMap = {
+    post_1: { id: "post_1", status: "sent", error: null },
+    post_2: { id: "post_2", status: "sending", error: null },
+  };
+  const mockFetch = async (_url, options) => {
+    const { variables } = JSON.parse(options.body);
+    return {
+      ok: true,
+      json: async () => ({
+        data: { post: statusMap[variables.input.id] },
+      }),
+    };
+  };
+
+  const pendingRes = await getBufferPostsStatus({
+    postIds: ["post_1", "post_2"],
+    apiKey: "k",
+    fetchFn: mockFetch,
+  });
+  assert.equal(pendingRes.allSent, false);
+  assert.equal(pendingRes.hasError, false);
+  assert.deepEqual(pendingRes.pendingIds, ["post_2"]);
+
+  statusMap.post_2 = { id: "post_2", status: "sent", error: null };
+  const sentRes = await getBufferPostsStatus({
+    postIds: ["post_1", "post_2"],
+    apiKey: "k",
+    fetchFn: mockFetch,
+  });
+  assert.equal(sentRes.allSent, true);
+  assert.deepEqual(sentRes.pendingIds, []);
+
+  statusMap.post_2 = { id: "post_2", status: "error", error: { message: "bad codec" } };
+  const errRes = await getBufferPostsStatus({
+    postIds: ["post_1", "post_2"],
+    apiKey: "k",
+    fetchFn: mockFetch,
+  });
+  assert.equal(errRes.allSent, false);
+  assert.equal(errRes.hasError, true);
 });

@@ -12,7 +12,9 @@ import { validateScript } from "../../v3/public/format-repositories/shaz-puppet-
 import { synthesizeShazVoice } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/voice.mjs";
 import { composeVerticalVideo, formatSafeHeadline } from "./vertical-letterbox.mjs";
 import { sendApprovalVideo, pollApprovalDecision, pollBatchDecision, sendTelegramMessage } from "./telegram-approval.mjs";
-import { publishVideoToInstagram, publishVideoToAllChannels } from "./buffer-publisher.mjs";
+import { publishVideoToInstagram, publishVideoToAllChannels, getBufferPostsStatus } from "./buffer-publisher.mjs";
+import { uploadPublishVideo, deletePublishVideo } from "./media-host.mjs";
+import { redactSecrets } from "./secrets.mjs";
 import { execute, parseArgs, resolveRunDirectory, sha256, writeJson } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/run-common.mjs";
 import { searchGoogleImages } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/serper-search.mjs";
 import { curateImageCandidatesDeterministic } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/director-jev.mjs";
@@ -546,6 +548,141 @@ export async function sourceStoryMedia({ topic, script, stageDir, searchFn = sea
   return downloadedList;
 }
 
+function resolveStudioDeps(deps = {}) {
+  return {
+    findNextStory,
+    findTopStories,
+    authorShazScript,
+    compileDialogueText,
+    sourceStoryMedia,
+    synthesizeShazVoice,
+    execute,
+    resolveRunDirectory,
+    sha256,
+    writeJson,
+    composeVerticalVideo,
+    sendApprovalVideo,
+    pollApprovalDecision,
+    pollBatchDecision,
+    sendTelegramMessage,
+    uploadPublishVideo,
+    deletePublishVideo,
+    publishVideoToAllChannels,
+    getBufferPostsStatus,
+    recordTopic,
+    sleepFn: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    bufferPollMaxAttempts: 24,
+    bufferPollIntervalMs: 10_000,
+    ...deps,
+  };
+}
+
+/**
+ * Waits for Buffer posts to finish fetching and reach `"sent"`, then deletes the temporary Convex blob.
+ * Falls back safely to the 7-day Convex TTL failsafe if Buffer errors or remains `"sending"`.
+ */
+async function deleteMediaAfterBufferSent({ postResult, storageId, deps }) {
+  const postIds = Object.values(postResult?.channels || {})
+    .map((entry) => entry?.postId)
+    .filter(Boolean);
+
+  if (postIds.length === 0 || !storageId) {
+    return { cleanupStatus: "deferred-to-7d-ttl", reason: "no-post-ids" };
+  }
+
+  for (let attempt = 0; attempt < deps.bufferPollMaxAttempts; attempt += 1) {
+    if (attempt > 0 && deps.bufferPollIntervalMs > 0) {
+      await deps.sleepFn(deps.bufferPollIntervalMs);
+    }
+
+    try {
+      const statusResult = await deps.getBufferPostsStatus({ postIds });
+      if (statusResult?.allSent) {
+        await deps.deletePublishVideo(storageId);
+        console.log(`  🗑️ Deleted temporary Convex media (${storageId}) after Buffer confirmed 'sent'.`);
+        return { cleanupStatus: "deleted-after-sent", cleanedUpAt: new Date().toISOString() };
+      }
+      if (statusResult?.hasError) {
+        console.warn("  ⚠️ Buffer reported a delivery error; leaving Convex media for 7-day auto-expiry.");
+        return { cleanupStatus: "deferred-to-7d-ttl", reason: "buffer-post-error" };
+      }
+    } catch (err) {
+      console.warn(redactSecrets(`  ⚠️ Buffer status/cleanup check failed: ${err.message}; leaving for 7-day TTL.`));
+      return { cleanupStatus: "deferred-to-7d-ttl", reason: "cleanup-check-error" };
+    }
+  }
+
+  console.warn("  ⏳ Buffer posts still sending after poll window; leaving Convex media for 7-day auto-expiry.");
+  return { cleanupStatus: "deferred-to-7d-ttl", reason: "poll-timeout" };
+}
+
+/**
+ * Shared Phase 1 post-approval flow: inspect -> human-review -> finalize -> Convex upload -> Buffer -> delete on sent.
+ */
+async function finalizeUploadPublishAndCleanup({
+  runId,
+  runDirectory,
+  rawMasterVideo,
+  verticalVideoPath,
+  title,
+  dialogueText,
+  tags,
+  story,
+  reviewNote,
+  deps,
+}) {
+  deps.execute("node", [path.join(root, "runner.mjs"), "inspect", `--run=${runId}`], { cwd: root });
+  const videoSha = await deps.sha256(rawMasterVideo);
+  const humanReview = {
+    schemaVersion: 1,
+    status: "approved",
+    reviewer: "shaz-telegram-operator",
+    reviewedOutputSha256: videoSha,
+    reviewedAt: new Date().toISOString(),
+    notes: reviewNote,
+    directVideoPerception: true,
+    directAudioPerception: true,
+    completePasses: 1,
+  };
+  await deps.writeJson(path.join(runDirectory, "human-review.json"), humanReview);
+  deps.execute("node", [path.join(root, "runner.mjs"), "finalize", `--run=${runId}`], { cwd: root });
+
+  console.log("\n☁️ Uploading finalized vertical MP4 to Convex temporary host...");
+  const media = await deps.uploadPublishVideo(verticalVideoPath);
+  const mediaReceiptPath = path.join(runDirectory, "publish-media.json");
+  const mediaReceipt = {
+    url: media.url,
+    storageId: media.storageId,
+    sha256: media.sha256,
+    bytes: media.bytes,
+    uploadedAt: new Date().toISOString(),
+  };
+  await deps.writeJson(mediaReceiptPath, mediaReceipt);
+
+  console.log("\n🚀 Broadcasting Video to Social Channels via Buffer API...");
+  const postResult = await deps.publishVideoToAllChannels({
+    videoUrl: media.url,
+    title,
+    caption: dialogueText,
+    tags: tags || null,
+    mode: "shareNow",
+  });
+
+  await deps.recordTopic(story.topic, {
+    runId,
+    channels: postResult.channels,
+  });
+
+  const cleanup = await deleteMediaAfterBufferSent({
+    postResult,
+    storageId: media.storageId,
+    deps,
+  });
+  await deps.writeJson(mediaReceiptPath, { ...mediaReceipt, ...cleanup });
+
+  return { media, postResult, cleanup };
+}
+
 /**
  * Runs the full daily studio pipeline end-to-end.
  */
@@ -553,13 +690,15 @@ export async function runDailyStudio({
   dryRun = false,
   autoApprove = false,
   customTopic = null,
+  deps = {},
 } = {}) {
+  const d = resolveStudioDeps(deps);
   console.log("\n================================================================================");
   console.log("🎬 WIGGLY SHAZ DAILY CONTENT STUDIO (AUTONOMOUS RUN)");
   console.log("================================================================================\n");
 
   const runId = `daily-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
-  const runDirectory = resolveRunDirectory(root, runId);
+  const runDirectory = d.resolveRunDirectory(root, runId);
   const stageDir = await fs.mkdtemp(path.join(os.tmpdir(), "studio-stage-"));
 
   try {
@@ -569,21 +708,21 @@ export async function runDailyStudio({
     if (customTopic) {
       story = { topic: { title: customTopic, snippet: customTopic }, source: "manual-override" };
     } else {
-      story = await findNextStory();
+      story = await d.findNextStory();
     }
     console.log(`  Selected Story: "${story.topic.title}" (${story.source})`);
 
     // 2. Creative Script Synthesis
     console.log("\n✍️  STEP 2: Synthesizing Script (Enforcing Therefore/But & AI Tell Linter)...");
-    const script = await authorShazScript(story.topic);
-    const dialogueText = compileDialogueText(script);
+    const script = await d.authorShazScript(story.topic);
+    const dialogueText = d.compileDialogueText(script);
     console.log(`  Title: ${script.title}`);
     console.log(`  Dialogue: "${dialogueText}"`);
-    await writeJson(path.join(stageDir, "script.json"), script);
+    await d.writeJson(path.join(stageDir, "script.json"), script);
 
     // 2b. Sourcing Authentic Subject Imagery via Google Images
     console.log("\n🖼️  STEP 2b: Sourcing Authentic Topic Imagery via Google Images...");
-    const downloadedMediaList = await sourceStoryMedia({
+    const downloadedMediaList = await d.sourceStoryMedia({
       topic: story.topic,
       script,
       stageDir,
@@ -592,7 +731,7 @@ export async function runDailyStudio({
     // 3. Cloned Shaz Voice Synthesis
     console.log("\n🎙️  STEP 3: Synthesizing Shaz Voice (Cartesia Sonic-3.6 Clone @ -16 LUFS)...");
     const audioFile = path.join(stageDir, "user-audio.wav");
-    await synthesizeShazVoice({
+    await d.synthesizeShazVoice({
       text: dialogueText,
       outputPath: audioFile,
     });
@@ -612,11 +751,11 @@ export async function runDailyStudio({
       script,
     };
     const inputJsonPath = path.join(stageDir, "input.json");
-    await writeJson(inputJsonPath, multiShotInput);
+    await d.writeJson(inputJsonPath, multiShotInput);
 
     // Run official format workflow: init -> validate -> render
     console.log("  Running runner init...");
-    execute("node", [
+    d.execute("node", [
       path.join(root, "runner.mjs"),
       "init",
       `--run=${runId}`,
@@ -638,10 +777,10 @@ export async function runDailyStudio({
     }
 
   console.log("  Running runner validate...");
-  execute("node", [path.join(root, "runner.mjs"), "validate", `--run=${runId}`], { cwd: root });
+  d.execute("node", [path.join(root, "runner.mjs"), "validate", `--run=${runId}`], { cwd: root });
 
   console.log("  Rendering 1280x720 multi-shot video...");
-  execute("node", [path.join(root, "runner.mjs"), "render", `--run=${runId}`], { cwd: root });
+  d.execute("node", [path.join(root, "runner.mjs"), "render", `--run=${runId}`], { cwd: root });
 
   const rawMasterVideo = path.join(runDirectory, "final.mp4");
   const transcriptPath = path.join(runDirectory, "transcript.json");
@@ -649,7 +788,7 @@ export async function runDailyStudio({
   // 5. Vertical Letterboxing (1080x1920) + Animated Karaoke Subtitles
   console.log("\n📐 STEP 5: Packaging 1080x1920 Vertical Letterbox for Instagram Reels...");
   const verticalVideoPath = path.join(runDirectory, "final-vertical.mp4");
-  await composeVerticalVideo({
+  await d.composeVerticalVideo({
     sourceVideoPath: rawMasterVideo,
     transcriptPath,
     headline: script.headline || formatSafeHeadline(script.title, 36),
@@ -664,19 +803,18 @@ export async function runDailyStudio({
 
   // 6. Telegram Bot Interactive Approval
   console.log("\n📱 STEP 6: Dispatching Preview to Telegram for One-Click Approval...");
-  const approval = await sendApprovalVideo({
+  const approval = await d.sendApprovalVideo({
     videoPath: verticalVideoPath,
     title: script.title,
     runId,
     captionText: dialogueText,
   });
   console.log(`  Preview sent to Telegram Chat ${approval.chatId}`);
-  console.log(`  Public Media CDN: ${approval.publicVideoUrl}`);
 
   let decision = "approved";
   if (!autoApprove) {
     console.log("  Waiting for operator approval on Telegram...");
-    decision = await pollApprovalDecision({ runId });
+    decision = await d.pollApprovalDecision({ runId });
   }
 
   if (decision !== "approved") {
@@ -684,41 +822,25 @@ export async function runDailyStudio({
     return { status: "rejected", runDirectory };
   }
 
-  // 7. Auto-sign human review receipt and finalize format run
+  // 7–8. Finalize -> Upload to Convex -> Publish via Buffer -> Delete on "sent"
   console.log("\n✍️  STEP 7: Signing Human Review Gate & Finalizing Deliverables...");
-  execute("node", [path.join(root, "runner.mjs"), "inspect", `--run=${runId}`], { cwd: root });
-  const videoSha = await sha256(rawMasterVideo);
-  const humanReview = {
-    schemaVersion: 1,
-    status: "approved",
-    reviewer: "shaz-telegram-operator",
-    reviewedOutputSha256: videoSha,
-    reviewedAt: new Date().toISOString(),
-    notes: `Approved via Telegram one-click dispatch for ${script.title}`,
-    directVideoPerception: true,
-    directAudioPerception: true,
-    completePasses: 1,
-  };
-  await writeJson(path.join(runDirectory, "human-review.json"), humanReview);
-  execute("node", [path.join(root, "runner.mjs"), "finalize", `--run=${runId}`], { cwd: root });
-
-  // 8. Buffer Live Multi-Channel Dispatch (Instagram Reels, YouTube Shorts, TikTok)
-  console.log("\n🚀 STEP 8: Dispatching Live Video to Social Channels (@shazskits, Shaz, TikTok) via Buffer API...");
-  const postResult = await publishVideoToAllChannels({
-    videoUrl: approval.publicVideoUrl,
+  const { postResult } = await finalizeUploadPublishAndCleanup({
+    runId,
+    runDirectory,
+    rawMasterVideo,
+    verticalVideoPath,
     title: script.title,
-    caption: dialogueText,
+    dialogueText,
     tags: script.hashtags || null,
-    mode: "shareNow",
+    story,
+    reviewNote: `Approved via Telegram one-click dispatch for ${script.title}`,
+    deps: d,
   });
   const publishedChannels = Object.keys(postResult.channels).join(", ");
   console.log(`  ✅ Successfully published to: ${publishedChannels}!`);
   if (postResult.pending.length > 0) {
     console.log(`  ℹ️ Pending channels: ${postResult.pending.map((p) => p.service).join(", ")}`);
   }
-
-  // Record to topic ledger so it never repeats
-  await recordTopic(story.topic, { runId, channels: postResult.channels });
   console.log(`  Logged to published-topics.json`);
 
   console.log("\n================================================================================");
@@ -752,14 +874,16 @@ export async function runDailyBatch({
   dryRun = false,
   autoApprove = false,
   customTopics = null,
+  deps = {},
 } = {}) {
+  const d = resolveStudioDeps(deps);
   console.log("\n================================================================================");
   console.log(`🎬 WIGGLY ANIMATE SHAZ DAILY STUDIO: BATCH MODE (${count} CANDIDATES)`);
   console.log("================================================================================\n");
 
   const stories = customTopics && customTopics.length > 0
     ? customTopics.map((t) => ({ topic: typeof t === "string" ? { title: t } : t, source: "custom" }))
-    : await findTopStories({ count });
+    : await d.findTopStories({ count });
 
   if (stories.length === 0) {
     throw new Error("No fresh candidate stories found for batch generation.");
@@ -780,18 +904,18 @@ export async function runDailyBatch({
     console.log(`--------------------------------------------------------------------------------`);
 
     const runId = `daily-${new Date().toISOString().slice(0, 10)}-${Math.random().toString(36).slice(2, 10)}`;
-    const runDirectory = resolveRunDirectory(root, runId);
+    const runDirectory = d.resolveRunDirectory(root, runId);
     const stageDir = path.join(os.tmpdir(), `wiggly-daily-batch-${runId}`);
     await fs.mkdir(stageDir, { recursive: true });
 
     try {
       // 1. Script authoring
-      const script = await authorShazScript(story.topic);
-      const dialogueText = compileDialogueText(script);
-      await writeJson(path.join(stageDir, "script.json"), script);
+      const script = await d.authorShazScript(story.topic);
+      const dialogueText = d.compileDialogueText(script);
+      await d.writeJson(path.join(stageDir, "script.json"), script);
 
       // 2. Sourcing Authentic Subject Imagery via Google Images
-      const downloadedMediaList = await sourceStoryMedia({
+      const downloadedMediaList = await d.sourceStoryMedia({
         topic: story.topic,
         script,
         stageDir,
@@ -799,7 +923,7 @@ export async function runDailyBatch({
 
       // 3. Voice synthesis
       const audioFile = path.join(stageDir, "user-audio.wav");
-      await synthesizeShazVoice({
+      await d.synthesizeShazVoice({
         text: dialogueText,
         outputPath: audioFile,
       });
@@ -817,9 +941,9 @@ export async function runDailyBatch({
         script,
       };
       const inputJsonPath = path.join(stageDir, "input.json");
-      await writeJson(inputJsonPath, multiShotInput);
+      await d.writeJson(inputJsonPath, multiShotInput);
 
-      execute("node", [
+      d.execute("node", [
         path.join(root, "runner.mjs"),
         "init",
         `--run=${runId}`,
@@ -839,15 +963,15 @@ export async function runDailyBatch({
         }
       }
 
-      execute("node", [path.join(root, "runner.mjs"), "validate", `--run=${runId}`], { cwd: root });
-      execute("node", [path.join(root, "runner.mjs"), "render", `--run=${runId}`], { cwd: root });
+      d.execute("node", [path.join(root, "runner.mjs"), "validate", `--run=${runId}`], { cwd: root });
+      d.execute("node", [path.join(root, "runner.mjs"), "render", `--run=${runId}`], { cwd: root });
 
       const rawMasterVideo = path.join(runDirectory, "final.mp4");
       const transcriptPath = path.join(runDirectory, "transcript.json");
 
       // 5. Vertical letterbox
       const verticalVideoPath = path.join(runDirectory, "final-vertical.mp4");
-      await composeVerticalVideo({
+      await d.composeVerticalVideo({
         sourceVideoPath: rawMasterVideo,
         transcriptPath,
         headline: script.headline || formatSafeHeadline(script.title, 36),
@@ -856,7 +980,7 @@ export async function runDailyBatch({
 
       // 6. Send preview to Telegram
       console.log(`  Dispatching Candidate ${candidateNumber}/${stories.length} to Telegram...`);
-      const approval = await sendApprovalVideo({
+      const approval = await d.sendApprovalVideo({
         videoPath: verticalVideoPath,
         title: script.title,
         runId,
@@ -885,7 +1009,7 @@ export async function runDailyBatch({
   // Send batch summary banner message to Telegram
   try {
     const countLabel = candidates.length === 1 ? "CANDIDATE" : "CANDIDATES";
-    await sendTelegramMessage({
+    await d.sendTelegramMessage({
       text:
         `🌅 *${candidates.length} DAILY ${countLabel} READY FOR REVIEW*\n\n` +
         `Hey Shaz! Above are your ${candidates.length} daily candidate videos for today.\n\n` +
@@ -901,7 +1025,7 @@ export async function runDailyBatch({
   let winner = candidates[0];
   if (!autoApprove) {
     console.log("\n📱 Waiting for operator to tap 'Pick & Post' on their favorite candidate in Telegram...");
-    const decision = await pollBatchDecision({
+    const decision = await d.pollBatchDecision({
       candidates: candidates.map((c) => ({
         runId: c.runId,
         title: c.script.title,
@@ -913,32 +1037,19 @@ export async function runDailyBatch({
 
   console.log(`\n🏆 WINNER SELECTED: Candidate #${winner.candidateNumber} ("${winner.script.title}") [${winner.runId}]`);
 
-  // Finalize winner
+  // Finalize winner -> Upload to Convex -> Broadcast to Buffer -> Delete on "sent"
   console.log("\n✍️  Signing Human Review Gate & Finalizing Winner Deliverables...");
-  execute("node", [path.join(root, "runner.mjs"), "inspect", `--run=${winner.runId}`], { cwd: root });
-  const videoSha = await sha256(winner.rawMasterVideo);
-  const humanReview = {
-    schemaVersion: 1,
-    status: "approved",
-    reviewer: "shaz-telegram-operator",
-    reviewedOutputSha256: videoSha,
-    reviewedAt: new Date().toISOString(),
-    notes: `Selected as daily winner from ${candidates.length}-candidate batch for ${winner.script.title}`,
-    directVideoPerception: true,
-    directAudioPerception: true,
-    completePasses: 1,
-  };
-  await writeJson(path.join(winner.runDirectory, "human-review.json"), humanReview);
-  execute("node", [path.join(root, "runner.mjs"), "finalize", `--run=${winner.runId}`], { cwd: root });
-
-  // Broadcast to all social channels
-  console.log("\n🚀 STEP: Broadcasting Winner to Instagram Reels, YouTube Shorts, and TikTok...");
-  const postResult = await publishVideoToAllChannels({
-    videoUrl: winner.approval.publicVideoUrl,
+  const { postResult } = await finalizeUploadPublishAndCleanup({
+    runId: winner.runId,
+    runDirectory: winner.runDirectory,
+    rawMasterVideo: winner.rawMasterVideo,
+    verticalVideoPath: winner.verticalVideoPath,
     title: winner.script.title,
-    caption: winner.dialogueText,
+    dialogueText: winner.dialogueText,
     tags: winner.script.hashtags || null,
-    mode: "shareNow",
+    story: winner.story,
+    reviewNote: `Selected as daily winner from ${candidates.length}-candidate batch for ${winner.script.title}`,
+    deps: d,
   });
 
   const publishedChannels = Object.keys(postResult.channels).join(", ");
@@ -946,17 +1057,11 @@ export async function runDailyBatch({
   if (postResult.pending.length > 0) {
     console.log(`  ℹ️ Pending channels: ${postResult.pending.map((p) => p.service).join(", ")}`);
   }
-
-  // Record winner topic to ledger
-  await recordTopic(winner.story.topic, {
-    runId: winner.runId,
-    channels: postResult.channels,
-  });
   console.log(`  Logged winner to published-topics.json`);
 
   // Send Telegram completion confirmation
   try {
-    await sendTelegramMessage({
+    await d.sendTelegramMessage({
       text:
         `🎉 *DAILY POST LIVE!*\n\n` +
         `Candidate #${winner.candidateNumber} (*${winner.script.title}*) has been published to *Instagram Reels* and *YouTube Shorts*!\n\n` +
@@ -1002,7 +1107,7 @@ if (isDirectRun) {
       autoApprove: isAutoApprove,
       customTopic: topicArg || null,
     }).catch((err) => {
-      console.error(`\n❌ Fatal Studio Error: ${err.message}\n`, err.stack);
+      console.error(redactSecrets(`\n❌ Fatal Studio Error: ${err.message}\n`), redactSecrets(err.stack || ""));
       process.exit(1);
     });
   } else {
@@ -1012,7 +1117,7 @@ if (isDirectRun) {
       autoApprove: isAutoApprove,
       customTopics: topicArg ? [topicArg] : null,
     }).catch((err) => {
-      console.error(`\n❌ Fatal Batch Studio Error: ${err.message}\n`, err.stack);
+      console.error(redactSecrets(`\n❌ Fatal Batch Studio Error: ${err.message}\n`), redactSecrets(err.stack || ""));
       process.exit(1);
     });
   }

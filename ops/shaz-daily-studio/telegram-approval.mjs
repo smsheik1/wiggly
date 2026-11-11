@@ -4,6 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { getSecretKey, redactSecrets } from "./secrets.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -11,8 +12,8 @@ const execFileAsync = promisify(execFile);
  * Loads Telegram bot credentials from secrets.env or environment.
  */
 export function getTelegramCredentials() {
-  const token = process.env.TELEGRAM_BOT_TOKEN?.trim() || getSecretKey("TELEGRAM_BOT_TOKEN");
-  const chatId = process.env.TELEGRAM_CHAT_ID?.trim() || getSecretKey("TELEGRAM_CHAT_ID");
+  const token = getSecretKey("TELEGRAM_BOT_TOKEN");
+  const chatId = getSecretKey("TELEGRAM_CHAT_ID");
 
   if (!token) {
     throw new Error("Missing TELEGRAM_BOT_TOKEN in secrets.env");
@@ -24,30 +25,8 @@ export function getTelegramCredentials() {
   return { token, chatId };
 }
 
-function getSecretKey(name) {
-  let currentDir = process.cwd();
-  for (let i = 0; i < 7; i += 1) {
-    const candidate = path.join(currentDir, "secrets.env");
-    if (fs.existsSync(candidate)) {
-      try {
-        const lines = fs.readFileSync(candidate, "utf8").split("\n");
-        for (const line of lines) {
-          if (line.startsWith(`${name}=`)) {
-            const val = line.split("=")[1]?.trim();
-            if (val) return val;
-          }
-        }
-      } catch {}
-    }
-    const parent = path.dirname(currentDir);
-    if (parent === currentDir) break;
-    currentDir = parent;
-  }
-  return null;
-}
-
 /**
- * Sends a rendered video to the user's Telegram for approval and resolves its public CDN URL.
+ * Sends a rendered video to the user's Telegram for approval.
  */
 export async function sendApprovalVideo({
   videoPath,
@@ -120,32 +99,27 @@ export async function sendApprovalVideo({
   };
   formData.append("reply_markup", JSON.stringify(inlineKeyboard));
 
-  const res = await fetchFn(`https://api.telegram.org/bot${token}/sendVideo`, {
-    method: "POST",
-    body: formData,
-  });
+  let res;
+  try {
+    res = await fetchFn(`https://api.telegram.org/bot${token}/sendVideo`, {
+      method: "POST",
+      body: formData,
+    });
+  } catch (err) {
+    throw new Error(redactSecrets(`Telegram sendVideo request failed: ${err.message}`, [token]));
+  }
 
   const data = await res.json();
   if (!data.ok) {
-    throw new Error(`Telegram sendVideo failed: ${data.description}`);
+    throw new Error(redactSecrets(`Telegram sendVideo failed: ${data.description}`, [token]));
   }
 
   const fileId = data.result?.video?.file_id;
   const messageId = data.result?.message_id;
 
-  // Retrieve public file path
-  const fileRes = await fetchFn(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`);
-  const fileData = await fileRes.json();
-  if (!fileData.ok) {
-    throw new Error(`Telegram getFile failed: ${fileData.description}`);
-  }
-
-  const publicVideoUrl = `https://api.telegram.org/file/bot${token}/${fileData.result.file_path}`;
-
   return {
     messageId,
     fileId,
-    publicVideoUrl,
     chatId,
   };
 }
@@ -258,7 +232,7 @@ export async function pollApprovalDecision({
         }
       }
     } catch (err) {
-      console.warn(`[Telegram Polling Warning] ${err.message}`);
+      console.warn(redactSecrets(`[Telegram Polling Warning] ${err.message}`, [token]));
     }
 
     await sleepFn(pollIntervalMs);
@@ -381,7 +355,7 @@ export async function pollBatchDecision({
         }
       }
     } catch (err) {
-      console.warn(`[Telegram Polling Warning] ${err.message}`);
+      console.warn(redactSecrets(`[Telegram Polling Warning] ${err.message}`, [token]));
     }
 
     await sleepFn(pollIntervalMs);
