@@ -45,7 +45,13 @@ async function runTests(): Promise<void> {
     await writeFakeCli(
       localBin,
       "agy",
-      `echo '{"response":"\`\`\`json\\n{\\"picked\\":true}\\n\`\`\`"}'`,
+      [
+        `args=" $* "`,
+        `[[ "$args" == *" --output-format json "* ]] || { echo "missing --output-format json" >&2; exit 2; }`,
+        `[[ "$args" == *" --disable-slash-commands "* ]] || { echo "missing --disable-slash-commands" >&2; exit 2; }`,
+        `[[ "$args" == *" --print-timeout 5s "* ]] || { echo "missing --print-timeout 5s" >&2; exit 2; }`,
+        `echo '{"response":"\`\`\`json\\n{\\"picked\\":true}\\n\`\`\`"}'`,
+      ].join("\n"),
     );
     process.env.PATH = "/usr/bin:/bin";
     const localRes = await askActiveAgent("test", { agent: "agy", requireJson: true, timeoutMs: 5000 });

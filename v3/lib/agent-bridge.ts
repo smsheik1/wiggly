@@ -174,7 +174,7 @@ function buildCliArgs(command: SupportedAgentCli, prompt: string, options?: Agen
       args.push("--disable-slash-commands");
     }
     if (typeof options?.timeoutMs === "number" && options.timeoutMs > 0) {
-      args.push("--print-timeout", String(Math.max(1, Math.ceil(options.timeoutMs / 1000))));
+      args.push("--print-timeout", `${Math.max(1, Math.ceil(options.timeoutMs / 1000))}s`);
     }
   } else if (options?.requireJson || options?.schema) {
     args.push("--output-format", "json");
