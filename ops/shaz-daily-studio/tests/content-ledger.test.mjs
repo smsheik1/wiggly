@@ -105,7 +105,7 @@ test("matching checks eventId -> canonical link -> exact normalized title withou
   }
 });
 
-test("unpicked candidates stay eligible once and retire permanently after 2 live shown dates even across skipped days", async () => {
+test("unpicked candidates stay eligible only on the next Chicago day, and retire after skipped days or 2 showings", async () => {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "studio-ledger-shown-"));
   const ledgerPath = path.join(tmpDir, "published-topics.json");
   const candidate = {
@@ -115,24 +115,41 @@ test("unpicked candidates stay eligible once and retire permanently after 2 live
   };
 
   try {
-    // Day 1 shown -> still eligible once more (even if studio misses Day 2)
-    await recordShown(candidate, { ledgerPath, date: "2026-11-11" });
+    // Shown once on Monday 2026-11-09
+    await recordShown(candidate, { ledgerPath, date: "2026-11-09" });
     let ledger = await loadLedger(ledgerPath);
-    assert.equal(ledger.entries[0].shown.length, 1);
-    assert.equal(isEntryEligible(ledger.entries[0]), true);
-    assert.equal(filterFreshTopics([candidate], ledger).length, 1);
+    assert.deepEqual(ledger.entries[0].shown, ["2026-11-09"]);
 
-    // Duplicate same-day record is idempotent
-    await recordShown(candidate, { ledgerPath, date: "2026-11-11" });
+    // Duplicate same-day record is idempotent; also not re-shown later on the same day
+    await recordShown(candidate, { ledgerPath, date: "2026-11-09" });
     ledger = await loadLedger(ledgerPath);
-    assert.deepEqual(ledger.entries[0].shown, ["2026-11-11"]);
+    assert.deepEqual(ledger.entries[0].shown, ["2026-11-09"]);
+    assert.equal(isEntryEligible(ledger.entries[0], { now: new Date("2026-11-09T18:00:00Z") }), false);
 
-    // Day 3 (skipped Day 2) shown -> second live appearance retires it
-    await recordShown(candidate, { ledgerPath, date: "2026-11-13" });
+    // Shown yesterday (2026-11-09) -> eligible on the very next Chicago calendar day (2026-11-10)
+    const tuesdayRun = new Date("2026-11-10T14:00:00Z"); // 08:00 CST in America/Chicago
+    assert.equal(isEntryEligible(ledger.entries[0], { now: tuesdayRun }), true);
+    assert.equal(isTopicCovered(candidate, ledger, { now: tuesdayRun }), false);
+    assert.equal(filterFreshTopics([candidate], ledger, { now: tuesdayRun }).length, 1);
+
+    // Verify Chicago calendar rollover (2026-11-11T04:00:00Z is still 2026-11-10T22:00 CST)
+    assert.equal(isEntryEligible(ledger.entries[0], { now: new Date("2026-11-11T04:00:00Z") }), true);
+
+    // Shown 3 days ago (2026-11-09 -> Thursday 2026-11-12 or Friday 2026-11-13) -> retired
+    const thursdayRun = new Date("2026-11-12T14:00:00Z");
+    const fridayRun = new Date("2026-11-13T14:00:00Z");
+    assert.equal(isEntryEligible(ledger.entries[0], { now: thursdayRun }), false);
+    assert.equal(isTopicCovered(candidate, ledger, { now: thursdayRun }), true);
+    assert.equal(filterFreshTopics([candidate], ledger, { now: thursdayRun }).length, 0);
+    assert.equal(isEntryEligible(ledger.entries[0], { now: fridayRun }), false);
+
+    // Shown twice (2026-11-09 and 2026-11-10) -> retired permanently even the next day (2026-11-11)
+    await recordShown(candidate, { ledgerPath, date: "2026-11-10" });
     ledger = await loadLedger(ledgerPath);
-    assert.deepEqual(ledger.entries[0].shown, ["2026-11-11", "2026-11-13"]);
-    assert.equal(isEntryEligible(ledger.entries[0]), false);
-    assert.equal(filterFreshTopics([candidate], ledger).length, 0);
+    assert.deepEqual(ledger.entries[0].shown, ["2026-11-09", "2026-11-10"]);
+    const wednesdayRun = new Date("2026-11-11T14:00:00Z");
+    assert.equal(isEntryEligible(ledger.entries[0], { now: wednesdayRun }), false);
+    assert.equal(filterFreshTopics([candidate], ledger, { now: wednesdayRun }).length, 0);
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }

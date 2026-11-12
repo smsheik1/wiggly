@@ -268,29 +268,47 @@ export function findMatchingEntry(ledger, topic) {
   return null;
 }
 
-/**
- * Determines whether a ledger entry may be shown again (unpublished and shown fewer than 2 live days).
- */
-export function isEntryEligible(entry) {
-  if (!entry) return true;
-  if (entry.published) return false;
-  if (Array.isArray(entry.shown) && entry.shown.length >= 2) return false;
-  return true;
+const CHICAGO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+function nextChicagoDate(dateStr) {
+  const match = CHICAGO_DATE_RE.exec(String(dateStr || "").trim());
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  // Stepping 24h from noon UTC preserves the next America/Chicago calendar date across DST shifts.
+  return formatChicagoDate(new Date(Date.UTC(year, month - 1, day, 12, 0, 0) + 86_400_000));
 }
 
 /**
- * Returns true if the candidate topic is already published or retired after 2 live appearances.
+ * Determines whether a ledger entry may be shown again under Q5:
+ * unpublished, and if shown once before, eligible only on the next America/Chicago calendar day.
  */
-export function isTopicCovered(topic, ledger) {
+export function isEntryEligible(entry, { now = new Date(), date } = {}) {
+  if (!entry) return true;
+  if (entry.published) return false;
+  if (!Array.isArray(entry.shown) || entry.shown.length === 0) return true;
+  if (entry.shown.length >= 2) return false;
+
+  const runDate = typeof date === "string" && CHICAGO_DATE_RE.test(date.trim())
+    ? date.trim()
+    : formatChicagoDate(now);
+  return nextChicagoDate(entry.shown[0]) === runDate;
+}
+
+/**
+ * Returns true if the candidate topic is already published or no longer eligible under Q5.
+ */
+export function isTopicCovered(topic, ledger, options = {}) {
   const matched = findMatchingEntry(ledger, topic);
-  return matched ? !isEntryEligible(matched) : false;
+  return matched ? !isEntryEligible(matched, options) : false;
 }
 
 /**
  * Filters a candidate list to events that remain eligible under the v2 ledger rules.
  */
-export function filterFreshTopics(topics, ledger) {
-  return topics.filter((topic) => !isTopicCovered(topic, ledger));
+export function filterFreshTopics(topics, ledger, options = {}) {
+  return topics.filter((topic) => !isTopicCovered(topic, ledger, options));
 }
 
 /**

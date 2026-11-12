@@ -70,6 +70,7 @@ export async function findTopStories({
   count = 3,
   query,
   limit = 15,
+  now = new Date(),
   ledgerPath,
   env = process.env,
   configPath = DEFAULT_CONFIG_PATH,
@@ -93,7 +94,7 @@ export async function findTopStories({
     }),
   ]);
 
-  const eligible = filterFreshTopics(events, ledger);
+  const eligible = filterFreshTopics(events, ledger, { now });
   if (eligible.length === 0) {
     return [];
   }
