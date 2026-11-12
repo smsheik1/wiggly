@@ -662,6 +662,103 @@ test("deriveMultiShotPlan respects authored beat.cardHeadline and beat.cardBadge
   }
 });
 
+test("deriveMultiShotPlan shares one media cursor across shot types, splits >5s cuts, supports OTS image2 swap cache keys, and preserves plain opener/closer", async () => {
+  const { getActiveOtsImageState } = await import("../runtime/render-multi-shot.mjs");
+  const assets = JSON.parse(await fs.readFile(path.join(root, "assets.json"), "utf8"));
+
+  // Build 8 beats spanning 30s where beat 1 is >5s (0->5s opener, 5s->11s b-roll >5s, 11s->17s talk OTS >5s, etc.)
+  const sampleTranscript = {
+    text: "One. Two. Three. Four. Five. Six. Seven. Eight.",
+    words: [
+      { text: "Hook", startMs: 0, endMs: 1200 },
+      { text: "opener.", startMs: 1300, endMs: 2800 },
+      { text: "Long", startMs: 3000, endMs: 6000 },
+      { text: "broll.", startMs: 6100, endMs: 9200 },
+      { text: "Chibi", startMs: 9500, endMs: 11200 },
+      { text: "joke.", startMs: 11300, endMs: 12600 },
+      { text: "Long", startMs: 12800, endMs: 15800 },
+      { text: "talk.", startMs: 15900, endMs: 18500 },
+      { text: "Second", startMs: 18700, endMs: 20200 },
+      { text: "broll.", startMs: 20300, endMs: 21500 },
+      { text: "Another", startMs: 21700, endMs: 23000 },
+      { text: "chibi.", startMs: 23100, endMs: 24500 },
+      { text: "Third", startMs: 24700, endMs: 26200 },
+      { text: "broll.", startMs: 26300, endMs: 27800 },
+      { text: "Final", startMs: 28000, endMs: 29000 },
+      { text: "landing.", startMs: 29100, endMs: 30000 },
+    ],
+  };
+
+  const brollMediaList = Array.from({ length: 8 }, (_, i) => `media/broll-0${i + 1}.png`);
+  const plan = deriveMultiShotPlan({
+    transcript: sampleTranscript,
+    audioDurationSeconds: 30.0,
+    defaultBackgroundId: "sisters-room",
+    brollMediaList,
+  });
+
+  // First and last shots stay plain talk-to-camera without OTS graphics
+  assert.equal(plan.shots[0].shotType, "talk-to-camera");
+  assert.equal(plan.shots[0].otsGraphic, undefined);
+  assert.equal(plan.shots.at(-1).shotType, "talk-to-camera");
+  assert.equal(plan.shots.at(-1).otsGraphic, undefined);
+
+  // Collect images assigned across all shot types in display order
+  const usedMedia = [];
+  for (const shot of plan.shots) {
+    if (shot.brollMedia) usedMedia.push(shot.brollMedia);
+    if (shot.card?.image) usedMedia.push(shot.card.image);
+    if (shot.otsGraphic?.image) usedMedia.push(shot.otsGraphic.image);
+    if (shot.otsGraphic?.image2) usedMedia.push(shot.otsGraphic.image2);
+  }
+  assert.ok(new Set(usedMedia).size >= 6, `Expected >= 6 distinct images scheduled across shots, got ${new Set(usedMedia).size}`);
+  for (let i = 1; i < usedMedia.length; i += 1) {
+    assert.notEqual(usedMedia[i], usedMedia[i - 1], "Adjacent visual slots should never reuse the same image back-to-back");
+  }
+
+  // >5s b-roll split produces -a and -b shots with different images & motions
+  const splitA = plan.shots.find((s) => s.id.endsWith("-a") && s.shotType === "b-roll");
+  const splitB = plan.shots.find((s) => s.id.endsWith("-b") && s.shotType === "b-roll");
+  assert.ok(splitA && splitB, "b-roll shot > 120 frames must split into two distinct cuts");
+  assert.notEqual(splitA.brollMedia, splitB.brollMedia);
+  assert.notEqual(splitA.motion, splitB.motion);
+
+  // >5s talk shot OTS gets image2 + swapAtFrame
+  const swapOts = plan.shots.find((s) => s.otsGraphic?.image2 && s.otsGraphic?.swapAtFrame);
+  assert.ok(swapOts, "talk-to-camera OTS shot > 120 frames must attach image2 and swapAtFrame");
+
+  // Plan passes validateMultiShotPlan cleanly (backward-compatible shaz-multi-shot-v1)
+  const validated = validateMultiShotPlan(plan, {
+    audioDurationSeconds: 30.0,
+    defaultBackgroundId: "sisters-room",
+    assets,
+    transcript: sampleTranscript,
+  });
+  assert.equal(validated.totalFrames, 720);
+
+  // OTS swap cache key changes between slot 1 and slot 2 at swapAtFrame
+  const buf1 = Buffer.from("img-1");
+  const buf2 = Buffer.from("img-2");
+  const before = getActiveOtsImageState({
+    ots: { swapAtFrame: 60 },
+    localFrame: 59,
+    otsEntranceDelay: 4,
+    image1Buffer: buf1,
+    image2Buffer: buf2,
+  });
+  const after = getActiveOtsImageState({
+    ots: { swapAtFrame: 60 },
+    localFrame: 60,
+    otsEntranceDelay: 4,
+    image1Buffer: buf1,
+    image2Buffer: buf2,
+  });
+  assert.equal(before.slot, 1);
+  assert.equal(after.slot, 2);
+  assert.notEqual(before.cacheKey, after.cacheKey, "OTS cache key must distinguish image1 vs image2 after scale settles");
+  assert.equal(after.activeImageBuffer, buf2);
+});
+
 
 
 

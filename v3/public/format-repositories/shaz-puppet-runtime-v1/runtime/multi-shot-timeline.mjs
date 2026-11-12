@@ -136,7 +136,7 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
         }
         exactKeys(
           shot.otsGraphic,
-          ["badge", "headline", "image", "subtext", "entranceDelayFrames", "durationFrames"],
+          ["badge", "headline", "image", "image2", "swapAtFrame", "subtext", "entranceDelayFrames", "durationFrames"],
           `shots[${index}].otsGraphic`,
         );
         if (shot.otsGraphic.headline !== undefined && typeof shot.otsGraphic.headline !== "string") {
@@ -144,6 +144,15 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
         }
         if (shot.otsGraphic.badge !== undefined && typeof shot.otsGraphic.badge !== "string") {
           throw new Error(`shots[${index}].otsGraphic.badge must be a string`);
+        }
+        if (shot.otsGraphic.image2 !== undefined && typeof shot.otsGraphic.image2 !== "string") {
+          throw new Error(`shots[${index}].otsGraphic.image2 must be a string`);
+        }
+        if (
+          shot.otsGraphic.swapAtFrame !== undefined &&
+          (!Number.isInteger(shot.otsGraphic.swapAtFrame) || shot.otsGraphic.swapAtFrame < 1)
+        ) {
+          throw new Error(`shots[${index}].otsGraphic.swapAtFrame must be an integer >= 1`);
         }
       }
     }
@@ -372,6 +381,125 @@ export function groupTranscriptIntoBeats(words) {
   return beats;
 }
 
+const LONG_SHOT_SPLIT_FRAMES = 120; // > ~5s at 24fps triggers visual refresh / split cut
+const BROLL_MOTIONS = ["zoom-in", "pan-right", "zoom-out", "pan-left"];
+
+function createMediaCycler(brollMediaList = []) {
+  const list = Array.isArray(brollMediaList) ? brollMediaList.filter(Boolean) : [];
+  const uniqueCount = new Set(list).size;
+  let cursor = 0;
+  let lastUsed = null;
+  return {
+    hasMedia: list.length > 0,
+    uniqueCount,
+    next(avoidItem = null) {
+      if (list.length === 0) return null;
+      const forbid = avoidItem ?? lastUsed;
+      let picked = list[cursor % list.length];
+      cursor += 1;
+      if (uniqueCount > 1 && picked === forbid) {
+        for (let offset = 0; offset < list.length; offset += 1) {
+          const alt = list[(cursor + offset) % list.length];
+          if (alt !== forbid) {
+            picked = alt;
+            cursor += offset + 1;
+            break;
+          }
+        }
+      }
+      lastUsed = picked;
+      return picked;
+    },
+  };
+}
+
+function buildOtsGraphic({ badge, headline, text, shotDuration, mediaCycler }) {
+  if (!mediaCycler.hasMedia) return undefined;
+  const image = mediaCycler.next();
+  const graphic = {
+    badge,
+    headline,
+    image,
+    subtext: text.length > 45 ? text.slice(0, 42) + "..." : text,
+    entranceDelayFrames: 4,
+    durationFrames: Math.max(1, shotDuration - 4),
+  };
+  if (shotDuration > LONG_SHOT_SPLIT_FRAMES && mediaCycler.uniqueCount >= 2) {
+    const secondImage = mediaCycler.next(image);
+    if (secondImage && secondImage !== image) {
+      graphic.image2 = secondImage;
+      graphic.swapAtFrame = Math.max(8, Math.floor(shotDuration / 2));
+    }
+  }
+  return graphic;
+}
+
+function buildBrollShots({
+  shotId,
+  startFrame,
+  endFrame,
+  defaultBackgroundId,
+  mediaCycler,
+  preferredMotion = null,
+  brollCountStart = 0,
+  canSplit = true,
+}) {
+  const shotDuration = endFrame - startFrame;
+  let brollCount = brollCountStart;
+
+  if (canSplit && shotDuration > LONG_SHOT_SPLIT_FRAMES && mediaCycler.uniqueCount >= 2) {
+    const midFrame = startFrame + Math.floor(shotDuration / 2);
+    const firstMedia = mediaCycler.next();
+    brollCount += 1;
+    const firstMotion = preferredMotion || BROLL_MOTIONS[brollCount % BROLL_MOTIONS.length];
+
+    const secondMedia = mediaCycler.next(firstMedia);
+    brollCount += 1;
+    const secondMotion = BROLL_MOTIONS.find((m) => m !== firstMotion) || BROLL_MOTIONS[brollCount % BROLL_MOTIONS.length];
+
+    return {
+      brollCount,
+      shots: [
+        {
+          id: `${shotId}-a`,
+          shotType: "b-roll",
+          startFrame,
+          endFrameExclusive: midFrame,
+          backgroundId: defaultBackgroundId,
+          brollMedia: firstMedia,
+          motion: firstMotion,
+        },
+        {
+          id: `${shotId}-b`,
+          shotType: "b-roll",
+          startFrame: midFrame,
+          endFrameExclusive: endFrame,
+          backgroundId: defaultBackgroundId,
+          brollMedia: secondMedia,
+          motion: secondMotion,
+        },
+      ],
+    };
+  }
+
+  const brollMedia = mediaCycler.next();
+  brollCount += 1;
+  return {
+    brollCount,
+    shots: [
+      {
+        id: shotId,
+        shotType: "b-roll",
+        startFrame,
+        endFrameExclusive: endFrame,
+        backgroundId: defaultBackgroundId,
+        brollMedia,
+        motion: preferredMotion || BROLL_MOTIONS[brollCount % BROLL_MOTIONS.length],
+      },
+    ],
+  };
+}
+
 /**
  * Automatically derives an intelligent, rhythmic multi-shot plan
  * from a word-timestamped transcript.
@@ -472,7 +600,7 @@ export function deriveMultiShotPlan({
       const broll2 = Math.floor(beats.length * 0.55);
       if (broll1 > 0 && !chibiIndices.has(broll1)) brollIndices.add(broll1);
       if (broll2 > 0 && !chibiIndices.has(broll2) && broll2 < beats.length - 1) brollIndices.add(broll2);
-      if (beats.length >= 9 && brollMediaList.length >= 3) {
+      if ((beats.length >= 9 && brollMediaList.length >= 3) || (beats.length >= 8 && brollMediaList.length >= 5)) {
         const broll3 = Math.floor(beats.length * 0.80);
         if (broll3 > 0 && !chibiIndices.has(broll3) && broll3 < beats.length - 1) brollIndices.add(broll3);
       }
@@ -505,8 +633,7 @@ export function deriveMultiShotPlan({
   ];
   let activePoseIndex = 0;
   let brollCount = 0;
-  let otsCount = 0;
-  let chibiCardCount = 0;
+  const mediaCycler = createMediaCycler(brollMediaList);
 
   for (let bIndex = 0; bIndex < beats.length; bIndex += 1) {
     const beat = beats[bIndex];
@@ -547,18 +674,14 @@ export function deriveMultiShotPlan({
       const prevWasOts = Boolean(shots.at(-1)?.otsGraphic);
       const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
       const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || semantics.badge;
-      if (!isFirst && !isLast && brollMediaList && brollMediaList.length > 0 && !prevWasOts) {
-        const otsMedia = brollMediaList[otsCount % brollMediaList.length];
-        otsCount += 1;
-        const shotDuration = endFrame - currentFrame;
-        otsGraphic = {
+      if (!isFirst && !isLast && mediaCycler.hasMedia && !prevWasOts) {
+        otsGraphic = buildOtsGraphic({
           badge: effectiveBadge || "KEY POINT",
           headline: effectiveHeadline,
-          image: otsMedia,
-          subtext: beat.text.length > 45 ? beat.text.slice(0, 42) + "..." : beat.text,
-          entranceDelayFrames: 4,
-          durationFrames: Math.max(1, shotDuration - 4),
-        };
+          text: beat.text,
+          shotDuration: endFrame - currentFrame,
+          mediaCycler,
+        });
       }
 
       shots.push({
@@ -573,10 +696,7 @@ export function deriveMultiShotPlan({
     } else if (shotType === "chibi-commentary") {
       lastPoseId = null;
       const shotDuration = endFrame - currentFrame;
-      const cardMedia = brollMediaList && brollMediaList.length > 0
-        ? brollMediaList[chibiCardCount % brollMediaList.length]
-        : null;
-      if (cardMedia) chibiCardCount += 1;
+      const cardMedia = mediaCycler.next();
       const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
       const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || semantics.badge;
 
@@ -599,18 +719,18 @@ export function deriveMultiShotPlan({
       });
     } else if (shotType === "b-roll") {
       lastPoseId = null;
-      const motions = ["zoom-in", "pan-right", "zoom-out", "pan-left"];
-      const brollMedia = brollMediaList[brollCount % brollMediaList.length] ?? null;
-      brollCount += 1;
-      shots.push({
-        id: shotId,
-        shotType: "b-roll",
+      const canSplit = shots.length + (beats.length - bIndex) < MAX_SHOTS - 1;
+      const built = buildBrollShots({
+        shotId,
         startFrame: currentFrame,
-        endFrameExclusive: endFrame,
-        backgroundId: defaultBackgroundId,
-        brollMedia,
-        motion: motions[brollCount % motions.length],
+        endFrame,
+        defaultBackgroundId,
+        mediaCycler,
+        brollCountStart: brollCount,
+        canSplit,
       });
+      brollCount = built.brollCount;
+      shots.push(...built.shots);
     } else if (shotType === "text-card") {
       lastPoseId = null;
       const words = beat.text.split(/\s+/);
@@ -736,11 +856,10 @@ export async function deriveMultiShotPlanWithJev({
   let chibiCount = 0;
   let textCardCount = 0;
   let brollCount = 0;
-  let otsCount = 0;
-  let chibiCardCount = 0;
+  const mediaCycler = createMediaCycler(brollMediaList);
   let consecutiveTalkCount = 0;
   const maxChibi = beats.length >= 7 ? 2 : 1;
-  const maxTextCards = brollMediaList?.length > 0 ? 0 : 1;
+  const maxTextCards = mediaCycler.hasMedia ? 0 : 1;
 
   try {
     for (let bIndex = 0; bIndex < beats.length; bIndex += 1) {
@@ -842,19 +961,15 @@ export async function deriveMultiShotPlanWithJev({
         const hasActivePose = chosenPose !== "neutral-listening";
         const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
         const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || jevChoice?.badge || semantics.badge;
-        if (!isFirst && !isLast && brollMediaList && brollMediaList.length > 0 && !prevWasOts) {
-          if (hasActivePose || shots.at(-1)?.shotType === "talk-to-camera" || otsCount === 0) {
-            const otsMedia = brollMediaList[otsCount % brollMediaList.length];
-            otsCount += 1;
-            const shotDuration = endFrame - currentFrame;
-            otsGraphic = {
+        if (!isFirst && !isLast && mediaCycler.hasMedia && !prevWasOts) {
+          if (hasActivePose || shots.at(-1)?.shotType === "talk-to-camera" || mediaCycler.uniqueCount > 0) {
+            otsGraphic = buildOtsGraphic({
               badge: effectiveBadge,
               headline: effectiveHeadline,
-              image: otsMedia,
-              subtext: beat.text.length > 45 ? beat.text.slice(0, 42) + "..." : beat.text,
-              entranceDelayFrames: 4,
-              durationFrames: Math.max(1, shotDuration - 4),
-            };
+              text: beat.text,
+              shotDuration: endFrame - currentFrame,
+              mediaCycler,
+            });
           }
         }
 
@@ -887,10 +1002,7 @@ export async function deriveMultiShotPlanWithJev({
         const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || chosenBadge;
 
         const shotDuration = endFrame - currentFrame;
-        const cardMedia = brollMediaList && brollMediaList.length > 0
-          ? brollMediaList[chibiCardCount % brollMediaList.length]
-          : null;
-        if (cardMedia) chibiCardCount += 1;
+        const cardMedia = mediaCycler.next();
 
         shots.push({
           id: shotId,
@@ -915,19 +1027,19 @@ export async function deriveMultiShotPlanWithJev({
       } else if (shotType === "b-roll") {
         consecutiveTalkCount = 0;
         lastPuppetPose = null;
-        const brollMedia = brollMediaList[brollCount % brollMediaList.length] ?? null;
-        brollCount += 1;
-        const motions = ["zoom-in", "pan-right", "zoom-out", "pan-left"];
-        const chosenMotion = jevChoice?.cameraMotion || motions[brollCount % motions.length];
-        shots.push({
-          id: shotId,
-          shotType: "b-roll",
+        const canSplit = shots.length + (beats.length - bIndex) < MAX_SHOTS - 1;
+        const built = buildBrollShots({
+          shotId,
           startFrame: currentFrame,
-          endFrameExclusive: endFrame,
-          backgroundId: defaultBackgroundId,
-          brollMedia,
-          motion: chosenMotion,
+          endFrame,
+          defaultBackgroundId,
+          mediaCycler,
+          preferredMotion: jevChoice?.cameraMotion || null,
+          brollCountStart: brollCount,
+          canSplit,
         });
+        brollCount = built.brollCount;
+        shots.push(...built.shots);
       } else if (shotType === "text-card") {
         lastPuppetPose = null;
         const words = beat.text.split(/\s+/);
