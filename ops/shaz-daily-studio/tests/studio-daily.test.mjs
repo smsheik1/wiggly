@@ -165,6 +165,13 @@ test("runDailyBatch alerts Telegram & stops on 0 fresh stories or AgentUnavailab
       ledgerPath,
       deps: {
         findTopStories: async () => [{ source: "mock", topic: { eventId: "evt_dry", title: "Dry Run Only" } }],
+        fetchArticleForTopic: async () => ({
+          url: "https://example.com/dry",
+          fetchedAt: new Date().toISOString(),
+          sha256: "drysha",
+          title: "Dry Run Only",
+          text: "Dry run article content ".repeat(40),
+        }),
         authorShazScript: async () => ({ title: "Dry Run Only", backgroundId: "living-room" }),
         compileDialogueText: () => "Short dry run script.",
         sourceStoryMedia: async () => [],

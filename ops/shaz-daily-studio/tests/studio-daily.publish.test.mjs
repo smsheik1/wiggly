@@ -46,6 +46,13 @@ test("runDailyBatch never leaks Telegram bot token, publishes Convex URL to Buff
       findTopStories: async () => [
         { source: "mock", topic: { eventId: "evt_gta6", title: "GTA 6 Launches Soon", link: "https://example.com/gta6" } },
       ],
+      fetchArticleForTopic: async (t) => ({
+        url: t.link || "https://example.com/gta6",
+        fetchedAt: new Date().toISOString(),
+        sha256: "deadbeef".repeat(8),
+        title: t.title,
+        text: "Grand Theft Auto 6 article body content ".repeat(30),
+      }),
       authorShazScript: async () => ({
         title: "GTA 6 Launches Soon",
         headline: "GTA 6 SOON",
@@ -207,6 +214,13 @@ test("runDailyBatch skips immediate delete and leaves 7-day failsafe when Buffer
       autoApprove: true,
       deps: {
         findTopStories: async () => [{ source: "mock", topic: { title: "Timeout Topic" } }],
+        fetchArticleForTopic: async () => ({
+          url: "https://example.com/timeout",
+          fetchedAt: new Date().toISOString(),
+          sha256: "deadbeef".repeat(8),
+          title: "Timeout Topic",
+          text: "Timeout topic article content ".repeat(35),
+        }),
         authorShazScript: async () => ({ title: "Timeout Topic", backgroundId: "living-room" }),
         compileDialogueText: () => "Short test dialogue.",
         sourceStoryMedia: async () => [],
