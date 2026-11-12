@@ -225,7 +225,7 @@ test("runDailyBatch skips child [JEV_CANDIDATE_SKIP] and render errors, while st
     assert.equal(res.skips.length, 2);
     assert.equal(res.skips[0].stage, "jev-director");
     assert.equal(res.skips[1].stage, "render");
-    assert.match(telegramMessages[0], /Voice: `cartesia`/);
+    assert.match(telegramMessages[0], /Voice: <code>cartesia<\/code>/);
 
     // 2. Child Jev account/billing failure stops run immediately
     telegramMessages.length = 0;

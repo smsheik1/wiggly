@@ -221,9 +221,9 @@ test("runDailyBatch skips failed article/3x-script stories, pulls backup NewsMCP
       "GTA 6 Launches November 19 - Good Story B",
     ]);
     assert.match(telegramBannerTexts[0], /Skipped 2 candidates/);
-    assert.match(telegramBannerTexts[0], /_Paywalled Story_ \(article-fetch\)/);
-    assert.match(telegramBannerTexts[0], /_Bad Agent Draft Story_ \(script-author\)/);
-    assert.match(telegramBannerTexts[0], /Writer: `agy`/);
+    assert.match(telegramBannerTexts[0], /<i>Paywalled Story<\/i> \(article-fetch\)/);
+    assert.match(telegramBannerTexts[0], /<i>Bad Agent Draft Story<\/i> \(script-author\)/);
+    assert.match(telegramBannerTexts[0], /Writer: <code>agy<\/code>/);
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }
