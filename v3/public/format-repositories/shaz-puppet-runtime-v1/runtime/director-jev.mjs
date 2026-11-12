@@ -273,8 +273,10 @@ export async function evaluateSentenceDirector(sentence, { apiKey, env, secretsP
       }
     : sentence;
 
+  let calls = 0;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     let result;
+    calls += 1;
     try {
       result = await callJevSystemOne({ state, questions, apiKey, env, secretsPath, fetchFn });
     } catch (err) {
@@ -293,7 +295,13 @@ export async function evaluateSentenceDirector(sentence, { apiKey, env, secretsP
 
     const check = validateSentenceAnswers(result?.answers, lineNumber, sentence);
     if (check.ok) {
-      return check.value;
+      const annotated = { ...check.value };
+      Object.defineProperty(annotated, "_jevCalls", {
+        value: calls,
+        enumerable: false,
+        configurable: true,
+      });
+      return annotated;
     }
     if (attempt === 2) {
       throw new JevDirectorSkipError(check.error, { lineNumber, field: check.field, sentence });

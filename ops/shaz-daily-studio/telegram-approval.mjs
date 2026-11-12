@@ -463,6 +463,7 @@ export async function pollApprovalDecision({
   fetchFn = fetch,
   sleepFn = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   nowFn = () => new Date(),
+  onDecision = null,
   onUnauthorizedTap,
 }) {
   const { token, chatId, operatorUserId } = getTelegramCredentials({
@@ -519,6 +520,14 @@ export async function pollApprovalDecision({
               fetchFn,
             }).catch(() => {});
           }
+          onDecision?.({
+            status: "approved",
+            runId,
+            telegramUserId: cb.from?.id ?? null,
+            chatId: cb.message?.chat?.id ?? null,
+            messageId: cb.message?.message_id ?? null,
+            pickedAt: nowFn().toISOString(),
+          });
           return "approved";
         }
 
@@ -662,6 +671,9 @@ export async function pollBatchDecision({
             runId: clickedId,
             chosen,
             messageId: cb.message?.message_id ?? chosen.messageId ?? null,
+            telegramUserId: cb.from?.id ?? null,
+            chatId: cb.message?.chat?.id ?? null,
+            pickedAt: nowFn().toISOString(),
             unauthorizedTaps,
           };
         }

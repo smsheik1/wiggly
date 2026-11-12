@@ -471,6 +471,9 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
       ]);
     }
 
+    const providerCalls = Number.isFinite(validated.receipt.providerCalls)
+      ? validated.receipt.providerCalls
+      : 0;
     const report = {
       schemaVersion: 2,
       status: "rendered",
@@ -490,8 +493,8 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
       audioDurationSeconds: validated.timeline.audioDurationSeconds,
       shots: shotReports,
       ...(validated.receipt.transcript ? { transcript: validated.receipt.transcript } : {}),
-      providerCalls: 0,
-      cost: "$0",
+      providerCalls,
+      ...(providerCalls === 0 ? { cost: "$0" } : {}),
     };
 
     await writeJson(path.join(runDirectory, "render-report.json"), report);

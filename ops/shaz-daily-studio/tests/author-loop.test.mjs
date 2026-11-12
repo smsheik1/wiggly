@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
+import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -195,13 +197,35 @@ test("runDailyBatch skips failed article/3x-script stories, pulls backup NewsMCP
         sourceStoryMedia: async () => [],
         synthesizeShazVoice: async ({ outputPath }) => fs.writeFile(outputPath, Buffer.from("wav")),
         resolveRunDirectory: (_root, runId) => path.join(tmpDir, runId),
-        execute: () => {},
+        execute: (_cmd, args) => {
+          const runArg = args.find((a) => a.startsWith("--run="))?.split("=")[1];
+          const runDir = runArg ? path.join(tmpDir, runArg) : null;
+          if (!runDir) return;
+          fsSync.mkdirSync(runDir, { recursive: true });
+          if (args.includes("render")) {
+            fsSync.writeFileSync(path.join(runDir, "final.mp4"), Buffer.from("mp4"));
+          }
+          if (args.includes("inspect")) {
+            const sha = crypto.createHash("sha256").update(Buffer.from("mp4")).digest("hex");
+            fsSync.writeFileSync(
+              path.join(runDir, "quality-report.json"),
+              JSON.stringify({ schemaVersion: 1, status: "pass", outputSha256: sha }),
+            );
+          }
+        },
         composeVerticalVideo: async ({ outputPath }) => {
           await fs.mkdir(path.dirname(outputPath), { recursive: true });
-          await fs.writeFile(path.join(path.dirname(outputPath), "final.mp4"), Buffer.from("mp4"));
           await fs.writeFile(path.join(path.dirname(outputPath), "transcript.json"), JSON.stringify({ words: [] }));
           await fs.writeFile(outputPath, Buffer.from("vert"));
         },
+        validateVerticalDeliverable: async ({ verticalVideoPath, sha256Fn }) => ({
+          file: path.basename(verticalVideoPath),
+          sha256: await sha256Fn(verticalVideoPath),
+          width: 1080,
+          height: 1920,
+          durationSeconds: 30,
+          bytes: 4,
+        }),
         sendApprovalVideo: async ({ title }) => {
           dispatchedTitles.push(title);
           return { messageId: dispatchedTitles.length };

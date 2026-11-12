@@ -23,6 +23,7 @@ test("pruneOldRuns previews via dryRun, prunes heavy assets and unpicked MP4s pa
 
   const expiredUnpicked = path.join(runsDir, "daily-2026-11-01-unpicked");
   const expiredPicked = path.join(runsDir, "daily-2026-11-01-picked");
+  const expiredDelivered = path.join(runsDir, "daily-2026-11-01-delivered");
   const recentRun = path.join(runsDir, "daily-2026-11-09-recent");
 
   try {
@@ -50,6 +51,16 @@ test("pruneOldRuns previews via dryRun, prunes heavy assets and unpicked MP4s pa
     await fs.writeFile(path.join(expiredPicked, "final-vertical.mp4"), "keep-me-picked");
     await fs.utimes(expiredPicked, tenDaysAgo, tenDaysAgo);
 
+    // 2b. Expired delivered run (studio-delivery.json without human-review.json): final-vertical.mp4 stays
+    await fs.mkdir(path.join(expiredDelivered, "shots"), { recursive: true });
+    await fs.writeFile(
+      path.join(expiredDelivered, "studio-delivery.json"),
+      JSON.stringify({ schemaVersion: 1, mode: "telegram-pick", publishedMediaSha256: "e".repeat(64) }),
+    );
+    await fs.writeFile(path.join(expiredDelivered, "final.mp4"), "s".repeat(200));
+    await fs.writeFile(path.join(expiredDelivered, "final-vertical.mp4"), "keep-me-delivered");
+    await fs.utimes(expiredDelivered, tenDaysAgo, tenDaysAgo);
+
     // 3. Recent run: everything stays
     await fs.mkdir(path.join(recentRun, "shots"), { recursive: true });
     await fs.mkdir(path.join(recentRun, "media"), { recursive: true });
@@ -61,16 +72,16 @@ test("pruneOldRuns previews via dryRun, prunes heavy assets and unpicked MP4s pa
 
     const preview = await pruneOldRuns({ runsDir, retentionDays: 7, dryRun: true, now });
     assert.equal(preview.dryRun, true);
-    assert.equal(preview.runsScanned, 3);
-    assert.equal(preview.runsPruned, 2);
-    assert.equal(preview.filesDeleted, 9);
-    assert.ok(preview.bytesFreed >= 3900);
+    assert.equal(preview.runsScanned, 4);
+    assert.equal(preview.runsPruned, 3);
+    assert.equal(preview.filesDeleted, 10);
+    assert.ok(preview.bytesFreed >= 4100);
     assert.equal(await exists(path.join(expiredUnpicked, "final-vertical.mp4")), true, "dryRun must not delete files");
 
     const applied = await pruneOldRuns({ runsDir, retentionDays: 7, dryRun: false, now });
     assert.equal(applied.dryRun, false);
-    assert.equal(applied.runsPruned, 2);
-    assert.equal(applied.filesDeleted, 9);
+    assert.equal(applied.runsPruned, 3);
+    assert.equal(applied.filesDeleted, 10);
 
     // Expired unpicked checks
     assert.equal(await exists(path.join(expiredUnpicked, "shots")), false);
@@ -88,6 +99,11 @@ test("pruneOldRuns previews via dryRun, prunes heavy assets and unpicked MP4s pa
     assert.equal(await exists(path.join(expiredPicked, "final.mp4")), false);
     assert.equal(await exists(path.join(expiredPicked, "final-vertical.mp4")), true);
     assert.equal(await exists(path.join(expiredPicked, "publish-state.json")), true);
+
+    // Expired delivered checks (studio-delivery.json preserves final-vertical.mp4)
+    assert.equal(await exists(path.join(expiredDelivered, "final.mp4")), false);
+    assert.equal(await exists(path.join(expiredDelivered, "final-vertical.mp4")), true);
+    assert.equal(await exists(path.join(expiredDelivered, "studio-delivery.json")), true);
 
     // Recent run checks
     assert.equal(await exists(path.join(recentRun, "shots", "frame-0001.png")), true);

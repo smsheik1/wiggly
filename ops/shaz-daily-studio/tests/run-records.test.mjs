@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import crypto from "node:crypto";
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
@@ -132,12 +133,29 @@ test("runDailyBatch never touches runDirectory before runner.mjs init and persis
             fsSync.mkdirSync(createdRunDir, { recursive: true });
             initCalled = true;
           }
+          if (subcmd === "render" && createdRunDir) {
+            fsSync.writeFileSync(path.join(createdRunDir, "final.mp4"), Buffer.from("mp4"));
+          }
+          if (subcmd === "inspect" && createdRunDir) {
+            const sha = crypto.createHash("sha256").update(Buffer.from("mp4")).digest("hex");
+            fsSync.writeFileSync(
+              path.join(createdRunDir, "quality-report.json"),
+              JSON.stringify({ schemaVersion: 1, status: "pass", outputSha256: sha }),
+            );
+          }
         },
         composeVerticalVideo: async ({ outputPath }) => {
-          await fs.writeFile(path.join(path.dirname(outputPath), "final.mp4"), Buffer.from("mp4"));
           await fs.writeFile(path.join(path.dirname(outputPath), "transcript.json"), JSON.stringify({ words: [] }));
           await fs.writeFile(outputPath, Buffer.from("vert"));
         },
+        validateVerticalDeliverable: async ({ verticalVideoPath, sha256Fn }) => ({
+          file: path.basename(verticalVideoPath),
+          sha256: await sha256Fn(verticalVideoPath),
+          width: 1080,
+          height: 1920,
+          durationSeconds: 30,
+          bytes: 4,
+        }),
         sendApprovalVideo: async () => ({ messageId: 1 }),
         sendTelegramMessage: async () => ({}),
       },

@@ -221,6 +221,7 @@ async function init(args) {
   await fs.mkdir(runDirectory, { recursive: true });
   let lipSyncState = null;
   let transcriptState = null;
+  let directorState = null;
   try {
     if (needsAudio) {
       const extension = path.extname(args.audio).toLowerCase() || ".audio";
@@ -276,6 +277,10 @@ async function init(args) {
           brollMediaList: Array.isArray(input.brollMedia) ? input.brollMedia : [],
           script: input.script ?? null,
         });
+        directorState = {
+          mode: "jev",
+          jevCalls: Number(derived?._jevCalls) || 0,
+        };
         input.title = input.title ?? derived.title;
         input.totalDurationFrames = sequenceAudioFrames;
         input.shots = derived.shots;
@@ -342,6 +347,7 @@ async function init(args) {
     status: "initialized",
     attempts: 0,
     initializedAt: new Date().toISOString(),
+    ...(directorState ? { director: directorState } : {}),
     ...(needsAudio ? {
       userAudio: {
         file: input.audioFile,
@@ -463,6 +469,9 @@ async function finalize(args) {
     }
   }
   if (failures.length > 0) throw new Error(`finalization blocked:\n- ${failures.join("\n- ")}`);
+  const providerCalls = Number.isFinite(validated.receipt.providerCalls)
+    ? validated.receipt.providerCalls
+    : 0;
   const delivery = {
     schemaVersion: 1,
     status: "ready",
@@ -472,8 +481,8 @@ async function finalize(args) {
     outputSha256,
     sourceXstageSha256: validated.receipt.sourceXstageSha256,
     artistRenderedFramesUsed: false,
-    providerCalls: 0,
-    cost: "$0",
+    providerCalls,
+    ...(providerCalls === 0 ? { cost: "$0" } : {}),
     reviewer: review.reviewer,
     ...(isAudiovisual ? {
       audio: validated.receipt.audio,

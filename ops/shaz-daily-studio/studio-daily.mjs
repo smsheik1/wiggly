@@ -51,6 +51,15 @@ import { redactSecrets } from "./secrets.mjs";
 import { execute, resolveRunDirectory, sha256, writeJson } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/run-common.mjs";
 import { searchGoogleImages } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/serper-search.mjs";
 import { normalizeBrollMedia } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/broll-renderer.mjs";
+import { validateVerticalDeliverable } from "./vertical-gate.mjs";
+import { buildStudioDeliveryRecord, verifyUploadedMediaChecksum } from "./studio-delivery.mjs";
+import {
+  createRunUsageTracker,
+  readKitJevCalls,
+  readMediaSourcingUsage,
+  updateRunUsage,
+  writeRunUsage,
+} from "./run-usage.mjs";
 import sharp from "sharp";
 
 export const STUDIO_ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -692,6 +701,8 @@ export async function sourceStoryMedia({
   const seenUrls = new Set();
   const seenShas = new Set();
   const seenDhashes = [];
+  let serperQueries = 0;
+  let serperDownloads = 0;
 
   const tryAcceptCandidate = async (candidate, origin, queryUsed) => {
     const cleanUrl = String(candidate?.imageUrl || "").trim();
@@ -703,6 +714,7 @@ export async function sourceStoryMedia({
     }
 
     try {
+      if (origin === "serper") serperDownloads += 1;
       const checked = await downloadAndValidateImage(candidate, { fetchFn });
       if (seenShas.has(checked.rawSha)) return false;
       if (seenDhashes.some((prev) => dHashHammingDistance(prev, checked.dhash) <= DHASH_DUPLICATE_THRESHOLD)) {
@@ -760,6 +772,7 @@ export async function sourceStoryMedia({
     for (let qIdx = 0; qIdx < queries.length && uniqueRecords.length < desiredCount; qIdx += 1) {
       const query = queries[qIdx];
       console.log(`  Searching Google Images (${qIdx + 1}/${queries.length}): "${query}"...`);
+      serperQueries += 1;
       let results = filterCandidateImages(await searchFn(query, { count: 10 }));
 
       if (results.length === 0) {
@@ -769,6 +782,7 @@ export async function sourceStoryMedia({
           .replace(/\s+/g, " ")
           .trim();
         if (broadened && broadened !== query) {
+          serperQueries += 1;
           results = filterCandidateImages(await searchFn(broadened, { count: 10 }));
         }
       }
@@ -819,6 +833,10 @@ export async function sourceStoryMedia({
         uniqueCount: uniqueRecords.length,
         repeatsAllowed: uniqueRecords.length < desiredCount,
         durationSeconds: Number((durationSeconds ?? script?.targetDurationSeconds ?? 30).toFixed?.(2) || 30),
+        telemetry: {
+          serperQueries,
+          serperDownloads,
+        },
         sequence,
         items: uniqueRecords,
       },
@@ -858,6 +876,7 @@ function resolveStudioDeps(deps = {}) {
     sha256,
     writeJson,
     composeVerticalVideo,
+    validateVerticalDeliverable,
     getTelegramCredentials: hasMockTelegram ? null : getTelegramCredentials,
     flushTelegramBacklog: hasMockTelegram ? async () => 0 : flushTelegramBacklog,
     editTelegramMessageCaption: hasMockTelegram ? async () => ({}) : editTelegramMessageCaption,
@@ -887,22 +906,53 @@ function resolveStudioDeps(deps = {}) {
   };
 }
 
+async function verifyMasterQualityReport({ runDirectory, rawMasterVideo, sha256Fn = sha256 }) {
+  const reportPath = path.join(runDirectory, "quality-report.json");
+  let report;
+  try {
+    report = JSON.parse(await fs.readFile(reportPath, "utf8"));
+  } catch (err) {
+    throw new CandidateSkipError(`Missing or invalid quality-report.json at ${reportPath}: ${err.message}`, {
+      stage: "inspect",
+      cause: err,
+    });
+  }
+  const masterVideoSha256 = await sha256Fn(rawMasterVideo);
+  if (report?.status !== "pass") {
+    throw new CandidateSkipError(
+      `Master inspect failed (status='${report?.status ?? "unknown"}') for ${path.basename(runDirectory)}.`,
+      { stage: "inspect" },
+    );
+  }
+  if (report?.outputSha256 && report.outputSha256 !== masterVideoSha256) {
+    throw new CandidateSkipError(
+      `Master inspect checksum mismatch (report=${report.outputSha256}, file=${masterVideoSha256}).`,
+      { stage: "inspect" },
+    );
+  }
+  return { qualityReport: report, masterVideoSha256 };
+}
+
 /**
  * Produces one grounded video candidate from story -> article -> grounded script -> media/voice -> render -> vertical MP4,
- * persisting `story.json`, `article.json`, `script.json`, and `author-receipt.json` into `runDirectory` after `init`.
+ * persisting `story.json`, `article.json`, `script.json`, `author-receipt.json`, `quality-report.json`, and `run-usage.json`.
  */
 async function produceGroundedCandidateRun({
   story,
   runId,
   cfg,
   isCustomTopic = false,
+  newsMcpCalls = 0,
   d,
 }) {
   const runDirectory = d.resolveRunDirectory(root, runId);
   const stageDir = await fs.mkdtemp(path.join(os.tmpdir(), `wiggly-stage-${runId}-`));
+  const usage = createRunUsageTracker({ runId, writerAgent: cfg.writerAgent, startedAt: new Date().toISOString() });
+  if (newsMcpCalls > 0) usage.recordNewsMcp(newsMcpCalls);
 
   try {
     const article = isCustomTopic ? null : await d.fetchArticleForTopic(story.topic);
+    if (!isCustomTopic) usage.recordArticleFetch(1);
     const script = await d.authorShazScript(story.topic, {
       article,
       config: cfg,
@@ -923,6 +973,11 @@ async function produceGroundedCandidateRun({
       attempts: [{ attempt: 1, ok: true }],
       errors: [],
     };
+    usage.recordAgentWriter({
+      calls: Math.max(1, Array.isArray(receipt?.attempts) ? receipt.attempts.length : 1),
+      attempts: Math.max(1, Array.isArray(receipt?.attempts) ? receipt.attempts.length : 1),
+      agent: receipt?.writerAgent || cfg.writerAgent,
+    });
 
     const storyRecord = {
       schemaVersion: 1,
@@ -960,6 +1015,7 @@ async function produceGroundedCandidateRun({
       outputPath: audioFile,
       provider: "cartesia",
     });
+    usage.recordCartesia({ calls: 1, characters: dialogueText.length });
 
     const durationSeconds = await measureAudioDurationSeconds(audioFile, {
       dialogueText,
@@ -1040,9 +1096,21 @@ async function produceGroundedCandidateRun({
     const rawMasterVideo = path.join(runDirectory, "final.mp4");
     const transcriptPath = path.join(runDirectory, "transcript.json");
     const verticalVideoPath = path.join(runDirectory, "final-vertical.mp4");
+    let masterVideoSha256;
+    let qualityReport;
+    let verticalGate;
     try {
       d.execute("node", [path.join(root, "runner.mjs"), "validate", `--run=${runId}`], { cwd: root });
       d.execute("node", [path.join(root, "runner.mjs"), "render", `--run=${runId}`], { cwd: root });
+      d.execute("node", [path.join(root, "runner.mjs"), "inspect", `--run=${runId}`], { cwd: root });
+
+      const verifiedMaster = await verifyMasterQualityReport({
+        runDirectory,
+        rawMasterVideo,
+        sha256Fn: d.sha256,
+      });
+      qualityReport = verifiedMaster.qualityReport;
+      masterVideoSha256 = verifiedMaster.masterVideoSha256;
 
       await d.composeVerticalVideo({
         sourceVideoPath: rawMasterVideo,
@@ -1050,18 +1118,32 @@ async function produceGroundedCandidateRun({
         headline: script.headline || formatSafeHeadline(script.title, 36),
         outputPath: verticalVideoPath,
       });
+
+      verticalGate = await d.validateVerticalDeliverable({
+        verticalVideoPath,
+        masterVideoPath: rawMasterVideo,
+        masterDurationSeconds: durationSeconds,
+        sha256Fn: d.sha256,
+      });
     } catch (err) {
-      if (!isJsCodeBug(err) && !(err instanceof RunStopError)) {
-        throw new CandidateSkipError(err.message, { stage: "render", cause: err });
+      if (err instanceof CandidateSkipError || err instanceof RunStopError || isJsCodeBug(err)) {
+        throw err;
       }
-      throw err;
+      throw new CandidateSkipError(err.message, { stage: "render", cause: err });
     }
+
+    usage.setJev(await readKitJevCalls(runDirectory));
+    usage.recordSerper(await readMediaSourcingUsage(runDirectory));
+    await writeRunUsage(runDirectory, usage.snapshot(), { writeJsonFn: d.writeJson });
 
     return {
       runId,
       runDirectory,
       rawMasterVideo,
       verticalVideoPath,
+      masterVideoSha256,
+      qualityReport,
+      verticalGate,
       script,
       article,
       receipt,
@@ -1093,6 +1175,9 @@ function serializeCandidateForPendingBatch(c) {
     runDirectory: c.runDirectory,
     rawMasterVideo: c.rawMasterVideo,
     verticalVideoPath: c.verticalVideoPath,
+    masterVideoSha256: c.masterVideoSha256 ?? null,
+    qualityReport: c.qualityReport ?? null,
+    verticalGate: c.verticalGate ?? null,
     script: c.script,
     dialogueText: c.dialogueText,
     story: c.story,
@@ -1217,6 +1302,25 @@ async function publishWithCheckpointsAndLedger({
     onCheckpoint: syncCheckpointAndLedger,
   });
 
+  const bufferCreates = Number.isFinite(postResult?.telemetry?.creates)
+    ? postResult.telemetry.creates
+    : Object.keys(postResult?.channels || {}).length +
+      (postResult?.failed?.length || 0) +
+      (postResult?.unknown?.length || 0);
+  const bufferStatusesFromPublish = Number.isFinite(postResult?.telemetry?.statuses)
+    ? postResult.telemetry.statuses
+    : 0;
+  if (bufferCreates > 0 || bufferStatusesFromPublish > 0) {
+    await updateRunUsage(
+      runDirectory,
+      (p) => {
+        p.buffer.creates += bufferCreates;
+        p.buffer.statuses += bufferStatusesFromPublish;
+      },
+      { writeJsonFn: deps.writeJson },
+    ).catch(() => {});
+  }
+
   const finalChannelStates =
     postResult.channelStates ||
     Object.fromEntries(
@@ -1299,6 +1403,16 @@ async function publishWithCheckpointsAndLedger({
     storageId: media.storageId,
     deps,
   });
+  if ((cleanup?.bufferStatusCalls || 0) > 0 || (cleanup?.convexDeletes || 0) > 0) {
+    await updateRunUsage(
+      runDirectory,
+      (p) => {
+        p.buffer.statuses += cleanup.bufferStatusCalls || 0;
+        p.convex.deletes += cleanup.convexDeletes || 0;
+      },
+      { writeJsonFn: deps.writeJson },
+    ).catch(() => {});
+  }
   await deps.writeJson(mediaReceiptPath, { ...media, ...cleanup });
 
   return { postResult, cleanup, publishStatePath, state: finalState };
@@ -1341,19 +1455,28 @@ async function completeBatchDecisionAndPublish({
   const winner = candidates.find((c) => c.runId === decision?.runId) || candidates[0];
   console.log(`\n🏆 WINNER SELECTED: Candidate #${winner.candidateNumber} ("${winner.script.title}") [${winner.runId}]`);
 
-  console.log("\n✍️  Signing Human Review Gate & Finalizing Winner Deliverables...");
+  console.log("\n✍️  Recording Studio Delivery & Publishing Winner Deliverables...");
   const { postResult } = await finalizeUploadPublishAndCleanup({
     runId: winner.runId,
     runDirectory: winner.runDirectory,
     rawMasterVideo: winner.rawMasterVideo,
     verticalVideoPath: winner.verticalVideoPath,
+    masterVideoSha256: winner.masterVideoSha256 ?? null,
+    qualityReport: winner.qualityReport ?? null,
+    verticalGate: winner.verticalGate ?? null,
     title: winner.script.title,
     dialogueText: winner.dialogueText,
     tags: winner.script.hashtags || null,
     story: winner.story,
-    reviewNote: `Selected as daily winner from ${candidates.length}-candidate batch for ${winner.script.title}`,
+    mode: decision?.mode || "telegram-pick",
+    pick: {
+      telegramUserId: decision?.telegramUserId ?? null,
+      chatId: decision?.chatId ?? winner.approval?.chatId ?? null,
+      messageId: decision?.messageId ?? winner.approval?.messageId ?? null,
+      pickedAt: decision?.pickedAt ?? new Date().toISOString(),
+    },
     pickedMessageId: decision?.messageId || winner.approval?.messageId || null,
-    pickedChatId: winner.approval?.chatId || null,
+    pickedChatId: decision?.chatId || winner.approval?.chatId || null,
     noTelegram,
     ledgerPath,
     env,
@@ -1414,48 +1537,59 @@ async function deleteMediaAfterBufferSent({ postResult, storageId, deps }) {
     .filter(Boolean);
 
   if (postIds.length === 0 || !storageId) {
-    return { cleanupStatus: "deferred-to-7d-ttl", reason: "no-post-ids" };
+    return { cleanupStatus: "deferred-to-7d-ttl", reason: "no-post-ids", bufferStatusCalls: 0, convexDeletes: 0 };
   }
 
+  let bufferStatusCalls = 0;
   for (let attempt = 0; attempt < deps.bufferPollMaxAttempts; attempt += 1) {
     if (attempt > 0 && deps.bufferPollIntervalMs > 0) {
       await deps.sleepFn(deps.bufferPollIntervalMs);
     }
 
     try {
+      bufferStatusCalls += 1;
       const statusResult = await deps.getBufferPostsStatus({ postIds });
       if (statusResult?.allSent) {
         await deps.deletePublishVideo(storageId);
         console.log(`  🗑️ Deleted temporary Convex media (${storageId}) after Buffer confirmed 'sent'.`);
-        return { cleanupStatus: "deleted-after-sent", cleanedUpAt: new Date().toISOString() };
+        return {
+          cleanupStatus: "deleted-after-sent",
+          cleanedUpAt: new Date().toISOString(),
+          bufferStatusCalls,
+          convexDeletes: 1,
+        };
       }
       if (statusResult?.hasError) {
         console.warn("  ⚠️ Buffer reported a delivery error; leaving Convex media for 7-day auto-expiry.");
-        return { cleanupStatus: "deferred-to-7d-ttl", reason: "buffer-post-error" };
+        return { cleanupStatus: "deferred-to-7d-ttl", reason: "buffer-post-error", bufferStatusCalls, convexDeletes: 0 };
       }
     } catch (err) {
       console.warn(redactSecrets(`  ⚠️ Buffer status/cleanup check failed: ${err.message}; leaving for 7-day TTL.`));
-      return { cleanupStatus: "deferred-to-7d-ttl", reason: "cleanup-check-error" };
+      return { cleanupStatus: "deferred-to-7d-ttl", reason: "cleanup-check-error", bufferStatusCalls, convexDeletes: 0 };
     }
   }
 
   console.warn("  ⏳ Buffer posts still sending after poll window; leaving Convex media for 7-day auto-expiry.");
-  return { cleanupStatus: "deferred-to-7d-ttl", reason: "poll-timeout" };
+  return { cleanupStatus: "deferred-to-7d-ttl", reason: "poll-timeout", bufferStatusCalls, convexDeletes: 0 };
 }
 
 /**
- * Shared Phase 1 post-approval flow: inspect -> human-review -> finalize -> Convex upload -> Buffer -> delete on sent.
+ * Shared post-pick flow: verify master/vertical checksums -> Convex upload -> verify upload -> studio-delivery.json -> Buffer -> delete on sent.
  */
 async function finalizeUploadPublishAndCleanup({
   runId,
   runDirectory,
   rawMasterVideo,
   verticalVideoPath,
+  masterVideoSha256 = null,
+  qualityReport = null,
+  verticalGate = null,
   title,
   dialogueText,
   tags,
   story,
-  reviewNote,
+  mode = "telegram-pick",
+  pick = null,
   pickedMessageId = null,
   pickedChatId = null,
   noTelegram = false,
@@ -1463,24 +1597,63 @@ async function finalizeUploadPublishAndCleanup({
   env = process.env,
   deps,
 }) {
-  deps.execute("node", [path.join(root, "runner.mjs"), "inspect", `--run=${runId}`], { cwd: root });
-  const videoSha = await deps.sha256(rawMasterVideo);
-  const humanReview = {
-    schemaVersion: 1,
-    status: "approved",
-    reviewer: "shaz-telegram-operator",
-    reviewedOutputSha256: videoSha,
-    reviewedAt: new Date().toISOString(),
-    notes: reviewNote,
-    directVideoPerception: true,
-    directAudioPerception: true,
-    completePasses: 1,
-  };
-  await deps.writeJson(path.join(runDirectory, "human-review.json"), humanReview);
-  deps.execute("node", [path.join(root, "runner.mjs"), "finalize", `--run=${runId}`], { cwd: root });
+  const masterSha = masterVideoSha256 || (await deps.sha256(rawMasterVideo));
+  let resolvedQuality = qualityReport;
+  if (!resolvedQuality) {
+    try {
+      resolvedQuality = JSON.parse(await fs.readFile(path.join(runDirectory, "quality-report.json"), "utf8"));
+    } catch {
+      resolvedQuality = null;
+    }
+  }
+
+  const resolvedVerticalGate = verticalGate || (await deps.validateVerticalDeliverable({
+    verticalVideoPath,
+    masterVideoPath: rawMasterVideo,
+    sha256Fn: deps.sha256,
+  }));
+  const currentVerticalSha = await deps.sha256(verticalVideoPath);
+  if (currentVerticalSha !== resolvedVerticalGate.sha256) {
+    throw new RunStopError(
+      `Vertical video on disk (${currentVerticalSha}) changed since Telegram approval (${resolvedVerticalGate.sha256}).`,
+      {
+        code: "MEDIA_CHECKSUM_MISMATCH",
+        stage: "publish",
+        headline: "Vertical Video Checksum Mismatch",
+      },
+    );
+  }
 
   console.log("\n☁️ Uploading finalized vertical MP4 to Convex temporary host...");
   const media = await deps.uploadPublishVideo(verticalVideoPath);
+  verifyUploadedMediaChecksum({
+    uploadedSha256: media.sha256,
+    expectedSha256: resolvedVerticalGate.sha256,
+  });
+  await updateRunUsage(
+    runDirectory,
+    (p) => {
+      p.convex.uploads += 1;
+    },
+    { writeJsonFn: deps.writeJson },
+  ).catch(() => {});
+
+  const deliveryRecord = buildStudioDeliveryRecord({
+    mode,
+    pick: {
+      telegramUserId: pick?.telegramUserId ?? null,
+      chatId: pick?.chatId ?? pickedChatId ?? null,
+      messageId: pick?.messageId ?? pickedMessageId ?? null,
+      pickedAt: pick?.pickedAt ?? new Date().toISOString(),
+    },
+    masterVideoPath: rawMasterVideo,
+    masterVideoSha256: masterSha,
+    verticalGate: resolvedVerticalGate,
+    qualityReport: resolvedQuality,
+    publishedMediaSha256: media.sha256,
+  });
+  await deps.writeJson(path.join(runDirectory, "studio-delivery.json"), deliveryRecord);
+
   const mediaReceiptPath = path.join(runDirectory, "publish-media.json");
   const mediaReceipt = {
     url: media.url,
@@ -1601,18 +1774,36 @@ export async function runDailyStudio({
       });
     }
 
-    const { runDirectory, rawMasterVideo, verticalVideoPath, script, dialogueText, story } = produced;
+    const {
+      runDirectory,
+      rawMasterVideo,
+      verticalVideoPath,
+      masterVideoSha256,
+      qualityReport,
+      verticalGate,
+      script,
+      dialogueText,
+      story,
+    } = produced;
     console.log(`  Vertical video ready: ${verticalVideoPath}`);
 
+    let approval = null;
     if (!noTelegram) {
       console.log("\n📱 STEP 6: Dispatching Preview to Telegram...");
-      const approval = await d.sendApprovalVideo({
+      approval = await d.sendApprovalVideo({
         videoPath: verticalVideoPath,
         title: script.title,
         runId,
         captionText: dialogueText,
         dryRun,
       });
+      await updateRunUsage(
+        runDirectory,
+        (p) => {
+          p.telegram.calls += 1;
+        },
+        { writeJsonFn: d.writeJson },
+      ).catch(() => {});
       console.log(`  Preview sent to Telegram Chat ${approval.chatId}`);
     }
 
@@ -1624,9 +1815,23 @@ export async function runDailyStudio({
     await d.recordShown(story.topic, { ledgerPath, env });
 
     let decision = "approved";
+    let decisionMeta = null;
     if (!autoApprove) {
       console.log("  Waiting for operator approval on Telegram...");
-      decision = await d.pollApprovalDecision({ runId, initialUpdateId: baselineUpdateId, env });
+      const polled = await d.pollApprovalDecision({
+        runId,
+        initialUpdateId: baselineUpdateId,
+        env,
+        onDecision: (meta) => {
+          decisionMeta = meta;
+        },
+      });
+      if (polled && typeof polled === "object") {
+        decision = polled.status;
+        decisionMeta = polled;
+      } else {
+        decision = polled;
+      }
     }
 
     if (decision === "no-pick") {
@@ -1651,17 +1856,29 @@ export async function runDailyStudio({
       return { status: "rejected", runDirectory };
     }
 
-    console.log("\n✍️  STEP 7: Signing Human Review Gate & Finalizing Deliverables...");
+    console.log("\n✍️  STEP 7: Recording Studio Delivery & Publishing Deliverables...");
     const { postResult } = await finalizeUploadPublishAndCleanup({
       runId,
       runDirectory,
       rawMasterVideo,
       verticalVideoPath,
+      masterVideoSha256,
+      qualityReport,
+      verticalGate,
       title: script.title,
       dialogueText,
       tags: script.hashtags || null,
       story,
-      reviewNote: `Approved via Telegram one-click dispatch for ${script.title}`,
+      mode: autoApprove ? "auto-approve" : "telegram-pick",
+      pick: {
+        telegramUserId: decisionMeta?.telegramUserId ?? null,
+        chatId: decisionMeta?.chatId ?? approval?.chatId ?? null,
+        messageId: decisionMeta?.messageId ?? approval?.messageId ?? null,
+        pickedAt: decisionMeta?.pickedAt ?? new Date().toISOString(),
+      },
+      pickedMessageId: decisionMeta?.messageId ?? approval?.messageId ?? null,
+      pickedChatId: decisionMeta?.chatId ?? approval?.chatId ?? null,
+      noTelegram,
       ledgerPath,
       env,
       deps: d,
@@ -1781,6 +1998,7 @@ export async function runDailyBatch({
           runId,
           cfg,
           isCustomTopic: isCustomTopics,
+          newsMcpCalls: candidates.length === 0 ? 1 : 0,
           d,
         });
       } catch (err) {
@@ -1805,6 +2023,13 @@ export async function runDailyBatch({
           totalCandidates: targetCount,
           dryRun,
         });
+        await updateRunUsage(
+          produced.runDirectory,
+          (p) => {
+            p.telegram.calls += 1;
+          },
+          { writeJsonFn: d.writeJson },
+        ).catch(() => {});
         console.log(`  ✅ Candidate ${candidateNumber} dispatched to Telegram.`);
       }
 
@@ -1872,9 +2097,12 @@ export async function runDailyBatch({
     const pendingBatchPath = getPendingBatchPath(env);
     let decision = {
       status: "approved",
+      mode: "auto-approve",
       runId: candidates[0].runId,
       chosen: candidates[0],
       messageId: candidates[0].approval?.messageId ?? null,
+      chatId: candidates[0].approval?.chatId ?? null,
+      pickedAt: new Date().toISOString(),
     };
 
     if (!autoApprove) {
@@ -2075,7 +2303,15 @@ export async function resumePublishForRun({
     const reachable = media.url ? await d.checkPublicVideoReachable(media.url) : false;
     if (!reachable) {
       console.log(`☁️ Hosted Convex video missing or expired; re-uploading ${verticalVideoPath}...`);
+      const deliveryJson = await fs
+        .readFile(path.join(runDirectory, "studio-delivery.json"), "utf8")
+        .then((raw) => JSON.parse(raw))
+        .catch(() => null);
+      const expectedSha = deliveryJson?.publishedMediaSha256 || deliveryJson?.verticalVideo?.sha256 || null;
       const reuploaded = await d.uploadPublishVideo(verticalVideoPath);
+      if (expectedSha) {
+        verifyUploadedMediaChecksum({ uploadedSha256: reuploaded.sha256, expectedSha256: expectedSha });
+      }
       media = {
         url: reuploaded.url,
         storageId: reuploaded.storageId,
@@ -2086,6 +2322,13 @@ export async function resumePublishForRun({
       state.videoUrl = media.url;
       state.storageId = media.storageId;
       await d.writeJson(path.join(runDirectory, "publish-media.json"), media);
+      await updateRunUsage(
+        runDirectory,
+        (p) => {
+          p.convex.uploads += 1;
+        },
+        { writeJsonFn: d.writeJson },
+      ).catch(() => {});
     }
 
     const { postResult, cleanup } = await publishWithCheckpointsAndLedger({

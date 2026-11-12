@@ -853,6 +853,7 @@ export async function deriveMultiShotPlanWithJev({
   let lastBadge = null;
   let lastPuppetPose = null;
   const usedPuppetPoses = [];
+  let jevCalls = 0;
   let chibiCount = 0;
   let textCardCount = 0;
   let brollCount = 0;
@@ -882,6 +883,7 @@ export async function deriveMultiShotPlanWithJev({
           recentPoses: usedPuppetPoses.slice(-2),
         },
       });
+      jevCalls += Number(jevChoice?._jevCalls) || 1;
 
       // Determine shot type using Jev + editorial rhythm:
       // - First shot is always talk-to-camera
@@ -1064,12 +1066,14 @@ export async function deriveMultiShotPlanWithJev({
       shots.at(-1).endFrameExclusive = totalFrames;
     }
 
-    return {
+    const plan = {
       schemaVersion: MULTI_SHOT_SCHEMA,
       title: transcript.text ? transcript.text.slice(0, 60) : "Automatic Video",
       totalDurationFrames: totalFrames,
       shots,
     };
+    Object.defineProperty(plan, "_jevCalls", { value: jevCalls, enumerable: false });
+    return plan;
   } catch (err) {
     if (err instanceof JevDirectorSkipError) {
       throw err;

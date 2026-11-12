@@ -24,13 +24,20 @@ async function isPickedOrPublishedRun(runDir) {
   if (await exists(path.join(runDir, "publish-state.json"))) {
     return true;
   }
-  const reviewPath = path.join(runDir, "human-review.json");
-  try {
-    const parsed = JSON.parse(await fs.readFile(reviewPath, "utf8"));
-    return parsed?.status === "approved";
-  } catch {
-    return false;
+  for (const fileName of ["studio-delivery.json", "human-review.json"]) {
+    try {
+      const parsed = JSON.parse(await fs.readFile(path.join(runDir, fileName), "utf8"));
+      if (
+        parsed?.status === "approved" ||
+        parsed?.mode === "telegram-pick" ||
+        parsed?.mode === "auto-approve" ||
+        Boolean(parsed?.publishedMediaSha256)
+      ) {
+        return true;
+      }
+    } catch {}
   }
+  return false;
 }
 
 async function collectFilesRecursively(dir, relPrefix = "") {

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -71,15 +72,33 @@ test("runDailyBatch never leaks Telegram bot token, publishes Convex URL to Buff
       execute: (_cmd, args) => {
         const subcmd = args[1];
         callSequence.push(`execute:${subcmd}`);
-        if (subcmd === "init") {
-          return;
+        if (subcmd === "render" && createdRunDir) {
+          fsSync.mkdirSync(createdRunDir, { recursive: true });
+          fsSync.writeFileSync(path.join(createdRunDir, "final.mp4"), Buffer.from("master-mp4"));
+        }
+        if (subcmd === "inspect" && createdRunDir) {
+          fsSync.mkdirSync(createdRunDir, { recursive: true });
+          fsSync.writeFileSync(
+            path.join(createdRunDir, "quality-report.json"),
+            JSON.stringify({ schemaVersion: 1, status: "pass", outputSha256: "deadbeef".repeat(8) }),
+          );
         }
       },
       composeVerticalVideo: async ({ outputPath }) => {
         await fs.mkdir(path.dirname(outputPath), { recursive: true });
-        await fs.writeFile(path.join(path.dirname(outputPath), "final.mp4"), Buffer.from("master-mp4"));
         await fs.writeFile(path.join(path.dirname(outputPath), "transcript.json"), JSON.stringify({ words: [] }));
         await fs.writeFile(outputPath, Buffer.from("vertical-mp4"));
+      },
+      validateVerticalDeliverable: async ({ verticalVideoPath }) => {
+        callSequence.push("validateVerticalDeliverable");
+        return {
+          file: path.basename(verticalVideoPath),
+          sha256: "deadbeef".repeat(8),
+          width: 1080,
+          height: 1920,
+          durationSeconds: 30,
+          bytes: 12,
+        };
       },
       sendApprovalVideo: async ({ videoPath, title, runId, captionText, candidateNumber, totalCandidates }) =>
         sendApprovalVideo({
@@ -176,10 +195,22 @@ test("runDailyBatch never leaks Telegram bot token, publishes Convex URL to Buff
     );
     assert.equal(JSON.stringify(bufferPublishCalls[0]).includes(SENTINEL_BOT_TOKEN), false);
 
-    // Must upload ONLY after finalize, publish before polling, and delete ONLY after sent
-    assert.equal(callSequence.indexOf("execute:finalize") < callSequence.indexOf("uploadPublishVideo"), true);
+    // Must inspect & validate vertical BEFORE Telegram approval, upload ONLY after pick, publish before polling, and delete ONLY after sent
+    assert.equal(callSequence.includes("execute:finalize"), false, "studio must NOT invoke human-gated runner.mjs finalize");
+    assert.equal(callSequence.includes("execute:inspect"), true);
+    assert.equal(callSequence.indexOf("execute:inspect") < callSequence.indexOf("validateVerticalDeliverable"), true);
+    assert.equal(callSequence.indexOf("validateVerticalDeliverable") < callSequence.indexOf("uploadPublishVideo"), true);
     assert.equal(callSequence.indexOf("uploadPublishVideo") < callSequence.indexOf("publishVideoToAllChannels"), true);
     assert.equal(callSequence.indexOf("getBufferPostsStatus:2") < callSequence.indexOf("deletePublishVideo"), true);
+    await assert.rejects(() => fs.stat(path.join(createdRunDir, "human-review.json")), { code: "ENOENT" });
+    const deliveryJson = JSON.parse(await fs.readFile(path.join(createdRunDir, "studio-delivery.json"), "utf8"));
+    assert.equal(deliveryJson.mode, "telegram-pick");
+    assert.equal(deliveryJson.publishedMediaSha256, "deadbeef".repeat(8));
+    assert.equal(deliveryJson.verticalVideo.sha256, "deadbeef".repeat(8));
+    const usageJson = JSON.parse(await fs.readFile(path.join(createdRunDir, "run-usage.json"), "utf8"));
+    assert.equal(usageJson.providers.cartesia.calls, 1);
+    assert.equal(usageJson.providers.convex.uploads, 1);
+    assert.equal(usageJson.providers.convex.deletes, 1);
     assert.deepEqual(deletedStorageIds, ["kg2_winner_1"]);
     assert.equal(shownTopics.length, 1);
     assert.equal(shownTopics[0].eventId, "evt_gta6");
@@ -234,13 +265,33 @@ test("runDailyBatch skips immediate delete and leaves 7-day failsafe when Buffer
           createdRunDir = path.join(tempRoot, runId);
           return createdRunDir;
         },
-        execute: () => {},
+        execute: (_cmd, args) => {
+          const subcmd = args[1];
+          if (subcmd === "render" && createdRunDir) {
+            fsSync.mkdirSync(createdRunDir, { recursive: true });
+            fsSync.writeFileSync(path.join(createdRunDir, "final.mp4"), Buffer.from("mp4"));
+          }
+          if (subcmd === "inspect" && createdRunDir) {
+            fsSync.mkdirSync(createdRunDir, { recursive: true });
+            fsSync.writeFileSync(
+              path.join(createdRunDir, "quality-report.json"),
+              JSON.stringify({ schemaVersion: 1, status: "pass", outputSha256: "abcd".repeat(16) }),
+            );
+          }
+        },
         composeVerticalVideo: async ({ outputPath }) => {
           await fs.mkdir(path.dirname(outputPath), { recursive: true });
-          await fs.writeFile(path.join(path.dirname(outputPath), "final.mp4"), Buffer.from("mp4"));
           await fs.writeFile(path.join(path.dirname(outputPath), "transcript.json"), JSON.stringify({ words: [] }));
           await fs.writeFile(outputPath, Buffer.from("vert"));
         },
+        validateVerticalDeliverable: async ({ verticalVideoPath }) => ({
+          file: path.basename(verticalVideoPath),
+          sha256: "abcd".repeat(16),
+          width: 1080,
+          height: 1920,
+          durationSeconds: 30,
+          bytes: 4,
+        }),
         sendApprovalVideo: async () => ({ messageId: 1, fileId: "f1", chatId: "9" }),
         sendTelegramMessage: async () => ({}),
         sha256: async () => "abcd".repeat(16),

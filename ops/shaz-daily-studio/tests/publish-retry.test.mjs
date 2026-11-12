@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
@@ -243,13 +244,28 @@ test("partial channel failure records ledger immediately, keeps Convex media, al
       if (sub === "render") {
         fsSync.writeFileSync(path.join(runDir, "final.mp4"), "fake-master-mp4");
       }
+      if (sub === "inspect") {
+        const sha = crypto.createHash("sha256").update("fake-master-mp4").digest("hex");
+        fsSync.writeFileSync(
+          path.join(runDir, "quality-report.json"),
+          JSON.stringify({ schemaVersion: 1, status: "pass", outputSha256: sha }),
+        );
+      }
     },
     composeVerticalVideo: async ({ outputPath }) => {
       await fs.mkdir(path.dirname(outputPath), { recursive: true });
       await fs.writeFile(outputPath, Buffer.from("fake-vertical-mp4"));
     },
+    validateVerticalDeliverable: async ({ verticalVideoPath, sha256Fn }) => ({
+      file: path.basename(verticalVideoPath),
+      sha256: await sha256Fn(verticalVideoPath),
+      width: 1080,
+      height: 1920,
+      durationSeconds: 30,
+      bytes: 17,
+    }),
     sendApprovalVideo: async ({ runId }) => ({ chatId: "123", messageId: 99, runId }),
-    pollBatchDecision: async () => ({ status: "picked", runId: createdRunId, messageId: 99 }),
+    pollBatchDecision: async () => ({ status: "approved", runId: createdRunId, messageId: 99 }),
     editTelegramMessageCaption: async (payload) => {
       editedCaptions.push(payload);
       return {};
@@ -260,11 +276,12 @@ test("partial channel failure records ledger immediately, keeps Convex media, al
     },
     uploadPublishVideo: async (filePath) => {
       uploadedPaths.push(filePath);
+      const buf = await fs.readFile(filePath);
       return {
         url: `https://convex.example.com/video-${uploadedPaths.length}.mp4`,
         storageId: `storage-${uploadedPaths.length}`,
-        sha256: "vsha",
-        bytes: 123,
+        sha256: crypto.createHash("sha256").update(buf).digest("hex"),
+        bytes: buf.length,
       };
     },
     deletePublishVideo: async (storageId) => {
