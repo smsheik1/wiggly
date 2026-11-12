@@ -109,6 +109,20 @@
             "type": "string",
             "description": "Image path or background for the topic being commented on"
           },
+          "otsGraphic": {
+            "type": "object",
+            "description": "Over-the-shoulder graphic card attached to a talk-to-camera shot",
+            "properties": {
+              "badge": { "type": "string" },
+              "headline": { "type": "string" },
+              "image": { "type": "string" },
+              "image2": { "type": "string", "description": "Optional second image swapped in mid-shot for long talk segments" },
+              "swapAtFrame": { "type": "integer", "minimum": 1 },
+              "subtext": { "type": "string" },
+              "entranceDelayFrames": { "type": "integer", "minimum": 0 },
+              "durationFrames": { "type": "integer", "minimum": 1 }
+            }
+          },
           "card": {
             "type": "object",
             "description": "Declarative vector topic card to generate on-the-fly",

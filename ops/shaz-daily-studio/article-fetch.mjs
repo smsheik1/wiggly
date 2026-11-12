@@ -67,16 +67,127 @@ async function readBoundedHtml(response, maxBytes = MAX_HTML_BYTES) {
   return text;
 }
 
+const SKIP_IMAGE_RE = /(?:^|[/_.-])(favicon|avatar|emoji|sprite|pixel|1x1|spacer|doubleclick|gravatar|profile[-_]?pic)(?:[/_.-]|$)/i;
+
+function resolveHttpUrl(raw, baseUrl) {
+  const trimmed = String(raw || "").trim();
+  if (!trimmed || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) return null;
+  try {
+    const resolved = new URL(trimmed, baseUrl);
+    if (resolved.protocol !== "http:" && resolved.protocol !== "https:") return null;
+    if (/\.(?:svg|ico)(?:$|[?#])/i.test(resolved.pathname)) return null;
+    return resolved.toString();
+  } catch {
+    return null;
+  }
+}
+
+function pickFromSrcset(srcset, baseUrl) {
+  if (!srcset || typeof srcset !== "string") return null;
+  let bestUrl = null;
+  let bestScore = -1;
+  for (const part of srcset.split(",")) {
+    const tokens = part.trim().split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) continue;
+    const candidateUrl = resolveHttpUrl(tokens[0], baseUrl);
+    if (!candidateUrl) continue;
+    let score = 0;
+    const descriptor = tokens[1] || "";
+    if (descriptor.endsWith("w")) score = parseInt(descriptor, 10) || 0;
+    else if (descriptor.endsWith("x")) score = (parseFloat(descriptor) || 1) * 1000;
+    if (score >= bestScore) {
+      bestScore = score;
+      bestUrl = candidateUrl;
+    }
+  }
+  return bestUrl;
+}
+
+function isTinyOrJunkImgElement(img, urlStr) {
+  if (SKIP_IMAGE_RE.test(urlStr)) return true;
+  const w = parseInt(img?.getAttribute?.("width") || "", 10);
+  const h = parseInt(img?.getAttribute?.("height") || "", 10);
+  if ((Number.isFinite(w) && w > 0 && w < 200) || (Number.isFinite(h) && h > 0 && h < 200)) {
+    return true;
+  }
+  return false;
+}
+
+function collectImgsFromDom(rootDoc, baseUrl, kind, addCandidate) {
+  if (!rootDoc?.querySelectorAll) return;
+  for (const img of rootDoc.querySelectorAll("img")) {
+    const srcsetUrl =
+      pickFromSrcset(img.getAttribute("srcset"), baseUrl) ||
+      pickFromSrcset(img.getAttribute("data-srcset"), baseUrl);
+    const attrUrl =
+      resolveHttpUrl(img.getAttribute("data-original"), baseUrl) ||
+      resolveHttpUrl(img.getAttribute("data-lazy-src"), baseUrl) ||
+      resolveHttpUrl(img.getAttribute("data-src"), baseUrl) ||
+      resolveHttpUrl(img.getAttribute("src"), baseUrl);
+    const chosen = srcsetUrl || attrUrl;
+    if (!chosen || isTinyOrJunkImgElement(img, chosen)) continue;
+    const alt = String(img.getAttribute("alt") || "").trim();
+    addCandidate(chosen, alt, kind);
+  }
+}
+
 /**
- * Extracts clean article title and readable text from raw HTML using Linkedom + Readability.
+ * Extracts clean article title, readable text, and candidate editorial image URLs from raw HTML.
  */
 export function extractArticleFromHtml(html, url, { minChars = MIN_ARTICLE_CHARS } = {}) {
   const { document } = parseHTML(html);
   try {
     Object.defineProperty(document, "baseURI", { value: url, configurable: true });
   } catch {}
+
+  // Capture meta + article/main/figure images BEFORE Readability mutates `document`.
+  const seenUrls = new Set();
+  const images = [];
+  const addCandidate = (rawCandidateUrl, altText, kind) => {
+    const resolved = resolveHttpUrl(rawCandidateUrl, url);
+    if (!resolved || seenUrls.has(resolved) || SKIP_IMAGE_RE.test(resolved)) return;
+    seenUrls.add(resolved);
+    let domain = "";
+    try {
+      domain = new URL(resolved).hostname.replace(/^www\./, "");
+    } catch {}
+    images.push({
+      imageUrl: resolved,
+      pageUrl: url,
+      domain,
+      title: String(altText || "").trim(),
+      kind,
+    });
+  };
+
+  for (const selector of [
+    'meta[property="og:image"]',
+    'meta[property="og:image:secure_url"]',
+    'meta[name="twitter:image"]',
+    'meta[name="twitter:image:src"]',
+  ]) {
+    for (const metaEl of document.querySelectorAll(selector)) {
+      addCandidate(metaEl.getAttribute("content"), "", "meta");
+    }
+  }
+
+  const preReadabilityImgs = [];
+  for (const scope of document.querySelectorAll("article, main, figure")) {
+    collectImgsFromDom(scope, url, "article-dom", (chosen, alt, kind) => {
+      preReadabilityImgs.push({ chosen, alt, kind });
+    });
+  }
+
   const reader = new Readability(document);
   const parsed = reader.parse();
+
+  if (parsed?.content) {
+    const { document: parsedDoc } = parseHTML(parsed.content);
+    collectImgsFromDom(parsedDoc, url, "readability", addCandidate);
+  }
+  for (const item of preReadabilityImgs) {
+    addCandidate(item.chosen, item.alt, item.kind);
+  }
 
   const rawText = String(parsed?.textContent || "")
     .replace(/\r\n/g, "\n")
@@ -101,6 +212,7 @@ export function extractArticleFromHtml(html, url, { minChars = MIN_ARTICLE_CHARS
     sha256,
     title,
     text: rawText,
+    images: images.slice(0, 16),
   };
 }
 

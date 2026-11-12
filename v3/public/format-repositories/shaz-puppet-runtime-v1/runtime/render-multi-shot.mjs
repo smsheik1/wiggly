@@ -30,6 +30,29 @@ export const OTS_GRAPHIC_ZONE = Object.freeze({
   shazStagingBox: Object.freeze({ left: 540, top: 80, width: 700, height: 640 }),
 });
 
+/**
+ * Resolves the active OTS image buffer and cache key so swapping `image` -> `image2` at `swapAtFrame`
+ * never hits the cached card frame from slot 1.
+ */
+export function getActiveOtsImageState({
+  ots,
+  localFrame,
+  otsEntranceDelay = 0,
+  image1Buffer = null,
+  image2Buffer = null,
+}) {
+  const useSecondOts = Boolean(
+    image2Buffer &&
+    Number.isInteger(ots?.swapAtFrame) &&
+    localFrame >= ots.swapAtFrame,
+  );
+  const slot = useSecondOts ? 2 : 1;
+  const activeImageBuffer = useSecondOts ? image2Buffer : image1Buffer;
+  const cardEntranceFrame = localFrame - otsEntranceDelay;
+  const cacheKey = `${slot}:${Math.min(cardEntranceFrame, 4)}`;
+  return { slot, activeImageBuffer, cardEntranceFrame, cacheKey };
+}
+
 export async function renderMultiShot({ root, runDirectory, validated }) {
   const output = path.join(runDirectory, "final.mp4");
   const scratch = await fs.mkdtemp(path.join(os.tmpdir(), "shaz-multi-shot-"));
@@ -128,15 +151,18 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
 
         // Resolve OTS graphic assets and timing if present
         const ots = shot.otsGraphic ?? null;
-        let otsInnerImageBuffer = null;
-        if (ots?.image) {
-          const otsImgPath = path.isAbsolute(ots.image)
-            ? ots.image
-            : path.resolve(runDirectory, ots.image);
-          if (await fs.access(otsImgPath).then(() => true).catch(() => false)) {
-            otsInnerImageBuffer = await fs.readFile(otsImgPath);
+        const loadOtsAssetBuffer = async (relativeOrAbsPath) => {
+          if (!relativeOrAbsPath) return null;
+          const resolvedPath = path.isAbsolute(relativeOrAbsPath)
+            ? relativeOrAbsPath
+            : path.resolve(runDirectory, relativeOrAbsPath);
+          if (await fs.access(resolvedPath).then(() => true).catch(() => false)) {
+            return fs.readFile(resolvedPath);
           }
-        }
+          return null;
+        };
+        const otsInnerImageBuffer = await loadOtsAssetBuffer(ots?.image);
+        const otsInnerImageBuffer2 = await loadOtsAssetBuffer(ots?.image2);
         const otsEntranceDelay = ots?.entranceDelayFrames ?? 0;
         const otsDuration = ots?.durationFrames ?? (shot.durationFrames - otsEntranceDelay);
         const otsFrameCache = new Map();
@@ -195,13 +221,22 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
           }
 
           if (ots && f >= otsEntranceDelay && f < otsEntranceDelay + otsDuration) {
-            const cardEntranceFrame = f - otsEntranceDelay;
-            const cardCacheKey = Math.min(cardEntranceFrame, 4);
+            const {
+              activeImageBuffer: activeOtsImageBuffer,
+              cardEntranceFrame,
+              cacheKey: cardCacheKey,
+            } = getActiveOtsImageState({
+              ots,
+              localFrame: f,
+              otsEntranceDelay,
+              image1Buffer: otsInnerImageBuffer,
+              image2Buffer: otsInnerImageBuffer2,
+            });
             let cardBuffer = otsFrameCache.get(cardCacheKey);
             if (!cardBuffer) {
               cardBuffer = await renderOtsCardFrame({
                 headline: ots.headline ?? "",
-                image: otsInnerImageBuffer,
+                image: activeOtsImageBuffer,
                 subtext: ots.subtext ?? "",
                 width: OTS_GRAPHIC_ZONE.width,
                 height: OTS_GRAPHIC_ZONE.height,

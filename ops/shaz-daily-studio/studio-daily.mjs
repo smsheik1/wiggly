@@ -8,7 +8,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { AgentUnavailableError, askActiveAgent } from "../../v3/lib/agent-bridge.ts";
-import { ArticleFetchError, fetchArticleForTopic } from "./article-fetch.mjs";
+import { ArticleFetchError, fetchArticleForTopic, USER_AGENT as STUDIO_USER_AGENT } from "./article-fetch.mjs";
 import {
   CandidateSkipError,
   classifyRunError,
@@ -19,6 +19,7 @@ import {
   ScriptAuthorError,
 } from "./errors.mjs";
 import { acquireStudioLock, assertFreeDiskSpace } from "./preflight.mjs";
+import { pruneOldRuns } from "./prune-runs.mjs";
 import { fetchNewsMcpEvents, NewsMcpError, pickDistinctEvents } from "./newsmcp.mjs";
 
 export { CandidateSkipError, RunStopError, ScriptAuthorError };
@@ -252,9 +253,13 @@ Output ONLY valid JSON following this exact schema:
     "cardBadge": "<1-2 WORD BADGE>"
   },
   "visualQueries": [
-    "<exact high-intent Google image search query for the primary subject/hardware/game>",
-    "<exact visual query for the secondary subject, storefront, or real-world evidence>",
-    "<exact visual query for keyart, reaction meme, or gameplay screenshot>"
+    "<exact Google image query for primary game, hardware, or product key art>",
+    "<exact visual query for specific named character, studio, or console hardware>",
+    "<exact visual query for in-game screenshot, UI, or retail product closeup>",
+    "<exact visual query for official press photo or store listing>",
+    "<exact visual query for developer, executive, or studio logo>",
+    "<exact visual query for comparison, sequel, or companion device>",
+    "<exact visual query for community reaction, meme template, or esports/showcase stage>"
   ],
   "beats": [
     {
@@ -450,21 +455,98 @@ export function compileDialogueText(script) {
 }
 
 /**
- * Generates subject-targeted Google Image queries for clean editorial and hardware assets.
+ * Computes target visual image count from audio duration (~1 new image every 4 seconds, clamped [5, 10]).
  */
-export function buildTargetedImageQueries(topicTitle = "", script = {}) {
-  // 1. Author-driven visual queries (Wiggly Rule 13: Operating Agent is the Author)
-  if (Array.isArray(script.visualQueries) && script.visualQueries.length > 0) {
-    const valid = script.visualQueries
-      .map((q) => (typeof q === "string" ? q.trim() : ""))
-      .filter((q) => q.length >= 3);
-    if (valid.length >= 2) {
-      return valid.slice(0, 3);
+export function computeTargetImageCount(durationSeconds = 30) {
+  const sec = Number.isFinite(durationSeconds) && durationSeconds > 0 ? durationSeconds : 30;
+  return Math.max(5, Math.min(10, Math.round(sec / 4)));
+}
+
+/**
+ * Computes a 64-bit 8x8 difference hash (dHash) hex string for perceptual image deduplication.
+ */
+export async function computeImageDHash(imageBuffer) {
+  const { data } = await sharp(imageBuffer)
+    .grayscale()
+    .resize(9, 8, { fit: "fill" })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  let bits = 0n;
+  for (let y = 0; y < 8; y += 1) {
+    const rowOffset = y * 9;
+    for (let x = 0; x < 8; x += 1) {
+      bits = (bits << 1n) | (data[rowOffset + x] > data[rowOffset + x + 1] ? 1n : 0n);
     }
   }
+  return bits.toString(16).padStart(16, "0");
+}
 
-  // 2. Dynamic story-tailored fallback based on real headline/entities
-  const rawTitle = (topicTitle || script.title || "Gaming News").trim();
+/**
+ * Returns the Hamming distance between two 64-bit hex dHash strings.
+ */
+export function dHashHammingDistance(hashA, hashB) {
+  const a = BigInt(`0x${hashA}`);
+  const b = BigInt(`0x${hashB}`);
+  let x = a ^ b;
+  let dist = 0;
+  while (x > 0n) {
+    dist += Number(x & 1n);
+    x >>= 1n;
+  }
+  return dist;
+}
+
+function readWavDurationSeconds(buf) {
+  if (!Buffer.isBuffer(buf) || buf.length < 44) return null;
+  if (buf.toString("ascii", 0, 4) !== "RIFF" || buf.toString("ascii", 8, 12) !== "WAVE") {
+    return null;
+  }
+  let offset = 12;
+  let byteRate = 0;
+  let dataSize = 0;
+  while (offset + 8 <= buf.length) {
+    const chunkId = buf.toString("ascii", offset, offset + 4);
+    const chunkSize = buf.readUInt32LE(offset + 4);
+    const dataStart = offset + 8;
+    if (chunkId === "fmt " && dataStart + 12 <= buf.length) {
+      byteRate = buf.readUInt32LE(dataStart + 8);
+    } else if (chunkId === "data") {
+      dataSize = chunkSize;
+    }
+    offset = dataStart + chunkSize + (chunkSize % 2);
+  }
+  if (byteRate > 0 && dataSize > 0) {
+    return dataSize / byteRate;
+  }
+  return null;
+}
+
+/**
+ * Measures WAV duration directly from header bytes or estimates from dialogue word count on stub audio.
+ */
+export async function measureAudioDurationSeconds(
+  audioPath,
+  { dialogueText = "", targetDurationSeconds = 30 } = {},
+) {
+  try {
+    const buf = await fs.readFile(audioPath);
+    const wavSec = readWavDurationSeconds(buf);
+    if (Number.isFinite(wavSec) && wavSec > 0) {
+      return wavSec;
+    }
+  } catch {}
+  const words = countWords(dialogueText);
+  if (words > 0) {
+    return Math.max(8, words / 2.6);
+  }
+  return Number.isFinite(targetDurationSeconds) && targetDurationSeconds > 0
+    ? targetDurationSeconds
+    : 30;
+}
+
+function buildTopicFallbackQueries(topicTitle = "", scriptTitle = "") {
+  const rawTitle = (topicTitle || scriptTitle || "Gaming News").trim();
   const clean = rawTitle
     .replace(/\b(controversy|reality check|delay secret|news|drama|meltdown|exclusive|leak|rumors|rumor)\b/gi, "")
     .replace(/[^\w\s-]/g, " ")
@@ -475,7 +557,29 @@ export function buildTargetedImageQueries(topicTitle = "", script = {}) {
     `${clean} official announcement press key art 16:9`,
     `${clean} official retail product photo screenshot`,
     `${clean} high resolution editorial feature 4k`,
+    `${clean} gameplay screenshot UI closeup`,
+    `${clean} developer studio showcase presentation`,
+    `${clean} hardware accessories promotional photo`,
+    `${clean} cover art poster key visual`,
+    `${clean} comparison review still frame`,
   ];
+}
+
+/**
+ * Generates subject-targeted Google Image queries for clean editorial and hardware assets.
+ */
+export function buildTargetedImageQueries(topicTitle = "", script = {}, { maxQueries = 8 } = {}) {
+  const valid = Array.isArray(script?.visualQueries)
+    ? script.visualQueries
+        .map((q) => (typeof q === "string" ? q.trim() : ""))
+        .filter((q) => q.length >= 3)
+    : [];
+
+  if (valid.length >= 2) {
+    return valid.slice(0, maxQueries);
+  }
+
+  return buildTopicFallbackQueries(topicTitle, script?.title).slice(0, maxQueries);
 }
 
 /**
@@ -485,7 +589,7 @@ export function filterCandidateImages(candidates = [], { minW = 600, minH = 400 
   if (!Array.isArray(candidates)) return [];
   return candidates
     .filter((item) => {
-      if (!item.imageUrl) return false;
+      if (!item?.imageUrl) return false;
       const url = item.imageUrl.toLowerCase();
       const domain = (item.domain || "").toLowerCase();
       const title = (item.title || "").toLowerCase();
@@ -509,8 +613,7 @@ export function filterCandidateImages(candidates = [], { minW = 600, minH = 400 
       if (title.includes("empty box") || title.includes("box only") || title.includes("back of box")) {
         return false;
       }
-      // Reject 360-spin back-of-box frames and tiny catalog cutouts
-      if (url.includes("360_store_merchant") || url.includes("sierialto") && (!item.width || item.width < 800)) {
+      if (url.includes("360_store_merchant") || (url.includes("sierialto") && (!item.width || item.width < 800))) {
         return false;
       }
       if (item.width && item.width < minW) return false;
@@ -520,115 +623,211 @@ export function filterCandidateImages(candidates = [], { minW = 600, minH = 400 
     .sort((a, b) => ((b.width || 0) * (b.height || 0)) - ((a.width || 0) * (a.height || 0)));
 }
 
+const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
+const DHASH_DUPLICATE_THRESHOLD = 6;
+
+async function downloadAndValidateImage(candidate, { fetchFn = fetch, minW = 600, minH = 400 } = {}) {
+  const res = await fetchFn(candidate.imageUrl, {
+    headers: {
+      "User-Agent": STUDIO_USER_AGENT,
+      Accept: "image/avif,image/webp,image/png,image/jpeg,image/*,*/*;q=0.8",
+    },
+    redirect: "follow",
+    signal: AbortSignal.timeout(7000),
+  });
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+  const contentType = String(res.headers?.get?.("content-type") || "").toLowerCase();
+  if (contentType && (contentType.startsWith("text/") || contentType.includes("json") || contentType.includes("xml"))) {
+    throw new Error(`Unexpected non-image content-type '${contentType}'`);
+  }
+
+  const rawBuf = Buffer.from(await res.arrayBuffer());
+  if (rawBuf.length === 0 || rawBuf.length > MAX_IMAGE_BYTES) {
+    throw new Error(`Invalid image byte size (${rawBuf.length})`);
+  }
+
+  const meta = await sharp(rawBuf).metadata();
+  if (!meta.width || !meta.height || meta.width < minW || meta.height < minH) {
+    throw new Error(`Image too small (${meta.width || 0}x${meta.height || 0} < ${minW}x${minH})`);
+  }
+
+  const rawSha = crypto.createHash("sha256").update(rawBuf).digest("hex");
+  const dhash = await computeImageDHash(rawBuf);
+
+  return {
+    rawBuf,
+    width: meta.width,
+    height: meta.height,
+    rawSha,
+    dhash,
+  };
+}
+
 /**
- * Sources authentic high-res topic imagery for each visual slot via Google Images.
- * Broadens queries dynamically if needed so image search NEVER fails or returns 0 results on real topics.
- * Follows Wiggly Rule 12 (No silent fallbacks on external API failures).
+ * Sources authentic high-res topic imagery (~1 new image every 4s, clamped 5..10):
+ * uses the article's own editorial images first with honest headers, fills the rest via Google Images,
+ * deduplicates via URL + SHA-256 + 8x8 dHash (Hamming <= 6), records provenance in `media-sources.json`,
+ * allows spread non-adjacent repeats when 2 <= unique < target, and skips candidate when < 2 unique images.
  */
-export async function sourceStoryMedia({ topic, script, stageDir, searchFn = searchGoogleImages }) {
-  const queries = buildTargetedImageQueries(topic.title, script);
+export async function sourceStoryMedia({
+  topic,
+  article = null,
+  script = {},
+  stageDir,
+  durationSeconds = null,
+  targetCount = null,
+  searchFn = searchGoogleImages,
+  fetchFn = fetch,
+}) {
+  const desiredCount = Number.isInteger(targetCount) && targetCount > 0
+    ? targetCount
+    : computeTargetImageCount(durationSeconds ?? script?.targetDurationSeconds ?? 30);
+
   const mediaDir = path.join(stageDir, "media");
   await fs.mkdir(mediaDir, { recursive: true });
-  const downloadedList = [];
 
-  const rawTopicTitle = (topic?.title || script.title || "Gaming News").trim();
-  const cleanTopic = rawTopicTitle
-    .replace(/\b(controversy|reality check|delay secret|news|drama|meltdown|exclusive|leak|rumors|rumor)\b/gi, "")
-    .replace(/[^\w\s-]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  const topicFallbacks = [
-    `${cleanTopic} official announcement press key art 16:9`,
-    `${cleanTopic} official retail product photo screenshot`,
-    `${cleanTopic} high resolution editorial feature 4k`,
-  ];
+  const uniqueRecords = [];
+  const seenUrls = new Set();
+  const seenShas = new Set();
+  const seenDhashes = [];
 
-  for (let i = 0; i < queries.length; i++) {
-    const query = queries[i];
-    const relPath = `media/broll-${String(i + 1).padStart(2, "0")}.png`;
-    const outPath = path.join(stageDir, relPath);
-    let saved = false;
+  const tryAcceptCandidate = async (candidate, origin, queryUsed) => {
+    const cleanUrl = String(candidate?.imageUrl || "").trim();
+    if (!cleanUrl || seenUrls.has(cleanUrl)) return false;
+    seenUrls.add(cleanUrl);
 
-    console.log(`  Searching official imagery for slot ${i + 1}: "${query}"...`);
-    let candidates = [];
-    const rawResults = await searchFn(query, { count: 10 });
-    candidates = filterCandidateImages(rawResults);
+    if (filterCandidateImages([candidate], { minW: 600, minH: 400 }).length === 0) {
+      return false;
+    }
 
-    // If a hyper-specific query returned 0 filtered candidates, broaden query
-    if (candidates.length === 0) {
-      const broadened = query
-        .replace(/\b(press|key\s*art|screenshot|gameplay|16:9|editorial|feature|4k|official|announcement|retail|product|photo|rumors?|leaks?)\b/gi, "")
-        .replace(/[^\w\s-]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-      if (broadened && broadened !== query) {
-        console.log(`  Broadening query for slot ${i + 1}: "${broadened}"...`);
-        const broadenedResults = await searchFn(broadened, { count: 10 });
-        candidates = filterCandidateImages(broadenedResults);
+    try {
+      const checked = await downloadAndValidateImage(candidate, { fetchFn });
+      if (seenShas.has(checked.rawSha)) return false;
+      if (seenDhashes.some((prev) => dHashHammingDistance(prev, checked.dhash) <= DHASH_DUPLICATE_THRESHOLD)) {
+        return false;
+      }
+
+      const normalized = await normalizeBrollMedia(checked.rawBuf);
+      const slotIndex = uniqueRecords.length + 1;
+      const relPath = `media/broll-${String(slotIndex).padStart(2, "0")}.png`;
+      await fs.writeFile(path.join(stageDir, relPath), normalized);
+
+      seenShas.add(checked.rawSha);
+      seenDhashes.push(checked.dhash);
+      uniqueRecords.push({
+        file: relPath,
+        origin,
+        sourceUrl: cleanUrl,
+        pageUrl: candidate.pageUrl || candidate.contextUrl || article?.url || null,
+        query: queryUsed || null,
+        width: checked.width,
+        height: checked.height,
+        sha256: checked.rawSha,
+        dhash: checked.dhash,
+        repeats: 0,
+      });
+      console.log(`  Saved ${origin} media [${slotIndex}/${desiredCount}]: ${relPath} (${checked.width}x${checked.height}) [${candidate.domain || "article"}]`);
+      return true;
+    } catch (err) {
+      console.warn(`    Skipped image candidate (${candidate.domain || cleanUrl.slice(0, 60)}): ${err.message}`);
+      return false;
+    }
+  };
+
+  // 1. Prioritize the article's own extracted editorial images first
+  const articleCandidates = Array.isArray(article?.images)
+    ? article.images
+    : Array.isArray(article?.imageCandidates)
+      ? article.imageCandidates
+      : [];
+  for (const item of articleCandidates) {
+    if (uniqueRecords.length >= desiredCount) break;
+    await tryAcceptCandidate(item, "article", null);
+  }
+
+  // 2. Fill remaining slots via Serper Google Images
+  if (uniqueRecords.length < desiredCount) {
+    const primaryQueries = buildTargetedImageQueries(topic?.title, script, { maxQueries: 8 });
+    const queries = [...primaryQueries];
+    for (const fb of buildTopicFallbackQueries(topic?.title, script?.title)) {
+      if (queries.length >= 10) break;
+      if (!queries.some((q) => q.toLowerCase() === fb.toLowerCase())) {
+        queries.push(fb);
       }
     }
+    for (let qIdx = 0; qIdx < queries.length && uniqueRecords.length < desiredCount; qIdx += 1) {
+      const query = queries[qIdx];
+      console.log(`  Searching Google Images (${qIdx + 1}/${queries.length}): "${query}"...`);
+      let results = filterCandidateImages(await searchFn(query, { count: 10 }));
 
-    // If still 0 candidates, try the topic's direct press/editorial query for this slot
-    if (candidates.length === 0 && topicFallbacks[i] && topicFallbacks[i] !== query) {
-      console.log(`  Falling back to topic headline query for slot ${i + 1}: "${topicFallbacks[i]}"...`);
-      const fallbackResults = await searchFn(topicFallbacks[i], { count: 10 });
-      candidates = filterCandidateImages(fallbackResults);
-    }
-
-    if (candidates.length === 0) {
-      throw new CandidateSkipError(
-        `\n================================================================================\n` +
-        `❌ IMAGE SOURCING ERROR: 0 CANDIDATES RETURNED\n` +
-        `================================================================================\n` +
-        `Google Images returned 0 valid candidates for "${query}" (topic: "${topic.title}").\n` +
-        `Per Wiggly Rule 12, the pipeline refused to silently degrade or inject unrelated filler.\n` +
-        `================================================================================\n`,
-        { stage: "media-sourcing" },
-      );
-    }
-
-    // Try downloading candidates until one succeeds
-    const triedDomains = [];
-    for (const item of candidates.slice(0, 8)) {
-      triedDomains.push(item.domain);
-      try {
-        const imgRes = await fetch(item.imageUrl, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Referer": "https://www.google.com/",
-            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-          },
-          signal: AbortSignal.timeout(7000),
-        });
-        if (imgRes.ok) {
-          const imgBuffer = Buffer.from(await imgRes.arrayBuffer());
-          const normalized = await normalizeBrollMedia(imgBuffer);
-          await fs.writeFile(outPath, normalized);
-          downloadedList.push(relPath);
-          saved = true;
-          console.log(`  Saved topic media: ${relPath} (${item.title.slice(0, 50)}) [${item.domain}]`);
-          break;
+      if (results.length === 0) {
+        const broadened = query
+          .replace(/\b(press|key\s*art|screenshot|gameplay|16:9|editorial|feature|4k|official|announcement|retail|product|photo|rumors?|leaks?)\b/gi, "")
+          .replace(/[^\w\s-]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (broadened && broadened !== query) {
+          results = filterCandidateImages(await searchFn(broadened, { count: 10 }));
         }
-      } catch (err) {
-        console.warn(`    Failed to fetch candidate from ${item.domain}: ${err.message}`);
       }
-    }
 
-    if (!saved) {
-      throw new CandidateSkipError(
-        `\n================================================================================\n` +
-        `❌ IMAGE DOWNLOAD ERROR: ALL CANDIDATES FAILED\n` +
-        `================================================================================\n` +
-        `Could not download authentic topic media for slot ${i + 1}: "${query}".\n` +
-        `Tried domains: ${triedDomains.join(", ")}.\n` +
-        `Per Wiggly Rule 12, refusing to inject unrelated placeholder images.\n` +
-        `================================================================================\n`,
-        { stage: "media-sourcing" },
-      );
+      // Cap early queries to 2 picks each so the final sequence covers diverse visual queries
+      const isTailQuery = qIdx >= queries.length - 2;
+      let pickedThisQuery = 0;
+      const queryCap = isTailQuery ? desiredCount : 2;
+      for (const candidate of results.slice(0, 10)) {
+        if (uniqueRecords.length >= desiredCount || pickedThisQuery >= queryCap) break;
+        const accepted = await tryAcceptCandidate(candidate, "serper", query);
+        if (accepted) pickedThisQuery += 1;
+      }
     }
   }
 
-  return downloadedList;
+  if (uniqueRecords.length < 2) {
+    throw new CandidateSkipError(
+      `\n================================================================================\n` +
+      `❌ IMAGE SOURCING ERROR: FEWER THAN 2 UNIQUE USABLE IMAGES (${uniqueRecords.length})\n` +
+      `================================================================================\n` +
+      `Topic "${topic?.title || script?.title || "story"}" yielded only ${uniqueRecords.length} usable >=600x400 image(s).\n` +
+      `Per Phase 3 Q8c / Rule 12, skipping candidate rather than building an empty video.\n` +
+      `================================================================================\n`,
+      { stage: "media-sourcing" },
+    );
+  }
+
+  // Spread repeats modularly so when 2 <= unique < desiredCount no two adjacent slots repeat
+  const finalLength = Math.max(desiredCount, uniqueRecords.length);
+  const sequence = [];
+  const counts = new Map();
+  for (let i = 0; i < finalLength; i += 1) {
+    const rec = uniqueRecords[i % uniqueRecords.length];
+    sequence.push(rec.file);
+    counts.set(rec.file, (counts.get(rec.file) || 0) + 1);
+  }
+  for (const rec of uniqueRecords) {
+    rec.repeats = Math.max(0, (counts.get(rec.file) || 1) - 1);
+  }
+
+  await fs.writeFile(
+    path.join(stageDir, "media-sources.json"),
+    `${JSON.stringify(
+      {
+        schemaVersion: 1,
+        targetCount: desiredCount,
+        uniqueCount: uniqueRecords.length,
+        repeatsAllowed: uniqueRecords.length < desiredCount,
+        durationSeconds: Number((durationSeconds ?? script?.targetDurationSeconds ?? 30).toFixed?.(2) || 30),
+        sequence,
+        items: uniqueRecords,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  return sequence;
 }
 
 function resolveStudioDeps(deps = {}) {
@@ -653,6 +852,9 @@ function resolveStudioDeps(deps = {}) {
     synthesizeShazVoice,
     execute,
     resolveRunDirectory,
+    pruneOldRuns: typeof deps.resolveRunDirectory === "function"
+      ? async () => ({ runsPruned: 0, filesDeleted: 0 })
+      : pruneOldRuns,
     sha256,
     writeJson,
     composeVerticalVideo,
@@ -741,6 +943,7 @@ async function produceGroundedCandidateRun({
           sha256: article.sha256,
           title: article.title,
           text: article.text,
+          imageCandidates: Array.isArray(article.images) ? article.images : [],
         }
       : null;
 
@@ -751,17 +954,23 @@ async function produceGroundedCandidateRun({
     await d.writeJson(path.join(stageDir, "script.json"), script);
     await d.writeJson(path.join(stageDir, "author-receipt.json"), receipt);
 
-    const downloadedMediaList = await d.sourceStoryMedia({
-      topic: story.topic,
-      script,
-      stageDir,
-    });
-
     const audioFile = path.join(stageDir, "user-audio.wav");
     await d.synthesizeShazVoice({
       text: dialogueText,
       outputPath: audioFile,
       provider: "cartesia",
+    });
+
+    const durationSeconds = await measureAudioDurationSeconds(audioFile, {
+      dialogueText,
+      targetDurationSeconds: script.targetDurationSeconds,
+    });
+    const downloadedMediaList = await d.sourceStoryMedia({
+      topic: story.topic,
+      article,
+      script,
+      durationSeconds,
+      stageDir,
     });
 
     const allowedBgs = ["living-room", "map-photo-zone", "sisters-room", "pure-white"];
@@ -811,6 +1020,10 @@ async function produceGroundedCandidateRun({
     }
     await d.writeJson(path.join(runDirectory, "script.json"), script);
     await d.writeJson(path.join(runDirectory, "author-receipt.json"), receipt);
+    const stageMediaSources = path.join(stageDir, "media-sources.json");
+    if (fsSync.existsSync(stageMediaSources)) {
+      await fs.copyFile(stageMediaSources, path.join(runDirectory, "media-sources.json"));
+    }
 
     if (downloadedMediaList.length > 0) {
       const runMediaDir = path.join(runDirectory, "media");
@@ -1423,6 +1636,7 @@ export async function runDailyStudio({
           text: "⏱️ <b>No pick today</b> (8:00 PM Central deadline passed). Nothing was posted.",
         }).catch(() => {});
       }
+      await d.pruneOldRuns({ retentionDays: cfg.retentionDays }).catch(() => {});
       return { status: "no-pick", runDirectory };
     }
 
@@ -1433,6 +1647,7 @@ export async function runDailyStudio({
           text: "🚫 <b>Passed today</b> — nothing will be posted.",
         }).catch(() => {});
       }
+      await d.pruneOldRuns({ retentionDays: cfg.retentionDays }).catch(() => {});
       return { status: "rejected", runDirectory };
     }
 
@@ -1457,6 +1672,7 @@ export async function runDailyStudio({
       console.log(`  ℹ️ Pending channels: ${postResult.pending.map((p) => p.service).join(", ")}`);
     }
     console.log(`  Logged to published-topics.json`);
+    await d.pruneOldRuns({ retentionDays: cfg.retentionDays }).catch(() => {});
 
     console.log("\n================================================================================");
     console.log("🎉 DAILY STUDIO RUN FINISHED SUCCESSFULLY!");
@@ -1694,7 +1910,7 @@ export async function runDailyBatch({
       });
     }
 
-    return await completeBatchDecisionAndPublish({
+    const batchOutcome = await completeBatchDecisionAndPublish({
       decision,
       candidates,
       skips,
@@ -1704,6 +1920,8 @@ export async function runDailyBatch({
       noTelegram,
       d,
     });
+    await d.pruneOldRuns({ retentionDays: cfg.retentionDays }).catch(() => {});
+    return batchOutcome;
   } catch (err) {
     const classified = classifyRunError(err);
     if (classified.canAlert && !noTelegram) {
@@ -1930,6 +2148,8 @@ if (isDirectRun) {
   const isAutoApprove = rawArgs.includes("--auto-approve") || rawArgs.includes("--auto-approve=true");
   const isNoTelegram = rawArgs.includes("--no-telegram");
   const isResumePoll = rawArgs.includes("--resume-poll");
+  const isPruneOnly = rawArgs.includes("--prune-only");
+  const isPruneDryRun = rawArgs.includes("--prune-dry-run");
   const resumePublishArg = rawArgs.find((a) => a.startsWith("--resume-publish="))?.split("=").slice(1).join("=");
   const isSingle = rawArgs.includes("--single");
   const batchArg = rawArgs.find((a) => a.startsWith("--batch="))?.split("=")[1];
@@ -1937,7 +2157,17 @@ if (isDirectRun) {
   const count = Number.isNaN(parsedBatch) ? undefined : parsedBatch;
   const topicArg = rawArgs.find((a) => a.startsWith("--topic="))?.split("=").slice(1).join("=");
 
-  if (resumePublishArg) {
+  if (isPruneOnly || isPruneDryRun) {
+    loadStudioConfig()
+      .then((cfg) => pruneOldRuns({ retentionDays: cfg.retentionDays, dryRun: isPruneDryRun }))
+      .then((summary) => {
+        console.log(JSON.stringify(summary, null, 2));
+      })
+      .catch((err) => {
+        console.error(redactSecrets(`\n❌ Fatal Prune Error: ${err.message}\n`), redactSecrets(err.stack || ""));
+        process.exit(1);
+      });
+  } else if (resumePublishArg) {
     resumePublishForRun({
       runId: resumePublishArg,
       noTelegram: isNoTelegram,
