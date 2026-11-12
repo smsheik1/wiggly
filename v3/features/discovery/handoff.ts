@@ -58,12 +58,16 @@ Note: Do not connect the Wiggly MCP in Turn 1. When the skill says production is
     ? "Download and extract into a new workspace. Follow SKILL.md and root agent instructions. Report published Format version from KIT-MANIFEST.json or format.json."
     : "Open the Format page and follow SKILL.md as the sole source of truth. Report published Format version from KIT-MANIFEST.json or format.json.";
 
+  const byokOnboardingLine = format.slug === "shaz-puppet-runtime"
+    ? "\nBefore the first run, check repo-root secrets.env for CARTESIA_API_KEY (https://play.cartesia.ai/keys, free tier) and TYPESAFE_API_KEY (https://typesafe.ai/dashboard, free tier); if either is missing, walk me step-by-step through creating the free-tier key and saving it to secrets.env (no silent provider fallbacks)."
+    : "";
+
   return `CODING AGENT REQUIRED: If you cannot access this computer's terminal, filesystem, and media files, do not analyze or simulate. Reply only: "Open this in Codex, Claude Code, Antigravity, Cursor, or Copilot CLI."
 
 Let's create this with the latest published Wiggly Format: ${format.name}.
 
 Format page: ${formatUrl}
-${mcpLine}${githubRepoLine}${repositoryLine}${sourceOfTruth}
+${mcpLine}${githubRepoLine}${repositoryLine}${sourceOfTruth}${byokOnboardingLine}
 
 Use the packaged runtime; do not rebuild it. Never use a paid provider without my explicit approval. Continue until the Format's validation and quality checks pass, then return its defined deliverables.`;
 }

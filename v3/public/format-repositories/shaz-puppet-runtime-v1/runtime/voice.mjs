@@ -76,12 +76,18 @@ export async function synthesizeShazVoice({
     throw new Error("synthesizeShazVoice requires an outputPath");
   }
 
-  // Determine provider: explicit provider wins; otherwise kit defaults to Cartesia if configured, else Fish
-  const secretOpts = { env, secretsPath };
-  const cartesiaKey = provider === "fish" ? null : await loadCartesiaApiKey(secretOpts);
-  const fishKey = (provider && provider !== "fish") ? null : await loadFishApiKey(secretOpts);
+  if (provider && provider !== "cartesia" && provider !== "fish") {
+    throw new VoiceSynthesisError(
+      `Unsupported voice provider '${provider}': expected 'cartesia' or 'fish'.`,
+      { provider },
+    );
+  }
 
-  const selectedProvider = provider || (cartesiaKey ? "cartesia" : "fish");
+  // Cartesia is required by default with no silent switch to Fish; Fish runs only when explicitly selected.
+  const secretOpts = { env, secretsPath };
+  const selectedProvider = provider || "cartesia";
+  const cartesiaKey = selectedProvider === "cartesia" ? await loadCartesiaApiKey(secretOpts) : null;
+  const fishKey = selectedProvider === "fish" ? await loadFishApiKey(secretOpts) : null;
   const selectedVoiceId = voiceId || (selectedProvider === "cartesia" ? CARTESIA_SHAZ_VOICE_ID : SHAZ_VOICE_ID);
 
   const fullOutputPath = path.resolve(process.cwd(), outputPath);

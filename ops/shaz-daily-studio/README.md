@@ -15,11 +15,19 @@ cd /Users/shaz/wiggly-studio-main && node ops/shaz-daily-studio/studio-daily.mjs
 Key names read from `secrets.env` (or process environment):
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
+- `TELEGRAM_OPERATOR_USER_ID`
 - `BUFFER_API_KEY` (or `SHAZSKISBUFFER_API_KEY`)
 - `SERPER_API_KEY`
 - `NEWSMCP_API_KEY`
-- `TYPESAFE_API_KEY` (or `JEV_API_KEY`)
-- `CARTESIA_API_KEY` (or `FISH_STUDIO_APIKEY`)
+- `TYPESAFE_API_KEY` (or `JEV_API_KEY`, when `"director": "jev"` in `studio.config.json`)
+- `CARTESIA_API_KEY` (required; zero fallback to Fish in the studio)
+
+## Director Mode & Blind A/B (`studio.config.json`)
+
+- `"director": "jev"` (default) uses Jev per-beat choices restricted to approved poses in `poses/performance-approvals.json`.
+- `"director": "agent"` plans shots with `agent-director.mjs` (`askActiveAgent`) against approved poses and headline spacing rules (`--director=agent`).
+- Blind side-by-side harness (reuses an existing run's audio/transcript/media with zero Cartesia/Serper calls):
+  `node ops/shaz-daily-studio/tools/director-ab.mjs --run=<runId> [--dry-run]`
 
 ## Tests
 

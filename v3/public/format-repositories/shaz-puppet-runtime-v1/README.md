@@ -13,11 +13,11 @@ npm run inspect:registry
 npm run smoke
 ```
 
-These commands check the package, inspect every registered recipe, and make a free local smoke video. After installation, the normal workflow needs no network connection, API key, provider call, or paid service.
+These commands check the package, inspect every registered recipe, and make a free local smoke video with no network connection or API keys. Generating new dialogue (`npm run speak`) requires `CARTESIA_API_KEY` (free tier available) and Jev multi-shot direction requires `TYPESAFE_API_KEY` (free tier available) configured in `secrets.env`.
 
 ## The safe building blocks
 
-Use `neutral-listening` as the calm body behind Talk to Camera. The other six entries below are the artist-reviewed gestures in the current performance set.
+Use `neutral-listening` as the calm body behind Talk to Camera. The other five entries below are the artist-reviewed, approved gestures in `poses/performance-approvals.json`.
 
 | ID | Best use |
 | --- | --- |
@@ -27,9 +27,8 @@ Use `neutral-listening` as the calm body behind Talk to Camera. The other six en
 | `aha` | Realization |
 | `point` | Strong directional emphasis |
 | `confident` | Assured statement or finish |
-| `chin-stroke` | Thoughtful swagger, smug pause, or sly smirk (prop-free) |
 
-`poses/index.json` contains four more recipes. They are registered, so the runtime can load and inspect them, but they are **not cleared for automatic use**. Registered means runnable, not creatively approved. `shrug`, `key-point`, `excited-celebration`, and `point-at-screen` each need a fresh complete visual review before they appear in a user video. (Broken experimental poses `facepalm-frustrated` and `arms-crossed-skeptical` are preserved in `poses/archive/`).
+`poses/index.json` contains five more recipes (`shrug`, `key-point`, `excited-celebration`, `point-at-screen`, and `chin-stroke-swagger`). They are registered, so the runtime can load and inspect them, but they are **not cleared for automatic use**. Registered means runnable, not creatively approved. Each pending pose needs a fresh complete visual review and SHA-bound entry in `poses/performance-approvals.json` before it appears in a user video. (Broken experimental poses `facepalm-frustrated` and `arms-crossed-skeptical` are preserved in `poses/archive/`).
 
 ## Talk to Camera
 
@@ -140,7 +139,7 @@ Jev System One actor intuition is mandatory for autonomous multi-shot timeline d
 
 ### Shaz Voice Cloning & Synthesis (`npm run speak`)
 
-The format package integrates an official Cartesia Sonic-3.6 voice clone for creator Shaz (`28ca280b-6835-45d4-aa27-f432156f8236`), requiring `CARTESIA_API_KEY` in `secrets.env`. If credentials are missing, the runtime halts immediately with clear setup steps.
+The format package uses the official Cartesia Sonic-3.6 voice clone for creator Shaz (`28ca280b-6835-45d4-aa27-f432156f8236`) by default, requiring `CARTESIA_API_KEY` (free tier available at https://play.cartesia.ai/keys) in `secrets.env`. If `CARTESIA_API_KEY` is missing or fails, the runtime halts loudly with setup instructions and never switches silently to Fish Audio (Fish runs only when explicitly selected with `provider: "fish"`).
 
 To synthesize new dialogue on demand:
 ```sh

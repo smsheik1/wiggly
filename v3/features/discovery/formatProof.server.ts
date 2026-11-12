@@ -715,6 +715,7 @@ const formatConfigs: FormatProfileConfig[] = [
       ],
       instructions: [
         "Download the Repo, report the version in KIT-MANIFEST.json, then run npm install, npm test, npm run check, npm run inspect:registry, and npm run smoke",
+        "Before the first voice or Jev-directed run, check repo-root secrets.env for CARTESIA_API_KEY (https://play.cartesia.ai/keys) and TYPESAFE_API_KEY (https://typesafe.ai/dashboard); if either is missing, walk the user step-by-step through adding a free-tier key",
         "If starting without a topic, run npm run scout to monitor the Layer 1 Reddit sieve (GTA 6, Apple, Marvel, AI) and pull community roast comments",
         "Follow research-playbook.md and writer-playbook.md to frame the counterintuitive angle and write a tight 30s script enforcing Therefore/But causality",
         "Lint the script before recording: npm run lint:script -- --script=/path/to/script.json",

@@ -90,3 +90,35 @@ test("synthesizeShazVoice fails loudly when provider is cartesia without key or 
   );
 });
 
+test("synthesizeShazVoice defaults to Cartesia without silent Fish fallback when provider is omitted", async () => {
+  const { VoiceSynthesisError } = await import("../runtime/voice.mjs");
+  const envWithOnlyFish = { FISH_STUDIO_APIKEY: "fish-key-should-not-auto-select" };
+
+  await assert.rejects(
+    async () =>
+      synthesizeShazVoice({
+        text: "Default provider must not silently switch to Fish.",
+        outputPath: "/tmp/voice-default-cartesia-test.wav",
+        env: envWithOnlyFish,
+        secretsPath: null,
+        fetchFn: () => {
+          throw new Error("Should not fetch Fish or Cartesia without CARTESIA_API_KEY");
+        },
+      }),
+    (err) => err instanceof VoiceSynthesisError && err.provider === "cartesia" && /CARTESIA_API_KEY IS MISSING/.test(err.message),
+  );
+
+  // Explicit provider: "fish" still requires FISH_STUDIO_APIKEY directly
+  await assert.rejects(
+    async () =>
+      synthesizeShazVoice({
+        text: "Explicit Fish selection test.",
+        outputPath: "/tmp/voice-explicit-fish-test.wav",
+        provider: "fish",
+        env: {},
+        secretsPath: null,
+      }),
+    (err) => err instanceof VoiceSynthesisError && err.provider === "fish" && /FISH_STUDIO_APIKEY IS MISSING/.test(err.message),
+  );
+});
+

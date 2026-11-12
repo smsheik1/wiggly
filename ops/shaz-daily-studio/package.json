@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --import ../../v3/public/format-repositories/shaz-puppet-runtime-v1/tests/no-network.mjs --test tests/*.test.mjs"
   },
   "dependencies": {
     "@mozilla/readability": "0.6.0",

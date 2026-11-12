@@ -44,8 +44,10 @@ export function ShazPuppetRuntimeConnections({
             title="BYOK Provider Keys"
           >
             Autonomous actor direction requires TYPESAFE_API_KEY (Jev System
-            One), and official voice synthesis requires CARTESIA_API_KEY. Add
-            them to secrets.env with zero silent fallbacks per Wiggly Rule 12.
+            One), and official voice synthesis requires CARTESIA_API_KEY (both
+            offer free tiers at typesafe.ai/dashboard and play.cartesia.ai/keys).
+            Walk through adding them to secrets.env before the first run —
+            zero silent fallbacks per Wiggly Rule 12.
           </Fact>
           <Fact
             icon={<ShieldCheck aria-hidden="true" />}
