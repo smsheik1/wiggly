@@ -116,6 +116,7 @@ test("findTopStories uses NewsMCP only, applies v2 ledger filters, and delegates
 test("runDailyBatch alerts Telegram & stops on 0 fresh stories or AgentUnavailableError, and skips ledger writes during dryRun", async () => {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "studio-batch-guards-"));
   const ledgerPath = path.join(tmpDir, "published-topics.json");
+  const testEnv = { ...process.env, WIGGLY_STUDIO_HOME: tmpDir };
   const telegramMessages = [];
 
   try {
@@ -125,6 +126,7 @@ test("runDailyBatch alerts Telegram & stops on 0 fresh stories or AgentUnavailab
         runDailyBatch({
           count: 3,
           ledgerPath,
+          env: testEnv,
           deps: {
             findTopStories: async () => [],
             sendTelegramMessage: async ({ text }) => {
@@ -144,6 +146,7 @@ test("runDailyBatch alerts Telegram & stops on 0 fresh stories or AgentUnavailab
         runDailyBatch({
           count: 3,
           ledgerPath,
+          env: testEnv,
           deps: {
             findTopStories: async () => {
               throw new AgentUnavailableError("Pinned agent CLI 'agy' is unavailable");
@@ -163,6 +166,7 @@ test("runDailyBatch alerts Telegram & stops on 0 fresh stories or AgentUnavailab
       count: 3,
       dryRun: true,
       ledgerPath,
+      env: testEnv,
       deps: {
         findTopStories: async () => [{ source: "mock", topic: { eventId: "evt_dry", title: "Dry Run Only" } }],
         fetchArticleForTopic: async () => ({

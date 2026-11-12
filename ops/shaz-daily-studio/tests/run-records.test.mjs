@@ -92,6 +92,7 @@ test("runDailyBatch never touches runDirectory before runner.mjs init and persis
     const result = await runDailyBatch({
       count: 1,
       dryRun: true,
+      env: { ...process.env, WIGGLY_STUDIO_HOME: tempRoot },
       deps: {
         findTopStories: async () => [
           {

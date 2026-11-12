@@ -171,6 +171,7 @@ test("runDailyBatch skips failed article/3x-script stories, pulls backup NewsMCP
     const result = await runDailyBatch({
       count: 2,
       dryRun: true,
+      env: { ...process.env, WIGGLY_STUDIO_HOME: tmpDir },
       deps: {
         findTopStories: async () => [
           { source: "newsmcp", topic: { eventId: "e1", title: "Paywalled Story", sources: ["https://paywall.example.com/1"] } },

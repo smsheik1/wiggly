@@ -9,7 +9,19 @@ import { fileURLToPath } from "node:url";
 
 import { AgentUnavailableError, askActiveAgent } from "../../v3/lib/agent-bridge.ts";
 import { ArticleFetchError, fetchArticleForTopic } from "./article-fetch.mjs";
+import {
+  CandidateSkipError,
+  classifyRunError,
+  isJevAccountError,
+  isJevCandidateSkipError,
+  isJsCodeBug,
+  RunStopError,
+  ScriptAuthorError,
+} from "./errors.mjs";
+import { acquireStudioLock, assertFreeDiskSpace } from "./preflight.mjs";
 import { fetchNewsMcpEvents, NewsMcpError, pickDistinctEvents } from "./newsmcp.mjs";
+
+export { CandidateSkipError, RunStopError, ScriptAuthorError };
 import {
   filterFreshTopics,
   getRecentPublishedTitles,
@@ -56,11 +68,21 @@ export async function loadStudioConfig(configPath = DEFAULT_CONFIG_PATH) {
   if (!Number.isInteger(batchSize) || batchSize < 1) {
     throw new Error(`Invalid studio.config.json batchSize '${parsed?.batchSize}': expected integer >= 1.`);
   }
+  const minFreeDiskMb = parsed?.minFreeDiskMb === undefined ? 1500 : Number(parsed.minFreeDiskMb);
+  const retentionDays = parsed?.retentionDays === undefined ? 7 : Number(parsed.retentionDays);
+  if (!Number.isFinite(minFreeDiskMb) || minFreeDiskMb < 0) {
+    throw new Error(`Invalid studio.config.json minFreeDiskMb '${parsed?.minFreeDiskMb}': expected >= 0.`);
+  }
+  if (!Number.isFinite(retentionDays) || retentionDays < 0) {
+    throw new Error(`Invalid studio.config.json retentionDays '${parsed?.retentionDays}': expected >= 0.`);
+  }
   return {
     writerAgent,
     agentTimeoutMs,
     maxScriptAttempts,
     batchSize,
+    minFreeDiskMb,
+    retentionDays,
   };
 }
 
@@ -272,14 +294,6 @@ Rules:
 }
 
 const AUTHOR_RECEIPT_SYMBOL = Symbol("shazAuthorReceipt");
-
-export class ScriptAuthorError extends Error {
-  constructor(message, attempts = [], options) {
-    super(message, options);
-    this.name = "ScriptAuthorError";
-    this.attempts = attempts;
-  }
-}
 
 function buildRetrySuffix({ attempt, maxAttempts, errorMessage, previousPayload }) {
   const payloadPreview = previousPayload
@@ -551,13 +565,14 @@ export async function sourceStoryMedia({ topic, script, stageDir, searchFn = sea
     }
 
     if (candidates.length === 0) {
-      throw new Error(
+      throw new CandidateSkipError(
         `\n================================================================================\n` +
         `❌ IMAGE SOURCING ERROR: 0 CANDIDATES RETURNED\n` +
         `================================================================================\n` +
         `Google Images returned 0 valid candidates for "${query}" (topic: "${topic.title}").\n` +
         `Per Wiggly Rule 12, the pipeline refused to silently degrade or inject unrelated filler.\n` +
-        `================================================================================\n`
+        `================================================================================\n`,
+        { stage: "media-sourcing" },
       );
     }
 
@@ -589,14 +604,15 @@ export async function sourceStoryMedia({ topic, script, stageDir, searchFn = sea
     }
 
     if (!saved) {
-      throw new Error(
+      throw new CandidateSkipError(
         `\n================================================================================\n` +
         `❌ IMAGE DOWNLOAD ERROR: ALL CANDIDATES FAILED\n` +
         `================================================================================\n` +
         `Could not download authentic topic media for slot ${i + 1}: "${query}".\n` +
         `Tried domains: ${triedDomains.join(", ")}.\n` +
         `Per Wiggly Rule 12, refusing to inject unrelated placeholder images.\n` +
-        `================================================================================\n`
+        `================================================================================\n`,
+        { stage: "media-sourcing" },
       );
     }
   }
@@ -607,6 +623,9 @@ export async function sourceStoryMedia({ topic, script, stageDir, searchFn = sea
 function resolveStudioDeps(deps = {}) {
   return {
     loadStudioConfig,
+    acquireStudioLock,
+    assertFreeDiskSpace,
+    statfsFn: undefined,
     findNextStory,
     findTopStories,
     fetchArticleForTopic,
@@ -713,6 +732,7 @@ async function produceGroundedCandidateRun({
     await d.synthesizeShazVoice({
       text: dialogueText,
       outputPath: audioFile,
+      provider: "cartesia",
     });
 
     const allowedBgs = ["living-room", "map-photo-zone", "sisters-room", "pure-white"];
@@ -728,13 +748,31 @@ async function produceGroundedCandidateRun({
     const inputJsonPath = path.join(stageDir, "input.json");
     await d.writeJson(inputJsonPath, multiShotInput);
 
-    d.execute("node", [
-      path.join(root, "runner.mjs"),
-      "init",
-      `--run=${runId}`,
-      `--input=${inputJsonPath}`,
-      `--audio=${audioFile}`,
-    ], { cwd: root });
+    try {
+      d.execute("node", [
+        path.join(root, "runner.mjs"),
+        "init",
+        `--run=${runId}`,
+        `--input=${inputJsonPath}`,
+        `--audio=${audioFile}`,
+      ], { cwd: root });
+    } catch (err) {
+      if (isJevCandidateSkipError(err)) {
+        throw new CandidateSkipError(err.message, { stage: "jev-director", cause: err });
+      }
+      if (isJevAccountError(err)) {
+        throw new RunStopError(err.message, {
+          code: "JEV_API_ERROR",
+          stage: "jev-director",
+          headline: "Jev Director API Failure",
+          cause: err,
+        });
+      }
+      if (!isJsCodeBug(err) && !(err instanceof RunStopError)) {
+        throw new CandidateSkipError(err.message, { stage: "runner-init", cause: err });
+      }
+      throw err;
+    }
 
     // Write traceability records into runDirectory ONLY after `runner.mjs init` creates it
     await fs.mkdir(runDirectory, { recursive: true });
@@ -757,18 +795,25 @@ async function produceGroundedCandidateRun({
       }
     }
 
-    d.execute("node", [path.join(root, "runner.mjs"), "validate", `--run=${runId}`], { cwd: root });
-    d.execute("node", [path.join(root, "runner.mjs"), "render", `--run=${runId}`], { cwd: root });
-
     const rawMasterVideo = path.join(runDirectory, "final.mp4");
     const transcriptPath = path.join(runDirectory, "transcript.json");
     const verticalVideoPath = path.join(runDirectory, "final-vertical.mp4");
-    await d.composeVerticalVideo({
-      sourceVideoPath: rawMasterVideo,
-      transcriptPath,
-      headline: script.headline || formatSafeHeadline(script.title, 36),
-      outputPath: verticalVideoPath,
-    });
+    try {
+      d.execute("node", [path.join(root, "runner.mjs"), "validate", `--run=${runId}`], { cwd: root });
+      d.execute("node", [path.join(root, "runner.mjs"), "render", `--run=${runId}`], { cwd: root });
+
+      await d.composeVerticalVideo({
+        sourceVideoPath: rawMasterVideo,
+        transcriptPath,
+        headline: script.headline || formatSafeHeadline(script.title, 36),
+        outputPath: verticalVideoPath,
+      });
+    } catch (err) {
+      if (!isJsCodeBug(err) && !(err instanceof RunStopError)) {
+        throw new CandidateSkipError(err.message, { stage: "render", cause: err });
+      }
+      throw err;
+    }
 
     return {
       runId,
@@ -922,9 +967,13 @@ export async function runDailyStudio({
   console.log("================================================================================\n");
 
   const runId = `daily-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
+  let lock = null;
 
   try {
     const cfg = await d.loadStudioConfig();
+    lock = await d.acquireStudioLock({ env, mode: "single" });
+    await d.assertFreeDiskSpace({ minFreeDiskMb: cfg.minFreeDiskMb, env, statfsFn: d.statfsFn });
+
     console.log("📡 STEP 1: Scouting Breaking Topics & Content Ledger...");
     const isCustomTopic = Boolean(customTopic);
     let candidatePool;
@@ -938,9 +987,10 @@ export async function runDailyStudio({
     }
 
     if (candidatePool.length === 0) {
-      const msg = "No fresh stories available from NewsMCP today.";
-      await notifyFatalStudioAlert(d.sendTelegramMessage, "No Fresh Stories Today", new Error(msg));
-      throw new Error(msg);
+      throw new RunStopError("No fresh stories available from NewsMCP today.", {
+        code: "NO_FRESH_STORIES",
+        headline: "No Fresh Stories Today",
+      });
     }
 
     let produced = null;
@@ -957,20 +1007,22 @@ export async function runDailyStudio({
         });
         break;
       } catch (err) {
-        if (err instanceof AgentUnavailableError) throw err;
-        if (err instanceof ArticleFetchError || err instanceof ScriptAuthorError) {
-          skips.push({ title: story.topic.title, reason: err.message });
-          console.warn(`  ⏭️ Skipping "${story.topic.title}": ${err.message}`);
+        const classified = classifyRunError(err);
+        if (classified.kind === "skip") {
+          skips.push({ title: story.topic.title, stage: classified.stage, reason: classified.error.message });
+          console.warn(`  ⏭️ Skipping "${story.topic.title}" [${classified.stage}]: ${classified.error.message}`);
           continue;
         }
-        throw err;
+        throw classified.error;
       }
     }
 
     if (!produced) {
-      const msg = `No usable candidate stories succeeded (${skips.length} skipped).`;
-      await notifyFatalStudioAlert(d.sendTelegramMessage, "All Candidates Skipped", new Error(msg));
-      throw new Error(msg);
+      const skipDetail = skips.map((s) => `• ${s.title} (${s.stage}): ${s.reason}`).join("\n");
+      throw new RunStopError(`No usable candidate stories succeeded (${skips.length} skipped).\n${skipDetail}`, {
+        code: "ALL_CANDIDATES_SKIPPED",
+        headline: "All Candidates Skipped",
+      });
     }
 
     const { runDirectory, rawMasterVideo, verticalVideoPath, script, dialogueText, story } = produced;
@@ -1035,14 +1087,13 @@ export async function runDailyStudio({
       verticalVideoPath,
     };
   } catch (err) {
-    if (err instanceof AgentUnavailableError || err instanceof NewsMcpError) {
-      await notifyFatalStudioAlert(
-        d.sendTelegramMessage,
-        err instanceof AgentUnavailableError ? "Agent Unavailable" : "NewsMCP Failure",
-        err,
-      );
+    const classified = classifyRunError(err);
+    if (classified.canAlert) {
+      await notifyFatalStudioAlert(d.sendTelegramMessage, classified.headline, classified.error);
     }
-    throw err;
+    throw classified.error;
+  } finally {
+    await lock?.release().catch(() => {});
   }
 }
 
@@ -1067,9 +1118,12 @@ export async function runDailyBatch({
   deps = {},
 } = {}) {
   const d = resolveStudioDeps(deps);
+  let lock = null;
 
   try {
     const cfg = await d.loadStudioConfig();
+    lock = await d.acquireStudioLock({ env, mode: "batch" });
+    await d.assertFreeDiskSpace({ minFreeDiskMb: cfg.minFreeDiskMb, env, statfsFn: d.statfsFn });
     const targetCount = count ?? cfg.batchSize;
 
     console.log("\n================================================================================");
@@ -1082,9 +1136,10 @@ export async function runDailyBatch({
       : await d.findTopStories({ count: targetCount, ledgerPath, env, config: cfg });
 
     if (candidatePool.length === 0) {
-      const msg = "No fresh stories available from NewsMCP today.";
-      await notifyFatalStudioAlert(d.sendTelegramMessage, "No Fresh Stories Today", new Error(msg));
-      throw new Error(msg);
+      throw new RunStopError("No fresh stories available from NewsMCP today.", {
+        code: "NO_FRESH_STORIES",
+        headline: "No Fresh Stories Today",
+      });
     }
 
     console.log(`Found ${candidatePool.length} ranked candidate stories (target ${targetCount}):`);
@@ -1113,14 +1168,13 @@ export async function runDailyBatch({
           d,
         });
       } catch (err) {
-        if (err instanceof AgentUnavailableError) throw err;
-        if (err instanceof ArticleFetchError || err instanceof ScriptAuthorError) {
-          const stage = err instanceof ArticleFetchError ? "article-fetch" : "script-author";
-          skips.push({ title: story.topic.title, stage, reason: err.message });
-          console.warn(`  ⏭️ Skipping "${story.topic.title}" [${stage}]: ${err.message}`);
+        const classified = classifyRunError(err);
+        if (classified.kind === "skip") {
+          skips.push({ title: story.topic.title, stage: classified.stage, reason: classified.error.message });
+          console.warn(`  ⏭️ Skipping "${story.topic.title}" [${classified.stage}]: ${classified.error.message}`);
           continue;
         }
-        throw err;
+        throw classified.error;
       }
 
       console.log(`  Dispatching Candidate ${candidateNumber} to Telegram...`);
@@ -1147,9 +1201,10 @@ export async function runDailyBatch({
 
     if (candidates.length === 0) {
       const skipDetail = skips.map((s) => `• ${s.title} (${s.stage}): ${s.reason}`).join("\n");
-      const msg = `No usable candidates produced today (${skips.length} skipped):\n${skipDetail}`;
-      await notifyFatalStudioAlert(d.sendTelegramMessage, "All Candidates Skipped", new Error(msg));
-      throw new Error(msg);
+      throw new RunStopError(`No usable candidates produced today (${skips.length} skipped):\n${skipDetail}`, {
+        code: "ALL_CANDIDATES_SKIPPED",
+        headline: "All Candidates Skipped",
+      });
     }
 
     // Send batch summary banner message to Telegram
@@ -1165,7 +1220,7 @@ export async function runDailyBatch({
       await d.sendTelegramMessage({
         text:
           `🌅 *${candidates.length} DAILY ${countLabel} READY FOR REVIEW*\n` +
-          `Writer: \`${cfg.writerAgent}\`\n\n` +
+          `Writer: \`${cfg.writerAgent}\` · Voice: \`cartesia\`\n\n` +
           `Hey Shaz! Above are your ${candidates.length} daily candidate videos for today.\n\n` +
           `Watch each cut above and tap *🚀 Pick & Post* on your favorite. Wiggly will immediately push it live across *Instagram Reels* (@shazskits), *YouTube Shorts* (Shaz), and *TikTok*!` +
           shortfallNote +
@@ -1238,14 +1293,13 @@ export async function runDailyBatch({
     postResult,
   };
   } catch (err) {
-    if (err instanceof AgentUnavailableError || err instanceof NewsMcpError) {
-      await notifyFatalStudioAlert(
-        d.sendTelegramMessage,
-        err instanceof AgentUnavailableError ? "Agent Unavailable" : "NewsMCP Failure",
-        err,
-      );
+    const classified = classifyRunError(err);
+    if (classified.canAlert) {
+      await notifyFatalStudioAlert(d.sendTelegramMessage, classified.headline, classified.error);
     }
-    throw err;
+    throw classified.error;
+  } finally {
+    await lock?.release().catch(() => {});
   }
 }
 

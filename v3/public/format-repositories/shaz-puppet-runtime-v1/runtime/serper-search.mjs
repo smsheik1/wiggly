@@ -1,64 +1,48 @@
-import fs from "node:fs";
-import path from "node:path";
-import process from "node:process";
+import { readSecret } from "./secrets.mjs";
 
 const SERPER_IMAGES_URL = "https://google.serper.dev/images";
 
+export class SerperApiError extends Error {
+  constructor(message, { status = null, isAccountError = false, options } = {}) {
+    super(message, options);
+    this.name = "SerperApiError";
+    this.status = status;
+    this.isAccountError = isAccountError;
+  }
+}
+
 /**
- * Loads the Serper API key from secrets.env or environment variables in memory.
+ * Loads the Serper API key from environment variables or module-anchored secrets.env.
  */
-export function getSerperApiKey() {
-  if (process.env.SERPER_API_KEY?.trim()) {
-    return process.env.SERPER_API_KEY.trim();
-  }
-
-  // Walk up directories to find secrets.env
-  let currentDir = process.cwd();
-  for (let i = 0; i < 7; i += 1) {
-    const candidate = path.join(currentDir, "secrets.env");
-    if (fs.existsSync(candidate)) {
-      try {
-        const lines = fs.readFileSync(candidate, "utf8").split("\n");
-        for (const line of lines) {
-          if (line.startsWith("SERPER_API_KEY=")) {
-            const val = line.split("=")[1]?.trim();
-            if (val) return val;
-          }
-        }
-      } catch {
-        // Ignore read errors
-      }
-    }
-    const parent = path.dirname(currentDir);
-    if (parent === currentDir) break;
-    currentDir = parent;
-  }
-
-  return null;
+export function getSerperApiKey(options = {}) {
+  return readSecret("SERPER_API_KEY", options);
 }
 
 /**
  * Searches Google Images via the Serper API.
  * Returns structured candidate objects with titles, sources, domains, and image URLs.
+ * Throws loudly per Wiggly Rule 12 when SERPER_API_KEY is missing or HTTP fails.
  *
  * @param {string} query - Search query
  * @param {Object} [options]
  * @param {number} [options.count=5] - Number of image candidates to retrieve
  * @param {string} [options.apiKey] - Explicit API key override
+ * @param {Object} [options.env] - Environment override
+ * @param {string|null} [options.secretsPath] - Explicit secrets.env override
  * @param {Function} [options.fetchFn=fetch] - Injected fetch function for testing
- * @returns {Promise<Array<{ index: number, title: string, imageUrl: string, source: string, domain: string, width?: number, height?: number }>|null>}
+ * @returns {Promise<Array<{ index: number, title: string, imageUrl: string, source: string, domain: string, width?: number, height?: number }>>}
  */
-export async function searchGoogleImages(query, { count = 5, apiKey: explicitKey, fetchFn = fetch } = {}) {
+export async function searchGoogleImages(
+  query,
+  { count = 5, apiKey: explicitKey, env, secretsPath, fetchFn = fetch } = {},
+) {
   if (!query || typeof query !== "string" || !query.trim()) {
     throw new Error("searchGoogleImages requires a non-empty query string");
   }
 
-  const key = explicitKey !== undefined ? explicitKey : getSerperApiKey();
-  if (key === null) {
-    return null;
-  }
+  const key = explicitKey !== undefined ? explicitKey : getSerperApiKey({ env, secretsPath });
   if (!key) {
-    throw new Error(
+    throw new SerperApiError(
       `\n================================================================================\n` +
       `❌ SERPER API ERROR: SERPER_API_KEY IS MISSING\n` +
       `================================================================================\n` +
@@ -67,7 +51,8 @@ export async function searchGoogleImages(query, { count = 5, apiKey: explicitKey
       `1. Open https://serper.dev/ and sign in to your dashboard.\n` +
       `2. Copy your API Key.\n` +
       `3. Open 'secrets.env' at repo root and add: SERPER_API_KEY=your_key_here\n` +
-      `================================================================================\n`
+      `================================================================================\n`,
+      { status: null, isAccountError: true },
     );
   }
 
@@ -85,7 +70,7 @@ export async function searchGoogleImages(query, { count = 5, apiKey: explicitKey
 
   if (!response.ok) {
     const errText = await response.text().catch(() => "");
-    throw new Error(
+    throw new SerperApiError(
       `\n================================================================================\n` +
       `❌ SERPER API ERROR (HTTP ${response.status})\n` +
       `================================================================================\n` +
@@ -93,7 +78,11 @@ export async function searchGoogleImages(query, { count = 5, apiKey: explicitKey
       `Baby steps to fix:\n` +
       `1. Visit https://serper.dev/dashboard to check remaining query credits or payment status.\n` +
       `2. Verify that your SERPER_API_KEY in 'secrets.env' is active.\n` +
-      `================================================================================\n`
+      `================================================================================\n`,
+      {
+        status: response.status,
+        isAccountError: [401, 402, 403, 429].includes(response.status),
+      },
     );
   }
 

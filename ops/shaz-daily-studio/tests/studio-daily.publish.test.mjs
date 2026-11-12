@@ -162,7 +162,11 @@ test("runDailyBatch never leaks Telegram bot token, publishes Convex URL to Buff
       bufferPollMaxAttempts: 5,
     };
 
-    const result = await runDailyBatch({ count: 1, deps });
+    const result = await runDailyBatch({
+      count: 1,
+      env: { ...process.env, WIGGLY_STUDIO_HOME: tempRoot },
+      deps,
+    });
 
     assert.equal(result.status, "published");
     assert.equal(bufferPublishCalls.length, 1);
@@ -212,6 +216,7 @@ test("runDailyBatch skips immediate delete and leaves 7-day failsafe when Buffer
     const result = await runDailyBatch({
       count: 1,
       autoApprove: true,
+      env: { ...process.env, WIGGLY_STUDIO_HOME: tempRoot },
       deps: {
         findTopStories: async () => [{ source: "mock", topic: { title: "Timeout Topic" } }],
         fetchArticleForTopic: async () => ({

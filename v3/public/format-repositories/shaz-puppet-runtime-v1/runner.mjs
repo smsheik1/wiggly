@@ -10,6 +10,7 @@ import { generateCherryCues, verifyCherryEngine } from "./runtime/cherry.mjs";
 import { inspectRun } from "./runtime/inspect-run.mjs";
 import { renderSequence } from "./runtime/render-sequence.mjs";
 import { ensureWhisperEngine, generateTranscript, validateTranscriptionAudio } from "./runtime/transcription.mjs";
+import { JevDirectorSkipError } from "./runtime/director-jev.mjs";
 import { deriveMultiShotPlan, deriveMultiShotPlanWithJev } from "./runtime/multi-shot-timeline.mjs";
 import { runScriptLinter } from "./runtime/validate-script.mjs";
 import {
@@ -579,6 +580,10 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error.message);
+  if (error instanceof JevDirectorSkipError) {
+    console.error(`[JEV_CANDIDATE_SKIP] ${error.message}`);
+  } else {
+    console.error(error.message);
+  }
   process.exitCode = 1;
 });

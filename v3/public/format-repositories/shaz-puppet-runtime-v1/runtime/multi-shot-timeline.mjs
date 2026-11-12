@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import { evaluateSentenceDirector, getTypesafeApiKey } from "./director-jev.mjs";
+import { evaluateSentenceDirector, getTypesafeApiKey, JevApiError, JevDirectorSkipError } from "./director-jev.mjs";
 import { deriveChibiRoutine } from "./chibi-choreography.mjs";
 
 const MULTI_SHOT_SCHEMA = "shaz-multi-shot-v1";
@@ -659,7 +659,7 @@ export async function deriveMultiShotPlanWithJev({
 }) {
   const resolvedKey = apiKey !== undefined ? apiKey : getTypesafeApiKey();
   if (!resolvedKey) {
-    throw new Error(
+    throw new JevApiError(
       `\n================================================================================\n` +
       `❌ JEV DIRECTOR FAILURE: TYPESAFE_API_KEY IS MISSING\n` +
       `================================================================================\n` +
@@ -674,7 +674,8 @@ export async function deriveMultiShotPlanWithJev({
       `6. Add or update this exact line:\n` +
       `   TYPESAFE_API_KEY=your_copied_key_here\n` +
       `7. Save the file and re-run your command.\n` +
-      `================================================================================\n`
+      `================================================================================\n`,
+      { status: null, isAccountError: true },
     );
   }
 
@@ -847,7 +848,7 @@ export async function deriveMultiShotPlanWithJev({
             otsCount += 1;
             const shotDuration = endFrame - currentFrame;
             otsGraphic = {
-              badge: effectiveBadge || "KEY POINT",
+              badge: effectiveBadge,
               headline: effectiveHeadline,
               image: otsMedia,
               subtext: beat.text.length > 45 ? beat.text.slice(0, 42) + "..." : beat.text,
@@ -958,24 +959,38 @@ export async function deriveMultiShotPlanWithJev({
       shots,
     };
   } catch (err) {
-    if (err.message && err.message.includes("❌ JEV DIRECTOR FAILURE")) {
+    if (err instanceof JevDirectorSkipError) {
       throw err;
     }
-    throw new Error(
-      `\n================================================================================\n` +
-      `❌ JEV DIRECTOR FAILURE DURING MULTI-SHOT TIMELINE GENERATION\n` +
-      `================================================================================\n` +
-      `Jev failed to choreograph the scene beats:\n${err.message}\n\n` +
-      `Baby steps to fix:\n` +
-      `1. Open your browser and go to: https://typesafe.ai/dashboard\n` +
-      `2. Click 'Billing' at https://typesafe.ai/billing to check your balance or add credits.\n` +
-      `3. Go to https://typesafe.ai/keys, click 'Create New Secret Key', and copy the key string.\n` +
-      `4. Open 'secrets.env' at your repo root in your code editor.\n` +
-      `5. Add or update: TYPESAFE_API_KEY=your_copied_key_here\n` +
-      `6. Check https://status.typesafe.ai to verify services are operational.\n` +
-      `7. Save 'secrets.env' and re-run your command.\n` +
-      `================================================================================\n`
-    );
+    if (err instanceof JevApiError) {
+      if (err.message && err.message.includes("❌ JEV DIRECTOR")) {
+        throw err;
+      }
+      throw new JevApiError(
+        `\n================================================================================\n` +
+        `❌ JEV DIRECTOR FAILURE DURING MULTI-SHOT TIMELINE GENERATION\n` +
+        `================================================================================\n` +
+        `Jev failed to choreograph the scene beats:\n${err.message}\n\n` +
+        `Baby steps to fix:\n` +
+        `1. Open your browser and go to: https://typesafe.ai/dashboard\n` +
+        `2. Click 'Billing' at https://typesafe.ai/billing to check your balance or add credits.\n` +
+        `3. Go to https://typesafe.ai/keys, click 'Create New Secret Key', and copy the key string.\n` +
+        `4. Open 'secrets.env' at your repo root in your code editor.\n` +
+        `5. Add or update: TYPESAFE_API_KEY=your_copied_key_here\n` +
+        `6. Check https://status.typesafe.ai to verify services are operational.\n` +
+        `7. Save 'secrets.env' and re-run your command.\n` +
+        `================================================================================\n`,
+        {
+          status: err.status,
+          isAccountError: err.isAccountError,
+          isRetryable5xx: err.isRetryable5xx,
+          isNetworkError: err.isNetworkError,
+          cause: err,
+        },
+      );
+    }
+    // Rethrow internal code bugs (TypeError, ReferenceError, logic bugs) unchanged rather than blaming TypeSafe billing.
+    throw err;
   }
 }
 

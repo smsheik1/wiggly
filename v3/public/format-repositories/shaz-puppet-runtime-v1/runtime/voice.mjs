@@ -3,9 +3,19 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { readSecret } from "./secrets.mjs";
 
 const execFileAsync = promisify(execFile);
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+export class VoiceSynthesisError extends Error {
+  constructor(message, { provider = null, status = null, isMissingKey = false, cause } = {}) {
+    super(message, { cause });
+    this.name = "VoiceSynthesisError";
+    this.provider = provider;
+    this.status = status;
+    this.isMissingKey = isMissingKey;
+  }
+}
 
 // Official cloned voice model for creator Shaz (trained on 30s studio audio with ground-truth transcript)
 export const SHAZ_VOICE_ID = "947a3b8d8a2c431a8a2934008d89d5b3";
@@ -18,57 +28,17 @@ export const CARTESIA_TTS_URL = "https://api.cartesia.ai/tts/bytes";
 export const CARTESIA_MODEL = "sonic-3.6";
 
 /**
- * Loads CARTESIA_API_KEY from process.env or secrets.env in memory.
+ * Loads CARTESIA_API_KEY from env or module-anchored secrets.env in memory.
  */
-export async function loadCartesiaApiKey() {
-  if (process.env.CARTESIA_API_KEY?.trim()) {
-    return process.env.CARTESIA_API_KEY.trim();
-  }
-
-  const candidatePaths = [
-    path.join(root, "secrets.env"),
-    path.join(root, "../secrets.env"),
-    path.join(root, "../../secrets.env"),
-    path.join(root, "../../../secrets.env"),
-    path.join(root, "../../../../secrets.env"),
-  ];
-
-  for (const candidate of candidatePaths) {
-    try {
-      const content = await fs.readFile(candidate, "utf8");
-      const match = content.match(/CARTESIA_API_KEY=([^\r\n]+)/);
-      if (match && match[1].trim()) return match[1].trim();
-    } catch {}
-  }
-
-  return null;
+export async function loadCartesiaApiKey(options = {}) {
+  return readSecret("CARTESIA_API_KEY", options);
 }
 
 /**
- * Loads FISH_STUDIO_APIKEY from process.env or secrets.env in memory.
+ * Loads FISH_STUDIO_APIKEY from env or module-anchored secrets.env in memory.
  */
-export async function loadFishApiKey() {
-  if (process.env.FISH_STUDIO_APIKEY?.trim()) {
-    return process.env.FISH_STUDIO_APIKEY.trim();
-  }
-
-  const candidatePaths = [
-    path.join(root, "secrets.env"),
-    path.join(root, "../secrets.env"),
-    path.join(root, "../../secrets.env"),
-    path.join(root, "../../../secrets.env"),
-    path.join(root, "../../../../secrets.env"),
-  ];
-
-  for (const candidate of candidatePaths) {
-    try {
-      const content = await fs.readFile(candidate, "utf8");
-      const match = content.match(/FISH_STUDIO_APIKEY=([^\r\n]+)/);
-      if (match && match[1].trim()) return match[1].trim();
-    } catch {}
-  }
-
-  return null;
+export async function loadFishApiKey(options = {}) {
+  return readSecret("FISH_STUDIO_APIKEY", options);
 }
 
 /**
@@ -83,6 +53,9 @@ export async function loadFishApiKey() {
  * @param {string} [options.voiceId] - Voice clone reference ID
  * @param {number} [options.speed=1.0] - Speaking rate multiplier
  * @param {string} [options.apiKey] - Optional explicit API key
+ * @param {Object} [options.env] - Environment override
+ * @param {string|null} [options.secretsPath] - Explicit secrets.env path override
+ * @param {Function} [options.fetchFn=fetch] - Injected fetch for testing
  * @returns {Promise<{ outputPath: string, durationSeconds: number, voiceId: string, provider: string }>}
  */
 export async function synthesizeShazVoice({
@@ -92,6 +65,9 @@ export async function synthesizeShazVoice({
   voiceId,
   speed = 1.0,
   apiKey: explicitApiKey,
+  env,
+  secretsPath,
+  fetchFn = fetch,
 }) {
   if (!text || typeof text !== "string" || text.trim().length === 0) {
     throw new Error("synthesizeShazVoice requires non-empty text");
@@ -100,9 +76,10 @@ export async function synthesizeShazVoice({
     throw new Error("synthesizeShazVoice requires an outputPath");
   }
 
-  // Determine provider: Cartesia is preferred if configured or explicitly requested
-  const cartesiaKey = await loadCartesiaApiKey();
-  const fishKey = await loadFishApiKey();
+  // Determine provider: explicit provider wins; otherwise kit defaults to Cartesia if configured, else Fish
+  const secretOpts = { env, secretsPath };
+  const cartesiaKey = provider === "fish" ? null : await loadCartesiaApiKey(secretOpts);
+  const fishKey = (provider && provider !== "fish") ? null : await loadFishApiKey(secretOpts);
 
   const selectedProvider = provider || (cartesiaKey ? "cartesia" : "fish");
   const selectedVoiceId = voiceId || (selectedProvider === "cartesia" ? CARTESIA_SHAZ_VOICE_ID : SHAZ_VOICE_ID);
@@ -118,9 +95,9 @@ export async function synthesizeShazVoice({
   let rawBuffer;
 
   if (selectedProvider === "cartesia") {
-    const apiKey = explicitApiKey || cartesiaKey;
+    const apiKey = explicitApiKey !== undefined ? explicitApiKey : cartesiaKey;
     if (!apiKey) {
-      throw new Error(
+      throw new VoiceSynthesisError(
         `\n================================================================================\n` +
         `❌ VOICE SYNTHESIS FAILURE: CARTESIA_API_KEY IS MISSING\n` +
         `================================================================================\n` +
@@ -134,35 +111,44 @@ export async function synthesizeShazVoice({
         `6. Add or update this exact line:\n` +
         `   CARTESIA_API_KEY=your_copied_key_here\n` +
         `7. Save the file and re-run your command.\n` +
-        `================================================================================\n`
+        `================================================================================\n`,
+        { provider: "cartesia", status: null, isMissingKey: true },
       );
     }
 
-    const res = await fetch(CARTESIA_TTS_URL, {
-      method: "POST",
-      headers: {
-        "X-API-Key": apiKey,
-        "Cartesia-Version": "2024-06-10",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model_id: CARTESIA_MODEL,
-        transcript: text.trim(),
-        voice: {
-          mode: "id",
-          id: selectedVoiceId,
+    let res;
+    try {
+      res = await fetchFn(CARTESIA_TTS_URL, {
+        method: "POST",
+        headers: {
+          "X-API-Key": apiKey,
+          "Cartesia-Version": "2024-06-10",
+          "Content-Type": "application/json",
         },
-        output_format: {
-          container: "wav",
-          encoding: "pcm_s16le",
-          sample_rate: 44100,
-        },
-      }),
-    });
+        body: JSON.stringify({
+          model_id: CARTESIA_MODEL,
+          transcript: text.trim(),
+          voice: {
+            mode: "id",
+            id: selectedVoiceId,
+          },
+          output_format: {
+            container: "wav",
+            encoding: "pcm_s16le",
+            sample_rate: 44100,
+          },
+        }),
+      });
+    } catch (err) {
+      throw new VoiceSynthesisError(
+        `Cartesia voice synthesis request failed: ${err.message}`,
+        { provider: "cartesia", cause: err },
+      );
+    }
 
     if (!res.ok) {
       const errorBody = await res.text().catch(() => "");
-      throw new Error(
+      throw new VoiceSynthesisError(
         `\n================================================================================\n` +
         `❌ CARTESIA VOICE SYNTHESIS API ERROR (HTTP ${res.status})\n` +
         `================================================================================\n` +
@@ -174,15 +160,16 @@ export async function synthesizeShazVoice({
         `4. Open 'secrets.env' at your repo root and update CARTESIA_API_KEY with your verified key.\n` +
         `5. Check https://status.cartesia.ai to verify Cartesia voice systems are operational.\n` +
         `6. Save 'secrets.env' and re-run your command.\n` +
-        `================================================================================\n`
+        `================================================================================\n`,
+        { provider: "cartesia", status: res.status },
       );
     }
 
     rawBuffer = Buffer.from(await res.arrayBuffer());
   } else {
-    const apiKey = explicitApiKey || fishKey;
+    const apiKey = explicitApiKey !== undefined ? explicitApiKey : fishKey;
     if (!apiKey) {
-      throw new Error(
+      throw new VoiceSynthesisError(
         `\n================================================================================\n` +
         `❌ VOICE SYNTHESIS FAILURE: FISH_STUDIO_APIKEY IS MISSING\n` +
         `================================================================================\n` +
@@ -196,29 +183,38 @@ export async function synthesizeShazVoice({
         `6. Add or update this exact line:\n` +
         `   FISH_STUDIO_APIKEY=your_copied_key_here\n` +
         `7. Save the file and re-run your command.\n` +
-        `================================================================================\n`
+        `================================================================================\n`,
+        { provider: "fish", status: null, isMissingKey: true },
       );
     }
 
-    const res = await fetch(FISH_TTS_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        model: FISH_MODEL,
-      },
-      body: JSON.stringify({
-        text: text.trim(),
-        reference_id: selectedVoiceId,
-        format: "wav",
-        normalize: true,
-        prosody: { speed, volume: 0 },
-      }),
-    });
+    let res;
+    try {
+      res = await fetchFn(FISH_TTS_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          model: FISH_MODEL,
+        },
+        body: JSON.stringify({
+          text: text.trim(),
+          reference_id: selectedVoiceId,
+          format: "wav",
+          normalize: true,
+          prosody: { speed, volume: 0 },
+        }),
+      });
+    } catch (err) {
+      throw new VoiceSynthesisError(
+        `Fish Audio synthesis request failed: ${err.message}`,
+        { provider: "fish", cause: err },
+      );
+    }
 
     if (!res.ok) {
       const errorBody = await res.text().catch(() => "");
-      throw new Error(
+      throw new VoiceSynthesisError(
         `\n================================================================================\n` +
         `❌ FISH AUDIO SYNTHESIS API ERROR (HTTP ${res.status})\n` +
         `================================================================================\n` +
@@ -228,7 +224,8 @@ export async function synthesizeShazVoice({
         `2. Click 'Add Credits' or top up your account balance.\n` +
         `3. Verify your key under 'API Keys', then update FISH_STUDIO_APIKEY in 'secrets.env'.\n` +
         `4. Save 'secrets.env' and re-run your command.\n` +
-        `================================================================================\n`
+        `================================================================================\n`,
+        { provider: "fish", status: res.status },
       );
     }
 
@@ -236,7 +233,10 @@ export async function synthesizeShazVoice({
   }
 
   if (rawBuffer.length < 64) {
-    throw new Error(`${selectedProvider} returned an empty or invalid audio payload`);
+    throw new VoiceSynthesisError(
+      `${selectedProvider} returned an empty or invalid audio payload`,
+      { provider: selectedProvider },
+    );
   }
 
   await fs.writeFile(rawWavPath, rawBuffer);

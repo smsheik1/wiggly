@@ -2,5 +2,7 @@
   "writerAgent": "agy",
   "agentTimeoutMs": 600000,
   "maxScriptAttempts": 3,
-  "batchSize": 3
+  "batchSize": 3,
+  "minFreeDiskMb": 1500,
+  "retentionDays": 7
 }

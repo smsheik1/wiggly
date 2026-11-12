@@ -1,54 +1,76 @@
-import fs from "node:fs";
-import path from "node:path";
-import process from "node:process";
-import { normalizeChibiHold } from "./chibi-choreography.mjs";
+import { CHIBI_HOLDS, CHIBI_POSE_ALIASES, normalizeChibiHold } from "./chibi-choreography.mjs";
+import { readSecret } from "./secrets.mjs";
 
 const TYPESAFE_ENDPOINT = "https://api.typesafe.ai/v1/systemone";
 const JEV_MODEL = "jev-latest";
 
+export const ALLOWED_SHOT_TYPES = ["talk-to-camera", "b-roll", "chibi-commentary", "text-card"];
+export const ALLOWED_CAMERA_MOTIONS = ["zoom-in", "zoom-out", "pan-left", "pan-right", "pan-up", "pan-down"];
+export const ALLOWED_SHAZ_PUPPET_POSES = [
+  "neutral-listening",
+  "chin-stroke",
+  "chin-stroke-swagger",
+  "excited-celebration",
+  "point-at-screen",
+  "confident",
+  "shrug",
+  "think",
+  "point",
+  "aha",
+  "present",
+];
+export const ALLOWED_BADGE_CATEGORIES = [
+  "BREAKING",
+  "THE CLASH",
+  "REALITY CHECK",
+  "COMMUNITY ROAST",
+  "YOUR VERDICT",
+];
+export const ALLOWED_SCRIPT_GRADES = ["pass", "reject-corporate", "reject-cliche"];
+
+export class JevApiError extends Error {
+  constructor(message, { status = null, isAccountError = false, isRetryable5xx = false, isNetworkError = false, cause } = {}) {
+    super(message, { cause });
+    this.name = "JevApiError";
+    this.status = status;
+    this.isAccountError = isAccountError;
+    this.isRetryable5xx = isRetryable5xx;
+    this.isNetworkError = isNetworkError;
+  }
+}
+
+export class JevDirectorSkipError extends Error {
+  constructor(message, { lineNumber = null, field = null, sentence = "", cause } = {}) {
+    super(message, { cause });
+    this.name = "JevDirectorSkipError";
+    this.code = "JEV_CANDIDATE_SKIP";
+    this.lineNumber = lineNumber;
+    this.field = field;
+    this.sentence = sentence;
+  }
+}
+
+function isValidChibiPoseChoice(choice) {
+  return typeof choice === "string" && (
+    Object.prototype.hasOwnProperty.call(CHIBI_HOLDS, choice) ||
+    Object.prototype.hasOwnProperty.call(CHIBI_POSE_ALIASES, choice)
+  );
+}
+
 /**
- * Loads the TypeSafe API key from secrets.env or environment variables.
+ * Loads the TypeSafe API key from env or module-anchored secrets.env.
  */
-export function getTypesafeApiKey() {
-  if (process.env.TYPESAFE_API_KEY) {
-    return process.env.TYPESAFE_API_KEY.trim();
-  }
-  if (process.env.JEV_API_KEY) {
-    return process.env.JEV_API_KEY.trim();
-  }
-
-  // Walk up directories to find secrets.env
-  let currentDir = process.cwd();
-  for (let i = 0; i < 7; i += 1) {
-    const candidate = path.join(currentDir, "secrets.env");
-    if (fs.existsSync(candidate)) {
-      try {
-        const lines = fs.readFileSync(candidate, "utf8").split("\n");
-        for (const line of lines) {
-          if (line.startsWith("TYPESAFE_API_KEY=") || line.startsWith("JEV_API_KEY=")) {
-            const val = line.split("=")[1]?.trim();
-            if (val) return val;
-          }
-        }
-      } catch {
-        // Ignore read errors
-      }
-    }
-    const parent = path.dirname(currentDir);
-    if (parent === currentDir) break;
-    currentDir = parent;
-  }
-
-  return null;
+export function getTypesafeApiKey(options = {}) {
+  return readSecret("TYPESAFE_API_KEY", options) || readSecret("JEV_API_KEY", options);
 }
 
 /**
  * Calls Jev System One API with typed questions.
  */
-export async function callJevSystemOne({ state, questions, apiKey: explicitKey, fetchFn = fetch }) {
-  const key = explicitKey !== undefined ? explicitKey : getTypesafeApiKey();
+export async function callJevSystemOne({ state, questions, apiKey: explicitKey, env, secretsPath, fetchFn = fetch }) {
+  const key = explicitKey !== undefined ? explicitKey : getTypesafeApiKey({ env, secretsPath });
   if (!key) {
-    throw new Error(
+    throw new JevApiError(
       `\n================================================================================\n` +
       `❌ JEV DIRECTOR FAILURE: TYPESAFE_API_KEY IS MISSING\n` +
       `================================================================================\n` +
@@ -62,26 +84,35 @@ export async function callJevSystemOne({ state, questions, apiKey: explicitKey, 
       `6. Add or update this exact line:\n` +
       `   TYPESAFE_API_KEY=your_copied_key_here\n` +
       `7. Save the file and re-run your command.\n` +
-      `================================================================================\n`
+      `================================================================================\n`,
+      { status: null, isAccountError: true },
     );
   }
 
-  const response = await fetchFn(TYPESAFE_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: JEV_MODEL,
-      state,
-      questions,
-    }),
-  });
+  let response;
+  try {
+    response = await fetchFn(TYPESAFE_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: JEV_MODEL,
+        state,
+        questions,
+      }),
+    });
+  } catch (err) {
+    throw new JevApiError(
+      `Jev System One network request failed: ${err.message}`,
+      { isNetworkError: true, cause: err },
+    );
+  }
 
   if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(
+    const errText = await response.text().catch(() => "");
+    throw new JevApiError(
       `\n================================================================================\n` +
       `❌ JEV DIRECTOR API ERROR (HTTP ${response.status})\n` +
       `================================================================================\n` +
@@ -93,18 +124,78 @@ export async function callJevSystemOne({ state, questions, apiKey: explicitKey, 
       `4. Open 'secrets.env' at your repo root and update TYPESAFE_API_KEY with your verified key.\n` +
       `5. Check https://status.typesafe.ai to verify TypeSafe API services are operational.\n` +
       `6. Save 'secrets.env' and re-run your command.\n` +
-      `================================================================================\n`
+      `================================================================================\n`,
+      {
+        status: response.status,
+        isAccountError: [401, 402, 403, 429].includes(response.status),
+        isRetryable5xx: response.status >= 500 && response.status < 600,
+      },
     );
   }
 
   return response.json();
 }
 
+function validateSentenceAnswers(answers, lineNumber, sentence) {
+  if (!answers || typeof answers !== "object") {
+    return { ok: false, field: "answers", error: `Jev gave no valid answers for line ${lineNumber}: ${sentence}` };
+  }
+
+  const shotType = answers.shot_type?.choice;
+  if (!ALLOWED_SHOT_TYPES.includes(shotType)) {
+    return { ok: false, field: "shot_type", error: `Jev gave no valid shot_type for line ${lineNumber}: ${sentence}` };
+  }
+
+  const shazPose = answers.shaz_puppet_pose?.choice;
+  if (!ALLOWED_SHAZ_PUPPET_POSES.includes(shazPose)) {
+    return { ok: false, field: "shaz_puppet_pose", error: `Jev gave no valid shaz_puppet_pose for line ${lineNumber}: ${sentence}` };
+  }
+
+  const rawChibiPose = answers.chibi_pose?.choice;
+  if (!isValidChibiPoseChoice(rawChibiPose)) {
+    return { ok: false, field: "chibi_pose", error: `Jev gave no valid chibi_pose for line ${lineNumber}: ${sentence}` };
+  }
+
+  const cameraMotion = answers.camera_motion?.choice;
+  if (!ALLOWED_CAMERA_MOTIONS.includes(cameraMotion)) {
+    return { ok: false, field: "camera_motion", error: `Jev gave no valid camera_motion for line ${lineNumber}: ${sentence}` };
+  }
+
+  const badge = answers.badge_category?.choice;
+  if (!ALLOWED_BADGE_CATEGORIES.includes(badge)) {
+    return { ok: false, field: "badge_category", error: `Jev gave no valid badge_category for line ${lineNumber}: ${sentence}` };
+  }
+
+  const punchlineProbability = answers.is_punchline?.probability ?? answers.is_punchline?.noul;
+  if (typeof punchlineProbability !== "number" || !Number.isFinite(punchlineProbability) || punchlineProbability < 0 || punchlineProbability > 1) {
+    return { ok: false, field: "is_punchline", error: `Jev gave no valid is_punchline for line ${lineNumber}: ${sentence}` };
+  }
+
+  return {
+    ok: true,
+    value: {
+      shotType,
+      shotTypeConfidence: answers.shot_type?.confidence ?? 0,
+      shazPose,
+      shazConfidence: answers.shaz_puppet_pose?.confidence ?? 0,
+      chibiPose: normalizeChibiHold(rawChibiPose),
+      chibiConfidence: answers.chibi_pose?.confidence ?? 0,
+      cameraMotion,
+      cameraConfidence: answers.camera_motion?.confidence ?? 0,
+      badge,
+      badgeConfidence: answers.badge_category?.confidence ?? 0,
+      isPunchline: punchlineProbability > 0.6,
+      punchlineProbability,
+      provenance: "jev-systemone",
+    },
+  };
+}
+
 /**
  * Directs a single spoken commentary sentence using Jev.
- * Returns { chibiPose, cameraMotion, badge, isPunchline } or null if Jev is unavailable.
+ * Retries once on missing/invalid choices or line-level 5xx, then throws `JevDirectorSkipError` (zero silent defaults).
  */
-export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn, beatContext } = {}) {
+export async function evaluateSentenceDirector(sentence, { apiKey, env, secretsPath, fetchFn, beatContext } = {}) {
   const questions = {
     chibi_pose: {
       type: "choice",
@@ -172,6 +263,7 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn, beat
     },
   };
 
+  const lineNumber = Number.isInteger(beatContext?.beatIndex) ? beatContext.beatIndex + 1 : 1;
   const state = beatContext
     ? {
         sentence,
@@ -181,39 +273,38 @@ export async function evaluateSentenceDirector(sentence, { apiKey, fetchFn, beat
       }
     : sentence;
 
-  const result = await callJevSystemOne({ state, questions, apiKey, fetchFn });
-  if (!result || !result.answers) return null;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    let result;
+    try {
+      result = await callJevSystemOne({ state, questions, apiKey, env, secretsPath, fetchFn });
+    } catch (err) {
+      if (err instanceof JevApiError) {
+        if (err.isAccountError) throw err;
+        if (err.isRetryable5xx || err.isNetworkError) {
+          if (attempt === 1) continue;
+          throw new JevDirectorSkipError(
+            `Jev gave no valid api response for line ${lineNumber} (${err.status ? `HTTP ${err.status}` : "network error"}): ${sentence}`,
+            { lineNumber, field: "api", sentence, cause: err },
+          );
+        }
+      }
+      throw err;
+    }
 
-  const answers = result.answers;
-  const allowedMotions = ["zoom-in", "zoom-out", "pan-left", "pan-right", "pan-up", "pan-down"];
-  const chosenMotion = answers.camera_motion?.choice;
-  const cameraMotion = allowedMotions.includes(chosenMotion) ? chosenMotion : "zoom-in";
-
-  const allowedShotTypes = ["talk-to-camera", "b-roll", "chibi-commentary", "text-card"];
-  const chosenShotType = answers.shot_type?.choice;
-  const shotType = allowedShotTypes.includes(chosenShotType) ? chosenShotType : "talk-to-camera";
-
-  return {
-    shotType,
-    shotTypeConfidence: answers.shot_type?.confidence ?? 0,
-    shazPose: answers.shaz_puppet_pose?.choice || "neutral-listening",
-    shazConfidence: answers.shaz_puppet_pose?.confidence || 0,
-    chibiPose: normalizeChibiHold(answers.chibi_pose?.choice),
-    chibiConfidence: answers.chibi_pose?.confidence || 0,
-    cameraMotion,
-    cameraConfidence: answers.camera_motion?.confidence || 0,
-    badge: answers.badge_category?.choice || "KEY POINT",
-    badgeConfidence: answers.badge_category?.confidence || 0,
-    isPunchline: (answers.is_punchline?.probability ?? answers.is_punchline?.noul ?? 0) > 0.6,
-    punchlineProbability: answers.is_punchline?.probability ?? answers.is_punchline?.noul ?? 0,
-    provenance: "jev-systemone",
-  };
+    const check = validateSentenceAnswers(result?.answers, lineNumber, sentence);
+    if (check.ok) {
+      return check.value;
+    }
+    if (attempt === 2) {
+      throw new JevDirectorSkipError(check.error, { lineNumber, field: check.field, sentence });
+    }
+  }
 }
 
 /**
  * Lints a commentary script for corporate PR buzzwords and AI tells using Jev.
  */
-export async function lintScriptWithJev(scriptText, { apiKey, fetchFn } = {}) {
+export async function lintScriptWithJev(scriptText, { apiKey, env, secretsPath, fetchFn } = {}) {
   const questions = {
     is_corporate_pr_speak: {
       type: "noul",
@@ -234,17 +325,34 @@ export async function lintScriptWithJev(scriptText, { apiKey, fetchFn } = {}) {
     },
   };
 
-  const result = await callJevSystemOne({ state: scriptText, questions, apiKey, fetchFn });
-  if (!result || !result.answers) return null;
+  const result = await callJevSystemOne({ state: scriptText, questions, apiKey, env, secretsPath, fetchFn });
+  const answers = result?.answers;
+  if (!answers || typeof answers !== "object") {
+    throw new JevApiError("Jev script linter returned empty or invalid answers payload.");
+  }
 
-  const answers = result.answers;
+  const grade = answers.script_grade?.choice;
+  if (!ALLOWED_SCRIPT_GRADES.includes(grade)) {
+    throw new JevApiError(`Jev script linter returned invalid or missing script_grade: ${String(grade)}`);
+  }
+
+  const corpProb = answers.is_corporate_pr_speak?.probability ?? answers.is_corporate_pr_speak?.noul;
+  if (typeof corpProb !== "number" || !Number.isFinite(corpProb) || corpProb < 0 || corpProb > 1) {
+    throw new JevApiError("Jev script linter returned invalid is_corporate_pr_speak score.");
+  }
+
+  const authProb = answers.has_authentic_voice?.probability ?? answers.has_authentic_voice?.noul;
+  if (typeof authProb !== "number" || !Number.isFinite(authProb) || authProb < 0 || authProb > 1) {
+    throw new JevApiError("Jev script linter returned invalid has_authentic_voice score.");
+  }
+
   return {
-    grade: answers.script_grade?.choice || "pass",
-    confidence: answers.script_grade?.confidence || 0,
-    isCorporate: (answers.is_corporate_pr_speak?.noul ?? 0) >= 0.4,
-    corporateProbability: answers.is_corporate_pr_speak?.noul ?? 0,
-    hasAuthenticVoice: (answers.has_authentic_voice?.noul ?? 0) >= 0.5,
-    authenticProbability: answers.has_authentic_voice?.noul ?? 0,
+    grade,
+    confidence: answers.script_grade?.confidence ?? 0,
+    isCorporate: corpProb >= 0.4,
+    corporateProbability: corpProb,
+    hasAuthenticVoice: authProb >= 0.5,
+    authenticProbability: authProb,
     provenance: "jev-systemone",
   };
 }
@@ -352,13 +460,22 @@ export async function curateImageCandidatesWithJev({ sentence, candidates, apiKe
 
   const answers = result.answers;
   const choiceKey = answers.best_image?.choice;
-  const matchIndex = choiceKey ? Number(choiceKey.replace("candidate_", "")) : 0;
-  const selectedIndex = (!isNaN(matchIndex) && matchIndex >= 0 && matchIndex < candidates.length) ? matchIndex : 0;
+  const match = typeof choiceKey === "string" ? choiceKey.match(/^candidate_(\d+)$/) : null;
+  const selectedIndex = match ? Number(match[1]) : -1;
+  if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= candidates.length) {
+    throw new JevApiError(`Jev image curator returned invalid best_image choice: ${String(choiceKey)}`);
+  }
+
+  const allowedCardBadges = ["REPORT", "REALITY CHECK", "REACTION", "THE DEALBREAKER"];
+  const cardBadge = answers.card_badge?.choice;
+  if (!allowedCardBadges.includes(cardBadge)) {
+    throw new JevApiError(`Jev image curator returned invalid card_badge choice: ${String(cardBadge)}`);
+  }
 
   return {
     selectedCandidate: candidates[selectedIndex],
     selectedIndex,
-    badge: answers.card_badge?.choice || "REPORT",
+    badge: cardBadge,
     confidence: answers.best_image?.confidence ?? 0.9,
     rationale: `Jev selected candidate ${selectedIndex} for editorial impact`,
     provenance: "jev-systemone",
