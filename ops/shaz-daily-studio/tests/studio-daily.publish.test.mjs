@@ -84,6 +84,7 @@ test("runDailyBatch never leaks Telegram bot token, publishes Convex URL to Buff
           );
         }
       },
+      assertScriptAligned: () => ({ ok: true, coverage: 1, matchedCount: 1, totalCount: 1, unmatchedWords: [], words: [], segments: [] }),
       composeVerticalVideo: async ({ outputPath }) => {
         await fs.mkdir(path.dirname(outputPath), { recursive: true });
         await fs.writeFile(path.join(path.dirname(outputPath), "transcript.json"), JSON.stringify({ words: [] }));
@@ -279,7 +280,8 @@ test("runDailyBatch skips immediate delete and leaves 7-day failsafe when Buffer
             );
           }
         },
-        composeVerticalVideo: async ({ outputPath }) => {
+        assertScriptAligned: () => ({ ok: true, coverage: 1, matchedCount: 1, totalCount: 1, unmatchedWords: [], words: [], segments: [] }),
+      composeVerticalVideo: async ({ outputPath }) => {
           await fs.mkdir(path.dirname(outputPath), { recursive: true });
           await fs.writeFile(path.join(path.dirname(outputPath), "transcript.json"), JSON.stringify({ words: [] }));
           await fs.writeFile(outputPath, Buffer.from("vert"));

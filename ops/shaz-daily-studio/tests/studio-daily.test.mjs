@@ -199,6 +199,7 @@ test("runDailyBatch alerts Telegram & stops on 0 fresh stories or AgentUnavailab
             );
           }
         },
+        assertScriptAligned: () => ({ ok: true, coverage: 1, matchedCount: 1, totalCount: 1, unmatchedWords: [], words: [], segments: [] }),
         composeVerticalVideo: async ({ outputPath }) => {
           await fs.mkdir(path.dirname(outputPath), { recursive: true });
           await fs.writeFile(path.join(path.dirname(outputPath), "transcript.json"), JSON.stringify({ words: [] }));

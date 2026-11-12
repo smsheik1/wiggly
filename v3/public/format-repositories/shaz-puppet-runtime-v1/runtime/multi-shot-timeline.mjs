@@ -2,6 +2,9 @@ import crypto from "node:crypto";
 import path from "node:path";
 import { evaluateSentenceDirector, getTypesafeApiKey, JevApiError, JevDirectorSkipError } from "./director-jev.mjs";
 import { deriveChibiRoutine } from "./chibi-choreography.mjs";
+import { alignScriptToTranscript } from "./script-alignment.mjs";
+import { doesPoseReachEnterRect, loadGestureReachMapSync } from "./gesture-reach.mjs";
+import { OTS_HEADLINE_BOX } from "./ots-card-renderer.mjs";
 
 const MULTI_SHOT_SCHEMA = "shaz-multi-shot-v1";
 const SHOT_ID = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
@@ -20,6 +23,80 @@ function exactKeys(value, allowed, context) {
  * Resolves semantic alias pose IDs to their registered recipe identifiers.
  * E.g. "chin-stroke" -> "chin-stroke-swagger" (the prop-free swagger chin-stroke pose)
  */
+/**
+ * Maps authored script `hook`, `beats[]`, and `landing` card headlines/badges onto transcript beats
+ * by aligned audio time-span overlap rather than brittle array indices.
+ */
+function attachAuthoredBeatMetadata(beats, transcript, script) {
+  if (!script || (!script.hook && !Array.isArray(script.beats) && !script.landing && !Array.isArray(script.lines))) {
+    return;
+  }
+  const alignment = alignScriptToTranscript({ script, transcript, minCoverage: 0 });
+  const timedSegments = alignment.segments.filter((s) => s.endMs > s.startMs && s.matchedCount > 0);
+  if (timedSegments.length === 0) {
+    // Card-only synthetic stubs (without `.text` fields on script beats) map 1:1 by index
+    const rawAuthored = [
+      script.hook,
+      ...(Array.isArray(script.beats) ? script.beats : []),
+      script.landing,
+    ].filter(Boolean);
+    const hasAnyText = rawAuthored.some((seg) => typeof seg?.text === "string" && seg.text.trim().length > 0);
+    if (!hasAnyText && rawAuthored.length > 0) {
+      for (let i = 0; i < beats.length; i += 1) {
+        const authored = rawAuthored[Math.min(i, rawAuthored.length - 1)];
+        if (!beats[i].cardHeadline && authored?.cardHeadline !== undefined) {
+          beats[i].cardHeadline = authored.cardHeadline;
+        }
+        if (!beats[i].cardBadge && authored?.cardBadge !== undefined) {
+          beats[i].cardBadge = authored.cardBadge;
+        }
+      }
+    }
+    return;
+  }
+
+  for (const beat of beats) {
+    let best = null;
+    let bestOverlap = 0;
+    for (const seg of timedSegments) {
+      const overlap = Math.min(beat.endMs, seg.endMs) - Math.max(beat.startMs, seg.startMs);
+      if (overlap > bestOverlap) {
+        bestOverlap = overlap;
+        best = seg;
+      }
+    }
+    // Small inter-word pause fallback: attach to adjacent segment within 400ms
+    if (!best) {
+      const beatMid = (beat.startMs + beat.endMs) / 2;
+      let minDist = Infinity;
+      for (const seg of timedSegments) {
+        const dist = beatMid < seg.startMs ? seg.startMs - beatMid : beatMid > seg.endMs ? beatMid - seg.endMs : 0;
+        if (dist < minDist) {
+          minDist = dist;
+          best = seg;
+        }
+      }
+      if (minDist > 400) best = null;
+    }
+    if (best) {
+      if (!beat.cardHeadline && best.cardHeadline) beat.cardHeadline = best.cardHeadline;
+      if (!beat.cardBadge && best.cardBadge) beat.cardBadge = best.cardBadge;
+    }
+  }
+}
+
+/**
+ * Checks whether a pose's measured pixel reach enters `[OTS_HEADLINE_BOX ± 16px]`
+ * so OTS cards with top headlines are skipped/deferred onto clear shots.
+ */
+function poseBlocksOtsHeadline(poseId) {
+  const reachMap = loadGestureReachMapSync();
+  const resolved = resolvePuppetPoseId(poseId);
+  const entry = reachMap?.[resolved];
+  if (!entry) return false;
+  return doesPoseReachEnterRect(entry, OTS_HEADLINE_BOX, { padding: 16 });
+}
+
 export function resolvePuppetPoseId(poseId) {
   if (poseId === "chin-stroke" || poseId === "chin-stroke-swagger" || poseId === "chin-stroke-smug" || poseId === "swagger" || poseId === "phone-use-sequence" || poseId === "look-at-phone") {
     return "chin-stroke-swagger";
@@ -550,26 +627,8 @@ export function deriveMultiShotPlan({
     };
   }
 
-  // Attach authored script headlines and badges to transcript beats if available
-  if (script && (script.hook || Array.isArray(script.beats))) {
-    const authoredBeats = [
-      script.hook,
-      ...(Array.isArray(script.beats) ? script.beats : []),
-      script.landing,
-    ].filter(Boolean);
-
-    for (let i = 0; i < beats.length; i += 1) {
-      const authored = authoredBeats[Math.min(i, authoredBeats.length - 1)];
-      if (authored) {
-        if (!beats[i].cardHeadline && authored.cardHeadline) {
-          beats[i].cardHeadline = authored.cardHeadline;
-        }
-        if (!beats[i].cardBadge && authored.cardBadge) {
-          beats[i].cardBadge = authored.cardBadge;
-        }
-      }
-    }
-  }
+  // Attach authored script headlines and badges to transcript beats by aligned time span
+  attachAuthoredBeatMetadata(beats, transcript, script);
 
   // Plan shots from beats with natural video commentary pacing:
   // - talk-to-camera is the primary anchor (~75% of runtime)
@@ -669,12 +728,13 @@ export function deriveMultiShotPlan({
       }
       lastPoseId = chosenPose;
 
-      // Attach OTS graphic to talk-to-camera shots when media is available
+      // Attach OTS graphic to talk-to-camera shots when media is available & pose clears headline box
       let otsGraphic = undefined;
       const prevWasOts = Boolean(shots.at(-1)?.otsGraphic);
       const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
       const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || semantics.badge;
-      if (!isFirst && !isLast && mediaCycler.hasMedia && !prevWasOts) {
+      const headlineBlocked = Boolean(effectiveHeadline && poseBlocksOtsHeadline(chosenPose));
+      if (!isFirst && !isLast && mediaCycler.hasMedia && !prevWasOts && !headlineBlocked) {
         otsGraphic = buildOtsGraphic({
           badge: effectiveBadge || "KEY POINT",
           headline: effectiveHeadline,
@@ -808,26 +868,8 @@ export async function deriveMultiShotPlanWithJev({
     throw new Error("deriveMultiShotPlanWithJev could not extract any speech beats from transcript");
   }
 
-  // Attach authored script headlines and badges to transcript beats if available
-  if (script && (script.hook || Array.isArray(script.beats))) {
-    const authoredBeats = [
-      script.hook,
-      ...(Array.isArray(script.beats) ? script.beats : []),
-      script.landing,
-    ].filter(Boolean);
-
-    for (let i = 0; i < beats.length; i += 1) {
-      const authored = authoredBeats[Math.min(i, authoredBeats.length - 1)];
-      if (authored) {
-        if (!beats[i].cardHeadline && authored.cardHeadline) {
-          beats[i].cardHeadline = authored.cardHeadline;
-        }
-        if (!beats[i].cardBadge && authored.cardBadge) {
-          beats[i].cardBadge = authored.cardBadge;
-        }
-      }
-    }
-  }
+  // Attach authored script headlines and badges to transcript beats by aligned time span
+  attachAuthoredBeatMetadata(beats, transcript, script);
 
   const totalFrames = Math.max(1, Math.round(audioDurationSeconds * 24));
   const shots = [];
@@ -957,13 +999,14 @@ export async function deriveMultiShotPlanWithJev({
           usedPuppetPoses.push(chosenPose);
         }
 
-        // Attach OTS graphic card to talk-to-camera shots when media is available
+        // Attach OTS graphic card to talk-to-camera shots when media is available & pose clears headline box
         let otsGraphic = undefined;
         const prevWasOts = Boolean(shots.at(-1)?.otsGraphic);
         const hasActivePose = chosenPose !== "neutral-listening";
         const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
         const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || jevChoice?.badge || semantics.badge;
-        if (!isFirst && !isLast && mediaCycler.hasMedia && !prevWasOts) {
+        const headlineBlocked = Boolean(effectiveHeadline && poseBlocksOtsHeadline(chosenPose));
+        if (!isFirst && !isLast && mediaCycler.hasMedia && !prevWasOts && !headlineBlocked) {
           if (hasActivePose || shots.at(-1)?.shotType === "talk-to-camera" || mediaCycler.uniqueCount > 0) {
             otsGraphic = buildOtsGraphic({
               badge: effectiveBadge,

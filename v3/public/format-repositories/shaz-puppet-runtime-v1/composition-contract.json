@@ -21,7 +21,8 @@
     "canvasWidth": 1280,
     "canvasHeight": 720,
     "actionSafePercent": 90,
-    "bounds": { "left": 80, "top": 90, "width": 440, "height": 440 },
+    "bounds": { "left": 64, "top": 64, "width": 356, "height": 340 },
+    "headlineBox": { "left": 64, "top": 64, "width": 300, "height": 84 },
     "comfortMarginToShaz": 120,
     "shazStagingBox": { "left": 540, "top": 80, "width": 700, "height": 640 },
     "layering": [

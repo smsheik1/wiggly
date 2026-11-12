@@ -6,6 +6,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { assertScriptAligned } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/script-alignment.mjs";
 
 const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -227,6 +228,9 @@ export async function composeVerticalVideo({
   sourceVideoPath,
   transcriptPath,
   transcript,
+  script = null,
+  scriptPath = null,
+  minAlignmentCoverage = 0.9,
   headline,
   badge = null,
   outputPath,
@@ -243,6 +247,22 @@ export async function composeVerticalVideo({
     } catch {}
   }
 
+  let authoredScript = script;
+  if (!authoredScript && scriptPath) {
+    authoredScript = JSON.parse(await fs.readFile(scriptPath, "utf8"));
+  }
+
+  // Align authored script words onto Whisper word timestamps so captions display exact script spelling.
+  let alignedWords = null;
+  if (authoredScript) {
+    const alignment = assertScriptAligned({
+      script: authoredScript,
+      transcript: timedTranscript,
+      minCoverage: minAlignmentCoverage,
+    });
+    alignedWords = alignment.words;
+  }
+
   const scratchDir = await fs.mkdtemp(path.join(os.tmpdir(), "shaz-vertical-"));
   const headerPath = path.join(scratchDir, "header.png");
 
@@ -251,8 +271,8 @@ export async function composeVerticalVideo({
     const headerBuffer = await renderHeaderCard({ badge, headline });
     await fs.writeFile(headerPath, headerBuffer);
 
-    // 2. Prepare Subtitle cues
-    const words = timedTranscript?.words || [];
+    // 2. Prepare Subtitle cues (prefer script words aligned onto transcript timestamps)
+    const words = alignedWords || timedTranscript?.words || [];
     const cues = groupWordsIntoCues(words);
 
     const inputArgs = [

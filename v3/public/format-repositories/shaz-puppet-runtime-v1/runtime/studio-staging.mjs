@@ -22,8 +22,8 @@ export function generateStreamerStudioForegroundSvg({ width = 1280, height = 720
         <stop offset="40%" stop-color="#2d2d34" />
         <stop offset="100%" stop-color="#18181b" />
       </linearGradient>
-      <filter id="micShadow" x="-30%" y="-30%" width="160%" height="160%">
-        <feDropShadow dx="-4" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.65" />
+      <filter id="micShadow" x="-15%" y="-15%" width="130%" height="130%">
+        <feDropShadow dx="-2" dy="4" stdDeviation="5" flood-color="#000000" flood-opacity="0.55" />
       </filter>
     </defs>
 
@@ -39,28 +39,28 @@ export function generateStreamerStudioForegroundSvg({ width = 1280, height = 720
       <rect x="360" y="668" width="560" height="52" rx="6" fill="#111113" stroke="#27272a" stroke-width="1.5" />
     </g>
 
-    <!-- Broadcast Microphone on Boom Arm (Bottom Right) -->
-    <g id="streamer-mic" filter="url(#micShadow)" transform="translate(940, 480)">
-      <!-- Boom Arm Shaft from offscreen -->
-      <line x1="220" y1="240" x2="70" y2="100" stroke="#18181b" stroke-width="18" stroke-linecap="round" />
-      <line x1="220" y1="240" x2="70" y2="100" stroke="#3f3f46" stroke-width="4" stroke-linecap="round" />
+    <!-- Broadcast Microphone on Boom Arm (Compacted onto Bottom-Right Edge, clear of gesture reach) -->
+    <g id="streamer-mic" filter="url(#micShadow)" transform="translate(1174, 518) scale(0.68)">
+      <!-- Boom Arm Shaft from bottom-right corner -->
+      <line x1="210" y1="260" x2="105" y2="128" stroke="#18181b" stroke-width="18" stroke-linecap="round" />
+      <line x1="210" y1="260" x2="105" y2="128" stroke="#3f3f46" stroke-width="4" stroke-linecap="round" />
       <!-- Cable wrapped around boom arm -->
-      <path d="M 190,210 Q 140,165 110,135" fill="none" stroke="#09090b" stroke-width="6" />
+      <path d="M 185,225 Q 150,180 128,150" fill="none" stroke="#09090b" stroke-width="6" />
 
       <!-- Boom Arm Elbow / Swivel Mount -->
-      <circle cx="70" cy="100" r="16" fill="#27272a" stroke="#52525b" stroke-width="2" />
-      <circle cx="70" cy="100" r="6" fill="#71717a" />
+      <circle cx="105" cy="128" r="15" fill="#27272a" stroke="#52525b" stroke-width="2" />
+      <circle cx="105" cy="128" r="6" fill="#71717a" />
       <!-- Tension Knob -->
-      <rect x="58" y="76" width="24" height="8" rx="3" fill="#3f3f46" stroke="#18181b" stroke-width="1" />
+      <rect x="93" y="106" width="24" height="8" rx="3" fill="#3f3f46" stroke="#18181b" stroke-width="1" />
 
-      <!-- Shock Mount Yoke Arm -->
-      <g transform="rotate(-32, 70, 100)">
-        <path d="M 70,100 L 70,30" stroke="#27272a" stroke-width="12" stroke-linecap="round" />
+      <!-- Shock Mount Yoke Arm tilted slightly inward on right edge -->
+      <g transform="rotate(-16, 105, 128)">
+        <path d="M 105,128 L 105,62" stroke="#27272a" stroke-width="12" stroke-linecap="round" />
         <!-- Yoke Cradle -->
-        <path d="M 45,30 C 45,15 95,15 95,30 L 95,45 C 95,60 45,60 45,45 Z" fill="none" stroke="#3f3f46" stroke-width="5" />
+        <path d="M 80,62 C 80,47 130,47 130,62 L 130,77 C 130,92 80,92 80,77 Z" fill="none" stroke="#3f3f46" stroke-width="5" />
 
         <!-- Microphone Body (SM7B style) -->
-        <g transform="translate(48, -45)">
+        <g transform="translate(83, -12)">
           <!-- Base capsule / XLR connector -->
           <rect x="8" y="45" width="28" height="24" rx="4" fill="url(#micGrad)" stroke="#18181b" stroke-width="1.5" />
           <line x1="8" y1="52" x2="36" y2="52" stroke="#71717a" stroke-width="1" />

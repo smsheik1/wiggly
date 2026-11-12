@@ -32,6 +32,7 @@ import {
   recordTopic,
 } from "./content-ledger.mjs";
 import { countWords, validateScript } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/validate-script.mjs";
+import { assertScriptAligned } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/script-alignment.mjs";
 import { synthesizeShazVoice } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/voice.mjs";
 import { composeVerticalVideo, formatSafeHeadline } from "./vertical-letterbox.mjs";
 import {
@@ -875,6 +876,7 @@ function resolveStudioDeps(deps = {}) {
       : pruneOldRuns,
     sha256,
     writeJson,
+    assertScriptAligned,
     composeVerticalVideo,
     validateVerticalDeliverable,
     getTelegramCredentials: hasMockTelegram ? null : getTelegramCredentials,
@@ -1096,6 +1098,32 @@ async function produceGroundedCandidateRun({
     const rawMasterVideo = path.join(runDirectory, "final.mp4");
     const transcriptPath = path.join(runDirectory, "transcript.json");
     const verticalVideoPath = path.join(runDirectory, "final-vertical.mp4");
+
+    // Verify authored script aligns with staged Whisper transcript before spending GPU/CPU on render.
+    try {
+      const transcriptData = fsSync.existsSync(transcriptPath)
+        ? JSON.parse(await fs.readFile(transcriptPath, "utf8"))
+        : null;
+      const alignment = d.assertScriptAligned({ script, transcript: transcriptData });
+      await d.writeJson(path.join(runDirectory, "script-alignment.json"), {
+        schemaVersion: 1,
+        coverage: alignment.coverage ?? 1,
+        minCoverage: alignment.minCoverage ?? 0.9,
+        matchedCount: alignment.matchedCount ?? 0,
+        totalCount: alignment.totalCount ?? 0,
+        unmatchedWords: alignment.unmatchedWords ?? [],
+        segments: alignment.segments ?? [],
+      });
+    } catch (err) {
+      if (err instanceof CandidateSkipError || err instanceof RunStopError || isJsCodeBug(err)) {
+        throw err;
+      }
+      throw new CandidateSkipError(
+        `Script-to-transcript alignment failed for ${runId}: ${err.message}`,
+        { stage: "script-alignment", cause: err },
+      );
+    }
+
     let masterVideoSha256;
     let qualityReport;
     let verticalGate;
@@ -1115,6 +1143,7 @@ async function produceGroundedCandidateRun({
       await d.composeVerticalVideo({
         sourceVideoPath: rawMasterVideo,
         transcriptPath,
+        script,
         headline: script.headline || formatSafeHeadline(script.title, 36),
         outputPath: verticalVideoPath,
       });

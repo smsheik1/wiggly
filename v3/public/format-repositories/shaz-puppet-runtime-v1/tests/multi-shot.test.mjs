@@ -528,10 +528,10 @@ test("OTS_GRAPHIC_ZONE respects 90% broadcast action-safe and Shaz staging bound
   const contract = JSON.parse(await fs.readFile(path.join(root, "composition-contract.json"), "utf8"));
 
   assert.ok(OTS_GRAPHIC_ZONE, "OTS_GRAPHIC_ZONE must be exported");
-  assert.equal(OTS_GRAPHIC_ZONE.left, 80);
-  assert.equal(OTS_GRAPHIC_ZONE.top, 90);
-  assert.equal(OTS_GRAPHIC_ZONE.width, 440);
-  assert.equal(OTS_GRAPHIC_ZONE.height, 440);
+  assert.equal(OTS_GRAPHIC_ZONE.left, 64);
+  assert.equal(OTS_GRAPHIC_ZONE.top, 64);
+  assert.equal(OTS_GRAPHIC_ZONE.width, 356);
+  assert.equal(OTS_GRAPHIC_ZONE.height, 340);
 
   // 90% Action Safe limits for 1280x720 canvas
   const actionSafeLeft = (1280 * 0.1) / 2; // 64

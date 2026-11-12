@@ -9,7 +9,7 @@ import { renderRigFrame } from "./rig-v2-renderer.mjs";
 import { renderTextCardFrame, wordsVisibleAtFrame } from "./text-card-renderer.mjs";
 import { renderTopicCard } from "./topic-card-renderer.mjs";
 import { renderKenBurnsFrame, normalizeBrollMedia } from "./broll-renderer.mjs";
-import { renderOtsCardFrame } from "./ots-card-renderer.mjs";
+import { OTS_GRAPHIC_ZONE, OTS_HEADLINE_BOX, renderOtsCardFrame } from "./ots-card-renderer.mjs";
 import {
   getCinematicVignetteBuffer,
   getStreamerStudioForegroundBuffer,
@@ -20,15 +20,7 @@ import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
 
-export const OTS_GRAPHIC_ZONE = Object.freeze({
-  left: 80,
-  top: 90,
-  width: 440,
-  height: 440,
-  actionSafePadding: 64,
-  comfortMarginToShaz: 120,
-  shazStagingBox: Object.freeze({ left: 540, top: 80, width: 700, height: 640 }),
-});
+export { OTS_GRAPHIC_ZONE, OTS_HEADLINE_BOX };
 
 /**
  * Resolves the active OTS image buffer and cache key so swapping `image` -> `image2` at `swapAtFrame`

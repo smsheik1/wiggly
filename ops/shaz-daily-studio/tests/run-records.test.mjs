@@ -144,6 +144,7 @@ test("runDailyBatch never touches runDirectory before runner.mjs init and persis
             );
           }
         },
+        assertScriptAligned: () => ({ ok: true, coverage: 1, matchedCount: 1, totalCount: 1, unmatchedWords: [], words: [], segments: [] }),
         composeVerticalVideo: async ({ outputPath }) => {
           await fs.writeFile(path.join(path.dirname(outputPath), "transcript.json"), JSON.stringify({ words: [] }));
           await fs.writeFile(outputPath, Buffer.from("vert"));

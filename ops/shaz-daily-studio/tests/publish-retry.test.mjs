@@ -252,6 +252,7 @@ test("partial channel failure records ledger immediately, keeps Convex media, al
         );
       }
     },
+    assertScriptAligned: () => ({ ok: true, coverage: 1, matchedCount: 1, totalCount: 1, unmatchedWords: [], words: [], segments: [] }),
     composeVerticalVideo: async ({ outputPath }) => {
       await fs.mkdir(path.dirname(outputPath), { recursive: true });
       await fs.writeFile(outputPath, Buffer.from("fake-vertical-mp4"));
