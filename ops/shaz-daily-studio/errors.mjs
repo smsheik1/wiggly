@@ -136,6 +136,9 @@ export function classifyRunError(err) {
   if (isJevAccountError(err)) {
     return { kind: "stop", headline: "Jev Director API Failure", canAlert: true, error: err };
   }
+  if (err?.name === "BufferApiError" && err?.isAccountError) {
+    return { kind: "stop", headline: "Buffer API Failure", canAlert: true, error: err };
+  }
 
   return {
     kind: "stop",
