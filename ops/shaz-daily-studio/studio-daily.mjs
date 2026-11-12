@@ -667,6 +667,15 @@ function resolveStudioDeps(deps = {}) {
     deletePublishVideo,
     publishVideoToAllChannels,
     getBufferPostsStatus,
+    checkPublicVideoReachable: async (url) => {
+      if (!url) return false;
+      try {
+        const res = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(10_000) });
+        return res.ok;
+      } catch {
+        return false;
+      }
+    },
     recordShown,
     recordTopic,
     sleepFn: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
@@ -879,11 +888,207 @@ function serializeCandidateForPendingBatch(c) {
 }
 
 function formatChannelReceiptSummary(postResult) {
+  const states = postResult?.channelStates;
+  if (states && typeof states === "object") {
+    const parts = [];
+    for (const [key, entry] of Object.entries(states)) {
+      const label = escapeTelegramHtml(
+        key === "instagram" ? "Instagram" : key === "youtube" ? "YouTube" : key === "tiktok" ? "TikTok" : key,
+      );
+      if (entry?.status === "posted") parts.push(`${label} ✓`);
+      else if (entry?.status === "failed") parts.push(`${label} ❌`);
+      else if (entry?.status === "unknown") parts.push(`${label} ❓`);
+    }
+    if (parts.length > 0) return parts.join(" · ");
+  }
   const entries = Object.entries(postResult?.channels || {});
   if (entries.length === 0) return "none";
   return entries
-    .map(([key, entry]) => `${escapeTelegramHtml(entry?.service || key)} ✓`)
+    .map(([key, entry]) => {
+      const raw = entry?.service || key;
+      const label = raw === "instagram" ? "Instagram" : raw === "youtube" ? "YouTube" : raw === "tiktok" ? "TikTok" : raw;
+      return `${escapeTelegramHtml(label)} ✓`;
+    })
     .join(" · ");
+}
+
+async function publishWithCheckpointsAndLedger({
+  runId,
+  runDirectory,
+  title,
+  dialogueText,
+  tags,
+  story,
+  media,
+  publishState = null,
+  retryUnknownWhenMissing = false,
+  pickedMessageId = null,
+  pickedChatId = null,
+  noTelegram = false,
+  ledgerPath,
+  env = process.env,
+  deps,
+}) {
+  const publishStatePath = path.join(runDirectory, "publish-state.json");
+  const mediaReceiptPath = path.join(runDirectory, "publish-media.json");
+  let ledgerChannelsSignature = "";
+
+  const baseState = {
+    schemaVersion: 1,
+    ...(publishState || {}),
+    runId,
+    title,
+    story,
+    videoUrl: media.url,
+    storageId: media.storageId || publishState?.storageId || null,
+    channels: { ...(publishState?.channels || {}) },
+    updatedAt: new Date().toISOString(),
+  };
+
+  const buildPostedMap = (channelsObj = {}) =>
+    Object.fromEntries(
+      Object.entries(channelsObj)
+        .filter(([, entry]) => entry?.status === "posted" && entry?.postId)
+        .map(([k, entry]) => [
+          k,
+          {
+            success: true,
+            service: k,
+            channelId: entry.channelId,
+            postId: entry.postId,
+            status: entry.bufferStatus || entry.status,
+          },
+        ]),
+    );
+
+  const syncCheckpointAndLedger = async (snapshot) => {
+    const merged = {
+      ...baseState,
+      ...snapshot,
+      runId,
+      title,
+      story,
+      storageId: media.storageId || baseState.storageId || null,
+    };
+    await deps.writeJson(publishStatePath, merged);
+
+    const posted = buildPostedMap(merged.channels);
+    if (Object.keys(posted).length > 0) {
+      const sig = Object.entries(posted)
+        .map(([k, v]) => `${k}:${v.postId}`)
+        .sort()
+        .join("|");
+      if (sig !== ledgerChannelsSignature) {
+        ledgerChannelsSignature = sig;
+        await deps.recordTopic(story?.topic || { title }, {
+          runId,
+          channels: posted,
+          ledgerPath,
+          env,
+        });
+      }
+    }
+    return merged;
+  };
+
+  await deps.writeJson(publishStatePath, baseState);
+
+  const postResult = await deps.publishVideoToAllChannels({
+    videoUrl: media.url,
+    title,
+    caption: dialogueText,
+    tags: tags || null,
+    mode: "shareNow",
+    checkpoint: baseState,
+    retryUnknownWhenMissing,
+    onCheckpoint: syncCheckpointAndLedger,
+  });
+
+  const finalChannelStates =
+    postResult.channelStates ||
+    Object.fromEntries(
+      Object.entries(postResult.channels || {}).map(([k, v]) => [k, { status: "posted", ...v }]),
+    );
+  const finalState = await syncCheckpointAndLedger({
+    ...baseState,
+    channels: finalChannelStates,
+    pending: postResult.pending || [],
+  });
+
+  // Fallback for mocked `publishVideoToAllChannels` returning custom channels without `channelStates`
+  if (Object.keys(postResult.channels || {}).length > 0 && !ledgerChannelsSignature) {
+    ledgerChannelsSignature = Object.entries(postResult.channels)
+      .map(([k, v]) => `${k}:${v?.postId || ""}`)
+      .sort()
+      .join("|");
+    await deps.recordTopic(story?.topic || { title }, {
+      runId,
+      channels: postResult.channels,
+      ledgerPath,
+      env,
+    });
+  }
+
+  const failedList = postResult.failed || [];
+  const unknownList = postResult.unknown || [];
+  const hasIncomplete = failedList.length > 0 || unknownList.length > 0 || postResult.success === false;
+
+  if (hasIncomplete) {
+    const summaryHtml = formatChannelReceiptSummary({ ...postResult, channelStates: finalState.channels });
+    await deps.writeJson(mediaReceiptPath, {
+      ...media,
+      cleanupStatus: "retained-for-resume",
+      reason: "incomplete-channel-publish",
+      failedChannels: failedList.map((f) => ({ service: f.service, error: f.lastError })),
+      unknownChannels: unknownList.map((u) => ({ service: u.service, error: u.lastError })),
+    }).catch(() => {});
+
+    if (!noTelegram) {
+      if (pickedMessageId) {
+        await deps.editTelegramMessageCaption({
+          chatId: pickedChatId,
+          messageId: pickedMessageId,
+          caption:
+            `⚠️ <b>Partial/Failed Publish:</b> ${summaryHtml}\n\n` +
+            `<b>Title:</b> ${escapeTelegramHtml(title)}\n` +
+            `Resume: <code>--resume-publish=${escapeTelegramHtml(runId)}</code>`,
+        }).catch(() => {});
+      }
+
+      const detailLines = [
+        ...failedList.map((f) => `• <b>${escapeTelegramHtml(f.service)}</b> failed: ${escapeTelegramHtml(f.lastError || "error")}`),
+        ...unknownList.map((u) => `• <b>${escapeTelegramHtml(u.service)}</b> timed out (unknown state — will verify before retry)`),
+      ].join("\n");
+
+      await deps.sendTelegramMessage({
+        text:
+          `⚠️ <b>Buffer Publish Incomplete</b> (${summaryHtml})\n\n` +
+          `<b>Title:</b> ${escapeTelegramHtml(title)}\n` +
+          `${detailLines}\n\n` +
+          `Convex video preserved. Resume safely (posted channels are skipped):\n` +
+          `<code>node ops/shaz-daily-studio/studio-daily.mjs --resume-publish=${escapeTelegramHtml(runId)}</code>`,
+      }).catch(() => {});
+    }
+
+    throw new RunStopError(
+      `Buffer publish incomplete for ${runId} (${failedList.length} failed, ${unknownList.length} unknown). Re-run with --resume-publish=${runId}.`,
+      {
+        code: "PUBLISH_CHANNEL_INCOMPLETE",
+        stage: "publish",
+        headline: "Buffer Publish Incomplete",
+        canAlert: false,
+      },
+    );
+  }
+
+  const cleanup = await deleteMediaAfterBufferSent({
+    postResult,
+    storageId: media.storageId,
+    deps,
+  });
+  await deps.writeJson(mediaReceiptPath, { ...media, ...cleanup });
+
+  return { postResult, cleanup, publishStatePath, state: finalState };
 }
 
 async function completeBatchDecisionAndPublish({
@@ -934,6 +1139,9 @@ async function completeBatchDecisionAndPublish({
     tags: winner.script.hashtags || null,
     story: winner.story,
     reviewNote: `Selected as daily winner from ${candidates.length}-candidate batch for ${winner.script.title}`,
+    pickedMessageId: decision?.messageId || winner.approval?.messageId || null,
+    pickedChatId: winner.approval?.chatId || null,
+    noTelegram,
     ledgerPath,
     env,
     deps: d,
@@ -947,6 +1155,9 @@ async function completeBatchDecisionAndPublish({
   console.log(`  Logged winner to published-topics.json`);
 
   const summaryHtml = formatChannelReceiptSummary(postResult);
+  const pendingNote = postResult.pending?.length > 0
+    ? `\n<i>Not connected in Buffer: ${escapeTelegramHtml(postResult.pending.map((p) => p.service).join(", "))}</i>`
+    : "";
   if (!noTelegram && (decision?.messageId || winner.approval?.messageId)) {
     await d.editTelegramMessageCaption({
       chatId: winner.approval?.chatId,
@@ -962,7 +1173,8 @@ async function completeBatchDecisionAndPublish({
     await d.sendTelegramMessage({
       text:
         `🎉 <b>DAILY POST LIVE!</b>\n\n` +
-        `Candidate #${winner.candidateNumber} (<b>${escapeTelegramHtml(winner.script.title)}</b>) posted: ${summaryHtml}\n\n` +
+        `Candidate #${winner.candidateNumber} (<b>${escapeTelegramHtml(winner.script.title)}</b>) posted: ${summaryHtml}` +
+        `${pendingNote}\n\n` +
         `Run ID: <code>${escapeTelegramHtml(winner.runId)}</code>`,
     }).catch(() => {});
   }
@@ -1031,6 +1243,9 @@ async function finalizeUploadPublishAndCleanup({
   tags,
   story,
   reviewNote,
+  pickedMessageId = null,
+  pickedChatId = null,
+  noTelegram = false,
   ledgerPath,
   env = process.env,
   deps,
@@ -1064,29 +1279,23 @@ async function finalizeUploadPublishAndCleanup({
   await deps.writeJson(mediaReceiptPath, mediaReceipt);
 
   console.log("\n🚀 Broadcasting Video to Social Channels via Buffer API...");
-  const postResult = await deps.publishVideoToAllChannels({
-    videoUrl: media.url,
-    title,
-    caption: dialogueText,
-    tags: tags || null,
-    mode: "shareNow",
-  });
-
-  await deps.recordTopic(story.topic, {
+  const { postResult, cleanup, publishStatePath } = await publishWithCheckpointsAndLedger({
     runId,
-    channels: postResult.channels,
+    runDirectory,
+    title,
+    dialogueText,
+    tags,
+    story,
+    media: mediaReceipt,
+    pickedMessageId,
+    pickedChatId,
+    noTelegram,
     ledgerPath,
     env,
-  });
-
-  const cleanup = await deleteMediaAfterBufferSent({
-    postResult,
-    storageId: media.storageId,
     deps,
   });
-  await deps.writeJson(mediaReceiptPath, { ...mediaReceipt, ...cleanup });
 
-  return { media, postResult, cleanup };
+  return { media, postResult, cleanup, publishStatePath };
 }
 
 /**
@@ -1583,6 +1792,127 @@ export async function resumePendingBatchPoll({
   }
 }
 
+/**
+ * Resumes an incomplete or interrupted Buffer publish from `<runDirectory>/publish-state.json`.
+ * Never reposts channels already marked `"posted"`, verifies `"unknown"` timeout channels via Buffer's
+ * recent-posts API before retrying, re-uploads to Convex if expired, cleans up storage, and updates ledger.
+ */
+export async function resumePublishForRun({
+  runId,
+  noTelegram = false,
+  ledgerPath,
+  env = process.env,
+  deps = {},
+} = {}) {
+  if (!runId || !String(runId).trim()) {
+    throw new RunStopError("Missing runId for --resume-publish=<runId>.", {
+      code: "INVALID_CLI_FLAGS",
+      stage: "resume-publish",
+      headline: "Invalid Resume Publish Run ID",
+      canAlert: false,
+    });
+  }
+
+  const d = resolveStudioDeps(deps);
+  let lock = null;
+
+  try {
+    lock = await d.acquireStudioLock({ env, mode: "resume-publish" });
+    const runDirectory = d.resolveRunDirectory(root, runId);
+    const publishStatePath = path.join(runDirectory, "publish-state.json");
+
+    let state;
+    try {
+      state = JSON.parse(await fs.readFile(publishStatePath, "utf8"));
+    } catch {
+      throw new RunStopError(`No publish-state.json found for run '${runId}' at ${publishStatePath}.`, {
+        code: "NO_PUBLISH_STATE",
+        stage: "resume-publish",
+        headline: "Missing publish-state.json",
+        canAlert: false,
+      });
+    }
+
+    const scriptJson = await fs
+      .readFile(path.join(runDirectory, "script.json"), "utf8")
+      .then((raw) => JSON.parse(raw))
+      .catch(() => null);
+    const storyJson = await fs
+      .readFile(path.join(runDirectory, "story.json"), "utf8")
+      .then((raw) => JSON.parse(raw))
+      .catch(() => null);
+
+    const title = state.title || scriptJson?.title || storyJson?.title || runId;
+    const story = state.story || (storyJson ? { topic: storyJson } : { topic: { title } });
+    const dialogueText = scriptJson ? d.compileDialogueText(scriptJson) : (state.dialogueText || title);
+    const tags = scriptJson?.hashtags || state.tags || null;
+    const verticalVideoPath = path.join(runDirectory, "final-vertical.mp4");
+
+    let media = {
+      url: state.videoUrl || null,
+      storageId: state.storageId || null,
+      uploadedAt: state.uploadedAt || new Date().toISOString(),
+    };
+
+    const reachable = media.url ? await d.checkPublicVideoReachable(media.url) : false;
+    if (!reachable) {
+      console.log(`☁️ Hosted Convex video missing or expired; re-uploading ${verticalVideoPath}...`);
+      const reuploaded = await d.uploadPublishVideo(verticalVideoPath);
+      media = {
+        url: reuploaded.url,
+        storageId: reuploaded.storageId,
+        sha256: reuploaded.sha256,
+        bytes: reuploaded.bytes,
+        uploadedAt: new Date().toISOString(),
+      };
+      state.videoUrl = media.url;
+      state.storageId = media.storageId;
+      await d.writeJson(path.join(runDirectory, "publish-media.json"), media);
+    }
+
+    const { postResult, cleanup } = await publishWithCheckpointsAndLedger({
+      runId,
+      runDirectory,
+      title,
+      dialogueText,
+      tags,
+      story,
+      media,
+      publishState: state,
+      retryUnknownWhenMissing: true,
+      noTelegram,
+      ledgerPath,
+      env,
+      deps: d,
+    });
+
+    const summaryHtml = formatChannelReceiptSummary(postResult);
+    if (!noTelegram) {
+      await d.sendTelegramMessage({
+        text:
+          `🎉 <b>RESUME PUBLISH COMPLETE!</b>\n\n` +
+          `<b>${escapeTelegramHtml(title)}</b>: ${summaryHtml}\n\n` +
+          `Run ID: <code>${escapeTelegramHtml(runId)}</code>`,
+      }).catch(() => {});
+    }
+
+    return {
+      status: "published",
+      runId,
+      postResult,
+      cleanup,
+    };
+  } catch (err) {
+    const classified = classifyRunError(err);
+    if (classified.canAlert && !noTelegram) {
+      await notifyFatalStudioAlert(d.sendTelegramMessage, classified.headline, classified.error);
+    }
+    throw classified.error;
+  } finally {
+    await lock?.release().catch(() => {});
+  }
+}
+
 // CLI Execution entrypoint
 const isDirectRun = process.argv[1] && (() => {
   try {
@@ -1600,13 +1930,22 @@ if (isDirectRun) {
   const isAutoApprove = rawArgs.includes("--auto-approve") || rawArgs.includes("--auto-approve=true");
   const isNoTelegram = rawArgs.includes("--no-telegram");
   const isResumePoll = rawArgs.includes("--resume-poll");
+  const resumePublishArg = rawArgs.find((a) => a.startsWith("--resume-publish="))?.split("=").slice(1).join("=");
   const isSingle = rawArgs.includes("--single");
   const batchArg = rawArgs.find((a) => a.startsWith("--batch="))?.split("=")[1];
   const parsedBatch = batchArg ? parseInt(batchArg, 10) : Number.NaN;
   const count = Number.isNaN(parsedBatch) ? undefined : parsedBatch;
   const topicArg = rawArgs.find((a) => a.startsWith("--topic="))?.split("=").slice(1).join("=");
 
-  if (isResumePoll) {
+  if (resumePublishArg) {
+    resumePublishForRun({
+      runId: resumePublishArg,
+      noTelegram: isNoTelegram,
+    }).catch((err) => {
+      console.error(redactSecrets(`\n❌ Fatal Resume Publish Error: ${err.message}\n`), redactSecrets(err.stack || ""));
+      process.exit(1);
+    });
+  } else if (isResumePoll) {
     resumePendingBatchPoll().catch((err) => {
       console.error(redactSecrets(`\n❌ Fatal Resume Poll Error: ${err.message}\n`), redactSecrets(err.stack || ""));
       process.exit(1);
