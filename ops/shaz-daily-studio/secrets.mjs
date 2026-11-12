@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
+
+const STUDIO_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 const SENSITIVE_KEY_NAMES = [
   "TELEGRAM_BOT_TOKEN",
@@ -27,10 +30,7 @@ function stripMatchingQuotes(raw) {
   return trimmed;
 }
 
-/**
- * Finds `secrets.env` by walking upward from `startDir` (up to 7 parent directories).
- */
-export function findSecretsEnvPath(startDir = process.cwd()) {
+function searchSecretsUpward(startDir) {
   let currentDir = path.resolve(startDir);
   for (let i = 0; i < 7; i += 1) {
     const candidate = path.join(currentDir, "secrets.env");
@@ -42,6 +42,14 @@ export function findSecretsEnvPath(startDir = process.cwd()) {
     currentDir = parent;
   }
   return null;
+}
+
+/**
+ * Finds `secrets.env` by walking upward from `startDir` (up to 7 parent directories),
+ * falling back to walking upward from `ops/shaz-daily-studio` so cron/scheduler cwd doesn't break lookups.
+ */
+export function findSecretsEnvPath(startDir = process.cwd(), fallbackDir = STUDIO_DIR) {
+  return searchSecretsUpward(startDir) || (fallbackDir ? searchSecretsUpward(fallbackDir) : null);
 }
 
 /**

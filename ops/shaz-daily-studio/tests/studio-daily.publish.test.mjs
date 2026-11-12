@@ -36,13 +36,15 @@ test("runDailyBatch never leaks Telegram bot token, publishes Convex URL to Buff
   const deletedStorageIds = [];
   const bufferPublishCalls = [];
   const callSequence = [];
+  const shownTopics = [];
+  const recordedTopics = [];
   let createdRunDir = null;
   let statusPollCount = 0;
 
   try {
     const deps = {
       findTopStories: async () => [
-        { source: "mock", topic: { title: "GTA 6 Launches Soon", link: "https://example.com/gta6" } },
+        { source: "mock", topic: { eventId: "evt_gta6", title: "GTA 6 Launches Soon", link: "https://example.com/gta6" } },
       ],
       authorShazScript: async () => ({
         title: "GTA 6 Launches Soon",
@@ -127,7 +129,13 @@ test("runDailyBatch never leaks Telegram bot token, publishes Convex URL to Buff
           pending: [],
         };
       },
-      recordTopic: async () => [],
+      recordShown: async (topic) => {
+        shownTopics.push(topic);
+      },
+      recordTopic: async (topic, meta) => {
+        recordedTopics.push({ topic, meta });
+        return [];
+      },
       getBufferPostsStatus: async ({ postIds }) => {
         statusPollCount += 1;
         callSequence.push(`getBufferPostsStatus:${statusPollCount}`);
@@ -162,6 +170,11 @@ test("runDailyBatch never leaks Telegram bot token, publishes Convex URL to Buff
     assert.equal(callSequence.indexOf("uploadPublishVideo") < callSequence.indexOf("publishVideoToAllChannels"), true);
     assert.equal(callSequence.indexOf("getBufferPostsStatus:2") < callSequence.indexOf("deletePublishVideo"), true);
     assert.deepEqual(deletedStorageIds, ["kg2_winner_1"]);
+    assert.equal(shownTopics.length, 1);
+    assert.equal(shownTopics[0].eventId, "evt_gta6");
+    assert.equal(recordedTopics.length, 1);
+    assert.equal(recordedTopics[0].meta.channels.instagram.postId, "post_ig_1");
+    assert.equal(recordedTopics[0].meta.channels.youtube.postId, "post_yt_1");
 
     // Verify publish-media.json exists & records cleanup
     const mediaJsonRaw = await fs.readFile(path.join(createdRunDir, "publish-media.json"), "utf8");
@@ -227,6 +240,7 @@ test("runDailyBatch skips immediate delete and leaves 7-day failsafe when Buffer
           channels: { instagram: { postId: "post_still_sending" } },
           pending: [],
         }),
+        recordShown: async () => {},
         recordTopic: async () => [],
         getBufferPostsStatus: async () => ({
           allSent: false,

@@ -1,0 +1,6 @@
+{
+  "writerAgent": "agy",
+  "agentTimeoutMs": 600000,
+  "maxScriptAttempts": 3,
+  "batchSize": 3
+}
