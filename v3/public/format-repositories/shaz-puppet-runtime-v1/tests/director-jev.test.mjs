@@ -300,7 +300,7 @@ test("evaluateSentenceDirector passes beatContext to Jev state and resolves acti
         model: "jev-1.13.0",
         answers: {
           shot_type: { choice: "talk-to-camera", confidence: 0.9 },
-          shaz_puppet_pose: { choice: "chin-stroke", confidence: 0.88 },
+          shaz_puppet_pose: { choice: "present", confidence: 0.88 },
           chibi_pose: { choice: "think-chin", confidence: 0.8 },
           camera_motion: { choice: "zoom-in", confidence: 0.85 },
           badge_category: { choice: "COMMUNITY ROAST", confidence: 0.9 },
@@ -316,15 +316,15 @@ test("evaluateSentenceDirector passes beatContext to Jev state and resolves acti
     beatContext: {
       beatIndex: 2,
       totalBeats: 5,
-      recentPoses: ["point-at-screen", "excited-celebration"],
+      recentPoses: ["point", "aha"],
     },
   });
 
   assert.ok(evaluation);
-  assert.equal(evaluation.shazPose, "chin-stroke");
+  assert.equal(evaluation.shazPose, "present");
   assert.equal(capturedState.sentence, "And they expected us not to notice!");
   assert.equal(capturedState.beat_progression, "Beat 3 of 5");
-  assert.deepEqual(capturedState.recent_poses, ["point-at-screen", "excited-celebration"]);
+  assert.deepEqual(capturedState.recent_poses, ["point", "aha"]);
   assert.match(capturedState.direction_goal, /variety/i);
 });
 
@@ -440,7 +440,7 @@ test("evaluateSentenceDirector retries invalid/unknown answers once, then throws
             json: async () => ({
               answers: {
                 shot_type: { choice: "talk-to-camera" },
-                shaz_puppet_pose: { choice: "shrug" },
+                shaz_puppet_pose: { choice: "think" },
                 chibi_pose: { choice: "not-a-real-chibi-pose" },
                 camera_motion: { choice: "zoom-in" },
                 badge_category: { choice: "BREAKING" },

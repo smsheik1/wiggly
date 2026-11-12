@@ -452,36 +452,36 @@ test("buildChibiSchedule auto-expands single hold when duration >= 48 frames", (
   assert.ok(schedule.includes("Timeline 1_0008.png"), "must include think-chin hold");
 });
 
-test("resolvePuppetPoseId maps chin-stroke, key-point, and look-at-phone aliases to canonical recipes", () => {
-  assert.equal(resolvePuppetPoseId("chin-stroke"), "chin-stroke-swagger");
+test("resolvePuppetPoseId preserves pose IDs directly without silent pose swaps", () => {
+  assert.equal(resolvePuppetPoseId("chin-stroke"), "chin-stroke");
   assert.equal(resolvePuppetPoseId("chin-stroke-swagger"), "chin-stroke-swagger");
-  assert.equal(resolvePuppetPoseId("chin-stroke-smug"), "chin-stroke-swagger");
-  assert.equal(resolvePuppetPoseId("swagger"), "chin-stroke-swagger");
-  assert.equal(resolvePuppetPoseId("phone-use-sequence"), "chin-stroke-swagger");
-  assert.equal(resolvePuppetPoseId("look-at-phone"), "chin-stroke-swagger");
+  assert.equal(resolvePuppetPoseId("facepalm"), "facepalm");
+  assert.equal(resolvePuppetPoseId("arms-crossed"), "arms-crossed");
+  assert.equal(resolvePuppetPoseId("phone-use-sequence"), "phone-use-sequence");
+  assert.equal(resolvePuppetPoseId("look-at-phone"), "look-at-phone");
   assert.equal(resolvePuppetPoseId("key-point"), "key-point");
   assert.equal(resolvePuppetPoseId("neutral-listening"), "neutral-listening");
   assert.equal(resolvePuppetPoseId("point"), "point");
   assert.equal(resolvePuppetPoseId("point-at-screen"), "point-at-screen");
 });
 
-test("validateMultiShotPlan accepts chin-stroke pose for talk-to-camera shot", async () => {
+test("validateMultiShotPlan accepts approved poses and rejects unapproved or swapped pose IDs", async () => {
   const assets = JSON.parse(await fs.readFile(path.join(root, "assets.json"), "utf8"));
   const poseIndex = JSON.parse(await fs.readFile(path.join(root, "poses", "index.json"), "utf8"));
   const poseRegistry = {
     byId: new Map(poseIndex.poses.map((p) => [p.id, p])),
   };
 
-  const planWithChinStroke = {
+  const approvedPlan = {
     schemaVersion: "shaz-multi-shot-v1",
-    title: "Chin stroke validation",
+    title: "Approved pose validation",
     audioFile: "user-audio.wav",
     totalDurationFrames: 48,
     shots: [
       {
         id: "shot-1",
         shotType: "talk-to-camera",
-        poseId: "chin-stroke",
+        poseId: "think",
         startFrame: 0,
         endFrameExclusive: 48,
         backgroundId: "sisters-room",
@@ -489,14 +489,32 @@ test("validateMultiShotPlan accepts chin-stroke pose for talk-to-camera shot", a
     ],
   };
 
-  const validated = validateMultiShotPlan(planWithChinStroke, {
+  const validated = validateMultiShotPlan(approvedPlan, {
     audioDurationSeconds: 2.0,
     defaultBackgroundId: "sisters-room",
     assets,
     poseRegistry,
   });
+  assert.equal(validated.shots[0].poseId, "think");
 
-  assert.equal(validated.shots[0].poseId, "chin-stroke-swagger");
+  for (const unapprovedId of ["chin-stroke", "chin-stroke-swagger", "shrug", "excited-celebration", "point-at-screen", "key-point", "facepalm", "arms-crossed"]) {
+    assert.throws(
+      () =>
+        validateMultiShotPlan(
+          {
+            ...approvedPlan,
+            shots: [{ ...approvedPlan.shots[0], poseId: unapprovedId }],
+          },
+          {
+            audioDurationSeconds: 2.0,
+            defaultBackgroundId: "sisters-room",
+            assets,
+            poseRegistry,
+          },
+        ),
+      /not approved|not a registered/i,
+    );
+  }
 });
 
 test("chin-stroke-swagger recipe conforms to universal rig contract and matches think height", async () => {

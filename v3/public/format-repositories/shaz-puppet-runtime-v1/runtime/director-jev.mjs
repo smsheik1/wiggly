@@ -1,4 +1,5 @@
 import { CHIBI_HOLDS, CHIBI_POSE_ALIASES, normalizeChibiHold } from "./chibi-choreography.mjs";
+import { APPROVED_PERFORMANCE_POSES, getApprovedPerformancePoses } from "./pose-approvals.mjs";
 import { readSecret } from "./secrets.mjs";
 
 const TYPESAFE_ENDPOINT = "https://api.typesafe.ai/v1/systemone";
@@ -6,19 +7,21 @@ const JEV_MODEL = "jev-latest";
 
 export const ALLOWED_SHOT_TYPES = ["talk-to-camera", "b-roll", "chibi-commentary", "text-card"];
 export const ALLOWED_CAMERA_MOTIONS = ["zoom-in", "zoom-out", "pan-left", "pan-right", "pan-up", "pan-down"];
-export const ALLOWED_SHAZ_PUPPET_POSES = [
-  "neutral-listening",
-  "chin-stroke",
-  "chin-stroke-swagger",
-  "excited-celebration",
-  "point-at-screen",
-  "confident",
-  "shrug",
-  "think",
-  "point",
-  "aha",
-  "present",
-];
+export const ALLOWED_SHAZ_PUPPET_POSES = APPROVED_PERFORMANCE_POSES;
+
+const SHAZ_PUPPET_POSE_CRITERIA = {
+  "neutral-listening": "Grounded, calm conversational baseline; natural breathing room between active gestures",
+  "present": "Open, welcoming host hands framing the topic or inviting the viewer in",
+  "think": "Curious hand-to-chin ponder; analytical, thoughtful, or questioning",
+  "aha": "Quick lightbulb eureka moment; sudden realization or sharing a neat takeaway",
+  "point": "Direct, snappy point towards the camera/audience for punchy emphasis",
+  "confident": "Cool swagger with hands firmly on hips; grounded, strong, standing tall",
+  "shrug": "Expressive palms-up shrug with raised shoulders; comic disbelief or bafflement",
+  "key-point": "Dedicated key-point emphasis pose",
+  "excited-celebration": "High-energy double-arm bounce; celebration, hype, excitement, or victory",
+  "point-at-screen": "Gesturing towards the OTS graphic card or headline to draw the viewer's eye",
+  "chin-stroke-swagger": "Smug smirk with hand resting under jaw; witty, sarcastic, or playful swagger",
+};
 export const ALLOWED_BADGE_CATEGORIES = [
   "BREAKING",
   "THE CLASH",
@@ -147,7 +150,7 @@ function validateSentenceAnswers(answers, lineNumber, sentence) {
   }
 
   const shazPose = answers.shaz_puppet_pose?.choice;
-  if (!ALLOWED_SHAZ_PUPPET_POSES.includes(shazPose)) {
+  if (!getApprovedPerformancePoses().includes(shazPose)) {
     return { ok: false, field: "shaz_puppet_pose", error: `Jev gave no valid shaz_puppet_pose for line ${lineNumber}: ${sentence}` };
   }
 
@@ -248,18 +251,12 @@ export async function evaluateSentenceDirector(sentence, { apiKey, env, secretsP
     shaz_puppet_pose: {
       type: "choice",
       instructions: "Which entertaining character pose best fits Shaz in this beat? Prioritize visual variety, lively energy, and character attitude. Avoid picking poses that were recently used.",
-      criteria: {
-        "neutral-listening": "Grounded, calm conversational baseline; natural breathing room between active gestures",
-        "chin-stroke": "Smug smirk with hand resting under jaw; witty, sarcastic, playful swagger, or roasting",
-        "excited-celebration": "High-energy double-arm bounce; celebration, hype, excitement, or victory",
-        "point-at-screen": "Gesturing towards the OTS graphic card or headline to draw the viewer's eye",
-        "confident": "Cool swagger with hands firmly on hips; grounded, strong, standing tall",
-        "shrug": "Expressive palms-up shrug with raised shoulders; comic disbelief, bafflement, or 'who even knows?'",
-        "think": "Curious hand-to-chin ponder; analytical, thoughtful, or questioning",
-        "point": "Direct, snappy point towards the camera/audience for punchy emphasis",
-        "aha": "Quick lightbulb eureka moment; sudden realization or sharing a neat takeaway",
-        "present": "Open, welcoming host hands framing the topic or inviting the viewer in",
-      },
+      criteria: Object.fromEntries(
+        getApprovedPerformancePoses().map((poseId) => [
+          poseId,
+          SHAZ_PUPPET_POSE_CRITERIA[poseId] ?? poseId,
+        ]),
+      ),
     },
   };
 

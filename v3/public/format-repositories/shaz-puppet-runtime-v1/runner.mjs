@@ -47,7 +47,7 @@ function usage() {
   node runner.mjs lint:script --script=/absolute/path/script.json
   node runner.mjs lipsync --audio=/absolute/path/audio --output=/absolute/path/cherry.tsv
   node runner.mjs transcribe --audio=/absolute/path/audio --output=/absolute/path/transcript.json
-  node runner.mjs init --run=<id> --input=/absolute/path/input.json [--audio=/absolute/path/audio] [--lipsync=off] [--lipsync-cues=/absolute/path/cherry.tsv]
+  node runner.mjs init --run=<id> --input=/absolute/path/input.json [--audio=/absolute/path/audio] [--lipsync=off] [--lipsync-cues=/absolute/path/cherry.tsv] [--director=jev|agent]
   node runner.mjs validate --run=<id>
   node runner.mjs render --run=<id>
   node runner.mjs inspect --run=<id>
@@ -284,6 +284,17 @@ async function init(args) {
         input.title = input.title ?? derived.title;
         input.totalDurationFrames = sequenceAudioFrames;
         input.shots = derived.shots;
+        delete input.defaultBackgroundId;
+        delete input.brollMedia;
+        delete input.headline;
+        delete input.script;
+      } else if (isMultiShot) {
+        const mode = args.director === "agent" ? "agent" : "preplanned";
+        directorState = {
+          mode,
+          jevCalls: 0,
+        };
+        input.totalDurationFrames = input.totalDurationFrames ?? sequenceAudioFrames;
         delete input.defaultBackgroundId;
         delete input.brollMedia;
         delete input.headline;

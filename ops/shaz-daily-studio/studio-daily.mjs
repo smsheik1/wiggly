@@ -8,6 +8,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { AgentUnavailableError, askActiveAgent } from "../../v3/lib/agent-bridge.ts";
+import { planShotsWithAgent } from "./agent-director.mjs";
 import { ArticleFetchError, fetchArticleForTopic, USER_AGENT as STUDIO_USER_AGENT } from "./article-fetch.mjs";
 import {
   CandidateSkipError,
@@ -50,6 +51,7 @@ import { publishVideoToAllChannels, getBufferPostsStatus } from "./buffer-publis
 import { uploadPublishVideo, deletePublishVideo } from "./media-host.mjs";
 import { redactSecrets } from "./secrets.mjs";
 import { execute, resolveRunDirectory, sha256, writeJson } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/run-common.mjs";
+import { generateTranscript } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/transcription.mjs";
 import { searchGoogleImages } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/serper-search.mjs";
 import { normalizeBrollMedia } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/broll-renderer.mjs";
 import { validateVerticalDeliverable } from "./vertical-gate.mjs";
@@ -78,6 +80,10 @@ export async function loadStudioConfig(configPath = DEFAULT_CONFIG_PATH) {
   if (writerAgent !== "agy" && writerAgent !== "claude") {
     throw new Error(`Invalid studio.config.json writerAgent '${writerAgent}': expected "agy" or "claude".`);
   }
+  const director = parsed?.director === undefined ? "jev" : parsed.director;
+  if (director !== "jev" && director !== "agent") {
+    throw new Error(`Invalid studio.config.json director '${director}': expected "jev" or "agent".`);
+  }
   const agentTimeoutMs = Number(parsed?.agentTimeoutMs);
   const maxScriptAttempts = Number(parsed?.maxScriptAttempts);
   const batchSize = Number(parsed?.batchSize);
@@ -100,6 +106,7 @@ export async function loadStudioConfig(configPath = DEFAULT_CONFIG_PATH) {
   }
   return {
     writerAgent,
+    director,
     agentTimeoutMs,
     maxScriptAttempts,
     batchSize,
@@ -869,6 +876,9 @@ function resolveStudioDeps(deps = {}) {
     compileDialogueText,
     sourceStoryMedia,
     synthesizeShazVoice,
+    transcribeAudio: ({ audioPath, outputPath, receiptPath }) =>
+      generateTranscript({ root, audioPath, outputPath, receiptPath }),
+    planShotsWithAgent,
     execute,
     resolveRunDirectory,
     pruneOldRuns: typeof deps.resolveRunDirectory === "function"
@@ -1033,25 +1043,62 @@ async function produceGroundedCandidateRun({
 
     const allowedBgs = ["living-room", "map-photo-zone", "sisters-room", "pure-white"];
     const chosenBg = allowedBgs.includes(script.backgroundId) ? script.backgroundId : "living-room";
-    const multiShotInput = {
-      schemaVersion: "shaz-multi-shot-v1",
-      title: script.headline || formatSafeHeadline(script.title, 36),
-      headline: script.headline || formatSafeHeadline(script.title, 32),
-      defaultBackgroundId: chosenBg,
-      brollMedia: downloadedMediaList,
-      script,
-    };
+    const directorMode = cfg.director === "agent" ? "agent" : "jev";
     const inputJsonPath = path.join(stageDir, "input.json");
-    await d.writeJson(inputJsonPath, multiShotInput);
+    let directorReceipt = null;
+
+    if (directorMode === "agent") {
+      const stageTranscriptPath = path.join(stageDir, "transcript.json");
+      const stageTranscriptReceiptPath = path.join(stageDir, "transcription-receipt.json");
+      const transcribed = await d.transcribeAudio({
+        audioPath: audioFile,
+        outputPath: stageTranscriptPath,
+        receiptPath: stageTranscriptReceiptPath,
+      });
+      const transcriptSha256 = transcribed?.transcriptSha256
+        ?? (fsSync.existsSync(stageTranscriptPath) ? await d.sha256(stageTranscriptPath) : null);
+      const agentPlan = await d.planShotsWithAgent({
+        script,
+        topic: story.topic,
+        audioDurationSeconds: durationSeconds,
+        transcript: transcribed.transcript,
+        transcriptSha256,
+        brollMediaList: downloadedMediaList,
+        defaultBackgroundId: chosenBg,
+        kitRoot: root,
+        config: cfg,
+        askAgentFn: d.askAgentFn,
+      });
+      await d.writeJson(inputJsonPath, agentPlan.multiShotInput);
+      directorReceipt = {
+        schemaVersion: 1,
+        director: "agent",
+        writerAgent: cfg.writerAgent,
+        attempts: agentPlan.attempts,
+      };
+      await d.writeJson(path.join(stageDir, "director-receipt.json"), directorReceipt);
+    } else {
+      const multiShotInput = {
+        schemaVersion: "shaz-multi-shot-v1",
+        title: script.headline || formatSafeHeadline(script.title, 36),
+        headline: script.headline || formatSafeHeadline(script.title, 32),
+        defaultBackgroundId: chosenBg,
+        brollMedia: downloadedMediaList,
+        script,
+      };
+      await d.writeJson(inputJsonPath, multiShotInput);
+    }
 
     try {
-      d.execute("node", [
+      const initArgs = [
         path.join(root, "runner.mjs"),
         "init",
         `--run=${runId}`,
         `--input=${inputJsonPath}`,
         `--audio=${audioFile}`,
-      ], { cwd: root });
+        ...(directorMode === "agent" ? ["--director=agent"] : []),
+      ];
+      d.execute("node", initArgs, { cwd: root });
     } catch (err) {
       if (isJevCandidateSkipError(err)) {
         throw new CandidateSkipError(err.message, { stage: "jev-director", cause: err });
@@ -1078,6 +1125,9 @@ async function produceGroundedCandidateRun({
     }
     await d.writeJson(path.join(runDirectory, "script.json"), script);
     await d.writeJson(path.join(runDirectory, "author-receipt.json"), receipt);
+    if (directorReceipt) {
+      await d.writeJson(path.join(runDirectory, "director-receipt.json"), directorReceipt);
+    }
     const stageMediaSources = path.join(stageDir, "media-sources.json");
     if (fsSync.existsSync(stageMediaSources)) {
       await fs.copyFile(stageMediaSources, path.join(runDirectory, "media-sources.json"));

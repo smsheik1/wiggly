@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import path from "node:path";
 import { evaluateSentenceDirector, getTypesafeApiKey, JevApiError, JevDirectorSkipError } from "./director-jev.mjs";
 import { deriveChibiRoutine } from "./chibi-choreography.mjs";
+import { getApprovedPerformancePoses, loadPerformanceApprovalsSync } from "./pose-approvals.mjs";
 import { alignScriptToTranscript } from "./script-alignment.mjs";
 import { doesPoseReachEnterRect, loadGestureReachMapSync } from "./gesture-reach.mjs";
 import { OTS_HEADLINE_BOX } from "./ots-card-renderer.mjs";
@@ -97,23 +98,21 @@ function poseBlocksOtsHeadline(poseId) {
   return doesPoseReachEnterRect(entry, OTS_HEADLINE_BOX, { padding: 16 });
 }
 
+/**
+ * Returns the canonical puppet pose ID directly without silent pose substitution so
+ * unapproved, mistyped, or legacy pose names fail loudly in validation.
+ */
 export function resolvePuppetPoseId(poseId) {
-  if (poseId === "chin-stroke" || poseId === "chin-stroke-swagger" || poseId === "chin-stroke-smug" || poseId === "swagger" || poseId === "phone-use-sequence" || poseId === "look-at-phone") {
-    return "chin-stroke-swagger";
-  }
-  if (poseId === "facepalm-frustrated" || poseId === "facepalm") {
-    return "shrug";
-  }
-  if (poseId === "arms-crossed-skeptical" || poseId === "arms-crossed") {
-    return "confident";
-  }
   return poseId;
 }
 
 /**
- * Validates a multi-shot plan against measured audio and background assets.
+ * Validates a multi-shot plan against measured audio, approved poses, and background assets.
  */
-export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBackgroundId, assets, poseRegistry, transcript }) {
+export function validateMultiShotPlan(
+  input,
+  { audioDurationSeconds, defaultBackgroundId, assets, poseRegistry, transcript, allowUnapprovedPoses = false, approvals = null },
+) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     throw new Error("multi-shot input must be an object");
   }
@@ -153,6 +152,7 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
   }
 
   const registeredBackgroundIds = new Set((assets.backgrounds ?? []).map(({ id }) => id));
+  const resolvedApprovals = !allowUnapprovedPoses ? (approvals || loadPerformanceApprovalsSync()) : null;
 
   let currentFrame = 0;
   const validatedShots = [];
@@ -206,6 +206,13 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       const resolvedPoseId = resolvePuppetPoseId(shot.poseId ?? "neutral-listening");
       if (poseRegistry?.byId && !poseRegistry.byId.has(resolvedPoseId)) {
         throw new Error(`shots[${index}].poseId '${shot.poseId}' is not a registered puppet pose`);
+      }
+      if (resolvedApprovals && !resolvedApprovals.approvedSet.has(resolvedPoseId)) {
+        const entry = resolvedApprovals.byId.get(resolvedPoseId);
+        const decision = entry ? entry.decision : "unregistered";
+        throw new Error(
+          `shots[${index}].poseId '${shot.poseId}' is not approved for performance auto-pick (status: ${decision})`,
+        );
       }
       if (shot.otsGraphic !== undefined) {
         if (typeof shot.otsGraphic !== "object" || shot.otsGraphic === null) {
@@ -679,17 +686,9 @@ export function deriveMultiShotPlan({
     if (!chibiIndices.has(textIdx)) textCardIndices.add(textIdx);
   }
 
-  const activePoses = [
-    "chin-stroke-swagger",
-    "point-at-screen",
-    "excited-celebration",
-    "confident",
-    "shrug",
-    "point",
-    "think",
-    "aha",
-    "present",
-  ];
+  const approvedPoses = getApprovedPerformancePoses();
+  const activePoses = approvedPoses.filter((poseId) => poseId !== "neutral-listening");
+  if (activePoses.length === 0) activePoses.push("neutral-listening");
   let activePoseIndex = 0;
   let brollCount = 0;
   const mediaCycler = createMediaCycler(brollMediaList);
@@ -875,19 +874,7 @@ export async function deriveMultiShotPlanWithJev({
   const shots = [];
   let currentFrame = 0;
 
-  const puppetRotation = [
-    "neutral-listening",
-    "chin-stroke",
-    "chin-stroke-swagger",
-    "point-at-screen",
-    "excited-celebration",
-    "confident",
-    "shrug",
-    "point",
-    "think",
-    "aha",
-    "present",
-  ];
+  const puppetRotation = getApprovedPerformancePoses();
   const chibiRotation = ["point-emphasis", "think-chin", "present-card", "shrug-open", "talk-gesture"];
   const badgeRotation = ["REALITY CHECK", "THE CLASH", "COMMUNITY ROAST", "THE BEST", "YOUR VERDICT"];
 

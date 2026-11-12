@@ -112,7 +112,7 @@ export function getTelegramCredentials({
   return { token, chatId: String(chatId), operatorUserId: operatorUserId ? String(operatorUserId) : null };
 }
 
-async function parseTelegramApiResponse(res, actionName, token) {
+export async function parseTelegramApiResponse(res, actionName, token) {
   let data = null;
   let rawText = "";
   try {
@@ -155,7 +155,7 @@ async function parseTelegramApiResponse(res, actionName, token) {
   return data;
 }
 
-async function answerTelegramCallback(token, callbackQueryId, text, { showAlert = false, fetchFn = fetch } = {}) {
+export async function answerTelegramCallback(token, callbackQueryId, text, { showAlert = false, fetchFn = fetch } = {}) {
   try {
     await fetchFn(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
       method: "POST",
