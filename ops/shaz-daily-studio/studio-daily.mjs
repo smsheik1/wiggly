@@ -24,6 +24,7 @@ import { fetchNewsMcpEvents, NewsMcpError, pickDistinctEvents } from "./newsmcp.
 export { CandidateSkipError, RunStopError, ScriptAuthorError };
 import {
   filterFreshTopics,
+  getDefaultStudioHome,
   getRecentPublishedTitles,
   loadLedger,
   recordShown,
@@ -32,7 +33,17 @@ import {
 import { countWords, validateScript } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/validate-script.mjs";
 import { synthesizeShazVoice } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/voice.mjs";
 import { composeVerticalVideo, formatSafeHeadline } from "./vertical-letterbox.mjs";
-import { sendApprovalVideo, pollApprovalDecision, pollBatchDecision, sendTelegramMessage } from "./telegram-approval.mjs";
+import {
+  computeChicagoDeadline,
+  editTelegramMessageCaption,
+  escapeTelegramHtml,
+  flushTelegramBacklog,
+  getTelegramCredentials,
+  pollApprovalDecision,
+  pollBatchDecision,
+  sendApprovalVideo,
+  sendTelegramMessage,
+} from "./telegram-approval.mjs";
 import { publishVideoToAllChannels, getBufferPostsStatus } from "./buffer-publisher.mjs";
 import { uploadPublishVideo, deletePublishVideo } from "./media-host.mjs";
 import { redactSecrets } from "./secrets.mjs";
@@ -621,6 +632,12 @@ export async function sourceStoryMedia({ topic, script, stageDir, searchFn = sea
 }
 
 function resolveStudioDeps(deps = {}) {
+  const hasMockTelegram =
+    typeof deps.pollBatchDecision === "function" ||
+    typeof deps.pollApprovalDecision === "function" ||
+    typeof deps.sendApprovalVideo === "function" ||
+    typeof deps.sendTelegramMessage === "function";
+
   return {
     loadStudioConfig,
     acquireStudioLock,
@@ -639,6 +656,9 @@ function resolveStudioDeps(deps = {}) {
     sha256,
     writeJson,
     composeVerticalVideo,
+    getTelegramCredentials: hasMockTelegram ? null : getTelegramCredentials,
+    flushTelegramBacklog: hasMockTelegram ? async () => 0 : flushTelegramBacklog,
+    editTelegramMessageCaption: hasMockTelegram ? async () => ({}) : editTelegramMessageCaption,
     sendApprovalVideo,
     pollApprovalDecision,
     pollBatchDecision,
@@ -835,9 +855,128 @@ async function notifyFatalStudioAlert(sendTelegramMessageFn, headline, err) {
   try {
     const safeMsg = redactSecrets(err?.message || String(err));
     await sendTelegramMessageFn({
-      text: `🚨 *Shaz Daily Studio stopped: ${headline}*\n\n\`\`\`\n${safeMsg.slice(0, 2800)}\n\`\`\``,
+      text: `🚨 <b>Shaz Daily Studio stopped: ${escapeTelegramHtml(headline)}</b>\n\n<pre>${escapeTelegramHtml(safeMsg.slice(0, 2800))}</pre>`,
     });
   } catch {}
+}
+
+export function getPendingBatchPath(env = process.env) {
+  return path.join(getDefaultStudioHome(env), "pending-batch.json");
+}
+
+function serializeCandidateForPendingBatch(c) {
+  return {
+    candidateNumber: c.candidateNumber,
+    runId: c.runId,
+    runDirectory: c.runDirectory,
+    rawMasterVideo: c.rawMasterVideo,
+    verticalVideoPath: c.verticalVideoPath,
+    script: c.script,
+    dialogueText: c.dialogueText,
+    story: c.story,
+    approval: c.approval,
+  };
+}
+
+function formatChannelReceiptSummary(postResult) {
+  const entries = Object.entries(postResult?.channels || {});
+  if (entries.length === 0) return "none";
+  return entries
+    .map(([key, entry]) => `${escapeTelegramHtml(entry?.service || key)} ✓`)
+    .join(" · ");
+}
+
+async function completeBatchDecisionAndPublish({
+  decision,
+  candidates,
+  skips = [],
+  pendingBatchPath,
+  ledgerPath,
+  env,
+  noTelegram = false,
+  d,
+}) {
+  if (pendingBatchPath) {
+    await fs.unlink(pendingBatchPath).catch(() => {});
+  }
+
+  if (decision?.status === "no-pick") {
+    console.log("  ⏱️ 8:00 PM Central deadline passed without a pick. Nothing was posted.");
+    if (!noTelegram) {
+      await d.sendTelegramMessage({
+        text: "⏱️ <b>No pick today</b> (8:00 PM Central deadline passed). Nothing was posted.",
+      }).catch(() => {});
+    }
+    return { status: "no-pick", candidates, skips, decision };
+  }
+
+  if (decision?.status === "all-passed") {
+    console.log("  🚫 Operator passed all candidates. Nothing will be posted today.");
+    if (!noTelegram) {
+      await d.sendTelegramMessage({
+        text: "🚫 <b>All passed today</b> — nothing will be posted.",
+      }).catch(() => {});
+    }
+    return { status: "all-passed", candidates, skips, decision };
+  }
+
+  const winner = candidates.find((c) => c.runId === decision?.runId) || candidates[0];
+  console.log(`\n🏆 WINNER SELECTED: Candidate #${winner.candidateNumber} ("${winner.script.title}") [${winner.runId}]`);
+
+  console.log("\n✍️  Signing Human Review Gate & Finalizing Winner Deliverables...");
+  const { postResult } = await finalizeUploadPublishAndCleanup({
+    runId: winner.runId,
+    runDirectory: winner.runDirectory,
+    rawMasterVideo: winner.rawMasterVideo,
+    verticalVideoPath: winner.verticalVideoPath,
+    title: winner.script.title,
+    dialogueText: winner.dialogueText,
+    tags: winner.script.hashtags || null,
+    story: winner.story,
+    reviewNote: `Selected as daily winner from ${candidates.length}-candidate batch for ${winner.script.title}`,
+    ledgerPath,
+    env,
+    deps: d,
+  });
+
+  const publishedChannels = Object.keys(postResult.channels).join(", ");
+  console.log(`  ✅ Successfully published to: ${publishedChannels}!`);
+  if (postResult.pending.length > 0) {
+    console.log(`  ℹ️ Pending channels: ${postResult.pending.map((p) => p.service).join(", ")}`);
+  }
+  console.log(`  Logged winner to published-topics.json`);
+
+  const summaryHtml = formatChannelReceiptSummary(postResult);
+  if (!noTelegram && (decision?.messageId || winner.approval?.messageId)) {
+    await d.editTelegramMessageCaption({
+      chatId: winner.approval?.chatId,
+      messageId: decision?.messageId || winner.approval?.messageId,
+      caption:
+        `✅ <b>Posted:</b> ${summaryHtml}\n\n` +
+        `<b>Title:</b> ${escapeTelegramHtml(winner.script.title)}\n` +
+        `Run ID: <code>${escapeTelegramHtml(winner.runId)}</code>`,
+    }).catch(() => {});
+  }
+
+  if (!noTelegram) {
+    await d.sendTelegramMessage({
+      text:
+        `🎉 <b>DAILY POST LIVE!</b>\n\n` +
+        `Candidate #${winner.candidateNumber} (<b>${escapeTelegramHtml(winner.script.title)}</b>) posted: ${summaryHtml}\n\n` +
+        `Run ID: <code>${escapeTelegramHtml(winner.runId)}</code>`,
+    }).catch(() => {});
+  }
+
+  console.log("\n================================================================================");
+  console.log("🎉 DAILY BATCH FINISHED SUCCESSFULLY!");
+  console.log("================================================================================\n");
+
+  return {
+    status: "published",
+    winnerRunId: winner.runId,
+    winnerTitle: winner.script.title,
+    postResult,
+  };
 }
 
 /**
@@ -956,6 +1095,7 @@ async function finalizeUploadPublishAndCleanup({
 export async function runDailyStudio({
   dryRun = false,
   autoApprove = false,
+  noTelegram = false,
   customTopic = null,
   ledgerPath,
   env = process.env,
@@ -970,9 +1110,23 @@ export async function runDailyStudio({
   let lock = null;
 
   try {
+    if (noTelegram && !dryRun && !autoApprove) {
+      throw new RunStopError("--no-telegram can only be combined with --dry-run or --auto-approve.", {
+        code: "INVALID_CLI_FLAGS",
+        stage: "preflight",
+        headline: "Invalid CLI Flags",
+        canAlert: false,
+      });
+    }
     const cfg = await d.loadStudioConfig();
     lock = await d.acquireStudioLock({ env, mode: "single" });
     await d.assertFreeDiskSpace({ minFreeDiskMb: cfg.minFreeDiskMb, env, statfsFn: d.statfsFn });
+    if (!noTelegram && !dryRun && !autoApprove) {
+      d.getTelegramCredentials?.({ requireOperator: true, env });
+    }
+    const baselineUpdateId = (!noTelegram && !dryRun && !autoApprove)
+      ? await d.flushTelegramBacklog({ env })
+      : 0;
 
     console.log("📡 STEP 1: Scouting Breaking Topics & Content Ledger...");
     const isCustomTopic = Boolean(customTopic);
@@ -1028,29 +1182,48 @@ export async function runDailyStudio({
     const { runDirectory, rawMasterVideo, verticalVideoPath, script, dialogueText, story } = produced;
     console.log(`  Vertical video ready: ${verticalVideoPath}`);
 
+    if (!noTelegram) {
+      console.log("\n📱 STEP 6: Dispatching Preview to Telegram...");
+      const approval = await d.sendApprovalVideo({
+        videoPath: verticalVideoPath,
+        title: script.title,
+        runId,
+        captionText: dialogueText,
+        dryRun,
+      });
+      console.log(`  Preview sent to Telegram Chat ${approval.chatId}`);
+    }
+
     if (dryRun) {
       console.log("\n[DRY RUN COMPLETE] Staged run assets preserved at:", runDirectory);
       return { status: "dry-run-success", runDirectory, verticalVideoPath };
     }
 
-    console.log("\n📱 STEP 6: Dispatching Preview to Telegram for One-Click Approval...");
-    const approval = await d.sendApprovalVideo({
-      videoPath: verticalVideoPath,
-      title: script.title,
-      runId,
-      captionText: dialogueText,
-    });
-    console.log(`  Preview sent to Telegram Chat ${approval.chatId}`);
     await d.recordShown(story.topic, { ledgerPath, env });
 
     let decision = "approved";
     if (!autoApprove) {
       console.log("  Waiting for operator approval on Telegram...");
-      decision = await d.pollApprovalDecision({ runId });
+      decision = await d.pollApprovalDecision({ runId, initialUpdateId: baselineUpdateId, env });
+    }
+
+    if (decision === "no-pick") {
+      console.log("  ⏱️ 8:00 PM Central deadline passed without a pick. Publication aborted.");
+      if (!noTelegram) {
+        await d.sendTelegramMessage({
+          text: "⏱️ <b>No pick today</b> (8:00 PM Central deadline passed). Nothing was posted.",
+        }).catch(() => {});
+      }
+      return { status: "no-pick", runDirectory };
     }
 
     if (decision !== "approved") {
-      console.log("  ❌ Video rejected by operator. Publication aborted.");
+      console.log("  ❌ Video passed by operator. Publication aborted.");
+      if (!noTelegram) {
+        await d.sendTelegramMessage({
+          text: "🚫 <b>Passed today</b> — nothing will be posted.",
+        }).catch(() => {});
+      }
       return { status: "rejected", runDirectory };
     }
 
@@ -1112,6 +1285,7 @@ export async function runDailyBatch({
   count,
   dryRun = false,
   autoApprove = false,
+  noTelegram = false,
   customTopics = null,
   ledgerPath,
   env = process.env,
@@ -1121,9 +1295,26 @@ export async function runDailyBatch({
   let lock = null;
 
   try {
+    if (noTelegram && !dryRun && !autoApprove) {
+      throw new RunStopError("--no-telegram can only be combined with --dry-run or --auto-approve.", {
+        code: "INVALID_CLI_FLAGS",
+        stage: "preflight",
+        headline: "Invalid CLI Flags",
+        canAlert: false,
+      });
+    }
+
     const cfg = await d.loadStudioConfig();
     lock = await d.acquireStudioLock({ env, mode: "batch" });
     await d.assertFreeDiskSpace({ minFreeDiskMb: cfg.minFreeDiskMb, env, statfsFn: d.statfsFn });
+
+    if (!noTelegram && !dryRun && !autoApprove) {
+      d.getTelegramCredentials?.({ requireOperator: true, env });
+    }
+    const baselineUpdateId = (!noTelegram && !dryRun && !autoApprove)
+      ? await d.flushTelegramBacklog({ env })
+      : 0;
+
     const targetCount = count ?? cfg.batchSize;
 
     console.log("\n================================================================================");
@@ -1177,15 +1368,20 @@ export async function runDailyBatch({
         throw classified.error;
       }
 
-      console.log(`  Dispatching Candidate ${candidateNumber} to Telegram...`);
-      const approval = await d.sendApprovalVideo({
-        videoPath: produced.verticalVideoPath,
-        title: produced.script.title,
-        runId,
-        captionText: produced.dialogueText,
-        candidateNumber,
-        totalCandidates: targetCount,
-      });
+      let approval = null;
+      if (!noTelegram) {
+        console.log(`  Dispatching Candidate ${candidateNumber} to Telegram...`);
+        approval = await d.sendApprovalVideo({
+          videoPath: produced.verticalVideoPath,
+          title: produced.script.title,
+          runId,
+          captionText: produced.dialogueText,
+          candidateNumber,
+          totalCandidates: targetCount,
+          dryRun,
+        });
+        console.log(`  ✅ Candidate ${candidateNumber} dispatched to Telegram.`);
+      }
 
       if (!dryRun) {
         await d.recordShown(story.topic, { ledgerPath, env });
@@ -1196,7 +1392,6 @@ export async function runDailyBatch({
         ...produced,
         approval,
       });
-      console.log(`  ✅ Candidate ${candidateNumber} dispatched to Telegram.`);
     }
 
     if (candidates.length === 0) {
@@ -1207,91 +1402,176 @@ export async function runDailyBatch({
       });
     }
 
-    // Send batch summary banner message to Telegram
-    try {
-      const countLabel = candidates.length === 1 ? "CANDIDATE" : "CANDIDATES";
-      const shortfallNote = candidates.length < targetCount
-        ? `\n\nℹ️ Only ${candidates.length}/${targetCount} fresh distinct stories succeeded today.`
-        : "";
-      const skipNote = skips.length > 0
-        ? `\n\n⏭️ *Skipped ${skips.length} candidate${skips.length === 1 ? "" : "s"}:*\n` +
-          skips.map((s) => `• _${s.title}_ (${s.stage})`).join("\n")
-        : "";
-      await d.sendTelegramMessage({
-        text:
-          `🌅 *${candidates.length} DAILY ${countLabel} READY FOR REVIEW*\n` +
-          `Writer: \`${cfg.writerAgent}\` · Voice: \`cartesia\`\n\n` +
-          `Hey Shaz! Above are your ${candidates.length} daily candidate videos for today.\n\n` +
-          `Watch each cut above and tap *🚀 Pick & Post* on your favorite. Wiggly will immediately push it live across *Instagram Reels* (@shazskits), *YouTube Shorts* (Shaz), and *TikTok*!` +
-          shortfallNote +
-          skipNote,
-      });
-    } catch {}
+    const batchId = `batch-${new Date().toISOString().slice(0, 10)}-${Math.random().toString(36).slice(2, 8)}`;
+
+    if (!noTelegram) {
+      try {
+        const countLabel = candidates.length === 1 ? "CANDIDATE" : "CANDIDATES";
+        const shortfallNote = candidates.length < targetCount
+          ? `\n\nℹ️ Only ${candidates.length}/${targetCount} fresh distinct stories succeeded today.`
+          : "";
+        const skipNote = skips.length > 0
+          ? `\n\n⏭️ <b>Skipped ${skips.length} candidate${skips.length === 1 ? "" : "s"}:</b>\n` +
+            skips.map((s) => `• <i>${escapeTelegramHtml(s.title)}</i> (${escapeTelegramHtml(s.stage)})`).join("\n")
+          : "";
+        const dryPrefix = dryRun ? "🧪 <b>DRY RUN — won't post</b>\n" : "";
+        const actionLine = dryRun
+          ? "Preview only (dry-run mode — no buttons attached, ledger &amp; publishing skipped)."
+          : "Watch each cut above and tap <b>🚀 Pick &amp; Post</b> on your favorite, or pass all below.";
+        await d.sendTelegramMessage({
+          text:
+            `${dryPrefix}🌅 <b>${candidates.length} DAILY ${countLabel} READY FOR REVIEW</b>\n` +
+            `Writer: <code>${escapeTelegramHtml(cfg.writerAgent)}</code> · Voice: <code>cartesia</code>\n\n` +
+            `Hey Shaz! Above are your ${candidates.length} daily candidate videos for today.\n\n` +
+            actionLine +
+            shortfallNote +
+            skipNote,
+          ...(!dryRun && !autoApprove
+            ? {
+                replyMarkup: {
+                  inline_keyboard: [
+                    [{ text: "🚫 Pass All", callback_data: `pass_all:${batchId}` }],
+                  ],
+                },
+              }
+            : {}),
+        });
+      } catch {}
+    }
 
     if (dryRun) {
       console.log("\n[DRY RUN COMPLETE] Staged candidates preserved.");
       return { status: "dry-run-success", candidates, skips };
     }
 
-  let winner = candidates[0];
-  if (!autoApprove) {
-    console.log("\n📱 Waiting for operator to tap 'Pick & Post' on their favorite candidate in Telegram...");
+    const pendingBatchPath = getPendingBatchPath(env);
+    let decision = {
+      status: "approved",
+      runId: candidates[0].runId,
+      chosen: candidates[0],
+      messageId: candidates[0].approval?.messageId ?? null,
+    };
+
+    if (!autoApprove) {
+      const deadline = computeChicagoDeadline();
+      const pendingPayload = {
+        schemaVersion: 1,
+        batchId,
+        createdAt: new Date().toISOString(),
+        deadlineIso: deadline.toISOString(),
+        baselineUpdateId,
+        targetCount,
+        rejectedRunIds: [],
+        skips,
+        candidates: candidates.map(serializeCandidateForPendingBatch),
+      };
+      await d.writeJson(pendingBatchPath, pendingPayload);
+
+      console.log("\n📱 Waiting for operator to tap 'Pick & Post' on their favorite candidate in Telegram...");
+      decision = await d.pollBatchDecision({
+        batchId,
+        deadline,
+        initialUpdateId: baselineUpdateId,
+        env,
+        candidates: candidates.map((c) => ({
+          runId: c.runId,
+          title: c.script.title,
+          messageId: c.approval?.messageId,
+        })),
+        onCandidateRejected: async (_rejectedId, rejectedList) => {
+          pendingPayload.rejectedRunIds = rejectedList;
+          await d.writeJson(pendingBatchPath, pendingPayload).catch(() => {});
+        },
+      });
+    }
+
+    return await completeBatchDecisionAndPublish({
+      decision,
+      candidates,
+      skips,
+      pendingBatchPath,
+      ledgerPath,
+      env,
+      noTelegram,
+      d,
+    });
+  } catch (err) {
+    const classified = classifyRunError(err);
+    if (classified.canAlert && !noTelegram) {
+      await notifyFatalStudioAlert(d.sendTelegramMessage, classified.headline, classified.error);
+    }
+    throw classified.error;
+  } finally {
+    await lock?.release().catch(() => {});
+  }
+}
+
+/**
+ * Resumes polling Telegram from an interrupted `<studioHome>/pending-batch.json` session
+ * without regenerating or re-dispatching the candidate videos.
+ */
+export async function resumePendingBatchPoll({
+  ledgerPath,
+  env = process.env,
+  deps = {},
+} = {}) {
+  const d = resolveStudioDeps(deps);
+  const pendingBatchPath = getPendingBatchPath(env);
+  let lock = null;
+
+  try {
+    let raw;
+    try {
+      raw = await fs.readFile(pendingBatchPath, "utf8");
+    } catch {
+      throw new RunStopError(`No pending batch state found at ${pendingBatchPath}.`, {
+        code: "NO_PENDING_BATCH",
+        stage: "resume-poll",
+        headline: "No Pending Batch",
+        canAlert: false,
+      });
+    }
+    const pending = JSON.parse(raw);
+    const candidates = Array.isArray(pending?.candidates) ? pending.candidates : [];
+    if (candidates.length === 0) {
+      throw new RunStopError(`Pending batch at ${pendingBatchPath} contains 0 candidates.`, {
+        code: "INVALID_PENDING_BATCH",
+        stage: "resume-poll",
+        headline: "Invalid Pending Batch",
+        canAlert: false,
+      });
+    }
+
+    lock = await d.acquireStudioLock({ env, mode: "resume-poll" });
+    const deadline = pending.deadlineIso ? new Date(pending.deadlineIso) : computeChicagoDeadline();
+
     const decision = await d.pollBatchDecision({
+      batchId: pending.batchId || null,
+      deadline,
+      initialUpdateId: pending.baselineUpdateId || 0,
+      initialRejectedRunIds: Array.isArray(pending.rejectedRunIds) ? pending.rejectedRunIds : [],
+      env,
       candidates: candidates.map((c) => ({
         runId: c.runId,
-        title: c.script.title,
+        title: c.script?.title || c.title,
         messageId: c.approval?.messageId,
       })),
+      onCandidateRejected: async (_rejectedId, rejectedList) => {
+        pending.rejectedRunIds = rejectedList;
+        await d.writeJson(pendingBatchPath, pending).catch(() => {});
+      },
     });
-    winner = candidates.find((c) => c.runId === decision.runId) || winner;
-  }
 
-  console.log(`\n🏆 WINNER SELECTED: Candidate #${winner.candidateNumber} ("${winner.script.title}") [${winner.runId}]`);
-
-  // Finalize winner -> Upload to Convex -> Broadcast to Buffer -> Delete on "sent"
-  console.log("\n✍️  Signing Human Review Gate & Finalizing Winner Deliverables...");
-  const { postResult } = await finalizeUploadPublishAndCleanup({
-    runId: winner.runId,
-    runDirectory: winner.runDirectory,
-    rawMasterVideo: winner.rawMasterVideo,
-    verticalVideoPath: winner.verticalVideoPath,
-    title: winner.script.title,
-    dialogueText: winner.dialogueText,
-    tags: winner.script.hashtags || null,
-    story: winner.story,
-    reviewNote: `Selected as daily winner from ${candidates.length}-candidate batch for ${winner.script.title}`,
-    ledgerPath,
-    env,
-    deps: d,
-  });
-
-  const publishedChannels = Object.keys(postResult.channels).join(", ");
-  console.log(`  ✅ Successfully published to: ${publishedChannels}!`);
-  if (postResult.pending.length > 0) {
-    console.log(`  ℹ️ Pending channels: ${postResult.pending.map((p) => p.service).join(", ")}`);
-  }
-  console.log(`  Logged winner to published-topics.json`);
-
-  // Send Telegram completion confirmation
-  try {
-    await d.sendTelegramMessage({
-      text:
-        `🎉 *DAILY POST LIVE!*\n\n` +
-        `Candidate #${winner.candidateNumber} (*${winner.script.title}*) has been published to *Instagram Reels* and *YouTube Shorts*!\n\n` +
-        `Run ID: \`${winner.runId}\``,
+    return await completeBatchDecisionAndPublish({
+      decision,
+      candidates,
+      skips: pending.skips || [],
+      pendingBatchPath,
+      ledgerPath,
+      env,
+      noTelegram: false,
+      d,
     });
-  } catch {}
-
-  console.log("\n================================================================================");
-  console.log("🎉 DAILY BATCH FINISHED SUCCESSFULLY!");
-  console.log("================================================================================\n");
-
-  return {
-    status: "published",
-    winnerRunId: winner.runId,
-    winnerTitle: winner.script.title,
-    postResult,
-  };
   } catch (err) {
     const classified = classifyRunError(err);
     if (classified.canAlert) {
@@ -1318,16 +1598,24 @@ if (isDirectRun) {
   const rawArgs = process.argv.slice(2);
   const isDryRun = rawArgs.includes("--dry-run") || rawArgs.includes("--dry-run=true");
   const isAutoApprove = rawArgs.includes("--auto-approve") || rawArgs.includes("--auto-approve=true");
+  const isNoTelegram = rawArgs.includes("--no-telegram");
+  const isResumePoll = rawArgs.includes("--resume-poll");
   const isSingle = rawArgs.includes("--single");
   const batchArg = rawArgs.find((a) => a.startsWith("--batch="))?.split("=")[1];
   const parsedBatch = batchArg ? parseInt(batchArg, 10) : Number.NaN;
   const count = Number.isNaN(parsedBatch) ? undefined : parsedBatch;
   const topicArg = rawArgs.find((a) => a.startsWith("--topic="))?.split("=").slice(1).join("=");
 
-  if (isSingle) {
+  if (isResumePoll) {
+    resumePendingBatchPoll().catch((err) => {
+      console.error(redactSecrets(`\n❌ Fatal Resume Poll Error: ${err.message}\n`), redactSecrets(err.stack || ""));
+      process.exit(1);
+    });
+  } else if (isSingle) {
     runDailyStudio({
       dryRun: isDryRun,
       autoApprove: isAutoApprove,
+      noTelegram: isNoTelegram,
       customTopic: topicArg || null,
     }).catch((err) => {
       console.error(redactSecrets(`\n❌ Fatal Studio Error: ${err.message}\n`), redactSecrets(err.stack || ""));
@@ -1338,6 +1626,7 @@ if (isDirectRun) {
       count,
       dryRun: isDryRun,
       autoApprove: isAutoApprove,
+      noTelegram: isNoTelegram,
       customTopics: topicArg ? [topicArg] : null,
     }).catch((err) => {
       console.error(redactSecrets(`\n❌ Fatal Batch Studio Error: ${err.message}\n`), redactSecrets(err.stack || ""));
