@@ -55,3 +55,38 @@ test("loadCartesiaApiKey loads key from environment or secrets.env gracefully", 
   }
 });
 
+test("synthesizeShazVoice fails loudly when provider is cartesia without key or on Cartesia HTTP error (no Fish fallback)", async () => {
+  const { VoiceSynthesisError } = await import("../runtime/voice.mjs");
+  const envWithOnlyFish = { FISH_STUDIO_APIKEY: "fish-key-should-not-be-used" };
+
+  await assert.rejects(
+    async () =>
+      synthesizeShazVoice({
+        text: "Testing cartesia only enforcement.",
+        outputPath: "/tmp/voice-cartesia-missing-test.wav",
+        provider: "cartesia",
+        apiKey: null,
+        env: envWithOnlyFish,
+        secretsPath: null,
+      }),
+    (err) => err instanceof VoiceSynthesisError && err.provider === "cartesia" && /CARTESIA_API_KEY IS MISSING/.test(err.message),
+  );
+
+  await assert.rejects(
+    async () =>
+      synthesizeShazVoice({
+        text: "Testing cartesia http error.",
+        outputPath: "/tmp/voice-cartesia-http-test.wav",
+        provider: "cartesia",
+        apiKey: "cartesia-mock-key",
+        secretsPath: null,
+        fetchFn: async () => ({
+          ok: false,
+          status: 402,
+          text: async () => "insufficient credits",
+        }),
+      }),
+    (err) => err instanceof VoiceSynthesisError && err.provider === "cartesia" && err.status === 402,
+  );
+});
+
