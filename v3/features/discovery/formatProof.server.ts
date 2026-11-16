@@ -675,9 +675,9 @@ const formatConfigs: FormatProfileConfig[] = [
     promise: "Give Shaz a voice track and pick a room, or turn breaking cultural trends into animated multi-shot commentary Shorts. The kit reads the words locally, lip-syncs the mouth, scouts live scoops ($0), and gives a fresh agent five artist-reviewed gestures for the moments that matter.",
     lastUpdated: "September 2026",
     githubRepo: "https://github.com/smsheik1/wiggly-shaz-puppet-runtime",
-    repositoryHref: "https://github.com/smsheik1/wiggly-shaz-puppet-runtime/releases/download/v0.4.0/wiggly-shaz-puppet-runtime-format-kit.zip",
+    repositoryHref: "https://github.com/smsheik1/wiggly-shaz-puppet-runtime/releases/download/v0.5.0/wiggly-shaz-puppet-runtime-format-kit.zip",
     manifestPath: "format-repositories/shaz-puppet-runtime-v1/format.json",
-    historicalProofVersions: ["0.2.0"],
+    historicalProofVersions: ["0.2.0", "0.4.0"],
     whatStays: [
       "Shaz stays on-model throughout the scene",
       "Shaz’s original rig draws the body, mouth shapes, effects, preview, and final video",

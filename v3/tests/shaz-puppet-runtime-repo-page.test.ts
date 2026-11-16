@@ -429,7 +429,7 @@ assert.deepEqual(goldens.transcriptGuidedStoryShowcase, {
 const profile = getDiscoveryFormatProfile("shaz-puppet-runtime");
 assert.ok(profile);
 assert.equal(profile.name, "Animate Shaz");
-assert.equal(profile.version, "0.4.0");
+assert.equal(profile.version, "0.5.0");
 assert.deepEqual(
   profile.proofEntries.map(({ id, format }) => ({
     id,
@@ -497,7 +497,7 @@ for (const rejectedPoseId of rejectedShowcasePoseIds) {
 }
 assert.equal(
   profile.repositoryHref,
-  "https://github.com/smsheik1/wiggly-shaz-puppet-runtime/releases/download/v0.4.0/wiggly-shaz-puppet-runtime-format-kit.zip",
+  "https://github.com/smsheik1/wiggly-shaz-puppet-runtime/releases/download/v0.5.0/wiggly-shaz-puppet-runtime-format-kit.zip",
 );
 assert.ok(profile.handoff);
 assert.match(
@@ -597,7 +597,7 @@ for (const staleCopy of [
   );
 }
 const trust = await getShazPuppetRuntimeTrustData();
-assert.equal(trust.version, "0.4.0");
+assert.equal(trust.version, "0.5.0");
 assert.equal(trust.includedAssets.poses.length, 11);
 assert.equal(
   trust.includedAssets.poses.some(({ id }) => id === "talk-to-camera"),
@@ -666,7 +666,7 @@ assert.deepEqual(trust.includedAssets.bundledEngines, [
       "create an English transcript with word timestamps before body-language planning",
   },
 ]);
-assert.equal(trust.quality.summary[0]?.value, "0.4.0");
+assert.equal(trust.quality.summary[0]?.value, "0.5.0");
 assert.equal(trust.quality.summary[0]?.label, "kit version");
 assert.ok(trust.commands.includes("npm run inspect:registry"));
 assert.ok(
@@ -824,7 +824,7 @@ assert.doesNotMatch(
 );
 assert.equal(
   trust.receipt.rows.find(({ label }) => label === "Kit version")?.value,
-  "0.4.0",
+  "0.5.0",
 );
 assert.equal(
   trust.receipt.rows.find(({ label }) => label === "Demo made with")?.value,
@@ -899,7 +899,7 @@ if (existsSync(download)) {
       supportedPlatform?: string;
     }>;
   };
-  assert.equal(packagedFormat.version, "0.4.0");
+  assert.equal(packagedFormat.version, "0.5.0");
   assert.match(packagedFormat.summary, /Give Shaz a voice track/);
   assert.match(packagedFormat.summary, /four built-in backgrounds/);
   assert.deepEqual(packagedRequirements.bundledEngines, [
