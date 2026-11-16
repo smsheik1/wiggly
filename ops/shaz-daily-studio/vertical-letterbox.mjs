@@ -68,13 +68,13 @@ export function formatSafeHeadline(text, maxChars = 36) {
 }
 
 /**
- * Renders the top header card (1080 x 400 SVG overlay) with bold hook headline.
+ * Renders the top header card (1080 x 280 SVG overlay) with bold hook headline for Layout B.
  */
 export async function renderHeaderCard({
   badge = null,
   headline,
   width = 1080,
-  height = 400,
+  height = 280,
 }) {
   const fontBase64 = getGroboldBase64();
   const fontFaceStyle = fontBase64
@@ -86,9 +86,9 @@ export async function renderHeaderCard({
   const lines = wrapText(safeHeadline.toUpperCase(), 20).slice(0, 3);
   const hasBadge = Boolean(badge && String(badge).trim().length > 0);
   const startY = lines.length === 1
-    ? (hasBadge ? 240 : 200)
-    : (lines.length === 2 ? (hasBadge ? 210 : 170) : (hasBadge ? 180 : 140));
-  const lineHeight = 68;
+    ? (hasBadge ? 190 : 150)
+    : (lines.length === 2 ? (hasBadge ? 165 : 125) : (hasBadge ? 140 : 100));
+  const lineHeight = 64;
 
   const textTspans = lines
     .map((line, i) => `<tspan x="540" y="${startY + i * lineHeight}">${escapeXml(line)}</tspan>`)
@@ -96,7 +96,7 @@ export async function renderHeaderCard({
 
   const badgeXml = hasBadge
     ? `<!-- Category Pill -->
-    <g transform="translate(540, 80)">
+    <g transform="translate(540, 70)">
       <rect x="-140" y="-22" width="280" height="44" rx="22" fill="#FFD60A" stroke="#000000" stroke-width="4" />
       <text x="0" y="8" class="badge-text" text-anchor="middle">${escapeXml(String(badge).trim().toUpperCase())}</text>
     </g>`
@@ -282,13 +282,13 @@ export async function composeVerticalVideo({
     ];
 
     let filterComplex = "";
-    // Step A: Gaussian blurred atmospheric visual backdrop + foreground centered video
+    // Step A: Gaussian blurred atmospheric visual backdrop + foreground centered video (Layout B: 1080x810 centered)
     filterComplex += `[0:v]split=2[fg][bg];`;
-    filterComplex += `[bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=25:5,eq=brightness=-0.18:contrast=0.88[blurred_bg];`;
-    filterComplex += `[fg]scale=1080:608[main];`;
-    filterComplex += `[blurred_bg][main]overlay=0:656[with_video];`;
-    // Step B: Overlay header card at top (x=0, y=140)
-    filterComplex += `[with_video][1:v]overlay=0:140[with_header]`;
+    filterComplex += `[bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=35:5,eq=brightness=-0.16:contrast=0.9[blurred_bg];`;
+    filterComplex += `[fg]scale=1440:810,crop=1080:810:(in_w-out_w)/2:0[main];`;
+    filterComplex += `[blurred_bg][main]overlay=0:500[with_video];`;
+    // Step B: Overlay header card at top (x=0, y=180)
+    filterComplex += `[with_video][1:v]overlay=0:180[with_header]`;
 
     let lastLabel = "[with_header]";
 
@@ -323,7 +323,7 @@ export async function composeVerticalVideo({
           const endSec = (wEndMs / 1000).toFixed(2);
           const nextLabel = `[sub_v${overlayIndex - 2}]`;
 
-          filterComplex += `;${lastLabel}[${overlayIndex}:v]overlay=0:1320:enable='between(t,${startSec},${endSec})'${nextLabel}`;
+          filterComplex += `;${lastLabel}[${overlayIndex}:v]overlay=0:1360:enable='between(t,${startSec},${endSec})'${nextLabel}`;
           lastLabel = nextLabel;
           overlayIndex += 1;
         }

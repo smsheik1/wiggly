@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { askActiveAgent } from "../../../v3/lib/agent-bridge.ts";
 import { execute, measuredAudioDuration, probeMedia, resolveRunDirectory, sha256, writeJson } from "../../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/run-common.mjs";
+import { isPoseApprovedForPerformance } from "../../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/pose-approvals.mjs";
 import { planShotsWithAgent } from "../agent-director.mjs";
 import { loadStudioConfig } from "../studio-daily.mjs";
 import { composeVerticalVideo, formatSafeHeadline } from "../vertical-letterbox.mjs";
@@ -242,6 +243,7 @@ export async function runDirectorAbComparison({
     dispatchBlindAbPrompt,
     pollBlindAbVote,
     sendTelegramMessage,
+    isApprovedPoseFn: isPoseApprovedForPerformance,
     rngIntFn: (max) => crypto.randomInt(0, max),
     measureDurationFn: (audioPath) => measuredAudioDuration(probeMedia(audioPath)),
     ...deps,
@@ -315,6 +317,17 @@ export async function runDirectorAbComparison({
     }
   };
 
+  const sourceInputPath = path.join(sourceRunDir, "input.json");
+  const sourceInput = fsSync.existsSync(sourceInputPath) ? await readJsonFile(sourceInputPath) : null;
+  const sanitizedJevShots = Array.isArray(sourceInput?.shots) && sourceInput.shots.length > 0
+    ? sourceInput.shots.map((s) => {
+        if (s.shotType === "talk-to-camera" && s.poseId && !d.isApprovedPoseFn(s.poseId, { root: kitRoot })) {
+          return { ...s, poseId: "think" };
+        }
+        return s;
+      })
+    : null;
+
   // Arm 1: Jev
   const jevArm = await renderArm("jev", {
     schemaVersion: "shaz-multi-shot-v1",
@@ -323,6 +336,7 @@ export async function runDirectorAbComparison({
     defaultBackgroundId: chosenBg,
     brollMedia: brollMediaList,
     script,
+    ...(sanitizedJevShots ? { shots: sanitizedJevShots } : {}),
   });
 
   // Arm 2: Agent

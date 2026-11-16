@@ -29,8 +29,11 @@ For body-language beats, use only the approved gestures listed in `poses/perform
 - `aha`
 - `point`
 - `confident`
+- `shrug`
+- `excited-celebration`
+- `point-at-screen`
 
-The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, and `chin-stroke-swagger`. They are runnable engineering material, not approved performance choices (`decision: "pending"` in `poses/performance-approvals.json`). Do not select one automatically or put it into a user video until that exact current recipe has passed a fresh complete visual review. (Broken experimental poses `facepalm-frustrated` and `arms-crossed-skeptical` are archived in `poses/archive/`).
+The full registry also includes `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, and `chin-stroke-swagger` (the remaining unapproved poses `key-point` and `chin-stroke-swagger` are `decision: "pending"` in `poses/performance-approvals.json`). Do not select an unapproved pose automatically or put it into a user video until that exact current recipe has passed a fresh complete visual review. (Broken experimental poses `facepalm-frustrated` and `arms-crossed-skeptical` are archived in `poses/archive/`).
 
 **Registered means runnable. It does not mean creatively approved.** Mechanical inspection can pass a pose that still looks wrong.
 

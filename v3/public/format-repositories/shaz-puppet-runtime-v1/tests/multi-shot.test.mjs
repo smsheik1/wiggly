@@ -497,7 +497,23 @@ test("validateMultiShotPlan accepts approved poses and rejects unapproved or swa
   });
   assert.equal(validated.shots[0].poseId, "think");
 
-  for (const unapprovedId of ["chin-stroke", "chin-stroke-swagger", "shrug", "excited-celebration", "point-at-screen", "key-point", "facepalm", "arms-crossed"]) {
+  for (const newlyApproved of ["shrug", "excited-celebration", "point-at-screen"]) {
+    const passed = validateMultiShotPlan(
+      {
+        ...approvedPlan,
+        shots: [{ ...approvedPlan.shots[0], poseId: newlyApproved }],
+      },
+      {
+        audioDurationSeconds: 2.0,
+        defaultBackgroundId: "sisters-room",
+        assets,
+        poseRegistry,
+      },
+    );
+    assert.equal(passed.shots[0].poseId, newlyApproved);
+  }
+
+  for (const unapprovedId of ["chin-stroke", "chin-stroke-swagger", "key-point", "facepalm", "arms-crossed"]) {
     assert.throws(
       () =>
         validateMultiShotPlan(

@@ -280,3 +280,37 @@ test("composeVerticalVideo enforces capped bitrate encode flags without ultrafas
     await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
   }
 });
+
+test("composeVerticalVideo applies Layout B geometry (1080x810 centered video at Y=500, header at Y=180, subtitle at Y=1360)", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "shaz-vert-layoutb-"));
+  const inputVideo = path.join(tempDir, "input.mp4");
+  const outputVideo = path.join(tempDir, "output-vertical.mp4");
+  await fs.writeFile(inputVideo, Buffer.from("dummy-input"));
+
+  let capturedArgs = null;
+  try {
+    await composeVerticalVideo({
+      sourceVideoPath: inputVideo,
+      transcript: {
+        words: [{ word: "Test", startMs: 0, endMs: 500 }],
+      },
+      headline: "Layout B Geometry Guardrail",
+      badge: "LAYOUT B",
+      outputPath: outputVideo,
+      execFileFn: async (_cmd, args) => {
+        capturedArgs = args;
+      },
+    });
+
+    const filterComplexIdx = capturedArgs.indexOf("-filter_complex");
+    assert.ok(filterComplexIdx !== -1, "must have -filter_complex argument");
+    const filter = capturedArgs[filterComplexIdx + 1];
+
+    assert.match(filter, /scale=1440:810,crop=1080:810/);
+    assert.match(filter, /overlay=0:500/);
+    assert.match(filter, /overlay=0:180/);
+    assert.match(filter, /overlay=0:1360/);
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+  }
+});

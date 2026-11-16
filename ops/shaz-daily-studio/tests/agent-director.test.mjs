@@ -107,10 +107,10 @@ test("buildDirectorPrompt exposes only approved poses and separates clear vs hea
     brollMediaList: ["media/img-01.jpg"],
   });
 
-  assert.match(prompt, /Approved Talk-to-Camera Poses ONLY: neutral-listening, present, think, aha, point, confident/);
+  assert.match(prompt, /Approved Talk-to-Camera Poses ONLY: neutral-listening, present, think, aha, point, confident, shrug, excited-celebration, point-at-screen/);
   assert.match(prompt, /Poses clear for otsGraphic\.headline:[^\n]*present[^\n]*confident/);
   assert.match(prompt, /Poses that block otsGraphic\.headline[^\n]*aha[^\n]*point/);
-  assert.doesNotMatch(prompt, /Poses ONLY:[^\n]*(shrug|chin-stroke-swagger|excited-celebration|point-at-screen)/);
+  assert.doesNotMatch(prompt, /Poses ONLY:[^\n]*(key-point|chin-stroke-swagger)/);
 });
 
 test("planShotsWithAgent retries unapproved pose and OTS overlap errors, then accepts valid plan", async () => {
@@ -127,7 +127,7 @@ test("planShotsWithAgent retries unapproved pose and OTS overlap errors, then ac
       call += 1;
       if (call === 1) {
         const bad = makeValidAgentDraft();
-        bad.shots[0].poseId = "shrug";
+        bad.shots[0].poseId = "chin-stroke-swagger";
         return bad;
       }
       if (call === 2) {
@@ -157,7 +157,7 @@ test("planShotsWithAgent throws AgentDirectorError (CandidateSkip) after max ret
         transcript: makeTranscript(),
         brollMediaList: ["media/img-01.jpg"],
         maxAttempts: 2,
-        askAgentFn: async () => ({ title: "Bad", shots: [{ id: "shot-01", shotType: "talk-to-camera", startFrame: 0, endFrameExclusive: 144, poseId: "shrug" }] }),
+        askAgentFn: async () => ({ title: "Bad", shots: [{ id: "shot-01", shotType: "talk-to-camera", startFrame: 0, endFrameExclusive: 144, poseId: "chin-stroke-swagger" }] }),
       }),
     (err) => err instanceof AgentDirectorError && err instanceof CandidateSkipError && classifyRunError(err).stage === "agent-director",
   );

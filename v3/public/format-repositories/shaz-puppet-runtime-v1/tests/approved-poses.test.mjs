@@ -23,10 +23,20 @@ import {
 } from "../runtime/pose-approvals.mjs";
 
 const KIT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const UNAPPROVED_POSES = ["shrug", "key-point", "excited-celebration", "point-at-screen", "chin-stroke-swagger"];
-const EXPECTED_APPROVED = ["neutral-listening", "present", "think", "aha", "point", "confident"];
+const UNAPPROVED_POSES = ["key-point", "chin-stroke-swagger"];
+const EXPECTED_APPROVED = [
+  "neutral-listening",
+  "present",
+  "think",
+  "aha",
+  "point",
+  "confident",
+  "shrug",
+  "excited-celebration",
+  "point-at-screen",
+];
 
-test("performance-approvals.json exposes only the 6 base approved poses and binds SHA-256 hashes", () => {
+test("performance-approvals.json exposes approved poses (including Q1 approved poses) and binds SHA-256 hashes", () => {
   const manifest = loadPerformanceApprovalsSync({ root: KIT_ROOT });
   assert.deepEqual(manifest.approvedPoseIds, EXPECTED_APPROVED);
   assert.deepEqual(getApprovedPerformancePoses({ root: KIT_ROOT }), EXPECTED_APPROVED);
@@ -76,7 +86,7 @@ test("evaluateSentenceDirector advertises only approved poses and rejects unappr
             json: async () => ({
               answers: {
                 shot_type: { choice: "talk-to-camera", confidence: 0.9 },
-                shaz_puppet_pose: { choice: "shrug", confidence: 0.9 },
+                shaz_puppet_pose: { choice: "chin-stroke-swagger", confidence: 0.9 },
                 chibi_pose: { choice: "think-chin", confidence: 0.8 },
                 camera_motion: { choice: "zoom-in", confidence: 0.8 },
                 badge_category: { choice: "REALITY CHECK", confidence: 0.8 },
@@ -164,7 +174,7 @@ test("resolvePuppetPoseId removes silent pose swaps and validateMultiShotPlan en
       {
         id: "shot-01",
         shotType: "talk-to-camera",
-        poseId: "shrug",
+        poseId: "chin-stroke-swagger",
         startFrame: 0,
         endFrameExclusive: 48,
         backgroundId: "sisters-room",
@@ -184,5 +194,5 @@ test("resolvePuppetPoseId removes silent pose swaps and validateMultiShotPlan en
     poseRegistry,
     allowUnapprovedPoses: true,
   });
-  assert.equal(optedIn.shots[0].poseId, "shrug");
+  assert.equal(optedIn.shots[0].poseId, "chin-stroke-swagger");
 });

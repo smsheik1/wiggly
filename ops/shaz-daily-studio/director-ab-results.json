@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-16T22:39:47.035Z",
+  "pairs": [
+    {
+      "schemaVersion": 1,
+      "pairId": "daily-2026-11-11-pblvmjfr-ab-1d9421",
+      "sourceRunId": "daily-2026-11-11-pblvmjfr",
+      "title": "GTA 6 IN EIGHT DAYS",
+      "recordedAt": "2026-11-16T22:39:47.034Z",
+      "dryRun": true,
+      "arms": {
+        "A": {
+          "director": "jev",
+          "runId": "daily-2026-11-11-pblvmjfr-ab-1d9421-jev",
+          "verticalSha256": "08c91b8cb71e2604c81cda3f5591242063397340d4d881881f6e186d241466e4"
+        },
+        "B": {
+          "director": "agent",
+          "runId": "daily-2026-11-11-pblvmjfr-ab-1d9421-agent",
+          "verticalSha256": "4f4eb947768b84718e0b9eadfd5c3246e658454fc50768ebcf1228cd27ce2b4b"
+        }
+      },
+      "winnerLabel": "unvoted",
+      "winnerDirector": "unvoted",
+      "telegramUserId": null,
+      "votedAt": null,
+      "unauthorizedTaps": []
+    }
+  ]
+}

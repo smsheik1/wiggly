@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-12",
+  "updatedAt": "2026-11-16",
   "poses": [
     {
       "poseId": "neutral-listening",
@@ -59,11 +59,11 @@
     {
       "poseId": "shrug",
       "recipeSha256": "9cba89c6393a43580c25eb6059132a39ef30490958936d7f375071faf2f451b1",
-      "decision": "pending",
-      "reviewer": null,
-      "reviewedAt": null,
-      "clipSha256": null,
-      "notes": "Held out pending Q1 clip review."
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-16",
+      "clipSha256": "0de7ce98d083e9b7f454462bcc8a2ed3a168a2977a30aae275972b81d01bb11c",
+      "notes": "Approved in Q1 review."
     },
     {
       "poseId": "key-point",
@@ -72,25 +72,25 @@
       "reviewer": null,
       "reviewedAt": null,
       "clipSha256": null,
-      "notes": "Held out pending Q1 clip review."
+      "notes": "Held out pending future review."
     },
     {
       "poseId": "excited-celebration",
       "recipeSha256": "8ca05e529dae031fd6d1c19d727473f9aba058172e995d3e91cacdbc4f6be348",
-      "decision": "pending",
-      "reviewer": null,
-      "reviewedAt": null,
-      "clipSha256": null,
-      "notes": "Held out pending Q1 clip review."
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-16",
+      "clipSha256": "62ae3761820ac39f8da58b10b89c98c465ae63b094e77915ef1159b37db01940",
+      "notes": "Approved in Q1 review."
     },
     {
       "poseId": "point-at-screen",
       "recipeSha256": "399fdc5f52a76b6ee54a0c35863fed3d22307072e6a4b1d48b4ac32a0bbbb7df",
-      "decision": "pending",
-      "reviewer": null,
-      "reviewedAt": null,
-      "clipSha256": null,
-      "notes": "Held out pending Q1 clip review."
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-16",
+      "clipSha256": "5cc09b86cfb2acfc25648d7e24d2d521b7f181a7d31a244537022a1e706aa5b2",
+      "notes": "Approved in Q1 review."
     },
     {
       "poseId": "chin-stroke-swagger",
@@ -99,7 +99,7 @@
       "reviewer": null,
       "reviewedAt": null,
       "clipSha256": null,
-      "notes": "Held out pending Q1 clip review."
+      "notes": "Held out pending future review."
     }
   ]
 }
