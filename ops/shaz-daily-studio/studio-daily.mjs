@@ -33,6 +33,7 @@ import {
   recordTopic,
 } from "./content-ledger.mjs";
 import { countWords, validateScript } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/validate-script.mjs";
+import { describeAiTellsForPrompt } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/ai-tells.mjs";
 import { assertScriptAligned } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/script-alignment.mjs";
 import { synthesizeShazVoice } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/voice.mjs";
 import { composeVerticalVideo, formatSafeHeadline } from "./vertical-letterbox.mjs";
@@ -238,6 +239,8 @@ CURRENT DATE CONTEXT & TEMPORAL ANCHORING (CRITICAL — PREVENTS AI SLOP):
 - Under NO circumstance assume the current year is 2023, 2024, or 2025.
 - If the story discusses an upcoming release or event in ${currentYear}, calculate the exact days or weeks remaining relative to today. If an event is in ${currentYear}, it is happening in DAYS or WEEKS, NOT YEARS.
 - Only state prices, specs, platforms, dates, sales numbers, and concrete details that appear in the SOURCE ARTICLE TEXT above. If a detail isn't in the article, do NOT invent it.
+
+${describeAiTellsForPrompt()}
 
 Output ONLY valid JSON following this exact schema:
 {

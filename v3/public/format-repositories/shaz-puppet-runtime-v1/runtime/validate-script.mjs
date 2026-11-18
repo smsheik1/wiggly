@@ -1,34 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-export const BANNED_AI_PATTERNS = [
-  { pattern: /\bin today's fast[- ]paced world\b/i, name: "in today's fast-paced world" },
-  { pattern: /\bit's important to note\b/i, name: "it's important to note" },
-  { pattern: /\b(delve|dive) into\b/i, name: "delve/dive into" },
-  { pattern: /\b(game[- ]changing|revolutionary)\b/i, name: "game-changing/revolutionary" },
-  { pattern: /\bat the end of the day\b/i, name: "at the end of the day" },
-  { pattern: /\b(in conclusion|to sum up)\b/i, name: "in conclusion/to sum up" },
-  { pattern: /\b(let's dive in|here's the thing)\b/i, name: "let's dive in/here's the thing" },
-  { pattern: /\bnot only\b.*?\bbut also\b/i, name: "not only... but also" },
-  { pattern: /\b(testament to|stands as)\b/i, name: "testament to/stands as" },
-  { pattern: /\bparadigm shift\b/i, name: "paradigm shift" },
-  { pattern: /\b(tapestry|interplay)\b/i, name: "tapestry/interplay" },
-  { pattern: /\b(multifaceted|nuanced)\b/i, name: "multifaceted/nuanced" },
-  { pattern: /\b(fosters|empowers)\b/i, name: "fosters/empowers" },
-  { pattern: /\b(landscape|realm)\b/i, name: "landscape/realm" },
-  { pattern: /\b(crucial|vital|pivotal)\b/i, name: "crucial/vital/pivotal" },
-  { pattern: /\b(seamless|mastery)\b/i, name: "seamless/mastery" },
-  { pattern: /\bbeacon of\b/i, name: "beacon of" },
-  { pattern: /\bjourney\b/i, name: "journey (abstract buzzword)" },
-  { pattern: /\bdynamic\b/i, name: "dynamic (buzzword)" },
-  { pattern: /\b(unveil|unlock)\b/i, name: "unveil/unlock" },
-  { pattern: /\brich history\b/i, name: "rich history" },
-  { pattern: /\b(explore|deep dive)\b/i, name: "explore/deep dive" },
-  { pattern: /\bkey takeaway\b/i, name: "key takeaway" },
-  { pattern: /\b(furthermore|moreover)\b/i, name: "furthermore/moreover" },
-  { pattern: /\bin essence\b/i, name: "in essence" },
-  { pattern: /\b(plethora|myriad)\b/i, name: "plethora/myriad" },
-];
+import { AI_TELL_WORDS, findAiTells, formatAiTellFindings } from "./ai-tells.mjs";
+
+/** Banned words and stock phrases. Kept under this name for existing imports; see ai-tells.mjs. */
+export const BANNED_AI_PATTERNS = AI_TELL_WORDS;
 
 /**
  * Counts total words in a string.
@@ -341,17 +317,12 @@ export function validateScript(
 
   const totalWords = countWords(fullText);
 
-  // 2. AI Buzzword Linter (run before word count so quality issues surface first)
-  const foundAITells = [];
-  for (const item of BANNED_AI_PATTERNS) {
-    if (item.pattern.test(fullText)) {
-      foundAITells.push(item.name);
-    }
-  }
-
+  // 2. AI tell linter: banned words + banned sentence patterns (ai-tells.mjs). Runs before word count.
+  const foundAITells = findAiTells(fullText);
   if (foundAITells.length > 0) {
     throw new Error(
-      `Script contains banned AI buzzwords/tells: [${foundAITells.join(", ")}]. Rewrite using direct, conversational language per writer-playbook.md.`,
+      `Script contains banned AI buzzwords/tells: [${foundAITells.map((f) => f.name).join(", ")}]. ` +
+      `Offending text: ${formatAiTellFindings(foundAITells)}. Rewrite those lines in plain, direct speech per writer-playbook.md section 6.`,
     );
   }
 
