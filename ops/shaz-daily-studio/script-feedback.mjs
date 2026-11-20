@@ -28,11 +28,19 @@ export function parseFeedbackCallback(data) {
 
 /** Builds the Telegram message that shows the runner-up. Returns null when there is no runner-up. */
 export function buildRunnerUpMessage({ room, runId, candidateNumber = null, dryRun = false }) {
-  if (!room?.runnerUp?.text) return null;
+  const fine = room?.quality === "fine";
+  if (!room?.runnerUp?.text && !fine) return null;
   const label = candidateNumber ? `Candidate ${candidateNumber}` : "This video";
   const rewritten = room.rewrite ? "\n<i>(The winner was rewritten once after the judge's notes.)</i>" : "";
+  const warning = fine
+    ? `⚠️ <b>Judge says: fine, not great.</b>\n<i>${escapeTelegramHtml(room.qualityNotes || "")}</i>\n\n`
+    : "";
+  if (!room?.runnerUp?.text) {
+    return { text: `📝 <b>${label}</b>\n\n${warning}`.trim(), replyMarkup: undefined };
+  }
   const text =
     `📝 <b>${label}: the judge's runner-up script</b>${rewritten}\n\n` +
+    warning +
     `<b>Winner angle:</b> ${escapeTelegramHtml(room.winner?.angle || "")}\n` +
     `<b>Runner-up angle:</b> ${escapeTelegramHtml(room.runnerUp.angle || "")}\n\n` +
     `<blockquote>${escapeTelegramHtml(room.runnerUp.text)}</blockquote>\n\n` +

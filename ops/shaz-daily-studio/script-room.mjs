@@ -6,7 +6,8 @@
  *   2. Judge    : a fresh agent call sees only the voice guide and the drafts, blind
  *                 (shuffled, labelled A/B/C), scores them, picks a winner + runner-up.
  *   3. Rewrite  : if the judge says none is good enough, ONE rewrite with the judge's
- *                 notes, judged again. Still weak -> skip the story.
+ *                 notes, judged again. Still weak -> ship the better of the two, marked
+ *                 quality "fine" with the judge's notes (never skip for being "fine").
  *   4. Paperwork: a separate call adds headline, card text, image queries, room, tags,
  *                 without touching a single spoken word.
  *
@@ -118,6 +119,19 @@ function validateSpoken(script, { topic, now, article, requireGroundedClaims, li
 
 // ---------------------------------------------------------------- prompts
 
+/**
+ * Hard writer rules, learned from the judge's repeated notes on the first real trial (2026-11-20).
+ * The judge rejected every story for the same few mistakes, so the writer gets them up front.
+ */
+export const WRITER_HARD_RULES = `HARD RULES (the judge rejects drafts that break these):
+1. NO EXPLAINER LINES. Every sentence is a joke, a roast, or Shaz's reaction. Never summarize the news like a tech review ("New AI tech doubled the frames...", "The budget box runs the game but..."). State a fact only inside the joke that spins it.
+2. THE ENDING QUESTION IS ANSWERABLE IN 1-3 WORDS: a pick between two things, a yes/no, a name, a number. It calls back to the joke. Good: "PS5 Pro or wait for PC?" / "What did your parents play in the car?" Bad: anything that needs a story ("What's the most unhinged thing you've ever done...").
+3. CASUAL-VIEWER WORDS ONLY. Use the name everyone knows (Vice City, not Leonida). No tech terms (DLSS, frame generation, upscaling, latency) unless you instantly compare them to something everyday.
+4. NO STOCK GAMER JOKES. "Pray to the PR gods", "crash before the road renders", "my wallet is crying" are what anyone would say. Shaz's angle must be specific to THIS story.
+5. ESCALATE. Each beat is sharper or sillier than the last. The biggest laugh is near the end, and it gets [pause] right after it.
+6. VIVID, EVERYDAY COMPARISONS beat abstract ones: "spending $1,500 on a graphics card to babysit a PlayStation".
+Before you output, reread every sentence of every draft and ask: "Is this a joke or a reaction?" If it's information, rewrite it.`;
+
 const DRAFT_SHAPE = `{
   "drafts": [
     {
@@ -156,6 +170,8 @@ TASK: write ${draftCount} complete drafts of a ~30-second script about this stor
 - Every line must land instantly for a casual viewer. No niche jargon, no metaphors that need decoding.
 - Facts only from the article. 2-5 claims, at least one targeting "hook", each with an exact quote from the article.
 - You may put [pause] right after a punchline word that needs a beat of silence.
+
+${WRITER_HARD_RULES}
 
 Output ONLY valid JSON in this shape:
 ${DRAFT_SHAPE}`;
@@ -208,7 +224,9 @@ ${best.text}
 JUDGE NOTES (fix every one):
 ${judgeNotes}
 
-Write ONE improved draft. You may keep the angle or sharpen it. ${limits.minWords}-${limits.maxWords} spoken words. Same rules as before: facts only from the article, exact quotes in claims, at least one claim on "hook".
+${WRITER_HARD_RULES}
+
+Write ONE improved draft. Fix every judge note. You may keep the angle or sharpen it. ${limits.minWords}-${limits.maxWords} spoken words. Same rules as before: facts only from the article, exact quotes in claims, at least one claim on "hook".
 
 Output ONLY valid JSON in this shape (exactly one draft):
 ${DRAFT_SHAPE}`;
@@ -398,6 +416,8 @@ export async function runScriptRoom(topic, {
   let winner = byLabel(first, first.verdict.winner);
   const runnerUp = first.verdict.runnerUp ? byLabel(first, first.verdict.runnerUp) : null;
   let rewrite = null;
+  let quality = "loved";
+  let qualityNotes = "";
 
   // 3. One rewrite if nothing is good enough
   if (!first.verdict.goodEnough) {
@@ -419,10 +439,18 @@ export async function runScriptRoom(topic, {
       verdict: re.verdict,
     };
     partial.rewrite = rewrite;
-    if (!re.verdict.goodEnough) {
-      fail(`judge still not happy after one rewrite: ${re.verdict.rewriteNotes}`);
+    const rewriteTotal = Object.values(re.verdict.scores)[0]?.total ?? 0;
+    const originalTotal = first.verdict.scores[winner.label]?.total ?? 0;
+    if (re.verdict.goodEnough || rewriteTotal >= originalTotal) {
+      winner = { ...nd, text, wordCount: countWords(text), label: "R" };
     }
-    winner = { ...nd, text, wordCount: countWords(text), label: "R" };
+    if (!re.verdict.goodEnough) {
+      // Shaz decision 2026-11-20: never skip a story for being "fine". Ship the best version,
+      // clearly marked, with the judge's notes, and let Shaz decide in Telegram.
+      quality = "fine";
+      qualityNotes = re.verdict.rewriteNotes || first.verdict.rewriteNotes;
+      log.warn?.(`  ⚠️ Script room: judge says "fine, not great" for "${topic?.title}". Shipping the best version, marked.`);
+    }
   }
 
   // 4. Paperwork (spoken words locked)
@@ -473,6 +501,7 @@ export async function runScriptRoom(topic, {
   const receipt = {
     schemaVersion: 2,
     flow: "script-room",
+    quality,
     agent: cfg.writerAgent,
     writerAgent: cfg.writerAgent,
     // The writing round that produced the shipped script (1 = first drafts; rewrite = last round + 1).
@@ -492,6 +521,8 @@ export async function runScriptRoom(topic, {
       labels: first.labelled.map((d) => ({ label: d.label, angle: d.angle })),
       ...first.verdict,
     },
+    quality,
+    qualityNotes,
     winner: { label: winner.label, angle: winner.angle, text: dialogue },
     runnerUp: runnerUp ? { label: runnerUp.label, angle: runnerUp.angle, text: runnerUp.text } : null,
     rewrite,

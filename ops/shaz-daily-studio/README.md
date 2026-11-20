@@ -35,7 +35,7 @@ Key names read from `secrets.env` (or process environment):
 
 1. The writer agent writes **3 drafts, each with a different angle**, against `voice-guide.md`.
 2. A fresh agent call **judges them blind** (shuffled, labelled A/B/C) and picks a winner and a runner-up.
-3. If none is good enough: **one rewrite** with the judge's notes, judged again. Still weak → the story is skipped.
+3. If none is good enough: **one rewrite** with the judge's notes, judged again. Still weak → the better version ships, marked **"fine, not great"** with the judge's notes in Telegram.
 4. A separate "paperwork" call adds headline, cards, image searches, room and tags. Spoken words are locked.
 
 Every run saves `script-room.json` (all drafts, scores, winner, runner-up). In Telegram, the runner-up script is
