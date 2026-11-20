@@ -400,3 +400,18 @@ test("a failed feedback save is reported to Shaz, not swallowed", async () => {
   }
   assert.match(h.answers[0].text, /Could not save/);
 });
+
+test("a skipped story keeps its drafts, verdict and rewrite on the error", async () => {
+  const agent = makeAgent({
+    drafts: () => ({ drafts: [draft("Storage is the real boss fight"), draft("The price is the scary part"), draft("Pre-order panic is the joke")] }),
+    judge: (_p, labels) => verdict(labels, { runnerUp: labels.length > 1 ? labels[1] : null, goodEnough: false, rewriteNotes: "Still not funny enough for Shaz." }),
+    rewrite: () => ({ drafts: [draft("Storage is the real boss fight, again")] }),
+    paperwork: () => PAPERWORK,
+  });
+  const err = await runScriptRoom(TOPIC, ROOM_OPTS(agent)).catch((e) => e);
+  assert.ok(err instanceof ScriptAuthorError);
+  assert.equal(err.room.skipped, true);
+  assert.equal(err.room.drafts.length, 3);
+  assert.equal(err.room.judge.goodEnough, false);
+  assert.match(err.room.rewrite.text, /120GB/);
+});

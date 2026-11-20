@@ -73,7 +73,9 @@ async function main() {
       await save();
     } catch (err) {
       console.log(`SKIPPED: ${err.message}`);
-      results.push({ ok: false, title, error: err.message });
+      results.push({ ok: false, title, error: err.message, room: err.room ?? null });
+      for (const d of err.room?.drafts || []) show("DRAFT", d);
+      if (err.room?.rewrite) show("REWRITE", err.room.rewrite);
       await save();
     }
   }

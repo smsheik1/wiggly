@@ -316,14 +316,19 @@ export async function runScriptRoom(topic, {
     }
   }
 
+  // Partial record so a skipped story still shows what was written and why it lost.
+  const partial = { drafts: [], rejectedDrafts: [], judge: null, rewrite: null };
   const fail = (msg) => {
-    throw new ScriptAuthorError(`Script room failed for "${topic?.title || "topic"}": ${msg}`, calls);
+    const err = new ScriptAuthorError(`Script room failed for "${topic?.title || "topic"}": ${msg}`, calls);
+    err.room = { schemaVersion: 1, skipped: true, ...partial };
+    throw err;
   };
   const vctx = { topic, now, article, requireGroundedClaims, limits };
 
   // 1. Drafts
   const valid = [];
   const rejected = [];
+  partial.rejectedDrafts = rejected;
   let basePrompt = buildDraftsPrompt({ storyContext, voiceGuide: guide, draftCount: limits.draftCount, limits });
   let pendingFailures = [];
   for (let round = 1; round <= limits.maxDraftRounds && valid.length < limits.draftCount; round += 1) {
@@ -386,7 +391,9 @@ export async function runScriptRoom(topic, {
     fail(`judge gave no valid verdict: ${lastErr}`);
   }
 
+  partial.drafts = valid.map((d) => ({ angle: d.angle, text: d.text, wordCount: d.wordCount, originalSpoken: d.originalSpoken, round: d.round }));
   const first = await judge(valid, false);
+  partial.judge = { labels: first.labelled.map((d) => ({ label: d.label, angle: d.angle })), ...first.verdict };
   const byLabel = (j, label) => j.labelled.find((d) => d.label === label);
   let winner = byLabel(first, first.verdict.winner);
   const runnerUp = first.verdict.runnerUp ? byLabel(first, first.verdict.runnerUp) : null;
@@ -411,6 +418,7 @@ export async function runScriptRoom(topic, {
       text,
       verdict: re.verdict,
     };
+    partial.rewrite = rewrite;
     if (!re.verdict.goodEnough) {
       fail(`judge still not happy after one rewrite: ${re.verdict.rewriteNotes}`);
     }
