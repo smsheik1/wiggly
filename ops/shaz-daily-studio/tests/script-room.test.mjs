@@ -213,21 +213,18 @@ test("not good enough -> one rewrite with the judge's notes -> good -> ships the
   assert.ok(room.runnerUp, "runner-up from the first judging is still shown to Shaz");
 });
 
-test("still not good after one rewrite -> ships the best version marked 'fine' (never skips)", async () => {
+test("still not good after one rewrite -> skip the story; drafts are kept on the error", async () => {
   const agent = makeAgent({
     drafts: () => ({ drafts: [draft("Storage is the real boss fight"), draft("The price is the scary part"), draft("Pre-order panic is the joke")] }),
     judge: (_p, labels) => verdict(labels, { runnerUp: labels.length > 1 ? labels[1] : null, goodEnough: false, rewriteNotes: "Still not funny enough for Shaz." }),
     rewrite: () => ({ drafts: [draft("Storage is the real boss fight, again")] }),
     paperwork: () => PAPERWORK,
   });
-  const { script, room, receipt } = await runScriptRoom(TOPIC, ROOM_OPTS(agent));
-  assert.ok(script.headline);
-  assert.equal(room.quality, "fine");
-  assert.equal(receipt.quality, "fine");
-  assert.match(room.qualityNotes, /Still not funny/);
+  const err = await runScriptRoom(TOPIC, ROOM_OPTS(agent)).catch((e) => e);
+  assert.ok(err instanceof ScriptAuthorError && /after one rewrite/.test(err.message));
+  assert.equal(err.room.drafts.length, 3);
+  assert.match(err.room.rewrite.text, /120GB/);
   assert.equal(agent.calls.filter((c) => c.prompt.includes("A strict judge read")).length, 1, "only one rewrite");
-  const msg = buildRunnerUpMessage({ room, runId: "r1" });
-  assert.match(msg.text, /Judge says: fine, not great/);
 });
 
 test("writer prompts carry the hard rules (no explainer lines, 1-3 word ending question)", async () => {

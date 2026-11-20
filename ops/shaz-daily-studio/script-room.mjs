@@ -6,8 +6,7 @@
  *   2. Judge    : a fresh agent call sees only the voice guide and the drafts, blind
  *                 (shuffled, labelled A/B/C), scores them, picks a winner + runner-up.
  *   3. Rewrite  : if the judge says none is good enough, ONE rewrite with the judge's
- *                 notes, judged again. Still weak -> ship the better of the two, marked
- *                 quality "fine" with the judge's notes (never skip for being "fine").
+ *                 notes, judged again. Still weak -> skip the story ("fine" never posts).
  *   4. Paperwork: a separate call adds headline, card text, image queries, room, tags,
  *                 without touching a single spoken word.
  *
@@ -439,18 +438,11 @@ export async function runScriptRoom(topic, {
       verdict: re.verdict,
     };
     partial.rewrite = rewrite;
-    const rewriteTotal = Object.values(re.verdict.scores)[0]?.total ?? 0;
-    const originalTotal = first.verdict.scores[winner.label]?.total ?? 0;
-    if (re.verdict.goodEnough || rewriteTotal >= originalTotal) {
-      winner = { ...nd, text, wordCount: countWords(text), label: "R" };
-    }
     if (!re.verdict.goodEnough) {
-      // Shaz decision 2026-11-20: never skip a story for being "fine". Ship the best version,
-      // clearly marked, with the judge's notes, and let Shaz decide in Telegram.
-      quality = "fine";
-      qualityNotes = re.verdict.rewriteNotes || first.verdict.rewriteNotes;
-      log.warn?.(`  ⚠️ Script room: judge says "fine, not great" for "${topic?.title}". Shipping the best version, marked.`);
+      // Shaz decision 2026-11-20: high bar. "Fine" is not good enough to post. Skip.
+      fail(`judge still not happy after one rewrite: ${re.verdict.rewriteNotes}`);
     }
+    winner = { ...nd, text, wordCount: countWords(text), label: "R" };
   }
 
   // 4. Paperwork (spoken words locked)
