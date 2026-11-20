@@ -9,6 +9,8 @@ import { fileURLToPath } from "node:url";
 
 import { AgentUnavailableError, askActiveAgent } from "../../v3/lib/agent-bridge.ts";
 import { planShotsWithAgent } from "./agent-director.mjs";
+import { runScriptRoom } from "./script-room.mjs";
+import { appendScriptFeedback, buildRunnerUpMessage } from "./script-feedback.mjs";
 import { ArticleFetchError, fetchArticleForTopic, USER_AGENT as STUDIO_USER_AGENT } from "./article-fetch.mjs";
 import {
   CandidateSkipError,
@@ -105,9 +107,14 @@ export async function loadStudioConfig(configPath = DEFAULT_CONFIG_PATH) {
   if (!Number.isFinite(retentionDays) || retentionDays < 0) {
     throw new Error(`Invalid studio.config.json retentionDays '${parsed?.retentionDays}': expected >= 0.`);
   }
+  const scriptFlow = parsed?.scriptFlow === undefined ? "room" : parsed.scriptFlow;
+  if (scriptFlow !== "room" && scriptFlow !== "single") {
+    throw new Error(`Invalid studio.config.json scriptFlow '${scriptFlow}': expected "room" (3 drafts + judge) or "single".`);
+  }
   return {
     writerAgent,
     director,
+    scriptFlow,
     agentTimeoutMs,
     maxScriptAttempts,
     batchSize,
@@ -175,7 +182,14 @@ export async function findNextStory(options = {}) {
  * Builds an authentic, temporally anchored authoring prompt for the active coding agent.
  * Enforces current-year calendar grounding to prevent outdated AI slop and timeframe hallucinations.
  */
-export function buildAuthorPrompt(topic, { now = new Date(), article = null } = {}) {
+/**
+ * Story + article + date + AI-tell block shared by every writing step (single-call prompt and the script room).
+ */
+export function buildStoryContext(topic, { now = new Date(), article = null } = {}) {
+  return buildAuthorPrompt(topic, { now, article, contextOnly: true });
+}
+
+export function buildAuthorPrompt(topic, { now = new Date(), article = null, contextOnly = false } = {}) {
   const title = topic.title || "Breaking Story";
   const snippet = topic.snippet || "";
   const sourceUrl = String(article?.url || topic.link || topic?.sources?.[0] || "").trim();
@@ -221,9 +235,7 @@ export function buildAuthorPrompt(topic, { now = new Date(), article = null } = 
     } catch {}
   }
 
-  return `You are Shaz, an internet-native animator and gaming commentator.
-Write an authentic, punchy, funny 30-second script about this breaking news:
-Headline: "${title}"
+  const storyContext = `Headline: "${title}"
 Source URL: ${sourceUrl || "(none)"}
 Snippet: "${snippet}"${pubString}
 
@@ -240,7 +252,13 @@ CURRENT DATE CONTEXT & TEMPORAL ANCHORING (CRITICAL — PREVENTS AI SLOP):
 - If the story discusses an upcoming release or event in ${currentYear}, calculate the exact days or weeks remaining relative to today. If an event is in ${currentYear}, it is happening in DAYS or WEEKS, NOT YEARS.
 - Only state prices, specs, platforms, dates, sales numbers, and concrete details that appear in the SOURCE ARTICLE TEXT above. If a detail isn't in the article, do NOT invent it.
 
-${describeAiTellsForPrompt()}
+${describeAiTellsForPrompt()}`;
+
+  if (contextOnly) return storyContext;
+
+  return `You are Shaz, an internet-native animator and gaming commentator.
+Write an authentic, punchy, funny 30-second script about this breaking news:
+${storyContext}
 
 Output ONLY valid JSON following this exact schema:
 {
@@ -330,6 +348,12 @@ Rules:
 }
 
 const AUTHOR_RECEIPT_SYMBOL = Symbol("shazAuthorReceipt");
+const SCRIPT_ROOM_SYMBOL = Symbol("shazScriptRoom");
+
+/** The script room record (drafts, judge verdict, runner-up) attached by authorShazScript, if any. */
+export function getScriptRoom(script) {
+  return script?.[SCRIPT_ROOM_SYMBOL] ?? null;
+}
 
 function buildRetrySuffix({ attempt, maxAttempts, errorMessage, previousPayload }) {
   const payloadPreview = previousPayload
@@ -365,6 +389,20 @@ export async function authorShazScript(
       `Cannot author script for "${topic?.title || "topic"}" without fetched source article text.`,
       [],
     );
+  }
+
+  if (cfg.scriptFlow === "room") {
+    const { script, receipt, room } = await runScriptRoom(topic, {
+      article,
+      now,
+      config: cfg,
+      askAgentFn,
+      storyContext: buildStoryContext(topic, { now, article }),
+      requireGroundedClaims,
+    });
+    Object.defineProperty(script, AUTHOR_RECEIPT_SYMBOL, { value: receipt, enumerable: false, configurable: true });
+    Object.defineProperty(script, SCRIPT_ROOM_SYMBOL, { value: room, enumerable: false, configurable: true });
+    return script;
   }
 
   const authoringStartedAt = Date.now();
@@ -859,6 +897,30 @@ export async function sourceStoryMedia({
   return sequence;
 }
 
+/**
+ * Sends the judge's runner-up script under a candidate video, with feedback-only buttons.
+ * A failure here never blocks the run (the video is already in Telegram); it is logged loudly.
+ */
+async function sendRunnerUpFeedback({ d, script, runId, candidateNumber = null, dryRun = false }) {
+  const message = buildRunnerUpMessage({ room: getScriptRoom(script), runId, candidateNumber, dryRun });
+  if (!message) return null;
+  try {
+    return await d.sendTelegramMessage({ text: message.text, replyMarkup: message.replyMarkup });
+  } catch (err) {
+    console.warn(`  ⚠️ Could not send the runner-up script for ${runId} (feedback only, run continues): ${err.message}`);
+    return null;
+  }
+}
+
+function makeScriptFeedbackHandler({ d, env, runs }) {
+  const byRunId = new Map(runs.map((r) => [r.runId, r]));
+  return async ({ vote, runId, at }) => {
+    const run = byRunId.get(runId) || {};
+    await d.appendScriptFeedback({ vote, runId, at, runDirectory: run.runDirectory ?? null, title: run.title ?? null, env });
+    console.log(`  📝 Script feedback logged for ${runId}: ${vote}`);
+  };
+}
+
 function resolveStudioDeps(deps = {}) {
   const hasMockTelegram =
     typeof deps.pollBatchDecision === "function" ||
@@ -899,6 +961,7 @@ function resolveStudioDeps(deps = {}) {
     pollApprovalDecision,
     pollBatchDecision,
     sendTelegramMessage,
+    appendScriptFeedback: hasMockTelegram ? async () => null : appendScriptFeedback,
     uploadPublishVideo,
     deletePublishVideo,
     publishVideoToAllChannels,
@@ -1023,6 +1086,10 @@ async function produceGroundedCandidateRun({
     }
     await d.writeJson(path.join(stageDir, "script.json"), script);
     await d.writeJson(path.join(stageDir, "author-receipt.json"), receipt);
+    const scriptRoom = getScriptRoom(script);
+    if (scriptRoom) {
+      await d.writeJson(path.join(stageDir, "script-room.json"), scriptRoom);
+    }
 
     const audioFile = path.join(stageDir, "user-audio.wav");
     await d.synthesizeShazVoice({
@@ -1128,6 +1195,9 @@ async function produceGroundedCandidateRun({
     }
     await d.writeJson(path.join(runDirectory, "script.json"), script);
     await d.writeJson(path.join(runDirectory, "author-receipt.json"), receipt);
+    if (scriptRoom) {
+      await d.writeJson(path.join(runDirectory, "script-room.json"), scriptRoom);
+    }
     if (directorReceipt) {
       await d.writeJson(path.join(runDirectory, "director-receipt.json"), directorReceipt);
     }
@@ -1879,6 +1949,7 @@ export async function runDailyStudio({
         captionText: dialogueText,
         dryRun,
       });
+      await sendRunnerUpFeedback({ d, script, runId, dryRun });
       await updateRunUsage(
         runDirectory,
         (p) => {
@@ -1904,6 +1975,7 @@ export async function runDailyStudio({
         runId,
         initialUpdateId: baselineUpdateId,
         env,
+        onScriptFeedback: makeScriptFeedbackHandler({ d, env, runs: [{ runId, runDirectory, title: script.title }] }),
         onDecision: (meta) => {
           decisionMeta = meta;
         },
@@ -2105,6 +2177,7 @@ export async function runDailyBatch({
           totalCandidates: targetCount,
           dryRun,
         });
+        await sendRunnerUpFeedback({ d, script: produced.script, runId, candidateNumber, dryRun });
         await updateRunUsage(
           produced.runDirectory,
           (p) => {
@@ -2213,6 +2286,11 @@ export async function runDailyBatch({
           title: c.script.title,
           messageId: c.approval?.messageId,
         })),
+        onScriptFeedback: makeScriptFeedbackHandler({
+          d,
+          env,
+          runs: candidates.map((c) => ({ runId: c.runId, runDirectory: c.runDirectory, title: c.script?.title })),
+        }),
         onCandidateRejected: async (_rejectedId, rejectedList) => {
           pendingPayload.rejectedRunIds = rejectedList;
           await d.writeJson(pendingBatchPath, pendingPayload).catch(() => {});
@@ -2293,6 +2371,11 @@ export async function resumePendingBatchPoll({
         title: c.script?.title || c.title,
         messageId: c.approval?.messageId,
       })),
+      onScriptFeedback: makeScriptFeedbackHandler({
+        d,
+        env,
+        runs: candidates.map((c) => ({ runId: c.runId, runDirectory: c.runDirectory, title: c.script?.title || c.title })),
+      }),
       onCandidateRejected: async (_rejectedId, rejectedList) => {
         pending.rejectedRunIds = rejectedList;
         await d.writeJson(pendingBatchPath, pending).catch(() => {});

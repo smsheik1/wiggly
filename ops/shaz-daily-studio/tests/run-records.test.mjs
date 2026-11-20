@@ -10,6 +10,45 @@ import test from "node:test";
 import { resolveRunDirectory } from "../../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/run-common.mjs";
 import { KIT_ROOT, runDailyBatch } from "../studio-daily.mjs";
 
+/** Mock writer for the script room: 3 drafts (same words, different angles), a verdict, and paperwork. */
+export function makeRoomAgent(script) {
+  return async (prompt) => {
+    if (prompt.includes("You are judging")) {
+      const labels = [...prompt.matchAll(/^DRAFT ([A-Z]) \(angle/gm)].map((m) => m[1]);
+      const scores = Object.fromEntries(labels.map((l) => [l, {
+        instantClarity: 8, ownAngle: 8, funny: 8, relatable: 8, endingQuestion: 8, soundsLikeShaz: 8, notes: "ok",
+      }]));
+      return { scores, winner: labels[0], runnerUp: labels[1] ?? null, goodEnough: true, rewriteNotes: "" };
+    }
+    if (prompt.includes("spoken script below is FINAL")) {
+      return {
+        headline: script.headline,
+        hook: { cardHeadline: "CARD", cardBadge: "BADGE" },
+        beats: script.beats.map((b) => ({ id: b.id, shotTypeSuggestion: "talk-to-camera", cardHeadline: "CARD", cardBadge: "BADGE" })),
+        visualQueries: [...script.visualQueries, "extra query one", "extra query two", "extra query three", "extra query four"],
+        backgroundId: script.backgroundId,
+        hashtags: script.hashtags,
+      };
+    }
+    const base = {
+      title: script.title,
+      sourceUrl: script.sourceUrl,
+      primaryInsight: script.research.primaryInsight,
+      claims: script.claims,
+      hook: { formula: script.hook.formula, text: script.hook.text },
+      beats: script.beats.map((b) => ({ connector: b.connector, text: b.text, impliedQuestion: b.impliedQuestion })),
+      landing: script.landing,
+    };
+    return {
+      drafts: [
+        { ...base, angle: "Nintendo shipped a quiet but useful patch" },
+        { ...base, angle: "Nobody reads patch notes until it matters" },
+        { ...base, angle: "Faster storage without buying anything" },
+      ],
+    };
+  };
+}
+
 test("runDailyBatch never touches runDirectory before runner.mjs init and persists all 4 traceability files afterward", async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "studio-run-records-"));
   let createdRunDir = null;
@@ -107,7 +146,7 @@ test("runDailyBatch never touches runDirectory before runner.mjs init and persis
           },
         ],
         fetchArticleForTopic: async () => article,
-        askAgentFn: async () => script,
+        askAgentFn: makeRoomAgent(script),
         sourceStoryMedia: async () => [],
         synthesizeShazVoice: async ({ outputPath }) => {
           await fs.writeFile(outputPath, Buffer.from("fake-wav"));
@@ -169,6 +208,9 @@ test("runDailyBatch never touches runDirectory before runner.mjs init and persis
     const articleJson = JSON.parse(await fs.readFile(path.join(createdRunDir, "article.json"), "utf8"));
     const scriptJson = JSON.parse(await fs.readFile(path.join(createdRunDir, "script.json"), "utf8"));
     const receiptJson = JSON.parse(await fs.readFile(path.join(createdRunDir, "author-receipt.json"), "utf8"));
+    const roomJson = JSON.parse(await fs.readFile(path.join(createdRunDir, "script-room.json"), "utf8"));
+    assert.equal(roomJson.drafts.length, 3);
+    assert.ok(roomJson.runnerUp?.text, "the runner-up is saved for Shaz's feedback");
 
     assert.equal(storyJson.eventId, "evt_fw_test");
     assert.equal(storyJson.sourceUrl, article.url);

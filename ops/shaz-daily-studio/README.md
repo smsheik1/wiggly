@@ -29,6 +29,23 @@ Key names read from `secrets.env` (or process environment):
 - Blind side-by-side harness (reuses an existing run's audio/transcript/media with zero Cartesia/Serper calls):
   `node ops/shaz-daily-studio/tools/director-ab.mjs --run=<runId> [--dry-run]`
 
+## Script Room (`scriptFlow` in `studio.config.json`)
+
+`"scriptFlow": "room"` (default) writes each script in four steps (`script-room.mjs`):
+
+1. The writer agent writes **3 drafts, each with a different angle**, against `voice-guide.md`.
+2. A fresh agent call **judges them blind** (shuffled, labelled A/B/C) and picks a winner and a runner-up.
+3. If none is good enough: **one rewrite** with the judge's notes, judged again. Still weak → the story is skipped.
+4. A separate "paperwork" call adds headline, cards, image searches, room and tags. Spoken words are locked.
+
+Every run saves `script-room.json` (all drafts, scores, winner, runner-up). In Telegram, the runner-up script is
+sent under each video with **"Runner-up was better" / "Winner was right"** buttons. These are feedback only and
+never pick or post. Votes go to `~/.wiggly/shaz-daily-studio/script-feedback.jsonl`.
+
+Weekly review: `node tools/review-script-feedback.mjs` (summary) or `--propose` (asks the agent for voice-guide
+edits, written to `~/.wiggly/shaz-daily-studio/voice-guide-proposals/<date>.md`; never edits the guide itself).
+`[pause]` marks are stripped before voice until pause timing ships. `"scriptFlow": "single"` keeps the old one-shot writer.
+
 ## Tests
 
 ```bash

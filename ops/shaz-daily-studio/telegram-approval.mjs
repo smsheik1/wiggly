@@ -437,6 +437,26 @@ export async function sendTelegramMessage({
   return data.result;
 }
 
+/**
+ * Handles a script feedback tap ("ru:<runId>" / "wr:<runId>"). Feedback only: never picks or posts.
+ * Returns true when the tap was a feedback tap (handled), false otherwise.
+ */
+async function handleScriptFeedbackTap(cb, { knownRunIds, token, fetchFn, nowFn, onScriptFeedback }) {
+  const m = /^(ru|wr):(.+)$/.exec(String(cb.data || ""));
+  if (!m) return false;
+  const runId = m[2];
+  if (!knownRunIds.has(runId)) return false;
+  const vote = m[1] === "ru" ? "runner-up-better" : "winner-right";
+  try {
+    await onScriptFeedback?.({ vote, runId, at: nowFn().toISOString(), messageId: cb.message?.message_id ?? null });
+    await answerTelegramCallback(token, cb.id, vote === "runner-up-better" ? "🔁 Noted: runner-up was better." : "✅ Noted: winner was right.", { fetchFn });
+  } catch (err) {
+    console.warn(`[Telegram Studio] Could not log script feedback: ${err.message}`);
+    await answerTelegramCallback(token, cb.id, "⚠️ Could not save that feedback.", { showAlert: true, fetchFn });
+  }
+  return true;
+}
+
 function isAuthorizedCallback(cb, expectedOperatorUserId, expectedChatId) {
   const fromId = cb?.from?.id;
   const msgChatId = cb?.message?.chat?.id;
@@ -465,6 +485,7 @@ export async function pollApprovalDecision({
   nowFn = () => new Date(),
   onDecision = null,
   onUnauthorizedTap,
+  onScriptFeedback = null,
 }) {
   const { token, chatId, operatorUserId } = getTelegramCredentials({
     requireOperator: true,
@@ -531,6 +552,10 @@ export async function pollApprovalDecision({
           return "approved";
         }
 
+        if (await handleScriptFeedbackTap(cb, { knownRunIds: new Set([runId]), token, fetchFn, nowFn, onScriptFeedback })) {
+          continue;
+        }
+
         if (cb.data === `reject:${runId}`) {
           await answerTelegramCallback(token, cb.id, "❌ Passed.", { fetchFn });
           if (cb.message?.message_id && cb.message?.chat?.id) {
@@ -581,6 +606,7 @@ export async function pollBatchDecision({
   nowFn = () => new Date(),
   onUnauthorizedTap,
   onCandidateRejected,
+  onScriptFeedback = null,
 }) {
   const { token, chatId, operatorUserId } = getTelegramCredentials({
     requireOperator: true,
@@ -713,6 +739,10 @@ export async function pollBatchDecision({
               unauthorizedTaps,
             };
           }
+          continue;
+        }
+
+        if (await handleScriptFeedbackTap(cb, { knownRunIds: new Set(candidateMap.keys()), token, fetchFn, nowFn, onScriptFeedback })) {
           continue;
         }
 
