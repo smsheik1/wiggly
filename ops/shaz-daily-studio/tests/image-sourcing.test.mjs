@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import sharp from "sharp";
+import sharp from "../../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/sharp.mjs";
 
 import { extractArticleFromHtml } from "../article-fetch.mjs";
 import { USER_AGENT as STUDIO_USER_AGENT } from "../article-fetch.mjs";

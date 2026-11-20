@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import sharp from "sharp";
+import sharp from "../../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/sharp.mjs";
 
 import { CandidateSkipError, runDailyBatch } from "../studio-daily.mjs";
 import { composeVerticalVideo } from "../vertical-letterbox.mjs";

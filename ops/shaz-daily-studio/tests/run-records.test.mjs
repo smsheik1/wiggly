@@ -8,7 +8,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { resolveRunDirectory } from "../../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/run-common.mjs";
-import { KIT_ROOT, runDailyBatch } from "../studio-daily.mjs";
+import { KIT_ROOT, loadStudioConfig, runDailyBatch } from "../studio-daily.mjs";
 
 /** Mock writer for the script room: 3 drafts (same words, different angles), a verdict, and paperwork. */
 export function makeRoomAgent(script) {
@@ -147,6 +147,8 @@ test("runDailyBatch never touches runDirectory before runner.mjs init and persis
         ],
         fetchArticleForTopic: async () => article,
         askAgentFn: makeRoomAgent(script),
+        // Exercise the script room explicitly (the shipped config may pin the one-shot writer).
+        loadStudioConfig: async () => ({ ...(await loadStudioConfig()), scriptFlow: "room" }),
         sourceStoryMedia: async () => [],
         synthesizeShazVoice: async ({ outputPath }) => {
           await fs.writeFile(outputPath, Buffer.from("fake-wav"));

@@ -1,7 +1,7 @@
 {
   "writerAgent": "agy",
   "director": "jev",
-  "scriptFlow": "room",
+  "scriptFlow": "single",
   "agentTimeoutMs": 600000,
   "maxScriptAttempts": 3,
   "batchSize": 3,

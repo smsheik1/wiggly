@@ -66,7 +66,7 @@ import {
   updateRunUsage,
   writeRunUsage,
 } from "./run-usage.mjs";
-import sharp from "sharp";
+import sharp from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/sharp.mjs";
 
 export const STUDIO_ROOT = path.dirname(fileURLToPath(import.meta.url));
 export const KIT_ROOT = path.resolve(STUDIO_ROOT, "../../v3/public/format-repositories/shaz-puppet-runtime-v1");

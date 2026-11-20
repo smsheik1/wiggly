@@ -115,8 +115,8 @@ test("renderSubtitlePhrase creates subtitle overlay buffer", async () => {
     phraseWords: [{ word: "SonyPS5Pro", startMs: 0, endMs: 1200 }],
     activeWordIndex: 0,
   });
-  const { data: spacedData, info: spacedInfo } = await (await import("sharp")).default(buf).raw().toBuffer({ resolveWithObject: true });
-  const { data: fusedData, info: fusedInfo } = await (await import("sharp")).default(fusedBuf).raw().toBuffer({ resolveWithObject: true });
+  const { data: spacedData, info: spacedInfo } = await (await import("../../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/sharp.mjs")).default(buf).raw().toBuffer({ resolveWithObject: true });
+  const { data: fusedData, info: fusedInfo } = await (await import("../../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/sharp.mjs")).default(fusedBuf).raw().toBuffer({ resolveWithObject: true });
 
   const getWidth = (data, info) => {
     let minX = info.width, maxX = 0;
