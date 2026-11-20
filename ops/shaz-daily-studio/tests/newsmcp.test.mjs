@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { fetchNewsMcpEvents, NewsMcpError, pickDistinctEvents } from "../newsmcp.mjs";
+import { enforceStoryMix, fetchNewsMcpEvents, fetchStoryPool, NewsMcpError, pickDistinctEvents, STORY_AREAS } from "../newsmcp.mjs";
 import { AgentOutputError, AgentUnavailableError } from "../../../v3/lib/agent-bridge.ts";
 
 test("fetchNewsMcpEvents throws loud Rule 12 error when NEWSMCP_API_KEY is missing", async () => {
@@ -96,9 +96,14 @@ test("pickDistinctEvents enforces valid unique eventIds, retries bad output, and
     askAgentFn: async (prompt) => {
       prompts.push(prompt);
       if (prompts.length === 1) {
-        return { picks: [{ eventId: "evt_1", reason: "a" }, { eventId: "evt_1", reason: "dup" }] };
+        return { picks: [{ eventId: "evt_1", reason: "a", conflict: "Sony vs PS5 owners" }, { eventId: "evt_1", reason: "dup", conflict: "Sony vs PS5 owners" }] };
       }
-      return { picks: [{ eventId: "evt_1", reason: "sony news" }, { eventId: "evt_3", reason: "nintendo update" }] };
+      return {
+        picks: [
+          { eventId: "evt_1", reason: "sony news", franchise: "PlayStation", conflict: "Sony vs fans who paid full price" },
+          { eventId: "evt_3", reason: "nintendo update", franchise: "Nintendo Switch", conflict: "Nintendo vs owners of old storage cards" },
+        ],
+      };
     },
   });
   assert.equal(prompts.length, 2);
@@ -129,4 +134,78 @@ test("pickDistinctEvents enforces valid unique eventIds, retries bad output, and
     AgentUnavailableError,
   );
   assert.equal(calls, 1);
+});
+
+test("story areas: no franchise is hard-coded into a search, and there are 5 areas", () => {
+  assert.equal(STORY_AREAS.length, 5);
+  for (const a of STORY_AREAS) assert.doesNotMatch(a.query, /\bgta\b/i);
+});
+
+test("fetchStoryPool searches every area, tags and dedupes events, and only fails if every area fails", async () => {
+  const queries = [];
+  const { events, calls } = await fetchStoryPool({
+    fetchEventsFn: async ({ query }) => {
+      queries.push(query);
+      return [{ eventId: "shared", title: "Shared" }, { eventId: `only-${queries.length}`, title: query }];
+    },
+  });
+  assert.equal(calls, 5);
+  assert.equal(queries.length, 5);
+  assert.equal(events.filter((e) => e.eventId === "shared").length, 1);
+  assert.equal(events.find((e) => e.eventId === "shared").area, "games");
+
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const partial = await fetchStoryPool({
+      fetchEventsFn: async ({ query }) => {
+        if (query.includes("youtuber")) throw new Error("boom");
+        return [{ eventId: query, title: query }];
+      },
+    });
+    assert.equal(partial.events.length, 4);
+    assert.equal(partial.failures.length, 1);
+  } finally {
+    console.warn = warn;
+  }
+  await assert.rejects(
+    () => fetchStoryPool({ fetchEventsFn: async () => { throw new Error("down"); } }),
+    (err) => err instanceof NewsMcpError && /Every NewsMCP area search failed/.test(err.message),
+  );
+});
+
+test("enforceStoryMix: 1 story per franchise, 2 per area, keeps the picker's order", () => {
+  const p = (id, area, franchise) => ({ topic: { eventId: id, title: id }, area, franchise });
+  const { kept, dropped } = enforceStoryMix([
+    p("gta-1", "games", "GTA 6"),
+    p("gta-2", "games", "gta-6"),
+    p("gta-3", "games", "Grand Theft Auto 6".replace("Grand Theft Auto ", "GTA ")),
+    p("xbox", "games", "Xbox"),
+    p("switch", "games", "Nintendo"),
+    p("ai", "tech", "none"),
+    p("ai-2", "tech", "none"),
+  ]);
+  assert.deepEqual(kept.map((k) => k.topic.eventId), ["gta-1", "xbox", "ai", "ai-2"]);
+  assert.equal(dropped.length, 3);
+  assert.match(dropped[0].reason, /gta 6/);
+  assert.match(dropped[2].reason, /2 stories from "games"/);
+});
+
+test("pickDistinctEvents rejects picks with no conflict and its prompt asks for conflict + one per franchise", async () => {
+  const candidates = [{ eventId: "evt_1", title: "IShowSpeed hits 40M subs", snippet: "Milestone", newsrooms: 2 }];
+  const prompts = [];
+  await assert.rejects(
+    () =>
+      pickDistinctEvents({
+        candidates,
+        askAgentFn: async (prompt) => {
+          prompts.push(prompt);
+          return { picks: [{ eventId: "evt_1", reason: "big milestone", conflict: "" }] };
+        },
+      }),
+    (err) => err instanceof AgentOutputError && /no "conflict"/.test(err.message),
+  );
+  assert.match(prompts[0], /CONFLICT IS REQUIRED/);
+  assert.match(prompts[0], /ONE STORY PER GAME, FRANCHISE OR COMPANY/);
+  assert.match(prompts[1], /no "conflict"/, "the exact error is fed back");
 });

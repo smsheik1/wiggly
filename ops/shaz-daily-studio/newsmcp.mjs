@@ -11,7 +11,79 @@ import { findSecretsEnvPath, getSecretKey, redactSecrets } from "./secrets.mjs";
 
 const STUDIO_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(STUDIO_DIR, "../..");
-const DEFAULT_NEWSMCP_QUERY = "playstation OR xbox OR nintendo OR gta OR steam";
+const DEFAULT_NEWSMCP_QUERY = "playstation OR xbox OR nintendo OR steam OR video game";
+
+/**
+ * Story areas (Shaz decision 2026-11-20): games plus 4 new areas, max 2 stories per area,
+ * max 1 story per game/franchise/company, and only stories with real conflict.
+ * No single franchise name (e.g. "gta") is hard-coded into a search.
+ */
+export const STORY_AREAS = Object.freeze([
+  { id: "games", label: "Games industry", query: DEFAULT_NEWSMCP_QUERY },
+  { id: "indie-weird", label: "Indie & weird game news", query: "indie game OR game mod OR speedrun OR viral game OR game developer" },
+  { id: "tech", label: "Tech & gadgets", query: "apple OR samsung OR google OR gadget OR smartphone OR AI" },
+  { id: "creators", label: "Internet & creator culture", query: "youtuber OR streamer OR tiktok OR twitch OR influencer" },
+  { id: "animation", label: "Animation & movies", query: "pixar OR disney OR anime OR animated movie OR box office" },
+]);
+export const MAX_PER_AREA = 2;
+export const MAX_PER_FRANCHISE = 1;
+
+/**
+ * Fetches one pool across all story areas. Each event is tagged with the first area that found it.
+ * A failing area is reported loudly (Rule 12); the run only stops if EVERY area fails.
+ */
+export async function fetchStoryPool({ areas = STORY_AREAS, perAreaLimit = 8, fetchEventsFn, ...opts } = {}) {
+  const fetchFn = fetchEventsFn || fetchNewsMcpEvents;
+  const results = await Promise.allSettled(
+    areas.map((area) => fetchFn({ ...opts, query: area.query, limit: perAreaLimit })),
+  );
+  const pool = new Map();
+  const failures = [];
+  results.forEach((r, i) => {
+    const area = areas[i];
+    if (r.status === "rejected") {
+      failures.push(`${area.id}: ${r.reason?.message || r.reason}`);
+      return;
+    }
+    for (const evt of r.value || []) {
+      if (!pool.has(evt.eventId)) pool.set(evt.eventId, { ...evt, area: area.id });
+    }
+  });
+  if (failures.length === areas.length) {
+    throw new NewsMcpError(`Every NewsMCP area search failed:\n${failures.join("\n")}`);
+  }
+  if (failures.length) console.warn(`  ⚠️ NewsMCP: ${failures.length} area search(es) failed: ${failures.join(" | ")}`);
+  return { events: [...pool.values()], calls: areas.length, failures };
+}
+
+function normalizeFranchise(value) {
+  const v = String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return v === "" || v === "none" || v === "n a" ? null : v;
+}
+
+/** Keeps the picker's order but enforces the area and franchise caps. Returns { kept, dropped }. */
+export function enforceStoryMix(picks, { maxPerArea = MAX_PER_AREA, maxPerFranchise = MAX_PER_FRANCHISE } = {}) {
+  const perArea = new Map();
+  const perFranchise = new Map();
+  const kept = [];
+  const dropped = [];
+  for (const pick of picks) {
+    const area = pick.area || pick.topic?.area || "games";
+    const franchise = normalizeFranchise(pick.franchise);
+    if ((perArea.get(area) || 0) >= maxPerArea) {
+      dropped.push({ pick, reason: `already ${maxPerArea} stories from "${area}"` });
+      continue;
+    }
+    if (franchise && (perFranchise.get(franchise) || 0) >= maxPerFranchise) {
+      dropped.push({ pick, reason: `already a story about "${franchise}"` });
+      continue;
+    }
+    perArea.set(area, (perArea.get(area) || 0) + 1);
+    if (franchise) perFranchise.set(franchise, (perFranchise.get(franchise) || 0) + 1);
+    kept.push(pick);
+  }
+  return { kept, dropped };
+}
 
 export class NewsMcpError extends Error {
   constructor(message, options) {
@@ -121,6 +193,7 @@ function buildPickPrompt({ candidates, recentPublishedTitles, maxPicks, previous
     eventId: c.eventId,
     headline: c.title,
     abstract: c.snippet,
+    area: c.area || null,
     publishedAt: c.publishedAt,
     newsrooms: c.newsrooms,
   }));
@@ -129,19 +202,22 @@ function buildPickPrompt({ candidates, recentPublishedTitles, maxPicks, previous
     ? recentPublishedTitles.map((t, i) => `${i + 1}. ${t}`).join("\n")
     : "(none)";
 
+  const areaBlock = STORY_AREAS.map((a) => `- ${a.id}: ${a.label}`).join("\n");
   return (
-    `You are the executive producer for Shaz's daily gaming & tech short-form video channel.\n\n` +
-    `TASK: Select and rank up to ${maxPicks} DISTINCT real-world news events from the NewsMCP candidate pool below.\n` +
+    `You are the executive producer for Shaz, a cartoon gamer who roasts the games, tech and internet industry on YouTube Shorts, Reels and TikTok. His videos only work when the story has a fight in it.\n\n` +
+    `TASK: Select and rank up to ${maxPicks} DISTINCT news stories from the candidate pool below.\n` +
     `RULES:\n` +
-    `1. Never pick two headlines describing the same real-world event (e.g., two different outlets reporting the exact same announcement or release date).\n` +
-    `2. Do NOT pick any candidate covering the same real-world story as one of the recently published titles below.\n` +
-    `3. Order picks from strongest/freshest/most punchy gaming or hardware commentary topic first so downstream retries have ranked backups.\n` +
-    `4. Use ONLY exact eventId values present in CANDIDATES. Never repeat an eventId. If every candidate is a near-duplicate of RECENTLY PUBLISHED TITLES, return { "picks": [] }.\n\n` +
-    `RECENTLY PUBLISHED TITLES (avoid repeating these events):\n${recentBlock}\n\n` +
+    `1. CONFLICT IS REQUIRED. Pick only stories with a clear "someone vs someone": a company vs its fans, a boss vs workers, a price hike, a ban, a backlash, a feud, a lawsuit, a flop, a ridiculous decision. In "conflict", name both sides in one sentence. A milestone, a review, a benchmark, a spec comparison, a release date or a "how to" has NO conflict: skip it.\n` +
+    `2. A CASUAL VIEWER MUST GET IT IN ONE SENTENCE. Skip stories that need tech terms or niche lore to explain.\n` +
+    `3. ONE STORY PER GAME, FRANCHISE OR COMPANY TOPIC. Three different GTA stories are three picks of the same thing: keep only the best one. In "franchise", name the game/franchise/company it's about (or "none").\n` +
+    `4. MIX THE AREAS. At most ${MAX_PER_AREA} picks from the same area. Areas:\n${areaBlock}\n` +
+    `5. Never pick two headlines about the same real-world event, or a story already covered in RECENTLY PUBLISHED TITLES.\n` +
+    `6. Rank the funniest, most relatable fight first. Use ONLY exact eventId values from CANDIDATES. If nothing has real conflict, return { "picks": [] }.\n\n` +
+    `RECENTLY PUBLISHED TITLES (avoid repeating these stories):\n${recentBlock}\n\n` +
     `CANDIDATES:\n${JSON.stringify(candidateBlock, null, 2)}\n\n` +
     (previousError ? `PREVIOUS ATTEMPT FAILED VALIDATION — FIX THIS EXACT ERROR:\n${previousError}\n\n` : "") +
     `Respond ONLY with valid JSON matching:\n` +
-    `{\n  "picks": [\n    { "eventId": "<exact candidate eventId>", "reason": "<one concise sentence>" }\n  ]\n}`
+    `{\n  "picks": [\n    { "eventId": "<exact candidate eventId>", "area": "<area id>", "franchise": "<game/franchise/company or none>", "conflict": "<who vs who, one sentence>", "reason": "<why it's funny for Shaz, one sentence>" }\n  ]\n}`
   );
 }
 
@@ -218,10 +294,19 @@ export async function pickDistinctEvents({
         validationError = `Duplicate eventId '${id}' — every pick must be unique.`;
         break;
       }
+      const conflict = String(item?.conflict || "").trim();
+      if (conflict.length < 10) {
+        validationError = `Pick '${id}' has no "conflict" (who vs who). Skip stories without a real fight.`;
+        break;
+      }
       seen.add(id);
       const topic = byEventId.get(id);
+      const area = STORY_AREAS.some((a) => a.id === item?.area) ? item.area : topic.area || "games";
       selected.push({
-        topic,
+        topic: { ...topic, area },
+        area,
+        franchise: String(item?.franchise || "none").trim(),
+        conflict,
         source: `newsmcp (${topic.newsrooms} newsrooms)`,
         pickReason: String(item?.reason || "").trim(),
       });
@@ -235,7 +320,11 @@ export async function pickDistinctEvents({
       throw new AgentOutputError(`Event selection validation failed: ${validationError}`, JSON.stringify(response));
     }
 
-    return selected.slice(0, cappedMax);
+    const { kept, dropped } = enforceStoryMix(selected);
+    for (const d of dropped) {
+      console.log(`  ↪︎ Story mix: dropped "${d.pick.topic.title}" (${d.reason}).`);
+    }
+    return kept.slice(0, cappedMax);
   }
 
   return [];

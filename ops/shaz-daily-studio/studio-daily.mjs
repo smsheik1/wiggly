@@ -23,7 +23,7 @@ import {
 } from "./errors.mjs";
 import { acquireStudioLock, assertFreeDiskSpace } from "./preflight.mjs";
 import { pruneOldRuns } from "./prune-runs.mjs";
-import { fetchNewsMcpEvents, NewsMcpError, pickDistinctEvents } from "./newsmcp.mjs";
+import { fetchNewsMcpEvents, fetchStoryPool, NewsMcpError, pickDistinctEvents } from "./newsmcp.mjs";
 
 export { CandidateSkipError, RunStopError, ScriptAuthorError };
 import {
@@ -143,16 +143,14 @@ export async function findTopStories({
   const fetchEventsFn = deps.fetchNewsMcpEvents || fetchNewsMcpEvents;
   const pickEventsFn = deps.pickDistinctEvents || pickDistinctEvents;
 
+  const fetchOpts = { apiKey: deps.newsMcpApiKey, env, secretsPath: deps.secretsPath, fetchFn: deps.fetchFn };
   const [ledger, events] = await Promise.all([
     loadLedgerFn(ledgerPath, { env }),
-    fetchEventsFn({
-      ...(query ? { query } : {}),
-      limit,
-      apiKey: deps.newsMcpApiKey,
-      env,
-      secretsPath: deps.secretsPath,
-      fetchFn: deps.fetchFn,
-    }),
+    query
+      // An explicit --query keeps the old single search.
+      ? fetchEventsFn({ query, limit, ...fetchOpts })
+      // Default: one search per story area (games, indie & weird, tech, creators, animation).
+      : fetchStoryPool({ ...fetchOpts, fetchEventsFn }).then((r) => r.events),
   ]);
 
   const eligible = filterFreshTopics(events, ledger, { now });

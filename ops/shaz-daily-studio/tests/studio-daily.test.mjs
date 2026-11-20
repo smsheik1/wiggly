@@ -80,12 +80,13 @@ test("findTopStories uses NewsMCP only, applies v2 ledger filters, and delegates
     );
 
     let capturedAgentOpts = null;
+    let newsMcpCalls = 0;
     const picks = await findTopStories({
       count: 2,
       ledgerPath,
       deps: {
         newsMcpApiKey: "test-key",
-        fetchFn: async () => ({
+        fetchFn: async () => (newsMcpCalls += 1, {
           ok: true,
           json: async () => ({
             events: [
@@ -99,8 +100,8 @@ test("findTopStories uses NewsMCP only, applies v2 ledger filters, and delegates
           capturedAgentOpts = opts;
           return {
             picks: [
-              { eventId: "evt_new_b", reason: "Hardware pricing drama" },
-              { eventId: "evt_new_a", reason: "Sales milestone" },
+              { eventId: "evt_new_b", reason: "Hardware pricing drama", franchise: "Valve", conflict: "Valve vs fans shocked by the headset price" },
+              { eventId: "evt_new_a", reason: "Sales milestone", franchise: "Nintendo", area: "games", conflict: "Nintendo vs scalpers buying every unit" },
             ],
           };
         },
@@ -110,6 +111,7 @@ test("findTopStories uses NewsMCP only, applies v2 ledger filters, and delegates
     assert.equal(capturedAgentOpts.agent, "agy");
     assert.equal(capturedAgentOpts.requireJson, true);
     assert.deepEqual(picks.map((p) => p.topic.eventId), ["evt_new_b", "evt_new_a"]);
+    assert.equal(newsMcpCalls, 5, "one NewsMCP search per story area");
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }
