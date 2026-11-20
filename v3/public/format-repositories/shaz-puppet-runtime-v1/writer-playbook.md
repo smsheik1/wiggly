@@ -60,50 +60,56 @@ Write beats with the Wiggly 4-shot studio palette in mind:
 ## 5. Pacing & Word Count Bounds
 
 Speaking rate in animation is **140 to 160 words per minute** (approx. 2.4 to 2.6 words per second):
-- **30-Second Short:** **70 to 85 words maximum**. (Scripts over 90 words will spill over or sound rushed).
+- **30-Second Short:** **70 to 85 words recommended** (`70–88` words hard gate in daily studio grounding; `55–88` words / `110–175 WPM` baseline kit validator range). Over 90 words sounds rushed.
 - **60-Second Video:** **140 to 165 words maximum**.
 
 ---
 
-## 6. The 26 Banned AI Buzzwords & Tells (Automated Gate)
+## 6. Banned AI Tells (Automated Gate)
 
-The script linter will automatically **fail** any script containing these robotic phrases:
+The single source of truth is `runtime/ai-tells.mjs`. `validateScript` rejects any script that trips a rule and names the offending text, and the daily studio prints the same list into the writer prompt. If this table and the code ever disagree, the code wins.
 
-| Banned Phrase / Pattern | Why it is banned | What to use instead |
+### 6a. Banned sentence patterns
+
+| Pattern | Example (banned) | Write instead |
 |---|---|---|
-| *"in today's fast-paced world"* | Classic AI filler | Just state the observation |
-| *"it's important to note"* | Empty throat-clearing | Say the fact directly |
-| *"delve into"* / *"dive into"* | AI clichéd metaphor | *"look at"*, *"break down"*, or start |
-| *"game-changing"* / *"revolutionary"* | Hype inflation | Describe the actual specific change |
-| *"at the end of the day"* | Cliché padding | Cut it |
-| *"in conclusion"* / *"to sum up"* | School essay framing | Deliver the final punchline |
-| *"let's dive in"* / *"here's the thing"* | Collaborative meta-chatter | Cut it |
-| *"not only... but also..."* | Stilted rhetorical cadence | Write two clean sentences |
-| *"testament to"* / *"stands as"* | Flowery academic prose | Use *"is"* or *"shows"* |
-| *"paradigm shift"* | Corporate jargon | Explain what actually shifted |
-| *"tapestry"* / *"interplay"* | AI favorite metaphors | Plain English |
-| *"multifaceted"* / *"nuanced"* | Academic dodging | Pick a specific angle |
-| *"fosters"* / *"empowers"* | Corporate pitch talk | Concrete active verbs |
-| *"landscape"* / *"realm"* | Vague abstraction | Name the specific space |
-| *"crucial"* / *"vital"* / *"pivotal"* | Inflated adjective | Show the consequence |
-| *"seamless"* / *"mastery"* | Marketer speak | Describe what works |
-| *"beacon of"* | Melodramatic trope | Describe the reality |
-| *"journey"* (as abstract concept) | Self-help cliché | Describe the specific struggle |
-| *"dynamic"* (as buzzword) | Vague filler | Show the movement |
-| *"unveil"* / *"unlock"* | Generic teaser word | Reveal the fact directly |
-| *"rich history"* | Tourist brochure copy | Share the specific story |
-| *"explore"* / *"deep dive"* | Meta-announcement | Get into the subject |
-| *"key takeaway"* | Corporate meeting bullet | State the lesson plainly |
-| *"furthermore"* / *"moreover"* | Academic transition | Use *"therefore"* or *"but"* |
-| *"in essence"* | Filler | Say the thing |
-| *"plethora"* / *"myriad"* | Thesaurus padding | Use *"lots of"*, *"dozens"*, or the number |
+| Forced negation | *"That's not a patch, that's a roommate."* / *"You don't have a team problem. You have a calendar problem."* / *"It's not about X, it's about Y."* | Say the Y directly: *"The update moved in like a roommate."* |
+| Repetition | *"It's loud. It's broken. It's expensive."* / *"Raise the price... Raise the price..."* / *"Old games hid... New games hide..."* / *"could be X, could be Y, could be Z"* | Vary how sentences start; make the point once |
+| Echo fragments | *"Small."* / *"Sixty million."* / *"Again."* / *"Deserved."* | Fold it into a full sentence |
+| Question-then-answer | *"The reason? An AI shortage."* / *"And honestly? Deserved."* | State it. A real question to the viewer is fine |
+| Label openers | *"Respectfully, ..."* / *"Confession: ..."* / *"Hot take: ..."* | Just say the line |
+
+Also avoid (not auto-checked): rhetorical lists of three, em dashes, and stacked adverbs like *"brutally"* or *"furiously"*.
+
+Not banned on purpose: a plain concession like *"It's not cheap, but it works."*, and casual openers like *"honestly"* or *"look"* (Section 2).
+
+### 6b. Banned words and stock phrases
+
+| Banned | Write instead |
+|---|---|
+| *"in today's fast-paced world"*, *"it's important to note"*, *"at the end of the day"*, *"in conclusion"*, *"to sum up"*, *"in essence"*, *"key takeaway"* | Cut it and say the fact |
+| *"delve into"*, *"dive into"*, *"let's dive in"*, *"deep dive"*, *"here's the thing"* | Start with the subject |
+| *"game-changing"*, *"game changer"*, *"revolutionary"*, *"paradigm shift"* | Name the specific change |
+| *"not only... but also..."* | Two plain sentences |
+| *"testament to"*, *"stands as"*, *"beacon of"*, *"rich history"* | *"is"*, *"shows"*, or the specific story |
+| *"tapestry"*, *"interplay"*, *"multifaceted"*, *"nuanced"* | Plain English, one specific angle |
+| *"fosters"*, *"empowers"*, *"seamless"*, *"mastery"* | Concrete verbs, what actually works |
+| *"the gaming/tech/media/... landscape"* | Name the specific space |
+| *"crucial"*, *"vital"*, *"pivotal"* | Show the consequence |
+| *"my/our/your/the whole journey"* (abstract) | The specific struggle |
+| *"unveil"* | *"showed"*, *"announced"* |
+| *"furthermore"*, *"moreover"* | *"therefore"* or *"but"* |
+| *"plethora"*, *"myriad"* | *"lots of"* or the number |
+| *"the question nobody asked"*, *"doing a lot of heavy lifting"*, *"let that sink in"*, *"calling it now"*, *"make it make sense"*, *"said no one ever"*, *"plot twist"*, *"buckle up"*, *"you can't make this up"*, *"we need to talk about"*, *"in a world where"*, *"it's giving"*, *"and that's the point/kicker"*, *"here's the kicker/catch"*, *"let's be real/honest"* | Stock internet filler: cut it |
+
+Removed on 2026-11-18 because they blocked real terms: *"dynamic"* (dynamic pricing), *"explore"* (explore Vice City), *"unlock"* (unlock a character), *"realm"* and bare *"journey"* / *"landscape"* (game names, landscape mode).
 
 ---
 
 ## 7. Landing Types (Final 10–15% of Duration)
 
 End on a strong, definitive beat. Never wind down or summarize:
-- **The Reframe:** Look back at the premise with new meaning (*"Leo wasn't a bad dog—we were just chaotic roommates."*).
+- **The Reframe:** Look back at the premise with new meaning (*"Turns out Leo was the best-behaved one in that house the whole time."*).
 - **The Challenge:** One concrete thing to do today.
 - **The Twist:** A final revelation that turns the premise on its head.
 - **The Thought-Provoking Question:** An open question the viewer keeps thinking about after scrolling.
@@ -117,3 +123,13 @@ When running `npm run lint:script`, `TYPESAFE_API_KEY` must be configured in `se
 - **Check:** Measures probability of corporate PR speak, soulless buzzword density, and conversational authenticity.
 - **Fail Boundary:** Automatically blocks scripts if Jev identifies a corporate/PR probability ≥ 75%, flagging the text to be rewritten with more direct, personal human phrasing before voice synthesis.
 - **Zero Fallback Policy:** If `TYPESAFE_API_KEY` is missing or fails, execution halts immediately with clear setup instructions.
+
+---
+
+## 9. Temporal Grounding & Current Reality Rule (Mandatory Gate)
+
+To prevent outdated AI slop and inaccurate timeframes:
+1. **Present-Moment Grounding:** All scripts must be strictly calculated against the current calendar date (`new Date()`).
+2. **Relative Countdown Accuracy:** If a headline or event lists a date (e.g. November 19, 2026), calculate exact days or weeks remaining relative to today. Never say "two years away", "years in advance", or "a year early" for an event in the same year or month.
+3. **No Outdated Year References:** Past years (e.g. 2023, 2024, 2025) must never be framed as future launch targets.
+4. **Automated Gate:** The script validator will automatically reject scripts containing hallucinated relative timeframes conflicting with the topic timeline.

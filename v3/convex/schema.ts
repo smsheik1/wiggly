@@ -304,4 +304,23 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   }).index("by_accountId", ["accountId"]).index("by_jobId", ["jobId"]).index("by_stage", ["stage"]),
+
+  studioUploadTickets: defineTable({
+    token: v.string(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    consumedAt: v.optional(v.number()),
+  })
+    .index("by_token", ["token"])
+    .index("by_expiresAt", ["expiresAt"]),
+
+  studioMedia: defineTable({
+    storageId: v.id("_storage"),
+    sha256: v.string(),
+    bytes: v.number(),
+    createdAt: v.number(),
+    deleteAfter: v.number(),
+  })
+    .index("by_storageId", ["storageId"])
+    .index("by_deleteAfter", ["deleteAfter"]),
 });

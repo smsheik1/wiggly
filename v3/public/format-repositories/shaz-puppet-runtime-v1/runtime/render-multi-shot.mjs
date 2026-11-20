@@ -8,23 +8,42 @@ import { execute, sha256, writeJson } from "./run-common.mjs";
 import { renderRigFrame } from "./rig-v2-renderer.mjs";
 import { renderTextCardFrame, wordsVisibleAtFrame } from "./text-card-renderer.mjs";
 import { renderTopicCard } from "./topic-card-renderer.mjs";
-import { renderKenBurnsFrame } from "./broll-renderer.mjs";
-import { renderOtsCardFrame } from "./ots-card-renderer.mjs";
+import { renderKenBurnsFrame, normalizeBrollMedia } from "./broll-renderer.mjs";
+import { OTS_GRAPHIC_ZONE, OTS_HEADLINE_BOX, renderOtsCardFrame } from "./ots-card-renderer.mjs";
+import {
+  getCinematicVignetteBuffer,
+  getStreamerStudioForegroundBuffer,
+} from "./studio-staging.mjs";
 import { buildChibiSchedule, getChibiFrameTransform } from "./chibi-choreography.mjs";
 import { resolvePuppetPoseId } from "./multi-shot-timeline.mjs";
 import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
 
-export const OTS_GRAPHIC_ZONE = Object.freeze({
-  left: 80,
-  top: 90,
-  width: 440,
-  height: 440,
-  actionSafePadding: 64,
-  comfortMarginToShaz: 120,
-  shazStagingBox: Object.freeze({ left: 540, top: 80, width: 700, height: 640 }),
-});
+export { OTS_GRAPHIC_ZONE, OTS_HEADLINE_BOX };
+
+/**
+ * Resolves the active OTS image buffer and cache key so swapping `image` -> `image2` at `swapAtFrame`
+ * never hits the cached card frame from slot 1.
+ */
+export function getActiveOtsImageState({
+  ots,
+  localFrame,
+  otsEntranceDelay = 0,
+  image1Buffer = null,
+  image2Buffer = null,
+}) {
+  const useSecondOts = Boolean(
+    image2Buffer &&
+    Number.isInteger(ots?.swapAtFrame) &&
+    localFrame >= ots.swapAtFrame,
+  );
+  const slot = useSecondOts ? 2 : 1;
+  const activeImageBuffer = useSecondOts ? image2Buffer : image1Buffer;
+  const cardEntranceFrame = localFrame - otsEntranceDelay;
+  const cacheKey = `${slot}:${Math.min(cardEntranceFrame, 4)}`;
+  return { slot, activeImageBuffer, cardEntranceFrame, cacheKey };
+}
 
 export async function renderMultiShot({ root, runDirectory, validated }) {
   const output = path.join(runDirectory, "final.mp4");
@@ -46,6 +65,10 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
     const buffer = await sharp(bgPath).resize(1280, 720, { fit: "fill" }).png().toBuffer();
     bgCache.set(bg.id, buffer);
   }
+
+  // Pre-render streamer studio staging assets (cinematic depth & foreground desk/mic)
+  const vignetteBuffer = await getCinematicVignetteBuffer();
+  const studioForegroundBuffer = await getStreamerStudioForegroundBuffer();
 
   let outputFrame = 0;
   const shotReports = [];
@@ -120,15 +143,18 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
 
         // Resolve OTS graphic assets and timing if present
         const ots = shot.otsGraphic ?? null;
-        let otsInnerImageBuffer = null;
-        if (ots?.image) {
-          const otsImgPath = path.isAbsolute(ots.image)
-            ? ots.image
-            : path.resolve(runDirectory, ots.image);
-          if (await fs.access(otsImgPath).then(() => true).catch(() => false)) {
-            otsInnerImageBuffer = await fs.readFile(otsImgPath);
+        const loadOtsAssetBuffer = async (relativeOrAbsPath) => {
+          if (!relativeOrAbsPath) return null;
+          const resolvedPath = path.isAbsolute(relativeOrAbsPath)
+            ? relativeOrAbsPath
+            : path.resolve(runDirectory, relativeOrAbsPath);
+          if (await fs.access(resolvedPath).then(() => true).catch(() => false)) {
+            return fs.readFile(resolvedPath);
           }
-        }
+          return null;
+        };
+        const otsInnerImageBuffer = await loadOtsAssetBuffer(ots?.image);
+        const otsInnerImageBuffer2 = await loadOtsAssetBuffer(ots?.image2);
         const otsEntranceDelay = ots?.entranceDelayFrames ?? 0;
         const otsDuration = ots?.durationFrames ?? (shot.durationFrames - otsEntranceDelay);
         const otsFrameCache = new Map();
@@ -176,16 +202,33 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
             puppetCache.set(puppetKey, puppetBuffer);
           }
 
-          // Composite OTS card if active on this frame
+          // Composite layers:
+          // 1. Cinematic vignette overlay on background
+          // 2. OTS card (if active)
+          // 3. Puppet rig
+          // 4. Streamer studio desk & microphone foreground
           const composites = [];
+          if (vignetteBuffer) {
+            composites.push({ input: vignetteBuffer, left: 0, top: 0 });
+          }
+
           if (ots && f >= otsEntranceDelay && f < otsEntranceDelay + otsDuration) {
-            const cardEntranceFrame = f - otsEntranceDelay;
-            const cardCacheKey = Math.min(cardEntranceFrame, 4);
+            const {
+              activeImageBuffer: activeOtsImageBuffer,
+              cardEntranceFrame,
+              cacheKey: cardCacheKey,
+            } = getActiveOtsImageState({
+              ots,
+              localFrame: f,
+              otsEntranceDelay,
+              image1Buffer: otsInnerImageBuffer,
+              image2Buffer: otsInnerImageBuffer2,
+            });
             let cardBuffer = otsFrameCache.get(cardCacheKey);
             if (!cardBuffer) {
               cardBuffer = await renderOtsCardFrame({
                 headline: ots.headline ?? "",
-                image: otsInnerImageBuffer,
+                image: activeOtsImageBuffer,
                 subtext: ots.subtext ?? "",
                 width: OTS_GRAPHIC_ZONE.width,
                 height: OTS_GRAPHIC_ZONE.height,
@@ -202,6 +245,11 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
 
           // Puppet rig layer in front of OTS card
           composites.push({ input: puppetBuffer });
+
+          // Streamer studio desk and broadcast microphone in foreground
+          if (studioForegroundBuffer) {
+            composites.push({ input: studioForegroundBuffer, left: 0, top: 0 });
+          }
 
           const composedBuffer = await sharp(bgBuffer)
             .composite(composites)
@@ -304,10 +352,8 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
         if (shot.brollMedia) {
           const brollPath = path.resolve(runDirectory, shot.brollMedia);
           if (await fs.access(brollPath).then(() => true).catch(() => false)) {
-            sourceBrollBuffer = await sharp(brollPath)
-              .resize(1280, 720, { fit: "cover" })
-              .png()
-              .toBuffer();
+            const raw = await fs.readFile(brollPath);
+            sourceBrollBuffer = await normalizeBrollMedia(raw);
           }
         }
 
@@ -417,6 +463,9 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
       ]);
     }
 
+    const providerCalls = Number.isFinite(validated.receipt.providerCalls)
+      ? validated.receipt.providerCalls
+      : 0;
     const report = {
       schemaVersion: 2,
       status: "rendered",
@@ -436,8 +485,8 @@ export async function renderMultiShot({ root, runDirectory, validated }) {
       audioDurationSeconds: validated.timeline.audioDurationSeconds,
       shots: shotReports,
       ...(validated.receipt.transcript ? { transcript: validated.receipt.transcript } : {}),
-      providerCalls: 0,
-      cost: "$0",
+      providerCalls,
+      ...(providerCalls === 0 ? { cost: "$0" } : {}),
     };
 
     await writeJson(path.join(runDirectory, "render-report.json"), report);

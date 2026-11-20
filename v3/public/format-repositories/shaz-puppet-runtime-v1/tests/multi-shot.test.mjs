@@ -452,36 +452,36 @@ test("buildChibiSchedule auto-expands single hold when duration >= 48 frames", (
   assert.ok(schedule.includes("Timeline 1_0008.png"), "must include think-chin hold");
 });
 
-test("resolvePuppetPoseId maps chin-stroke, key-point, and look-at-phone aliases to canonical recipes", () => {
-  assert.equal(resolvePuppetPoseId("chin-stroke"), "chin-stroke-swagger");
+test("resolvePuppetPoseId preserves pose IDs directly without silent pose swaps", () => {
+  assert.equal(resolvePuppetPoseId("chin-stroke"), "chin-stroke");
   assert.equal(resolvePuppetPoseId("chin-stroke-swagger"), "chin-stroke-swagger");
-  assert.equal(resolvePuppetPoseId("chin-stroke-smug"), "chin-stroke-swagger");
-  assert.equal(resolvePuppetPoseId("swagger"), "chin-stroke-swagger");
-  assert.equal(resolvePuppetPoseId("phone-use-sequence"), "chin-stroke-swagger");
-  assert.equal(resolvePuppetPoseId("look-at-phone"), "chin-stroke-swagger");
+  assert.equal(resolvePuppetPoseId("facepalm"), "facepalm");
+  assert.equal(resolvePuppetPoseId("arms-crossed"), "arms-crossed");
+  assert.equal(resolvePuppetPoseId("phone-use-sequence"), "phone-use-sequence");
+  assert.equal(resolvePuppetPoseId("look-at-phone"), "look-at-phone");
   assert.equal(resolvePuppetPoseId("key-point"), "key-point");
   assert.equal(resolvePuppetPoseId("neutral-listening"), "neutral-listening");
   assert.equal(resolvePuppetPoseId("point"), "point");
   assert.equal(resolvePuppetPoseId("point-at-screen"), "point-at-screen");
 });
 
-test("validateMultiShotPlan accepts chin-stroke pose for talk-to-camera shot", async () => {
+test("validateMultiShotPlan accepts approved poses and rejects unapproved or swapped pose IDs", async () => {
   const assets = JSON.parse(await fs.readFile(path.join(root, "assets.json"), "utf8"));
   const poseIndex = JSON.parse(await fs.readFile(path.join(root, "poses", "index.json"), "utf8"));
   const poseRegistry = {
     byId: new Map(poseIndex.poses.map((p) => [p.id, p])),
   };
 
-  const planWithChinStroke = {
+  const approvedPlan = {
     schemaVersion: "shaz-multi-shot-v1",
-    title: "Chin stroke validation",
+    title: "Approved pose validation",
     audioFile: "user-audio.wav",
     totalDurationFrames: 48,
     shots: [
       {
         id: "shot-1",
         shotType: "talk-to-camera",
-        poseId: "chin-stroke",
+        poseId: "think",
         startFrame: 0,
         endFrameExclusive: 48,
         backgroundId: "sisters-room",
@@ -489,14 +489,48 @@ test("validateMultiShotPlan accepts chin-stroke pose for talk-to-camera shot", a
     ],
   };
 
-  const validated = validateMultiShotPlan(planWithChinStroke, {
+  const validated = validateMultiShotPlan(approvedPlan, {
     audioDurationSeconds: 2.0,
     defaultBackgroundId: "sisters-room",
     assets,
     poseRegistry,
   });
+  assert.equal(validated.shots[0].poseId, "think");
 
-  assert.equal(validated.shots[0].poseId, "chin-stroke-swagger");
+  for (const newlyApproved of ["shrug", "excited-celebration", "point-at-screen"]) {
+    const passed = validateMultiShotPlan(
+      {
+        ...approvedPlan,
+        shots: [{ ...approvedPlan.shots[0], poseId: newlyApproved }],
+      },
+      {
+        audioDurationSeconds: 2.0,
+        defaultBackgroundId: "sisters-room",
+        assets,
+        poseRegistry,
+      },
+    );
+    assert.equal(passed.shots[0].poseId, newlyApproved);
+  }
+
+  for (const unapprovedId of ["chin-stroke", "chin-stroke-swagger", "key-point", "facepalm", "arms-crossed"]) {
+    assert.throws(
+      () =>
+        validateMultiShotPlan(
+          {
+            ...approvedPlan,
+            shots: [{ ...approvedPlan.shots[0], poseId: unapprovedId }],
+          },
+          {
+            audioDurationSeconds: 2.0,
+            defaultBackgroundId: "sisters-room",
+            assets,
+            poseRegistry,
+          },
+        ),
+      /not approved|not a registered/i,
+    );
+  }
 });
 
 test("chin-stroke-swagger recipe conforms to universal rig contract and matches think height", async () => {
@@ -528,10 +562,10 @@ test("OTS_GRAPHIC_ZONE respects 90% broadcast action-safe and Shaz staging bound
   const contract = JSON.parse(await fs.readFile(path.join(root, "composition-contract.json"), "utf8"));
 
   assert.ok(OTS_GRAPHIC_ZONE, "OTS_GRAPHIC_ZONE must be exported");
-  assert.equal(OTS_GRAPHIC_ZONE.left, 80);
-  assert.equal(OTS_GRAPHIC_ZONE.top, 90);
-  assert.equal(OTS_GRAPHIC_ZONE.width, 440);
-  assert.equal(OTS_GRAPHIC_ZONE.height, 440);
+  assert.equal(OTS_GRAPHIC_ZONE.left, 64);
+  assert.equal(OTS_GRAPHIC_ZONE.top, 64);
+  assert.equal(OTS_GRAPHIC_ZONE.width, 356);
+  assert.equal(OTS_GRAPHIC_ZONE.height, 340);
 
   // 90% Action Safe limits for 1280x720 canvas
   const actionSafeLeft = (1280 * 0.1) / 2; // 64
@@ -557,6 +591,209 @@ test("OTS_GRAPHIC_ZONE respects 90% broadcast action-safe and Shaz staging bound
     height: OTS_GRAPHIC_ZONE.height,
   });
 });
+
+test("deriveMultiShotPlan distributes b-roll, attaches OTS graphics, and assigns card images when brollMediaList is provided", async () => {
+  const assets = JSON.parse(await fs.readFile(path.join(root, "assets.json"), "utf8"));
+  const sampleTranscript = {
+    text: "Sentence one here. Sentence two here. Sentence three is about games. Sentence four explains deals. Sentence five discusses consoles. Sentence six has jokes. Sentence seven is another point. Sentence eight asks question.",
+    words: [
+      { text: "Sentence", startMs: 0, endMs: 500 },
+      { text: "one", startMs: 550, endMs: 900 },
+      { text: "here.", startMs: 950, endMs: 2000 },
+      { text: "Sentence", startMs: 2100, endMs: 2600 },
+      { text: "two", startMs: 2650, endMs: 3000 },
+      { text: "here.", startMs: 3050, endMs: 4200 },
+      { text: "Sentence", startMs: 4300, endMs: 4800 },
+      { text: "three", startMs: 4850, endMs: 5200 },
+      { text: "is", startMs: 5250, endMs: 5500 },
+      { text: "about", startMs: 5550, endMs: 5800 },
+      { text: "games.", startMs: 5850, endMs: 6500 },
+      { text: "Sentence", startMs: 6600, endMs: 7000 },
+      { text: "four", startMs: 7050, endMs: 7400 },
+      { text: "explains", startMs: 7450, endMs: 7800 },
+      { text: "deals.", startMs: 7850, endMs: 8800 },
+      { text: "Sentence", startMs: 8900, endMs: 9300 },
+      { text: "five", startMs: 9350, endMs: 9700 },
+      { text: "discusses", startMs: 9750, endMs: 10100 },
+      { text: "consoles.", startMs: 10150, endMs: 11000 },
+      { text: "Sentence", startMs: 11100, endMs: 11500 },
+      { text: "six", startMs: 11550, endMs: 11900 },
+      { text: "has", startMs: 11950, endMs: 12200 },
+      { text: "jokes.", startMs: 12250, endMs: 13000 },
+      { text: "Sentence", startMs: 13100, endMs: 13500 },
+      { text: "seven", startMs: 13550, endMs: 13900 },
+      { text: "is", startMs: 13950, endMs: 14200 },
+      { text: "another", startMs: 14250, endMs: 14500 },
+      { text: "point.", startMs: 14550, endMs: 15500 },
+      { text: "Sentence", startMs: 15600, endMs: 16000 },
+      { text: "eight", startMs: 16050, endMs: 16400 },
+      { text: "asks", startMs: 16450, endMs: 16800 },
+      { text: "question.", startMs: 16850, endMs: 18000 },
+    ],
+  };
+
+  const brollMediaList = ["media/broll-01.png", "media/broll-02.png", "media/broll-03.png"];
+  const plan = deriveMultiShotPlan({
+    transcript: sampleTranscript,
+    audioDurationSeconds: 18.0,
+    defaultBackgroundId: "sisters-room",
+    brollMediaList,
+  });
+
+  const brollShots = plan.shots.filter((s) => s.shotType === "b-roll");
+  assert.ok(brollShots.length >= 2, `must schedule multiple b-roll shots, got ${brollShots.length}`);
+
+  const otsShots = plan.shots.filter((s) => s.otsGraphic);
+  assert.ok(otsShots.length >= 1, `must attach OTS graphics on talk-to-camera shots, got ${otsShots.length}`);
+
+  const chibiShotsWithImage = plan.shots.filter((s) => s.shotType === "chibi-commentary" && s.card?.image);
+  assert.ok(chibiShotsWithImage.length >= 1, "must assign media image to chibi commentary cards");
+
+  // Verify all shots validate cleanly against official schema
+  const validated = validateMultiShotPlan(plan, {
+    audioDurationSeconds: 18.0,
+    defaultBackgroundId: "sisters-room",
+    assets,
+    transcript: sampleTranscript,
+  });
+  assert.equal(validated.shots.length, plan.shots.length);
+});
+
+test("deriveMultiShotPlan respects authored beat.cardHeadline and beat.cardBadge without falling back to stop-word slicing", () => {
+  const sampleTranscript = {
+    text: "Dropping shopping guides with zero actual prices. Entire guide pure algorithmic clickbait.",
+    words: [
+      { text: "Dropping", startMs: 0, endMs: 400 },
+      { text: "shopping", startMs: 450, endMs: 800 },
+      { text: "guides", startMs: 850, endMs: 1200 },
+      { text: "with", startMs: 1250, endMs: 1400 },
+      { text: "zero", startMs: 1450, endMs: 1800 },
+      { text: "actual", startMs: 1850, endMs: 2200 },
+      { text: "prices.", startMs: 2250, endMs: 2800 },
+      { text: "Entire", startMs: 3000, endMs: 3400 },
+      { text: "guide", startMs: 3450, endMs: 3800 },
+      { text: "pure", startMs: 3850, endMs: 4200 },
+      { text: "algorithmic", startMs: 4250, endMs: 4800 },
+      { text: "clickbait.", startMs: 4850, endMs: 5500 },
+    ],
+  };
+
+  const brollMediaList = ["media/broll-01.png"];
+  const plan = deriveMultiShotPlan({
+    transcript: sampleTranscript,
+    audioDurationSeconds: 6.0,
+    brollMediaList,
+  });
+
+  // Check fallback headline extraction avoids weak prepositions like "with"
+  const fallbackHeadlines = plan.shots
+    .map((s) => s.otsGraphic?.headline || s.card?.headline)
+    .filter(Boolean);
+
+  for (const h of fallbackHeadlines) {
+    // Must NOT be the old blind 4-word slice that ended with "WITH"
+    assert.notEqual(h, "DROPPING SHOPPING GUIDES WITH");
+  }
+});
+
+test("deriveMultiShotPlan shares one media cursor across shot types, splits >5s cuts, supports OTS image2 swap cache keys, and preserves plain opener/closer", async () => {
+  const { getActiveOtsImageState } = await import("../runtime/render-multi-shot.mjs");
+  const assets = JSON.parse(await fs.readFile(path.join(root, "assets.json"), "utf8"));
+
+  // Build 8 beats spanning 30s where beat 1 is >5s (0->5s opener, 5s->11s b-roll >5s, 11s->17s talk OTS >5s, etc.)
+  const sampleTranscript = {
+    text: "One. Two. Three. Four. Five. Six. Seven. Eight.",
+    words: [
+      { text: "Hook", startMs: 0, endMs: 1200 },
+      { text: "opener.", startMs: 1300, endMs: 2800 },
+      { text: "Long", startMs: 3000, endMs: 6000 },
+      { text: "broll.", startMs: 6100, endMs: 9200 },
+      { text: "Chibi", startMs: 9500, endMs: 11200 },
+      { text: "joke.", startMs: 11300, endMs: 12600 },
+      { text: "Long", startMs: 12800, endMs: 15800 },
+      { text: "talk.", startMs: 15900, endMs: 18500 },
+      { text: "Second", startMs: 18700, endMs: 20200 },
+      { text: "broll.", startMs: 20300, endMs: 21500 },
+      { text: "Another", startMs: 21700, endMs: 23000 },
+      { text: "chibi.", startMs: 23100, endMs: 24500 },
+      { text: "Third", startMs: 24700, endMs: 26200 },
+      { text: "broll.", startMs: 26300, endMs: 27800 },
+      { text: "Final", startMs: 28000, endMs: 29000 },
+      { text: "landing.", startMs: 29100, endMs: 30000 },
+    ],
+  };
+
+  const brollMediaList = Array.from({ length: 8 }, (_, i) => `media/broll-0${i + 1}.png`);
+  const plan = deriveMultiShotPlan({
+    transcript: sampleTranscript,
+    audioDurationSeconds: 30.0,
+    defaultBackgroundId: "sisters-room",
+    brollMediaList,
+  });
+
+  // First and last shots stay plain talk-to-camera without OTS graphics
+  assert.equal(plan.shots[0].shotType, "talk-to-camera");
+  assert.equal(plan.shots[0].otsGraphic, undefined);
+  assert.equal(plan.shots.at(-1).shotType, "talk-to-camera");
+  assert.equal(plan.shots.at(-1).otsGraphic, undefined);
+
+  // Collect images assigned across all shot types in display order
+  const usedMedia = [];
+  for (const shot of plan.shots) {
+    if (shot.brollMedia) usedMedia.push(shot.brollMedia);
+    if (shot.card?.image) usedMedia.push(shot.card.image);
+    if (shot.otsGraphic?.image) usedMedia.push(shot.otsGraphic.image);
+    if (shot.otsGraphic?.image2) usedMedia.push(shot.otsGraphic.image2);
+  }
+  assert.ok(new Set(usedMedia).size >= 6, `Expected >= 6 distinct images scheduled across shots, got ${new Set(usedMedia).size}`);
+  for (let i = 1; i < usedMedia.length; i += 1) {
+    assert.notEqual(usedMedia[i], usedMedia[i - 1], "Adjacent visual slots should never reuse the same image back-to-back");
+  }
+
+  // >5s b-roll split produces -a and -b shots with different images & motions
+  const splitA = plan.shots.find((s) => s.id.endsWith("-a") && s.shotType === "b-roll");
+  const splitB = plan.shots.find((s) => s.id.endsWith("-b") && s.shotType === "b-roll");
+  assert.ok(splitA && splitB, "b-roll shot > 120 frames must split into two distinct cuts");
+  assert.notEqual(splitA.brollMedia, splitB.brollMedia);
+  assert.notEqual(splitA.motion, splitB.motion);
+
+  // >5s talk shot OTS gets image2 + swapAtFrame
+  const swapOts = plan.shots.find((s) => s.otsGraphic?.image2 && s.otsGraphic?.swapAtFrame);
+  assert.ok(swapOts, "talk-to-camera OTS shot > 120 frames must attach image2 and swapAtFrame");
+
+  // Plan passes validateMultiShotPlan cleanly (backward-compatible shaz-multi-shot-v1)
+  const validated = validateMultiShotPlan(plan, {
+    audioDurationSeconds: 30.0,
+    defaultBackgroundId: "sisters-room",
+    assets,
+    transcript: sampleTranscript,
+  });
+  assert.equal(validated.totalFrames, 720);
+
+  // OTS swap cache key changes between slot 1 and slot 2 at swapAtFrame
+  const buf1 = Buffer.from("img-1");
+  const buf2 = Buffer.from("img-2");
+  const before = getActiveOtsImageState({
+    ots: { swapAtFrame: 60 },
+    localFrame: 59,
+    otsEntranceDelay: 4,
+    image1Buffer: buf1,
+    image2Buffer: buf2,
+  });
+  const after = getActiveOtsImageState({
+    ots: { swapAtFrame: 60 },
+    localFrame: 60,
+    otsEntranceDelay: 4,
+    image1Buffer: buf1,
+    image2Buffer: buf2,
+  });
+  assert.equal(before.slot, 1);
+  assert.equal(after.slot, 2);
+  assert.notEqual(before.cacheKey, after.cacheKey, "OTS cache key must distinguish image1 vs image2 after scale settles");
+  assert.equal(after.activeImageBuffer, buf2);
+});
+
+
 
 
 

@@ -1,13 +1,14 @@
 {
   "name": "wiggly-shaz-puppet-runtime-format-kit",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "npm run test:fast",
-    "test:fast": "node --test tests/background-assets.test.mjs tests/cherry-vendor.test.mjs tests/deformation-chains.test.mjs tests/director-jev.test.mjs tests/generated-pose-regressions.test.mjs tests/lipsync.test.mjs tests/motion-packets.test.mjs tests/multi-shot.test.mjs tests/neutral-listening.test.mjs tests/ots-card-renderer.test.mjs tests/pose-authoring.test.mjs tests/pose-recipe.test.mjs tests/rig-v2-renderer.test.mjs tests/run-contract.test.mjs tests/script-validator.test.mjs tests/topic-card-renderer.test.mjs tests/trend-scout.test.mjs tests/voice.test.mjs",
-    "test:heavy": "node --test tests/build-kit.test.mjs tests/cherry-wasi-runtime.test.mjs tests/inspect-pose.test.mjs tests/key-point.test.mjs tests/performance-runtime.test.mjs tests/talk-to-camera.test.mjs tests/transcription.test.mjs",
-    "test:all": "node --test tests/*.test.mjs",
+    "test:fast": "node --import ./tests/no-network.mjs --test tests/ai-tells.test.mjs tests/approved-poses.test.mjs tests/background-assets.test.mjs tests/broll-renderer.test.mjs tests/card-spacing.test.mjs tests/cards-by-time.test.mjs tests/cherry-vendor.test.mjs tests/deformation-chains.test.mjs tests/director-jev.test.mjs tests/generated-pose-regressions.test.mjs tests/lipsync.test.mjs tests/motion-packets.test.mjs tests/multi-shot.test.mjs tests/neutral-listening.test.mjs tests/ots-card-renderer.test.mjs tests/pose-authoring.test.mjs tests/pose-recipe.test.mjs tests/rig-v2-renderer.test.mjs tests/run-contract.test.mjs tests/script-alignment.test.mjs tests/script-validator.test.mjs tests/secrets.test.mjs tests/staging-reach.test.mjs tests/studio-staging.test.mjs tests/topic-card-renderer.test.mjs tests/trend-scout.test.mjs tests/voice.test.mjs",
+    "test:heavy": "node --import ./tests/no-network.mjs --test tests/build-kit.test.mjs tests/cherry-wasi-runtime.test.mjs tests/inspect-pose.test.mjs tests/key-point.test.mjs tests/performance-runtime.test.mjs tests/talk-to-camera.test.mjs tests/transcription.test.mjs",
+    "test:all": "node --import ./tests/no-network.mjs --test tests/*.test.mjs",
+    "test:studio": "node --import ./tests/no-network.mjs --test tests/ai-tells.test.mjs tests/approved-poses.test.mjs tests/script-validator.test.mjs tests/script-alignment.test.mjs tests/cards-by-time.test.mjs tests/broll-renderer.test.mjs tests/staging-reach.test.mjs tests/card-spacing.test.mjs tests/studio-staging.test.mjs",
     "test:script": "node --test tests/script-validator.test.mjs",
     "test:scout": "node --test tests/trend-scout.test.mjs",
     "scout": "node runner.mjs scout",
@@ -27,6 +28,7 @@
     "build:kit": "node build-kit.mjs"
   },
   "dependencies": {
+    "playwright": "^1.60.0",
     "sharp": "0.35.3"
   }
 }

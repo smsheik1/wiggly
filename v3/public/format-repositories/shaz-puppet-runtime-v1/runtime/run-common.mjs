@@ -563,6 +563,15 @@ async function validateRun({ root, runDirectory }) {
       };
     }
 
+    let directorState = null;
+    try {
+      const savedState = await readJson(path.join(runDirectory, "state.json"));
+      if (savedState?.director && typeof savedState.director === "object") {
+        directorState = savedState.director;
+      }
+    } catch {}
+    const jevCalls = Number(directorState?.jevCalls) || 0;
+
     const receipt = {
       schemaVersion: 2,
       status: "pass",
@@ -584,8 +593,11 @@ async function validateRun({ root, runDirectory }) {
       transcript: transcription.receipt,
       ...(lipSync ? { lipSync: lipSync.receipt } : {}),
       shots: timeline.shots,
-      providerCalls: 0,
-      estimatedCost: "$0",
+      ...(directorState ? { director: directorState } : {}),
+      providerCalls: jevCalls,
+      ...(jevCalls > 0
+        ? { providerBreakdown: { jev: jevCalls } }
+        : { estimatedCost: "$0" }),
     };
     await writeJson(path.join(runDirectory, "validation-receipt.json"), receipt);
     return {

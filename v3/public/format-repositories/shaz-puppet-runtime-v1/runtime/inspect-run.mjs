@@ -1,8 +1,22 @@
 import path from "node:path";
 
+import sharp from "sharp";
+
+import {
+  doesPoseReachEnterRect,
+  loadGestureReachData,
+  measurePoseReach,
+  scanRectAlphaOverlap,
+  scanRgbaReach,
+} from "./gesture-reach.mjs";
 import { inspectPose } from "./inspect-pose.mjs";
+import { resolvePuppetPoseId } from "./multi-shot-timeline.mjs";
+import { OTS_HEADLINE_BOX } from "./ots-card-renderer.mjs";
+import { createPoseRuntime } from "./pose-recipe.mjs";
 import { PERFORMANCE_STAGE_VIEW } from "./render-sequence.mjs";
+import { renderRigFrame } from "./rig-v2-renderer.mjs";
 import { execute, exists, readJson, sha256, validateRun, writeJson } from "./run-common.mjs";
+import { getStreamerStudioForegroundBuffer } from "./studio-staging.mjs";
 
 function probeVideo(file) {
   const data = JSON.parse(execute("ffprobe", [
@@ -17,6 +31,106 @@ function probeVideo(file) {
     duration: Number(data.format?.duration),
     audioCodec: audio?.codec_name ?? null,
   };
+}
+
+/**
+ * Verifies multi-shot boom mic clearance and OTS headline zero-overlap invariants
+ * using measured SHA-verified gesture reach and live sample-frame pixel checks.
+ */
+async function inspectMultiShotSpacing({ root, validated, assetCache = new Map(), propCache = new Map() }) {
+  const failures = [];
+  const spacingChecks = [];
+  const reachData = await loadGestureReachData(root);
+  const reachCache = new Map();
+
+  // Measure live foreground boom mic bounding box above desk LED line (y < 658)
+  const fgPng = await getStreamerStudioForegroundBuffer();
+  const { data: fgRaw, info: fgInfo } = await sharp(fgPng).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const micMask = Buffer.from(fgRaw);
+  for (let y = 658; y < fgInfo.height; y += 1) {
+    micMask.fill(0, y * fgInfo.width * 4, (y + 1) * fgInfo.width * 4);
+  }
+  const micBox = scanRgbaReach(micMask, fgInfo.width, fgInfo.height).aboveDesk;
+
+  const resolvePoseReach = async (pose) => {
+    if (reachCache.has(pose.id)) return reachCache.get(pose.id);
+    const cached = reachData.poses?.[pose.id];
+    const expectedSha = pose.sha256 ?? pose.recipeSha256 ?? null;
+    const measured = cached && (!expectedSha || cached.recipeSha256 === expectedSha)
+      ? cached
+      : await measurePoseReach({
+          manifest: validated.manifest,
+          assetRoot: path.join(root, "rig-v2", "assets"),
+          propRoot: path.join(root, "assets", "props"),
+          poseId: pose.id,
+          recipe: pose.recipe,
+          recipeSha256: expectedSha,
+          assetCache,
+          propCache,
+        });
+    reachCache.set(pose.id, measured);
+    return measured;
+  };
+
+  const talkShots = validated.timeline.shots.filter((s) => s.shotType === "talk-to-camera");
+  const checkedMicPoses = new Set();
+  const headlineOverlapCache = new Map();
+  for (const shot of talkShots) {
+    const poseId = resolvePuppetPoseId(shot.poseId ?? "neutral-listening");
+    const pose = validated.registry.byId.get(poseId) ?? validated.registry.byId.get("neutral-listening");
+    if (!pose) continue;
+    const poseReach = await resolvePoseReach(pose);
+
+    if (micBox && !checkedMicPoses.has(pose.id)) {
+      checkedMicPoses.add(pose.id);
+      if (doesPoseReachEnterRect(poseReach, micBox, { padding: 16 })) {
+        failures.push(`pose ${pose.id} enters studio boom mic clearance zone`);
+      }
+    }
+
+    if (shot.otsGraphic?.headline?.trim()) {
+      let maxHeadlineOverlapPixels = headlineOverlapCache.get(pose.id);
+      if (maxHeadlineOverlapPixels === undefined) {
+        const totalRecipeFrames = Math.max(1, Number(pose.recipe?.durationFrames) || 1);
+        const runtime = pose.poseRuntime ?? createPoseRuntime(validated.manifest, pose.recipe);
+        maxHeadlineOverlapPixels = 0;
+        for (let f = 1; f <= totalRecipeFrames; f += 1) {
+          const rendered = await renderRigFrame({
+            manifest: validated.manifest,
+            frame: f,
+            assetRoot: path.join(root, "rig-v2", "assets"),
+            propRoot: path.join(root, "assets", "props"),
+            assetCache,
+            propCache,
+            poseRuntime: runtime,
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+            stageView: PERFORMANCE_STAGE_VIEW,
+          });
+          const { data: raw, info } = await sharp(rendered.buffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+          const overlapPx = scanRectAlphaOverlap(raw, info.width, info.height, OTS_HEADLINE_BOX, { padding: 8 });
+          if (overlapPx > maxHeadlineOverlapPixels) {
+            maxHeadlineOverlapPixels = overlapPx;
+            break;
+          }
+        }
+        headlineOverlapCache.set(pose.id, maxHeadlineOverlapPixels);
+      }
+      const reachHitsHeadline = doesPoseReachEnterRect(poseReach, OTS_HEADLINE_BOX, { padding: 8 });
+      spacingChecks.push({
+        shotId: shot.id,
+        poseId: pose.id,
+        reachHitsHeadline,
+        maxHeadlineOverlapPixels,
+      });
+      if (reachHitsHeadline || maxHeadlineOverlapPixels > 0) {
+        failures.push(
+          `ots headline overlaps puppet pose ${pose.id} on ${shot.id} (${maxHeadlineOverlapPixels} px in headline box)`,
+        );
+      }
+    }
+  }
+
+  return { failures, spacingChecks };
 }
 
 async function inspectRun({ root, runDirectory }) {
@@ -118,6 +232,13 @@ async function inspectRun({ root, runDirectory }) {
       failures: report.failures,
     });
     if (report.status !== "pass") failures.push(`pose inspection failed for ${poseId}`);
+  }
+
+  let spacingChecks = [];
+  if (validated.mode === "multi-shot") {
+    const spacing = await inspectMultiShotSpacing({ root, validated });
+    spacingChecks = spacing.spacingChecks;
+    failures.push(...spacing.failures);
   }
 
   const contactSheet = path.join(runDirectory, "contact-sheet.jpg");
@@ -228,6 +349,7 @@ async function inspectRun({ root, runDirectory }) {
       meanVolumeDb,
     },
     poseReports,
+    ...(spacingChecks.length > 0 ? { spacingChecks } : {}),
     failures,
     ...(validated.timeline.sequencePreset
       ? { sequencePreset: validated.timeline.sequencePreset }
@@ -242,4 +364,4 @@ async function inspectRun({ root, runDirectory }) {
   return report;
 }
 
-export { inspectRun, probeVideo };
+export { inspectMultiShotSpacing, inspectRun, probeVideo };

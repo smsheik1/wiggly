@@ -1,9 +1,64 @@
 import sharp from "sharp";
 
+export const OTS_GRAPHIC_ZONE = Object.freeze({
+  left: 64,
+  top: 64,
+  width: 356,
+  height: 340,
+  actionSafePadding: 64,
+  comfortMarginToShaz: 120,
+  shazStagingBox: Object.freeze({ left: 540, top: 80, width: 700, height: 640 }),
+});
+
+/**
+ * Top headline strip bounds inside `OTS_GRAPHIC_ZONE`, bounded right at x=364 so Shaz's
+ * right/left-reaching present/confident gestures keep >= 30px clearance.
+ */
+export const OTS_HEADLINE_BOX = Object.freeze({
+  left: OTS_GRAPHIC_ZONE.left,
+  top: OTS_GRAPHIC_ZONE.top,
+  width: 300,
+  height: 84,
+});
+
+function escapeXml(raw) {
+  return String(raw || "").replace(/[<>&'"]/g, (ch) => {
+    switch (ch) {
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case "&": return "&amp;";
+      case "'": return "&apos;";
+      case "\"": return "&quot;";
+    }
+  });
+}
+
+function wrapHeadlineLines(raw, maxChars = 22, maxLines = 2) {
+  const words = String(raw || "").toUpperCase().trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [];
+  const lines = [];
+  let current = "";
+  for (const w of words) {
+    if (!current) {
+      current = w;
+    } else if (`${current} ${w}`.length <= maxChars) {
+      current = `${current} ${w}`;
+    } else {
+      lines.push(current);
+      current = w;
+      if (lines.length === maxLines - 1) break;
+    }
+  }
+  if (lines.length < maxLines && current) {
+    lines.push(current);
+  }
+  return lines.slice(0, maxLines);
+}
+
 /**
  * Renders an Over-The-Shoulder (OTS) Graphic Card buffer for talk-to-camera shots.
- * Redesigned so the visual media/meme is the hero (dominating ~95% of the card area),
- * with sleek floating pill badges and bottom editorial headline overlays.
+ * Visual media fills the card while the editorial headline strip sits at the TOP left band
+ * so low/mid-frame character gestures never occlude headline legibility.
  *
  * @param {Object} options
  * @param {string} [options.badge] - Top category tag (e.g. "REALITY CHECK", "DETROIT FREE PRESS")
@@ -95,8 +150,15 @@ export async function renderOtsCardFrame({
     }).png().toBuffer();
   }
 
-  // 3. Prepare floating overlays (bottom headline scrim)
+  // 3. Prepare floating top headline overlay (keeps headline strip in top x<=300 band)
   const hasHeadline = Boolean(headline && headline.trim());
+  const headlineLines = hasHeadline ? wrapHeadlineLines(headline, 21, 2) : [];
+  const fontSize = headlineLines.length > 1 ? 17 : 19;
+  const lineHeight = 22;
+  const firstY = headlineLines.length > 1 ? 30 : 38;
+  const headlineTextSvg = headlineLines.map((line, idx) => (
+    `<text x="18" y="${firstY + idx * lineHeight}" font-family="system-ui, -apple-system, sans-serif" font-size="${fontSize}" font-weight="900" fill="#ffffff" letter-spacing="-0.3" filter="url(#pillShadow)">${escapeXml(line)}</text>`
+  )).join("\n        ");
 
   const overlaysSvg = Buffer.from(`
     <svg width="${innerW}" height="${innerH}" viewBox="0 0 ${innerW} ${innerH}" xmlns="http://www.w3.org/2000/svg">
@@ -104,17 +166,17 @@ export async function renderOtsCardFrame({
         <filter id="pillShadow" x="-20%" y="-20%" width="140%" height="140%">
           <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.45"/>
         </filter>
-        <linearGradient id="bottomFade" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
-          <stop offset="50%" stop-color="#000000" stop-opacity="0.72"/>
-          <stop offset="100%" stop-color="#000000" stop-opacity="0.94"/>
+        <linearGradient id="topFade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#000000" stop-opacity="0.94"/>
+          <stop offset="58%" stop-color="#000000" stop-opacity="0.72"/>
+          <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
         </linearGradient>
       </defs>
 
-      <!-- Bottom Gradient Scrim & Headline -->
+      <!-- Top Gradient Scrim & Headline -->
       ${hasHeadline ? `
-        <path d="M 0 ${innerH - 96} L ${innerW} ${innerH - 96} L ${innerW} ${innerH - rx} Q ${innerW} ${innerH} ${innerW - rx} ${innerH} L ${rx} ${innerH} Q 0 ${innerH} 0 ${innerH - rx} Z" fill="url(#bottomFade)" />
-        <text x="18" y="${innerH - 24}" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="900" fill="#ffffff" letter-spacing="-0.3" filter="url(#pillShadow)">${headline.toUpperCase().trim()}</text>
+        <path d="M 0 ${rx} Q 0 0 ${rx} 0 L ${innerW - rx} 0 Q ${innerW} 0 ${innerW} ${rx} L ${innerW} 88 L 0 88 Z" fill="url(#topFade)" />
+        ${headlineTextSvg}
       ` : ""}
     </svg>
   `);

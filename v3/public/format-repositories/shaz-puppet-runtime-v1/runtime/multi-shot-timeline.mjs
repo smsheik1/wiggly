@@ -1,7 +1,11 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import { evaluateSentenceDirector, getTypesafeApiKey } from "./director-jev.mjs";
+import { evaluateSentenceDirector, getTypesafeApiKey, JevApiError, JevDirectorSkipError } from "./director-jev.mjs";
 import { deriveChibiRoutine } from "./chibi-choreography.mjs";
+import { getApprovedPerformancePoses, loadPerformanceApprovalsSync } from "./pose-approvals.mjs";
+import { alignScriptToTranscript } from "./script-alignment.mjs";
+import { doesPoseReachEnterRect, loadGestureReachMapSync } from "./gesture-reach.mjs";
+import { OTS_HEADLINE_BOX } from "./ots-card-renderer.mjs";
 
 const MULTI_SHOT_SCHEMA = "shaz-multi-shot-v1";
 const SHOT_ID = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
@@ -20,23 +24,95 @@ function exactKeys(value, allowed, context) {
  * Resolves semantic alias pose IDs to their registered recipe identifiers.
  * E.g. "chin-stroke" -> "chin-stroke-swagger" (the prop-free swagger chin-stroke pose)
  */
+/**
+ * Maps authored script `hook`, `beats[]`, and `landing` card headlines/badges onto transcript beats
+ * by aligned audio time-span overlap rather than brittle array indices.
+ */
+function attachAuthoredBeatMetadata(beats, transcript, script) {
+  if (!script || (!script.hook && !Array.isArray(script.beats) && !script.landing && !Array.isArray(script.lines))) {
+    return;
+  }
+  const alignment = alignScriptToTranscript({ script, transcript, minCoverage: 0 });
+  const timedSegments = alignment.segments.filter((s) => s.endMs > s.startMs && s.matchedCount > 0);
+  if (timedSegments.length === 0) {
+    // Card-only synthetic stubs (without `.text` fields on script beats) map 1:1 by index
+    const rawAuthored = [
+      script.hook,
+      ...(Array.isArray(script.beats) ? script.beats : []),
+      script.landing,
+    ].filter(Boolean);
+    const hasAnyText = rawAuthored.some((seg) => typeof seg?.text === "string" && seg.text.trim().length > 0);
+    if (!hasAnyText && rawAuthored.length > 0) {
+      for (let i = 0; i < beats.length; i += 1) {
+        const authored = rawAuthored[Math.min(i, rawAuthored.length - 1)];
+        if (!beats[i].cardHeadline && authored?.cardHeadline !== undefined) {
+          beats[i].cardHeadline = authored.cardHeadline;
+        }
+        if (!beats[i].cardBadge && authored?.cardBadge !== undefined) {
+          beats[i].cardBadge = authored.cardBadge;
+        }
+      }
+    }
+    return;
+  }
+
+  for (const beat of beats) {
+    let best = null;
+    let bestOverlap = 0;
+    for (const seg of timedSegments) {
+      const overlap = Math.min(beat.endMs, seg.endMs) - Math.max(beat.startMs, seg.startMs);
+      if (overlap > bestOverlap) {
+        bestOverlap = overlap;
+        best = seg;
+      }
+    }
+    // Small inter-word pause fallback: attach to adjacent segment within 400ms
+    if (!best) {
+      const beatMid = (beat.startMs + beat.endMs) / 2;
+      let minDist = Infinity;
+      for (const seg of timedSegments) {
+        const dist = beatMid < seg.startMs ? seg.startMs - beatMid : beatMid > seg.endMs ? beatMid - seg.endMs : 0;
+        if (dist < minDist) {
+          minDist = dist;
+          best = seg;
+        }
+      }
+      if (minDist > 400) best = null;
+    }
+    if (best) {
+      if (!beat.cardHeadline && best.cardHeadline) beat.cardHeadline = best.cardHeadline;
+      if (!beat.cardBadge && best.cardBadge) beat.cardBadge = best.cardBadge;
+    }
+  }
+}
+
+/**
+ * Checks whether a pose's measured pixel reach enters `[OTS_HEADLINE_BOX ± 16px]`
+ * so OTS cards with top headlines are skipped/deferred onto clear shots.
+ */
+function poseBlocksOtsHeadline(poseId) {
+  const reachMap = loadGestureReachMapSync();
+  const resolved = resolvePuppetPoseId(poseId);
+  const entry = reachMap?.[resolved];
+  if (!entry) return false;
+  return doesPoseReachEnterRect(entry, OTS_HEADLINE_BOX, { padding: 16 });
+}
+
+/**
+ * Returns the canonical puppet pose ID directly without silent pose substitution so
+ * unapproved, mistyped, or legacy pose names fail loudly in validation.
+ */
 export function resolvePuppetPoseId(poseId) {
-  if (poseId === "chin-stroke" || poseId === "chin-stroke-swagger" || poseId === "chin-stroke-smug" || poseId === "swagger" || poseId === "phone-use-sequence" || poseId === "look-at-phone") {
-    return "chin-stroke-swagger";
-  }
-  if (poseId === "facepalm-frustrated" || poseId === "facepalm") {
-    return "shrug";
-  }
-  if (poseId === "arms-crossed-skeptical" || poseId === "arms-crossed") {
-    return "confident";
-  }
   return poseId;
 }
 
 /**
- * Validates a multi-shot plan against measured audio and background assets.
+ * Validates a multi-shot plan against measured audio, approved poses, and background assets.
  */
-export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBackgroundId, assets, poseRegistry, transcript }) {
+export function validateMultiShotPlan(
+  input,
+  { audioDurationSeconds, defaultBackgroundId, assets, poseRegistry, transcript, allowUnapprovedPoses = false, approvals = null },
+) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     throw new Error("multi-shot input must be an object");
   }
@@ -76,6 +152,7 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
   }
 
   const registeredBackgroundIds = new Set((assets.backgrounds ?? []).map(({ id }) => id));
+  const resolvedApprovals = !allowUnapprovedPoses ? (approvals || loadPerformanceApprovalsSync()) : null;
 
   let currentFrame = 0;
   const validatedShots = [];
@@ -130,13 +207,20 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
       if (poseRegistry?.byId && !poseRegistry.byId.has(resolvedPoseId)) {
         throw new Error(`shots[${index}].poseId '${shot.poseId}' is not a registered puppet pose`);
       }
+      if (resolvedApprovals && !resolvedApprovals.approvedSet.has(resolvedPoseId)) {
+        const entry = resolvedApprovals.byId.get(resolvedPoseId);
+        const decision = entry ? entry.decision : "unregistered";
+        throw new Error(
+          `shots[${index}].poseId '${shot.poseId}' is not approved for performance auto-pick (status: ${decision})`,
+        );
+      }
       if (shot.otsGraphic !== undefined) {
         if (typeof shot.otsGraphic !== "object" || shot.otsGraphic === null) {
           throw new Error(`shots[${index}].otsGraphic must be an object`);
         }
         exactKeys(
           shot.otsGraphic,
-          ["badge", "headline", "image", "subtext", "entranceDelayFrames", "durationFrames"],
+          ["badge", "headline", "image", "image2", "swapAtFrame", "subtext", "entranceDelayFrames", "durationFrames"],
           `shots[${index}].otsGraphic`,
         );
         if (shot.otsGraphic.headline !== undefined && typeof shot.otsGraphic.headline !== "string") {
@@ -144,6 +228,15 @@ export function validateMultiShotPlan(input, { audioDurationSeconds, defaultBack
         }
         if (shot.otsGraphic.badge !== undefined && typeof shot.otsGraphic.badge !== "string") {
           throw new Error(`shots[${index}].otsGraphic.badge must be a string`);
+        }
+        if (shot.otsGraphic.image2 !== undefined && typeof shot.otsGraphic.image2 !== "string") {
+          throw new Error(`shots[${index}].otsGraphic.image2 must be a string`);
+        }
+        if (
+          shot.otsGraphic.swapAtFrame !== undefined &&
+          (!Number.isInteger(shot.otsGraphic.swapAtFrame) || shot.otsGraphic.swapAtFrame < 1)
+        ) {
+          throw new Error(`shots[${index}].otsGraphic.swapAtFrame must be an integer >= 1`);
         }
       }
     }
@@ -267,7 +360,22 @@ export function analyzeSentenceSemantics(text) {
   let chibiPose = "present-open";
   let badge = "KEY POINT";
 
-  if (/\b(food|eat|eating|dinner|cook|cooking|greet|burger|burgers|snack|pizza|mom|kitchen)\b/i.test(lower)) {
+  if (/\b(price|cost|dollar|money|expensive|charge|fee|wallet|retail|msrp|tag|discount|deal|sales)\b/i.test(lower)) {
+    theme = "cold-blue";
+    icon = "trophy";
+    badge = "PRICE TAG";
+    chibiPose = "think-chin";
+  } else if (/\b(catch|ruin|tradeoff|warning|beware|trap|fine print|worst-case|clickbait|fake|scam)\b/i.test(lower)) {
+    theme = "warm-red";
+    icon = "star";
+    badge = "THE CATCH";
+    chibiPose = "shrug-open";
+  } else if (/\b(leak|leaks|rumor|insider|report|sources|scoop|unconfirmed)\b/i.test(lower)) {
+    theme = "energy-orange";
+    icon = "clash";
+    badge = "INSIDER SCOOP";
+    chibiPose = "point-emphasis";
+  } else if (/\b(food|eat|eating|dinner|cook|cooking|greet|burger|burgers|snack|pizza|mom|kitchen)\b/i.test(lower)) {
     theme = "warm-red";
     icon = "burger";
     badge = "HOMEMADE";
@@ -304,9 +412,22 @@ export function analyzeSentenceSemantics(text) {
     chibiPose = "point-emphasis";
   }
 
-  // Derive a punchy 2-4 word uppercase headline
+  // Derive a punchy 2-4 word uppercase headline by filtering out weak stop words
+  const STOP_WORDS = new Set([
+    "a", "an", "the", "with", "to", "of", "and", "in", "for", "on", "is", "are",
+    "just", "from", "that", "this", "they", "you", "we", "our", "your", "it", "its",
+    "be", "been", "being", "have", "has", "had", "do", "does", "did", "but", "if",
+    "or", "because", "as", "until", "while", "by", "about", "into", "through", "during",
+    "before", "after", "above", "below", "between", "under", "then", "once", "here",
+    "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more",
+    "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so",
+    "than", "too", "very", "can", "will", "should", "now", "everyone", "nobody", "already"
+  ]);
+
   const cleanWords = text.replace(/[^\w\s]/g, "").split(/\s+/).filter(Boolean);
-  const headline = cleanWords.slice(0, Math.min(4, cleanWords.length)).join(" ").toUpperCase() || "TAKEAWAY";
+  const meaningfulWords = cleanWords.filter((w) => !STOP_WORDS.has(w.toLowerCase()));
+  const chosenWords = meaningfulWords.length >= 2 ? meaningfulWords : cleanWords;
+  const headline = chosenWords.slice(0, Math.min(4, chosenWords.length)).join(" ").toUpperCase() || "TAKEAWAY";
 
   return { theme, icon, badge, headline, chibiPose };
 }
@@ -344,6 +465,125 @@ export function groupTranscriptIntoBeats(words) {
   return beats;
 }
 
+const LONG_SHOT_SPLIT_FRAMES = 120; // > ~5s at 24fps triggers visual refresh / split cut
+const BROLL_MOTIONS = ["zoom-in", "pan-right", "zoom-out", "pan-left"];
+
+function createMediaCycler(brollMediaList = []) {
+  const list = Array.isArray(brollMediaList) ? brollMediaList.filter(Boolean) : [];
+  const uniqueCount = new Set(list).size;
+  let cursor = 0;
+  let lastUsed = null;
+  return {
+    hasMedia: list.length > 0,
+    uniqueCount,
+    next(avoidItem = null) {
+      if (list.length === 0) return null;
+      const forbid = avoidItem ?? lastUsed;
+      let picked = list[cursor % list.length];
+      cursor += 1;
+      if (uniqueCount > 1 && picked === forbid) {
+        for (let offset = 0; offset < list.length; offset += 1) {
+          const alt = list[(cursor + offset) % list.length];
+          if (alt !== forbid) {
+            picked = alt;
+            cursor += offset + 1;
+            break;
+          }
+        }
+      }
+      lastUsed = picked;
+      return picked;
+    },
+  };
+}
+
+function buildOtsGraphic({ badge, headline, text, shotDuration, mediaCycler }) {
+  if (!mediaCycler.hasMedia) return undefined;
+  const image = mediaCycler.next();
+  const graphic = {
+    badge,
+    headline,
+    image,
+    subtext: text.length > 45 ? text.slice(0, 42) + "..." : text,
+    entranceDelayFrames: 4,
+    durationFrames: Math.max(1, shotDuration - 4),
+  };
+  if (shotDuration > LONG_SHOT_SPLIT_FRAMES && mediaCycler.uniqueCount >= 2) {
+    const secondImage = mediaCycler.next(image);
+    if (secondImage && secondImage !== image) {
+      graphic.image2 = secondImage;
+      graphic.swapAtFrame = Math.max(8, Math.floor(shotDuration / 2));
+    }
+  }
+  return graphic;
+}
+
+function buildBrollShots({
+  shotId,
+  startFrame,
+  endFrame,
+  defaultBackgroundId,
+  mediaCycler,
+  preferredMotion = null,
+  brollCountStart = 0,
+  canSplit = true,
+}) {
+  const shotDuration = endFrame - startFrame;
+  let brollCount = brollCountStart;
+
+  if (canSplit && shotDuration > LONG_SHOT_SPLIT_FRAMES && mediaCycler.uniqueCount >= 2) {
+    const midFrame = startFrame + Math.floor(shotDuration / 2);
+    const firstMedia = mediaCycler.next();
+    brollCount += 1;
+    const firstMotion = preferredMotion || BROLL_MOTIONS[brollCount % BROLL_MOTIONS.length];
+
+    const secondMedia = mediaCycler.next(firstMedia);
+    brollCount += 1;
+    const secondMotion = BROLL_MOTIONS.find((m) => m !== firstMotion) || BROLL_MOTIONS[brollCount % BROLL_MOTIONS.length];
+
+    return {
+      brollCount,
+      shots: [
+        {
+          id: `${shotId}-a`,
+          shotType: "b-roll",
+          startFrame,
+          endFrameExclusive: midFrame,
+          backgroundId: defaultBackgroundId,
+          brollMedia: firstMedia,
+          motion: firstMotion,
+        },
+        {
+          id: `${shotId}-b`,
+          shotType: "b-roll",
+          startFrame: midFrame,
+          endFrameExclusive: endFrame,
+          backgroundId: defaultBackgroundId,
+          brollMedia: secondMedia,
+          motion: secondMotion,
+        },
+      ],
+    };
+  }
+
+  const brollMedia = mediaCycler.next();
+  brollCount += 1;
+  return {
+    brollCount,
+    shots: [
+      {
+        id: shotId,
+        shotType: "b-roll",
+        startFrame,
+        endFrameExclusive: endFrame,
+        backgroundId: defaultBackgroundId,
+        brollMedia,
+        motion: preferredMotion || BROLL_MOTIONS[brollCount % BROLL_MOTIONS.length],
+      },
+    ],
+  };
+}
+
 /**
  * Automatically derives an intelligent, rhythmic multi-shot plan
  * from a word-timestamped transcript.
@@ -353,6 +593,7 @@ export function deriveMultiShotPlan({
   audioDurationSeconds,
   defaultBackgroundId = "sisters-room",
   brollMediaList = [],
+  script = null,
 }) {
   const totalFrames = Math.max(1, Math.round(audioDurationSeconds * 24));
 
@@ -393,6 +634,9 @@ export function deriveMultiShotPlan({
     };
   }
 
+  // Attach authored script headlines and badges to transcript beats by aligned time span
+  attachAuthoredBeatMetadata(beats, transcript, script);
+
   // Plan shots from beats with natural video commentary pacing:
   // - talk-to-camera is the primary anchor (~75% of runtime)
   // - neutral-listening is the home baseline, alternating with active punctuation
@@ -416,25 +660,38 @@ export function deriveMultiShotPlan({
     chibiIndices.add(Math.floor(beats.length * 0.7));
   }
   if (brollMediaList && brollMediaList.length > 0) {
-    const brollIdx = Math.floor(beats.length * 0.55);
-    if (!chibiIndices.has(brollIdx)) brollIndices.add(brollIdx);
+    // Distribute b-roll cutaways across the video so all media is showcased
+    if (beats.length >= 7) {
+      const broll1 = Math.floor(beats.length * 0.22);
+      const broll2 = Math.floor(beats.length * 0.55);
+      if (broll1 > 0 && !chibiIndices.has(broll1)) brollIndices.add(broll1);
+      if (broll2 > 0 && !chibiIndices.has(broll2) && broll2 < beats.length - 1) brollIndices.add(broll2);
+      if ((beats.length >= 9 && brollMediaList.length >= 3) || (beats.length >= 8 && brollMediaList.length >= 5)) {
+        const broll3 = Math.floor(beats.length * 0.80);
+        if (broll3 > 0 && !chibiIndices.has(broll3) && broll3 < beats.length - 1) brollIndices.add(broll3);
+      }
+    } else if (beats.length >= 4) {
+      const broll1 = Math.floor(beats.length * 0.55);
+      if (broll1 > 0 && !chibiIndices.has(broll1)) brollIndices.add(broll1);
+      if (beats.length >= 5 && brollMediaList.length >= 2) {
+        const broll2 = Math.floor(beats.length * 0.75);
+        if (broll2 > 0 && !chibiIndices.has(broll2) && broll2 < beats.length - 1) brollIndices.add(broll2);
+      }
+    } else {
+      const broll1 = 1;
+      if (!chibiIndices.has(broll1) && broll1 < beats.length - 1) brollIndices.add(broll1);
+    }
   } else if (beats.length >= 5) {
     const textIdx = Math.floor(beats.length * 0.55);
     if (!chibiIndices.has(textIdx)) textCardIndices.add(textIdx);
   }
 
-  const activePoses = [
-    "chin-stroke-swagger",
-    "point-at-screen",
-    "excited-celebration",
-    "confident",
-    "shrug",
-    "point",
-    "think",
-    "aha",
-    "present",
-  ];
+  const approvedPoses = getApprovedPerformancePoses();
+  const activePoses = approvedPoses.filter((poseId) => poseId !== "neutral-listening");
+  if (activePoses.length === 0) activePoses.push("neutral-listening");
   let activePoseIndex = 0;
+  let brollCount = 0;
+  const mediaCycler = createMediaCycler(brollMediaList);
 
   for (let bIndex = 0; bIndex < beats.length; bIndex += 1) {
     const beat = beats[bIndex];
@@ -470,6 +727,22 @@ export function deriveMultiShotPlan({
       }
       lastPoseId = chosenPose;
 
+      // Attach OTS graphic to talk-to-camera shots when media is available & pose clears headline box
+      let otsGraphic = undefined;
+      const prevWasOts = Boolean(shots.at(-1)?.otsGraphic);
+      const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
+      const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || semantics.badge;
+      const headlineBlocked = Boolean(effectiveHeadline && poseBlocksOtsHeadline(chosenPose));
+      if (!isFirst && !isLast && mediaCycler.hasMedia && !prevWasOts && !headlineBlocked) {
+        otsGraphic = buildOtsGraphic({
+          badge: effectiveBadge || "KEY POINT",
+          headline: effectiveHeadline,
+          text: beat.text,
+          shotDuration: endFrame - currentFrame,
+          mediaCycler,
+        });
+      }
+
       shots.push({
         id: shotId,
         shotType: "talk-to-camera",
@@ -477,10 +750,15 @@ export function deriveMultiShotPlan({
         endFrameExclusive: endFrame,
         backgroundId: defaultBackgroundId,
         poseId: chosenPose,
+        ...(otsGraphic ? { otsGraphic } : {}),
       });
     } else if (shotType === "chibi-commentary") {
       lastPoseId = null;
       const shotDuration = endFrame - currentFrame;
+      const cardMedia = mediaCycler.next();
+      const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
+      const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || semantics.badge;
+
       shots.push({
         id: shotId,
         shotType: "chibi-commentary",
@@ -490,26 +768,28 @@ export function deriveMultiShotPlan({
         chibiPose: semantics.chibiPose,
         chibiRoutine: deriveChibiRoutine(semantics.chibiPose, shotDuration),
         card: {
-          badge: semantics.badge,
-          headline: semantics.headline,
+          badge: effectiveBadge,
+          headline: effectiveHeadline,
           quote: beat.text.length > 60 ? beat.text.slice(0, 57) + "..." : beat.text,
           theme: semantics.theme,
           icon: semantics.icon,
+          ...(cardMedia ? { image: cardMedia } : {}),
         },
       });
     } else if (shotType === "b-roll") {
       lastPoseId = null;
-      const motions = ["zoom-in", "pan-right", "zoom-out", "pan-left"];
-      const brollMedia = brollMediaList[bIndex % brollMediaList.length] ?? null;
-      shots.push({
-        id: shotId,
-        shotType: "b-roll",
+      const canSplit = shots.length + (beats.length - bIndex) < MAX_SHOTS - 1;
+      const built = buildBrollShots({
+        shotId,
         startFrame: currentFrame,
-        endFrameExclusive: endFrame,
-        backgroundId: defaultBackgroundId,
-        brollMedia,
-        motion: motions[bIndex % motions.length],
+        endFrame,
+        defaultBackgroundId,
+        mediaCycler,
+        brollCountStart: brollCount,
+        canSplit,
       });
+      brollCount = built.brollCount;
+      shots.push(...built.shots);
     } else if (shotType === "text-card") {
       lastPoseId = null;
       const words = beat.text.split(/\s+/);
@@ -552,12 +832,13 @@ export async function deriveMultiShotPlanWithJev({
   audioDurationSeconds,
   defaultBackgroundId = "sisters-room",
   brollMediaList = [],
+  script = null,
   apiKey,
   fetchFn,
 }) {
   const resolvedKey = apiKey !== undefined ? apiKey : getTypesafeApiKey();
   if (!resolvedKey) {
-    throw new Error(
+    throw new JevApiError(
       `\n================================================================================\n` +
       `❌ JEV DIRECTOR FAILURE: TYPESAFE_API_KEY IS MISSING\n` +
       `================================================================================\n` +
@@ -572,7 +853,8 @@ export async function deriveMultiShotPlanWithJev({
       `6. Add or update this exact line:\n` +
       `   TYPESAFE_API_KEY=your_copied_key_here\n` +
       `7. Save the file and re-run your command.\n` +
-      `================================================================================\n`
+      `================================================================================\n`,
+      { status: null, isAccountError: true },
     );
   }
 
@@ -585,23 +867,14 @@ export async function deriveMultiShotPlanWithJev({
     throw new Error("deriveMultiShotPlanWithJev could not extract any speech beats from transcript");
   }
 
+  // Attach authored script headlines and badges to transcript beats by aligned time span
+  attachAuthoredBeatMetadata(beats, transcript, script);
+
   const totalFrames = Math.max(1, Math.round(audioDurationSeconds * 24));
   const shots = [];
   let currentFrame = 0;
 
-  const puppetRotation = [
-    "neutral-listening",
-    "chin-stroke",
-    "chin-stroke-swagger",
-    "point-at-screen",
-    "excited-celebration",
-    "confident",
-    "shrug",
-    "point",
-    "think",
-    "aha",
-    "present",
-  ];
+  const puppetRotation = getApprovedPerformancePoses();
   const chibiRotation = ["point-emphasis", "think-chin", "present-card", "shrug-open", "talk-gesture"];
   const badgeRotation = ["REALITY CHECK", "THE CLASH", "COMMUNITY ROAST", "THE BEST", "YOUR VERDICT"];
 
@@ -609,10 +882,14 @@ export async function deriveMultiShotPlanWithJev({
   let lastBadge = null;
   let lastPuppetPose = null;
   const usedPuppetPoses = [];
+  let jevCalls = 0;
   let chibiCount = 0;
   let textCardCount = 0;
+  let brollCount = 0;
+  const mediaCycler = createMediaCycler(brollMediaList);
+  let consecutiveTalkCount = 0;
   const maxChibi = beats.length >= 7 ? 2 : 1;
-  const maxTextCards = brollMediaList?.length > 0 ? 0 : 1;
+  const maxTextCards = mediaCycler.hasMedia ? 0 : 1;
 
   try {
     for (let bIndex = 0; bIndex < beats.length; bIndex += 1) {
@@ -635,12 +912,14 @@ export async function deriveMultiShotPlanWithJev({
           recentPoses: usedPuppetPoses.slice(-2),
         },
       });
+      jevCalls += Number(jevChoice?._jevCalls) || 1;
 
       // Determine shot type using Jev + editorial rhythm:
       // - First shot is always talk-to-camera
       // - Last shot is always talk-to-camera
       // - Chibi commentary is reserved for comedic cutaways (max 1-2 per video)
-      // - Text card is reserved for key quote/stats (max 1 per video)
+      // - B-roll is used for full-screen visual subject cutaways
+      // - Ensure frequent visual support when brollMediaList is provided
       let shotType = "talk-to-camera";
       if (isFirst || isLast) {
         shotType = "talk-to-camera";
@@ -653,10 +932,15 @@ export async function deriveMultiShotPlanWithJev({
           chibiCount += 1;
         }
       } else if (
-        jevChoice?.shotType === "text-card" ||
-        (brollMediaList?.length > 0 && bIndex === Math.floor(beats.length * 0.5))
+        jevChoice?.shotType === "b-roll" ||
+        (brollMediaList?.length > 0 && (
+          jevChoice?.shotType === "text-card" ||
+          consecutiveTalkCount >= 2 ||
+          (brollCount === 0 && bIndex >= Math.floor(beats.length * 0.25) && bIndex <= Math.floor(beats.length * 0.5)) ||
+          (brollCount === 1 && beats.length >= 6 && bIndex >= Math.floor(beats.length * 0.65))
+        ))
       ) {
-        if (brollMediaList?.length > 0) {
+        if (brollMediaList?.length > 0 && shots.at(-1)?.shotType !== "b-roll") {
           shotType = "b-roll";
         } else if (textCardCount < maxTextCards && shots.at(-1)?.shotType !== "text-card") {
           shotType = "text-card";
@@ -665,6 +949,7 @@ export async function deriveMultiShotPlanWithJev({
       }
 
       if (shotType === "talk-to-camera") {
+        consecutiveTalkCount += 1;
         let chosenPose = "neutral-listening";
         let rationale = "Natural conversational anchor";
 
@@ -701,6 +986,25 @@ export async function deriveMultiShotPlanWithJev({
           usedPuppetPoses.push(chosenPose);
         }
 
+        // Attach OTS graphic card to talk-to-camera shots when media is available & pose clears headline box
+        let otsGraphic = undefined;
+        const prevWasOts = Boolean(shots.at(-1)?.otsGraphic);
+        const hasActivePose = chosenPose !== "neutral-listening";
+        const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
+        const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || jevChoice?.badge || semantics.badge;
+        const headlineBlocked = Boolean(effectiveHeadline && poseBlocksOtsHeadline(chosenPose));
+        if (!isFirst && !isLast && mediaCycler.hasMedia && !prevWasOts && !headlineBlocked) {
+          if (hasActivePose || shots.at(-1)?.shotType === "talk-to-camera" || mediaCycler.uniqueCount > 0) {
+            otsGraphic = buildOtsGraphic({
+              badge: effectiveBadge,
+              headline: effectiveHeadline,
+              text: beat.text,
+              shotDuration: endFrame - currentFrame,
+              mediaCycler,
+            });
+          }
+        }
+
         shots.push({
           id: shotId,
           shotType: "talk-to-camera",
@@ -709,8 +1013,10 @@ export async function deriveMultiShotPlanWithJev({
           backgroundId: defaultBackgroundId,
           poseId: chosenPose,
           rationale,
+          ...(otsGraphic ? { otsGraphic } : {}),
         });
       } else if (shotType === "chibi-commentary") {
+        consecutiveTalkCount = 0;
         lastPuppetPose = null;
         let chosenPose = jevChoice?.chibiPose ?? semantics.chibiPose;
         let chosenBadge = jevChoice?.badge ?? semantics.badge;
@@ -724,7 +1030,12 @@ export async function deriveMultiShotPlanWithJev({
         lastChibiPose = chosenPose;
         lastBadge = chosenBadge;
 
+        const effectiveHeadline = beat.cardHeadline?.trim()?.toUpperCase() || semantics.headline;
+        const effectiveBadge = beat.cardBadge?.trim()?.toUpperCase() || chosenBadge;
+
         const shotDuration = endFrame - currentFrame;
+        const cardMedia = mediaCycler.next();
+
         shots.push({
           id: shotId,
           shotType: "chibi-commentary",
@@ -734,28 +1045,33 @@ export async function deriveMultiShotPlanWithJev({
           chibiPose: chosenPose,
           chibiRoutine: deriveChibiRoutine(chosenPose, shotDuration),
           card: {
-            badge: chosenBadge,
-            headline: semantics.headline,
+            badge: effectiveBadge,
+            headline: effectiveHeadline,
             quote: beat.text.length > 60 ? beat.text.slice(0, 57) + "..." : beat.text,
             theme: semantics.theme,
             icon: semantics.icon,
+            ...(cardMedia ? { image: cardMedia } : {}),
           },
           rationale: jevChoice
             ? `Jev cutaway comedic instinct: ${chosenPose} (${Math.round((jevChoice.chibiConfidence || 0.8) * 100)}% conf)`
             : undefined,
         });
       } else if (shotType === "b-roll") {
+        consecutiveTalkCount = 0;
         lastPuppetPose = null;
-        const brollMedia = brollMediaList[bIndex % brollMediaList.length] ?? null;
-        shots.push({
-          id: shotId,
-          shotType: "b-roll",
+        const canSplit = shots.length + (beats.length - bIndex) < MAX_SHOTS - 1;
+        const built = buildBrollShots({
+          shotId,
           startFrame: currentFrame,
-          endFrameExclusive: endFrame,
-          backgroundId: defaultBackgroundId,
-          brollMedia,
-          motion: jevChoice?.cameraMotion ?? "zoom-in",
+          endFrame,
+          defaultBackgroundId,
+          mediaCycler,
+          preferredMotion: jevChoice?.cameraMotion || null,
+          brollCountStart: brollCount,
+          canSplit,
         });
+        brollCount = built.brollCount;
+        shots.push(...built.shots);
       } else if (shotType === "text-card") {
         lastPuppetPose = null;
         const words = beat.text.split(/\s+/);
@@ -780,31 +1096,47 @@ export async function deriveMultiShotPlanWithJev({
       shots.at(-1).endFrameExclusive = totalFrames;
     }
 
-    return {
+    const plan = {
       schemaVersion: MULTI_SHOT_SCHEMA,
       title: transcript.text ? transcript.text.slice(0, 60) : "Automatic Video",
       totalDurationFrames: totalFrames,
       shots,
     };
+    Object.defineProperty(plan, "_jevCalls", { value: jevCalls, enumerable: false });
+    return plan;
   } catch (err) {
-    if (err.message && err.message.includes("❌ JEV DIRECTOR FAILURE")) {
+    if (err instanceof JevDirectorSkipError) {
       throw err;
     }
-    throw new Error(
-      `\n================================================================================\n` +
-      `❌ JEV DIRECTOR FAILURE DURING MULTI-SHOT TIMELINE GENERATION\n` +
-      `================================================================================\n` +
-      `Jev failed to choreograph the scene beats:\n${err.message}\n\n` +
-      `Baby steps to fix:\n` +
-      `1. Open your browser and go to: https://typesafe.ai/dashboard\n` +
-      `2. Click 'Billing' at https://typesafe.ai/billing to check your balance or add credits.\n` +
-      `3. Go to https://typesafe.ai/keys, click 'Create New Secret Key', and copy the key string.\n` +
-      `4. Open 'secrets.env' at your repo root in your code editor.\n` +
-      `5. Add or update: TYPESAFE_API_KEY=your_copied_key_here\n` +
-      `6. Check https://status.typesafe.ai to verify services are operational.\n` +
-      `7. Save 'secrets.env' and re-run your command.\n` +
-      `================================================================================\n`
-    );
+    if (err instanceof JevApiError) {
+      if (err.message && err.message.includes("❌ JEV DIRECTOR")) {
+        throw err;
+      }
+      throw new JevApiError(
+        `\n================================================================================\n` +
+        `❌ JEV DIRECTOR FAILURE DURING MULTI-SHOT TIMELINE GENERATION\n` +
+        `================================================================================\n` +
+        `Jev failed to choreograph the scene beats:\n${err.message}\n\n` +
+        `Baby steps to fix:\n` +
+        `1. Open your browser and go to: https://typesafe.ai/dashboard\n` +
+        `2. Click 'Billing' at https://typesafe.ai/billing to check your balance or add credits.\n` +
+        `3. Go to https://typesafe.ai/keys, click 'Create New Secret Key', and copy the key string.\n` +
+        `4. Open 'secrets.env' at your repo root in your code editor.\n` +
+        `5. Add or update: TYPESAFE_API_KEY=your_copied_key_here\n` +
+        `6. Check https://status.typesafe.ai to verify services are operational.\n` +
+        `7. Save 'secrets.env' and re-run your command.\n` +
+        `================================================================================\n`,
+        {
+          status: err.status,
+          isAccountError: err.isAccountError,
+          isRetryable5xx: err.isRetryable5xx,
+          isNetworkError: err.isNetworkError,
+          cause: err,
+        },
+      );
+    }
+    // Rethrow internal code bugs (TypeError, ReferenceError, logic bugs) unchanged rather than blaming TypeSafe billing.
+    throw err;
   }
 }
 

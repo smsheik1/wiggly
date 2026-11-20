@@ -456,12 +456,16 @@ function canonicalTranscript(raw, { vendor, sourceAudioSha256, canonicalPcmSha25
   const segments = [];
   for (const [segmentIndex, segment] of raw.transcription.entries()) {
     const segmentWords = wordsFromTokens(segment.tokens, words.length + 1);
-    words.push(...segmentWords);
     const startMs = Math.min(durationMs, Math.max(0, Math.round(Number(segment.offsets?.from ?? 0))));
     const endMs = Math.min(
       durationMs,
       Math.max(startMs, Math.round(Number(segment.offsets?.to ?? startMs))),
     );
+    for (const w of segmentWords) {
+      w.startMs = Math.min(endMs, Math.max(0, w.startMs));
+      w.endMs = Math.min(endMs, Math.max(w.startMs, w.endMs));
+    }
+    words.push(...segmentWords);
     segments.push({
       id: `s${String(segmentIndex + 1).padStart(3, "0")}`,
       startMs,

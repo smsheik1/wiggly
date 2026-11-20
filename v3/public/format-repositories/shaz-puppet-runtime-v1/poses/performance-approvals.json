@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-16",
+  "poses": [
+    {
+      "poseId": "neutral-listening",
+      "recipeSha256": "ca91808736aca7c2b4be3881a688abf9c755617bc61c9b21516a8e2361540406",
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-11",
+      "clipSha256": null,
+      "notes": "Base artist-reviewed conversational neutral pose."
+    },
+    {
+      "poseId": "present",
+      "recipeSha256": "4577345e15985d0fe71159fa6ebca5dae1e991b9e82ee2b1905a80040c826715",
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-11",
+      "clipSha256": null,
+      "notes": "Base artist-reviewed open presenting pose."
+    },
+    {
+      "poseId": "think",
+      "recipeSha256": "6fc21c25dd49a6bf18eae49886c6ebb95a41367461a792655d450377ddb16d12",
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-11",
+      "clipSha256": null,
+      "notes": "Base artist-reviewed hand-to-chin think pose."
+    },
+    {
+      "poseId": "aha",
+      "recipeSha256": "e3ebc83fa6409be5ac66ce77189ff445bf38352f16ccaf5423756ae95174d654",
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-11",
+      "clipSha256": null,
+      "notes": "Base artist-reviewed eureka aha pose."
+    },
+    {
+      "poseId": "point",
+      "recipeSha256": "fcc7f489498683514104d7612dc4fbf5be22243b1f867b6190db74c8e9225a39",
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-11",
+      "clipSha256": null,
+      "notes": "Base artist-reviewed direct emphasis point pose."
+    },
+    {
+      "poseId": "confident",
+      "recipeSha256": "53496ec22e505fa44673260935ccaa4edc9ea87796b99a1c79031b825c804c1c",
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-11",
+      "clipSha256": null,
+      "notes": "Base artist-reviewed confident hands-on-hips pose."
+    },
+    {
+      "poseId": "shrug",
+      "recipeSha256": "9cba89c6393a43580c25eb6059132a39ef30490958936d7f375071faf2f451b1",
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-16",
+      "clipSha256": "0de7ce98d083e9b7f454462bcc8a2ed3a168a2977a30aae275972b81d01bb11c",
+      "notes": "Approved in Q1 review."
+    },
+    {
+      "poseId": "key-point",
+      "recipeSha256": "6fc4f1da6fea7392bd8879e39c336c4e54641c2d805993025af9ad6865d9f8c5",
+      "decision": "pending",
+      "reviewer": null,
+      "reviewedAt": null,
+      "clipSha256": null,
+      "notes": "Held out pending future review."
+    },
+    {
+      "poseId": "excited-celebration",
+      "recipeSha256": "8ca05e529dae031fd6d1c19d727473f9aba058172e995d3e91cacdbc4f6be348",
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-16",
+      "clipSha256": "62ae3761820ac39f8da58b10b89c98c465ae63b094e77915ef1159b37db01940",
+      "notes": "Approved in Q1 review."
+    },
+    {
+      "poseId": "point-at-screen",
+      "recipeSha256": "399fdc5f52a76b6ee54a0c35863fed3d22307072e6a4b1d48b4ac32a0bbbb7df",
+      "decision": "approved",
+      "reviewer": "shaz",
+      "reviewedAt": "2026-11-16",
+      "clipSha256": "5cc09b86cfb2acfc25648d7e24d2d521b7f181a7d31a244537022a1e706aa5b2",
+      "notes": "Approved in Q1 review."
+    },
+    {
+      "poseId": "chin-stroke-swagger",
+      "recipeSha256": "196f618d56f1cd147465eb7ef3d27b2ac00c306f21141b000f17ddb40bd48381",
+      "decision": "pending",
+      "reviewer": null,
+      "reviewedAt": null,
+      "clipSha256": null,
+      "notes": "Held out pending future review."
+    }
+  ]
+}

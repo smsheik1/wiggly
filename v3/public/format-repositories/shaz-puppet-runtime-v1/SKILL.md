@@ -7,7 +7,7 @@ description: Animate the supplied Shaz puppet locally. Use Talk to Camera for di
 
 Skill version: **2.0**.
 
-Core puppet rendering, Cherry WASI lip-sync, and Whisper transcription run 100% locally with zero external calls. Official Shaz voice synthesis requires `CARTESIA_API_KEY` (official Cartesia Sonic clone), and autonomous actor direction requires `TYPESAFE_API_KEY` (TypeSafe Jev System One actor director). Both keys are mandatory BYOK requirements configured in `secrets.env` with zero silent fallbacks per Wiggly Engineering Rule 12.
+Core puppet rendering, Cherry WASI lip-sync, and Whisper transcription run 100% locally with zero external calls. Generating official Shaz dialogue (`npm run speak`) requires `CARTESIA_API_KEY` (Cartesia Sonic-3.6 clone, free tier available), and autonomous actor direction with Jev requires `TYPESAFE_API_KEY` (TypeSafe System One, free tier available). Both keys are mandatory BYOK requirements in `secrets.env` with zero silent fallbacks per Wiggly Engineering Rule 12. **Before the first run**, check `secrets.env` for both keys; if either is missing, walk the user step-by-step through signing up for a free-tier key (`https://play.cartesia.ai/keys` and `https://typesafe.ai/dashboard`) and saving it into `secrets.env` rather than skipping or silently switching providers.
 
 ## Choose the job
 
@@ -22,30 +22,33 @@ Use `neutral-listening` as the calm body behind Talk to Camera:
 
 - `neutral-listening`
 
-For body-language beats, default to these approved gestures:
+For body-language beats, use only the approved gestures listed in `poses/performance-approvals.json`:
 
 - `present`
 - `think`
 - `aha`
 - `point`
 - `confident`
-- `chin-stroke` (alias for canonical `chin-stroke-swagger`; approved swagger / smug chin-stroke with sly smirk)
+- `shrug`
+- `excited-celebration`
+- `point-at-screen`
 
-The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, and `chin-stroke-swagger`. They are runnable engineering material, not approved performance choices. Do not select one automatically or put it into a user video until that exact current recipe has passed a fresh complete visual review. (Broken experimental poses `facepalm-frustrated` and `arms-crossed-skeptical` are archived in `poses/archive/`).
+The full registry also includes `shrug`, `key-point`, `excited-celebration`, `point-at-screen`, and `chin-stroke-swagger` (the remaining unapproved poses `key-point` and `chin-stroke-swagger` are `decision: "pending"` in `poses/performance-approvals.json`). Do not select an unapproved pose automatically or put it into a user video until that exact current recipe has passed a fresh complete visual review. (Broken experimental poses `facepalm-frustrated` and `arms-crossed-skeptical` are archived in `poses/archive/`).
 
 **Registered means runnable. It does not mean creatively approved.** Mechanical inspection can pass a pose that still looks wrong.
 
 ## Run workflow
 
 1. Read `README.md`, `input-contract.json`, `composition-contract.json`, `output-contract.json`, `quality.json`, and `content-boundary.json`. Read `ROADMAP.md` as well when changing the Format, planning a capability, or checking what remains unfinished.
-2. Run `npm install` once. Then run `npm run check`, `npm run inspect:registry`, and `npm run smoke`.
-3. **If scouting for breaking topics (Cultural Radar):**
+2. Run `npm install` once. Then run `npm run check`, `npm run inspect:registry`, and `npm run smoke` (100% local, zero API keys required).
+3. Before running voice generation (`npm run speak`) or Jev multi-shot direction (`npm run init` on `shaz-multi-shot-v1`), check repo-root `secrets.env` for `CARTESIA_API_KEY` and `TYPESAFE_API_KEY`. If either key is missing, guide the user step-by-step to create a free-tier key (`https://play.cartesia.ai/keys` and `https://typesafe.ai/dashboard`) and write it into `secrets.env`. Never switch voice synthesis silently to Fish (Cartesia is required by default; Fish runs only when `--provider=fish` / `provider: "fish"` is explicitly chosen).
+4. **If scouting for breaking topics (Cultural Radar):**
    - Follow `trend-scout-playbook.md` to monitor the Layer 1 Reddit sieve.
    - Run the automated scout:
      `npm run scout -- --subreddit=GamingLeaksAndRumours --limit=3`
      Or scout all 5 core subreddits with top community debate comments:
      `npm run scout -- --with-comments --output=/absolute/path/trends.json`
-4. **If starting from a topic or idea (Research & Script Creation):**
+5. **If starting from a topic or idea (Research & Script Creation):**
    - Follow `research-playbook.md` to frame the counterintuitive angle, concrete stories/facts, and emotional payoff.
    - Follow `writer-playbook.md` to write the script in Shaz's authentic voice, enforcing the *Therefore/But* causality rule and 4-shot rhythm.
    - Validate and lint the script against AI tells and word count limits:
@@ -53,19 +56,19 @@ The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-a
    - Once approved by the user, record dialogue or synthesize speech using Shaz's official cloned voice:
      `npm run speak -- --text="Approved script text here" --output=/absolute/path/user-audio.wav`
      (Uses Shaz's official Cartesia Sonic-3.6 clone `28ca280b-6835-45d4-aa27-f432156f8236` with `-16 LUFS` broadcast loudness normalization and Cherry WASI lip-sync compatibility; requires `CARTESIA_API_KEY` in `secrets.env`).
-4. If the job uses audio, transcribe it before choosing gestures:
+6. If the job uses audio, transcribe it before choosing gestures:
 
    `npm run transcribe -- --audio=/absolute/path/audio --output=/absolute/path/transcript.json`
 
    Read the full text and the word timestamps. The bundled English Whisper model runs locally; never upload the audio to Deepgram or another transcription service. For a gesture sequence, copy the printed transcript SHA into `planningTranscriptSha256`. Anchor each expressive action to a real `wordId`, label, and 24 fps frame (`round(startMs × 24 / 1000)`), then make the preceding frames add up to that anchor. Do not infer semantics from volume alone. Talk to Camera does not need a gesture plan, but initialization still records the local transcript as evidence.
 
-4. Choose the input:
+7. Choose the input:
    - For ordinary dialogue, copy `fixtures/talk-to-camera/input.json`. Supply no `sequence`, `durationFrames`, or frame math. Initialization derives one exact-length `neutral-listening` hold from the audio, with lip-sync required.
-   - For a multi-shot directed video, copy `fixtures/multi-shot/input.json` or author a `shaz-multi-shot-v1` plan following `director-playbook.md`. If `shots` is omitted, `npm run init` will automatically invoke the autonomous JEV Director engine (requires `TYPESAFE_API_KEY` in `secrets.env` with zero silent fallbacks) to derive a complete, emotionally paced shot sheet directly from the Whisper transcript.
+   - For a multi-shot directed video, copy `fixtures/multi-shot/input.json` or author a `shaz-multi-shot-v1` plan following `director-playbook.md`. If `shots` is omitted, `npm run init` will automatically invoke the autonomous JEV Director engine (requires `TYPESAFE_API_KEY` in `secrets.env` with zero silent fallbacks) to derive a complete, emotionally paced shot sheet directly from the Whisper transcript. Passing pre-planned `shots` with `--director=agent` skips Jev API calls (`providerCalls: 0`).
    - For body language, write a `sequence` with the five reviewed gesture IDs above. Use `neutral-listening` only as the calm default or connective tissue. Use explicit `holdFrames` and `gapFrames`. The last action must use `gapFrames: 0`.
    - Choose `sisters-room`, `living-room`, `map-photo-zone`, or `pure-white` from `assets.json`. Name `backgroundId` explicitly for an audio-backed sequence. A semantic performance input may omit it and use `assets.defaultBackgroundId`. Never invent a background ID.
    - `map-photo-zone` is only a clean fixed room in this release. Its empty area is reserved for future supporting media; do not add, crop, or position an image or video there.
-5. Start a run with an absolute input path:
+8. Start a run with an absolute input path:
 
    `npm run init -- --run=my-run --input=/absolute/path/input.json`
 
@@ -73,15 +76,15 @@ The registry also contains `shrug`, `key-point`, `excited-celebration`, `point-a
 
    `shaz-body-language-performance-v1` remains body-language-only. Its audio sets duration and gesture timing, not mouth drawings. It accepts the same backgrounds and defaults to Sisters Room.
 
-6. Run these commands in order:
+9. Run these commands in order:
 
    - `npm run validate -- --run=my-run`
    - `npm run render -- --run=my-run`
    - `npm run inspect -- --run=my-run`
 
-7. Watch `agent-runs/my-run/final.mp4` completely. Inspect `contact-sheet.jpg` and `quality-report.json`. Do not approve a video you did not watch.
-8. Edit only `agent-runs/my-run/human-review.json`. Keep the exact `reviewedOutputSha256`, name the reviewer, write concise notes, and set `status` to `approved` or `rejected`.
-9. Run `npm run finalize -- --run=my-run`. Delivery remains blocked unless validation, inspection, file checks, and human review all pass.
+10. Watch `agent-runs/my-run/final.mp4` completely. Inspect `contact-sheet.jpg` and `quality-report.json`. Do not approve a video you did not watch.
+11. Edit only `agent-runs/my-run/human-review.json`. Keep the exact `reviewedOutputSha256`, name the reviewer, write concise notes, and set `status` to `approved` or `rejected`.
+12. Run `npm run finalize -- --run=my-run`. Delivery remains blocked unless validation, inspection, file checks, and human review all pass.
 
 ## Author-and-learn loop
 

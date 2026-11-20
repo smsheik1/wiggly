@@ -222,6 +222,9 @@ const puppet = getDiscoveryFormatProfile("shaz-puppet-runtime");
 assert.ok(puppet?.handoff);
 const puppetPrompt = buildDiscoveryHandoffPrompt(puppet, origin);
 assert.match(puppetPrompt, /Let's create this with the latest published Wiggly Format: Animate Shaz\./);
+assert.match(puppetPrompt, /CARTESIA_API_KEY/);
+assert.match(puppetPrompt, /TYPESAFE_API_KEY/);
+assert.match(puppetPrompt, /free-tier/);
 assert.match(puppetPrompt, /Use the packaged runtime; do not rebuild it\./);
 assert.match(puppetPrompt, /Continue until the Format's validation and quality checks pass/);
 

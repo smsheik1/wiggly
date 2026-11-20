@@ -10,6 +10,7 @@ import { generateCherryCues, verifyCherryEngine } from "./runtime/cherry.mjs";
 import { inspectRun } from "./runtime/inspect-run.mjs";
 import { renderSequence } from "./runtime/render-sequence.mjs";
 import { ensureWhisperEngine, generateTranscript, validateTranscriptionAudio } from "./runtime/transcription.mjs";
+import { JevDirectorSkipError } from "./runtime/director-jev.mjs";
 import { deriveMultiShotPlan, deriveMultiShotPlanWithJev } from "./runtime/multi-shot-timeline.mjs";
 import { runScriptLinter } from "./runtime/validate-script.mjs";
 import {
@@ -46,7 +47,7 @@ function usage() {
   node runner.mjs lint:script --script=/absolute/path/script.json
   node runner.mjs lipsync --audio=/absolute/path/audio --output=/absolute/path/cherry.tsv
   node runner.mjs transcribe --audio=/absolute/path/audio --output=/absolute/path/transcript.json
-  node runner.mjs init --run=<id> --input=/absolute/path/input.json [--audio=/absolute/path/audio] [--lipsync=off] [--lipsync-cues=/absolute/path/cherry.tsv]
+  node runner.mjs init --run=<id> --input=/absolute/path/input.json [--audio=/absolute/path/audio] [--lipsync=off] [--lipsync-cues=/absolute/path/cherry.tsv] [--director=jev|agent]
   node runner.mjs validate --run=<id>
   node runner.mjs render --run=<id>
   node runner.mjs inspect --run=<id>
@@ -220,6 +221,7 @@ async function init(args) {
   await fs.mkdir(runDirectory, { recursive: true });
   let lipSyncState = null;
   let transcriptState = null;
+  let directorState = null;
   try {
     if (needsAudio) {
       const extension = path.extname(args.audio).toLowerCase() || ".audio";
@@ -273,11 +275,30 @@ async function init(args) {
           audioDurationSeconds: sequenceAudioFrames / 24,
           defaultBackgroundId: input.defaultBackgroundId ?? "sisters-room",
           brollMediaList: Array.isArray(input.brollMedia) ? input.brollMedia : [],
+          script: input.script ?? null,
         });
+        directorState = {
+          mode: "jev",
+          jevCalls: Number(derived?._jevCalls) || 0,
+        };
         input.title = input.title ?? derived.title;
         input.totalDurationFrames = sequenceAudioFrames;
         input.shots = derived.shots;
         delete input.defaultBackgroundId;
+        delete input.brollMedia;
+        delete input.headline;
+        delete input.script;
+      } else if (isMultiShot) {
+        const mode = args.director === "agent" ? "agent" : "preplanned";
+        directorState = {
+          mode,
+          jevCalls: 0,
+        };
+        input.totalDurationFrames = input.totalDurationFrames ?? sequenceAudioFrames;
+        delete input.defaultBackgroundId;
+        delete input.brollMedia;
+        delete input.headline;
+        delete input.script;
       }
 
       const shouldGenerateLipSync = (isAudioSequence && lipSyncMode !== "off")
@@ -337,6 +358,7 @@ async function init(args) {
     status: "initialized",
     attempts: 0,
     initializedAt: new Date().toISOString(),
+    ...(directorState ? { director: directorState } : {}),
     ...(needsAudio ? {
       userAudio: {
         file: input.audioFile,
@@ -458,6 +480,9 @@ async function finalize(args) {
     }
   }
   if (failures.length > 0) throw new Error(`finalization blocked:\n- ${failures.join("\n- ")}`);
+  const providerCalls = Number.isFinite(validated.receipt.providerCalls)
+    ? validated.receipt.providerCalls
+    : 0;
   const delivery = {
     schemaVersion: 1,
     status: "ready",
@@ -467,8 +492,8 @@ async function finalize(args) {
     outputSha256,
     sourceXstageSha256: validated.receipt.sourceXstageSha256,
     artistRenderedFramesUsed: false,
-    providerCalls: 0,
-    cost: "$0",
+    providerCalls,
+    ...(providerCalls === 0 ? { cost: "$0" } : {}),
     reviewer: review.reviewer,
     ...(isAudiovisual ? {
       audio: validated.receipt.audio,
@@ -575,6 +600,10 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error.message);
+  if (error instanceof JevDirectorSkipError) {
+    console.error(`[JEV_CANDIDATE_SKIP] ${error.message}`);
+  } else {
+    console.error(error.message);
+  }
   process.exitCode = 1;
 });
