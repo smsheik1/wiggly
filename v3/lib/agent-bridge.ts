@@ -89,7 +89,7 @@ function buildMissingCliMessage(command: SupportedAgentCli): string {
     `Fix steps:\n` +
     `1. Check 'which ${command}' in Terminal.\n` +
     `2. ${loginHint}\n` +
-    `3. Check 'ops/shaz-daily-studio/studio.config.json' ("writerAgent": "${command}").`
+    `3. Check 'ops/shaz-daily-studio/studio.config.json' ("writerAgent" or "judgeAgent": "${command}").`
   );
 }
 
@@ -195,6 +195,19 @@ function buildCliArgs(command: SupportedAgentCli, prompt: string, options?: Agen
   return args;
 }
 
+/** claude -p --output-format json reports failures as {"is_error":true,"result":"<reason>"}; pull out that reason. */
+export function cliErrorReason(stdout: unknown): string | null {
+  const text = String(stdout ?? "").trim();
+  if (!text.startsWith("{")) return null;
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed?.is_error && typeof parsed.result === "string" && parsed.result.trim()) return parsed.result.trim();
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 async function runCli<T>(
   command: SupportedAgentCli,
   executablePath: string,
@@ -221,13 +234,17 @@ async function runCli<T>(
       execOptions.timeout = timeoutMs;
       execOptions.killSignal = "SIGTERM";
     }
-    const { stdout } = await execFileAsync(executablePath, args, execOptions);
+    const pending = execFileAsync(executablePath, args, execOptions);
+    // The prompt is an argument, never stdin. Close stdin so the CLI doesn't wait 3s and warn.
+    pending.child.stdin?.end();
+    const { stdout } = await pending;
     return parseBridgeOutput<T>(stdout, { strict });
   } catch (err: any) {
     if (err instanceof AgentOutputError || err instanceof AgentUnavailableError) {
       throw err;
     }
-    const detail = [err?.stderr, err?.stdout, err?.message].filter(Boolean).join(" ").trim();
+    const reason = cliErrorReason(err?.stdout);
+    const detail = reason || [err?.stderr, err?.stdout, err?.message].filter(Boolean).join(" ").trim();
     if (err?.killed || err?.signal === "SIGTERM" || err?.code === "ETIMEDOUT") {
       throw new AgentUnavailableError(
         `Agent '${command}' timed out after ${timeoutMs}ms.\n` +

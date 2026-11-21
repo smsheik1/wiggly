@@ -129,6 +129,22 @@ async function runTests(): Promise<void> {
       (err: unknown) => err instanceof AgentUnavailableError && /timed out after 150ms/.test(err.message),
     );
 
+    // 8. Logged-out claude: the real reason is shown up front, and stdin is closed (no 3s wait).
+    //    Guards the 2026-11-20 judge-eval bug where "Not logged in" was cut off behind a stdin warning.
+    await writeFakeCli(
+      fakeBin,
+      "claude",
+      `if [ -t 0 ]; then :; fi\nread -t 2 -r _line || true\necho '{"type":"result","is_error":true,"result":"Not logged in · Please run /login","usage":{"input_tokens":0,"output_tokens":0,"padding":"${"x".repeat(500)}"}}'\nexit 1`,
+    );
+    const t0 = Date.now();
+    await assert.rejects(
+      () => askActiveAgent("test", { agent: "claude", requireJson: true }),
+      (err: unknown) =>
+        err instanceof AgentUnavailableError &&
+        /failed to execute \(1\): Not logged in · Please run \/login\n/.test(err.message),
+    );
+    assert.ok(Date.now() - t0 < 1500, "stdin is closed, so the CLI never waits for input");
+
     console.log("agent-bridge tests passed");
   } finally {
     process.env.PATH = origPath;
