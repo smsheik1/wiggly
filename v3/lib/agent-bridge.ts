@@ -20,6 +20,12 @@ export interface AgentPromptOptions {
   model?: string;
   schema?: object;
   effort?: "low" | "medium" | "high" | "max";
+  /**
+   * Opt-in: run the CLI from the OS temp folder so no project instruction files are picked up,
+   * and (claude) with no tools and no saved session. For judge-style calls that must see only
+   * their prompt. Omitted = today's behavior.
+   */
+  isolated?: boolean;
 }
 
 export class AgentUnavailableError extends Error {
@@ -183,6 +189,9 @@ function buildCliArgs(command: SupportedAgentCli, prompt: string, options?: Agen
   if (options?.model) args.push("--model", options.model);
   if (options?.effort) args.push("--effort", options.effort);
   if (options?.schema) args.push("--json-schema", JSON.stringify(options.schema));
+  if (options?.isolated && command === "claude") {
+    args.push("--tools", "", "--no-session-persistence");
+  }
   return args;
 }
 
@@ -201,9 +210,13 @@ async function runCli<T>(
       maxBuffer: number;
       timeout?: number;
       killSignal?: NodeJS.Signals;
+      cwd?: string;
     } = {
       maxBuffer: 25 * 1024 * 1024,
     };
+    if (options?.isolated) {
+      execOptions.cwd = os.tmpdir();
+    }
     if (timeoutMs !== undefined) {
       execOptions.timeout = timeoutMs;
       execOptions.killSignal = "SIGTERM";

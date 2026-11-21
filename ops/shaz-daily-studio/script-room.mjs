@@ -47,6 +47,71 @@ export async function loadVoiceGuide(guidePath = DEFAULT_VOICE_GUIDE_PATH) {
   return text;
 }
 
+function approvedSection(guide) {
+  const start = guide.indexOf("## Approved samples");
+  if (start < 0) throw new Error('voice guide has no "## Approved samples" section');
+  const after = guide.indexOf("\n## ", start + 1);
+  return { start, end: after < 0 ? guide.length : after + 1 };
+}
+
+/**
+ * Lists the approved samples in the voice guide: one per "### <title>" heading.
+ * @returns {{ title: string, text: string }[]}
+ */
+export function parseApprovedSamples(guide) {
+  const { start, end } = approvedSection(guide);
+  const body = guide.slice(start, end);
+  return [...body.matchAll(/^### (.+)\n([\s\S]*?)(?=^### |^## |(?![\s\S]))/gm)]
+    .map((m) => ({ title: m[1].trim(), text: m[2].trim() }))
+    .filter((s) => s.text);
+}
+
+/**
+ * The voice guide with one approved sample taken out, so the judge cannot pass that
+ * sample just by recognising it (Shaz decision 2026-11-20, judge eval).
+ */
+export function voiceGuideWithoutSample(guide, title) {
+  const { start, end } = approvedSection(guide);
+  const section = guide.slice(start, end);
+  const heading = `### ${title}\n`;
+  const at = section.indexOf(heading);
+  if (at < 0) throw new Error(`voice guide has no approved sample titled "${title}"`);
+  const next = section.indexOf("\n### ", at + heading.length);
+  const cut = section.slice(0, at) + (next < 0 ? "" : section.slice(next + 1));
+  return guide.slice(0, start) + cut + guide.slice(end);
+}
+
+/** Judge defaults: a different model from the writer (Shaz decision 2026-11-20: Claude judges, agy writes). */
+export const JUDGE_DEFAULTS = Object.freeze({ judgeAgent: "claude", judgeModel: "claude-opus-5-5", judgeEffort: "high" });
+
+/**
+ * Agent options for every judge call. Refuses a judge that is the same agent as the writer:
+ * a writer grading its own drafts is the bias this whole step exists to remove.
+ */
+export function judgeCallOptions(cfg) {
+  const judgeAgent = cfg?.judgeAgent;
+  if (judgeAgent !== "agy" && judgeAgent !== "claude") {
+    throw new Error(
+      `studio.config.json "judgeAgent" is '${judgeAgent}', expected "claude" or "agy".\n` +
+      `Fix: open ops/shaz-daily-studio/studio.config.json and add "judgeAgent": "claude".`,
+    );
+  }
+  if (judgeAgent === cfg.writerAgent) {
+    throw new Error(
+      `studio.config.json uses '${judgeAgent}' as both writer and judge. The judge must be a different model.\n` +
+      `Fix: open ops/shaz-daily-studio/studio.config.json and set "judgeAgent" to the agent that is NOT "${cfg.writerAgent}".`,
+    );
+  }
+  return {
+    agent: judgeAgent,
+    ...(cfg.judgeModel ? { model: cfg.judgeModel } : {}),
+    ...(cfg.judgeEffort ? { effort: cfg.judgeEffort } : {}),
+    timeoutMs: cfg.agentTimeoutMs,
+    requireJson: true,
+    isolated: true,
+  };
+}
+
 /**
  * Removes stage marks the voice step cannot speak yet. `[pause]` timing is a separate
  * feature; until it lands, marks are stripped before checks and voice so "pause" is
@@ -300,6 +365,32 @@ function parseJudge(raw, labels, { oneDraftMode }) {
 }
 
 /**
+ * One blind judging: shuffles and labels the drafts, asks the judge, retries once on a
+ * bad answer. Shared by the daily room and tools/judge-eval.mjs so both use the same judge.
+ * `ask(prompt)` returns the parsed JSON, or `{ __agentError }` for bad output.
+ * @returns {Promise<{ labelled: object[], verdict: object }>}
+ */
+export async function runJudge({ drafts, voiceGuide, oneDraftMode = false, ask, randomFn = Math.random, maxAttempts = SCRIPT_ROOM_DEFAULTS.maxJudgeAttempts }) {
+  const labelled = shuffleLabels(drafts, randomFn);
+  const labels = labelled.map((d) => d.label);
+  let lastErr = null;
+  for (let a = 1; a <= maxAttempts; a += 1) {
+    const prompt = buildJudgePrompt({ voiceGuide, labelled, oneDraftMode })
+      + (lastErr ? `\n\nYour previous answer was invalid: ${lastErr}. Answer again in the exact JSON shape.` : "");
+    const out = await ask(prompt);
+    if (out?.__agentError) { lastErr = out.__agentError; continue; }
+    try {
+      return { labelled, verdict: parseJudge(out, labels, { oneDraftMode: oneDraftMode || labels.length === 1 }) };
+    } catch (err) {
+      lastErr = err.message;
+    }
+  }
+  const err = new Error(`judge gave no valid verdict: ${lastErr}`);
+  err.name = "JudgeVerdictError";
+  throw err;
+}
+
+/**
  * Runs the full script room for one story.
  * @returns {Promise<{ script: object, receipt: object, room: object }>}
  */
@@ -316,18 +407,22 @@ export async function runScriptRoom(topic, {
 } = {}) {
   const cfg = config;
   const limits = { ...SCRIPT_ROOM_DEFAULTS, ...(cfg?.scriptRoom || {}) };
+  // Checked before any agent call: a bad judge setting stops the run loudly (Rule 12).
+  const judgeOpts = judgeCallOptions(cfg);
+  const writerOpts = { agent: cfg.writerAgent, timeoutMs: cfg.agentTimeoutMs, requireJson: true };
   const guide = voiceGuide ?? await loadVoiceGuide();
   const startedAt = Date.now();
   const calls = [];
 
   async function ask(stage, prompt) {
     const t0 = Date.now();
+    const opts = stage.startsWith("judge") ? judgeOpts : writerOpts;
     try {
-      const out = await askAgentFn(prompt, { agent: cfg.writerAgent, timeoutMs: cfg.agentTimeoutMs, requireJson: true });
-      calls.push({ stage, ok: true, durationMs: Date.now() - t0, promptSha256: sha256(prompt) });
+      const out = await askAgentFn(prompt, opts);
+      calls.push({ stage, agent: opts.agent, ok: true, durationMs: Date.now() - t0, promptSha256: sha256(prompt) });
       return out;
     } catch (err) {
-      calls.push({ stage, ok: false, errorType: err?.name || "Error", error: err?.message || String(err), durationMs: Date.now() - t0, promptSha256: sha256(prompt) });
+      calls.push({ stage, agent: opts.agent, ok: false, errorType: err?.name || "Error", error: err?.message || String(err), durationMs: Date.now() - t0, promptSha256: sha256(prompt) });
       if (err instanceof AgentUnavailableError) throw err;
       return { __agentError: err?.message || String(err) };
     }
@@ -390,22 +485,19 @@ export async function runScriptRoom(topic, {
 
   // 2. Judge (blind)
   async function judge(drafts, oneDraftMode) {
-    const labelled = shuffleLabels(drafts, randomFn);
-    const labels = labelled.map((d) => d.label);
-    let lastErr = null;
-    for (let a = 1; a <= limits.maxJudgeAttempts; a += 1) {
-      const prompt = buildJudgePrompt({ voiceGuide: guide, labelled, oneDraftMode })
-        + (lastErr ? `\n\nYour previous answer was invalid: ${lastErr}. Answer again in the exact JSON shape.` : "");
-      const out = await ask(oneDraftMode ? "judge-rewrite" : "judge", prompt);
-      if (out?.__agentError) { lastErr = out.__agentError; continue; }
-      try {
-        const verdict = parseJudge(out, labels, { oneDraftMode: oneDraftMode || labels.length === 1 });
-        return { labelled, verdict };
-      } catch (err) {
-        lastErr = err.message;
-      }
+    try {
+      return await runJudge({
+        drafts,
+        voiceGuide: guide,
+        oneDraftMode,
+        ask: (prompt) => ask(oneDraftMode ? "judge-rewrite" : "judge", prompt),
+        randomFn,
+        maxAttempts: limits.maxJudgeAttempts,
+      });
+    } catch (err) {
+      if (err?.name !== "JudgeVerdictError") throw err;
+      fail(err.message);
     }
-    fail(`judge gave no valid verdict: ${lastErr}`);
   }
 
   partial.drafts = valid.map((d) => ({ angle: d.angle, text: d.text, wordCount: d.wordCount, originalSpoken: d.originalSpoken, round: d.round }));
@@ -496,6 +588,8 @@ export async function runScriptRoom(topic, {
     quality,
     agent: cfg.writerAgent,
     writerAgent: cfg.writerAgent,
+    judgeAgent: judgeOpts.agent,
+    judgeModel: judgeOpts.model ?? null,
     // The writing round that produced the shipped script (1 = first drafts; rewrite = last round + 1).
     finalAttempt: rewrite ? Math.max(...valid.map((d) => Number(d.round) || 1)) + 1 : Number(winner.round) || 1,
     finalWordCount: countWords(dialogue),

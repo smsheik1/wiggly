@@ -67,6 +67,38 @@ async function runTests(): Promise<void> {
     const claudeRes = await askActiveAgent("test", { agent: "claude", requireJson: true });
     assert.deepEqual(claudeRes, { source: "claude" });
 
+    // 3b. isolated: claude runs from the OS temp folder with no tools and no saved session;
+    //     without isolated, neither flag is sent (My Pixar Story and other callers unchanged).
+    await writeFakeCli(
+      fakeBin,
+      "claude",
+      [
+        `tools=no; nosess=no; prev=""`,
+        `for a in "$@"; do`,
+        `  [[ "$prev" == "--tools" && -z "$a" ]] && tools=yes`,
+        `  [[ "$a" == "--no-session-persistence" ]] && nosess=yes`,
+        `  prev="$a"`,
+        `done`,
+        `cwd="$(pwd -P)"`,
+        `echo "{\\"type\\":\\"result\\",\\"is_error\\":false,\\"result\\":\\"{\\\\\\"tools\\\\\\":\\\\\\"$tools\\\\\\",\\\\\\"nosess\\\\\\":\\\\\\"$nosess\\\\\\",\\\\\\"cwd\\\\\\":\\\\\\"$cwd\\\\\\"}\\"}"`,
+      ].join("\n"),
+    );
+    const isolatedRes = await askActiveAgent<{ tools: string; nosess: string; cwd: string }>("judge", {
+      agent: "claude",
+      requireJson: true,
+      isolated: true,
+    });
+    assert.equal(isolatedRes.tools, "yes", "isolated claude call disables tools");
+    assert.equal(isolatedRes.nosess, "yes", "isolated claude call skips session persistence");
+    assert.equal(isolatedRes.cwd, await fs.realpath(os.tmpdir()), "isolated call runs from the OS temp folder");
+    const plainRes = await askActiveAgent<{ tools: string; nosess: string; cwd: string }>("plain", {
+      agent: "claude",
+      requireJson: true,
+    });
+    assert.equal(plainRes.tools, "no", "non-isolated call keeps default tools");
+    assert.equal(plainRes.nosess, "no", "non-isolated call keeps default sessions");
+    assert.equal(plainRes.cwd, await fs.realpath(process.cwd()), "non-isolated call keeps the caller's folder");
+
     // 4. Non-JSON text fails with AgentOutputError when requireJson: true
     await writeFakeCli(fakeBin, "agy", `echo '{"response":"definitely not json"}'`);
     process.env.PATH = `${fakeBin}:/usr/bin:/bin`;

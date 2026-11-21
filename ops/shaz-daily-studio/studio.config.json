@@ -1,5 +1,8 @@
 {
   "writerAgent": "agy",
+  "judgeAgent": "claude",
+  "judgeModel": "claude-opus-5-5",
+  "judgeEffort": "high",
   "director": "jev",
   "scriptFlow": "single",
   "agentTimeoutMs": 600000,

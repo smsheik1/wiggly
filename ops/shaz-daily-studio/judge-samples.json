@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "about": "Scripts the judge must FAIL (goodEnough false). Shaz graded them 2026-11-20: not the standard, would not post. The 6 approved samples that must PASS are read from voice-guide.md, so they live in one place only. Used by tools/judge-eval.mjs.",
+  "mustFail": [
+    {
+      "id": "posted-2026-11-05-ps5-pro-disc-drive",
+      "source": "posted daily-2026-11-05-mw2ze5sr",
+      "text": "Sony just announced a $700 PS5 Pro, but they didn't even put a disc drive in the box. Therefore, if you actually want to play the discs you already own, Sony makes you buy an $80 plastic drive and snap it onto the side. But once you add the stand in sales tax, you're looking at almost $900 just to play existing games. Honestly, are you dropping 900 bucks on this, or has Sony officially lost their minds?"
+    },
+    {
+      "id": "posted-2026-11-06-gta6-delay-rumor",
+      "source": "posted daily-2026-11-06-mw5jr94b",
+      "text": "We waited 12 years for GTA 6, but everyone is falling for the exact same delay rumor every single week. Take 2 confirmed the fall 2025 window is locked, anonymous twitter accounts know that saying delay gets 50 million free impressions. The internet enters complete meltdown mode over a random screenshot with zero proof, so relax. Until Rockstar drops trailer 2, don't believe everything your feed tells you."
+    },
+    {
+      "id": "posted-2026-11-06-foldable-iphone",
+      "source": "posted daily-2026-11-06-mw5k2068",
+      "text": "Tim Cook retired, John Ternus dropped the foldable iPhone, and everyone is acting like three grand is normal. Therefore, now that people have it, the real test is the repair bill. But the moment you hear that crunch when closing it, your heart completely stops. Therefore, John Ternus celebrates Apple's new era while your bank account is in hospice. Are you daily driving the folding iPhone? Or too scared to touch it?"
+    },
+    {
+      "id": "posted-2026-11-07-steam-deck-reskins",
+      "source": "posted daily-2026-11-07-55y182wa",
+      "text": "PC gamers spent years mocking consoles, yet the second we get open handhelds, we fake a PlayStation. Decky Loader modders just dropped plugins that reskin SteamOS into PS5 and Xbox dashboards. You get zero console exclusives, just the exact same bloated, tiled corporate home screens. We fought for open portable Linux purely to cosplay as an overpriced Sony console. Are you skinning your Steam deck or keeping your gaming handheld pure PC?"
+    },
+    {
+      "id": "posted-2026-11-09-black-friday-clickbait",
+      "source": "posted daily-2026-11-09-48fi0w9c",
+      "text": "Black Friday is under three weeks away, and gaming sites are already dropping shopping guides with zero actual prices. Polish tech blogs are blasting massive articles telling you to maybe buy an Xbox or Gran Turismo. Not a single retailer confirmed a dime off, making the entire guide pure algorithmic clickbait. You get to read 12 paragraphs of filler just to learn consoles still cost retail money. Are you actually falling for unconfirmed deal rumors this November or waiting for real receipts?"
+    },
+    {
+      "id": "posted-2026-11-09-refurbished-ps5",
+      "source": "posted daily-2026-11-09-mw9um7a3",
+      "text": "With GTA 6 landing any minute now, retailers think 40 Euros off crusty used playstations will calm our panic. Back Market knocked 40 Euros off refurbished PS5s right as gamers enter full emergency hoarding mode. That discount barely covers half the game's disc, yet refurbished stock is evaporating instantly. People would rather buy somebody's pre-owned console today than battle violent scalpers at midnight. Would you buy a pre-owned playstation right now or risk total launch day heartbreak?"
+    },
+    {
+      "id": "posted-2026-11-11-gta6-eight-days",
+      "source": "posted daily-2026-11-11-pblvmjfr",
+      "text": "GTA 6 drops in exactly 8 days, and half your squad still thinks their dusty Xbox One can run it. Rockstar confirmed next Thursday is current gen only, leaving your ancient hardware completely in the dust. PC players have to wait months while console owners get to crash Vice City next week. Now everyone is panic buying PS5s like toilet paper in 2020 just to play on day one. Are you dropping 500 bucks right now or watching walkthroughs on YouTube like a peasant?"
+    },
+    {
+      "id": "posted-2026-11-18-project-helix",
+      "source": "posted daily-2026-11-18-xjd2e3gk",
+      "text": "Microsoft swears Project Helix is a console, but let's be real, it is just a pre-built PC in a plastic trench coat. They want you playing your massive Steam backlog straight from your couch with zero driver headaches. Nobody knows how storefront licensing works yet, or if Microsoft will charge full PC prices. If it blue screens while launching Cyberpunk, slapping an Xbox badge on it won't fool anyone. Would you buy a living room console that lets you access your entire Steam library?"
+    },
+    {
+      "id": "posted-2026-11-18-ps5-storage-212gb",
+      "source": "posted daily-2026-11-18-tmhufg7e",
+      "text": "You waited 12 years for GTA 6, but your PS5 is about to hold your storage drive hostage. Sony dropped a mandatory firmware update, while reports confirm the game devours 212 gigabytes. Meanwhile, Xbox players are already setting their console location to New Zealand to sneak in early, so while they're exploring Vice City, you'll be furiously deleting every game you own. Which beloved game are you brutally sacrificing off your SSD tonight to make room?"
+    },
+    {
+      "id": "posted-2026-11-18-ps5-pro-locker-codes",
+      "source": "posted daily-2026-11-18-dj26i72g",
+      "text": "Gamers are dropping 700 bucks on a PS5 Pro just to inspect foliage reflections in GTA 6. Everyone is arguing online whether Xbox Series X looks identical for half the price. A parcel locker company named InPost is already handing out GTA cheat codes on PlayStation. We are literally getting locker promo cheats before Rockstar even shows real uncompressed gameplay. Are you dropping 700 for slightly shinier palm trees or sticking with your current box?"
+    },
+    {
+      "id": "rejected-ishowspeed-60m",
+      "source": "voice-guide.md Rejected: milestone with no conflict",
+      "text": "IShowSpeed just passed 60 million YouTube subscribers and is now the most-followed streamer on the whole platform. That's a stadium full of people who signed up to watch one guy yell at everything with his entire chest, and he earned every one of them. Nobody on YouTube commits to a bit harder. Meanwhile I spent last night rendering one cartoon blink. What's the most unhinged thing you'd do on camera for that many subscribers?"
+    },
+    {
+      "id": "early-draft-nier-building-permit",
+      "source": "earlier draft of the approved Nier sample, before Shaz's edits (abstract metaphor ending, no question)",
+      "text": "Nier: Automata got a small update on Steam, and the install went from 50 gigs to 366. I've lived in apartments with less storage than that. The game is about robots wondering why they exist, and after this download my SSD is wondering the same thing. Somewhere a developer typed minor fixes into the patch notes and went to lunch. I'm scared to see what a major update looks like. Probably ships with a building permit and a moving truck."
+    },
+    {
+      "id": "early-draft-ps5-pricing-shelf",
+      "source": "earlier draft of the approved PlayStation pricing sample, before Shaz's edits (no viral trend, no question)",
+      "text": "I check the PlayStation Store the way my uncle checks crypto, and now Sony's been caught testing dynamic pricing on PS5 again. Nobody outside Sony knows what makes the price move, so I'm assuming it reacts to me sighing near the console. A disc on a shelf never did this to me. It cost what the sticker said and minded its own business. I'm going back to physical copies, and my shelf is thrilled about the company."
+    }
+  ]
+}

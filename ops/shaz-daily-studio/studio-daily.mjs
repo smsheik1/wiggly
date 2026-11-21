@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { AgentUnavailableError, askActiveAgent } from "../../v3/lib/agent-bridge.ts";
 import { planShotsWithAgent } from "./agent-director.mjs";
-import { runScriptRoom } from "./script-room.mjs";
+import { JUDGE_DEFAULTS, runScriptRoom } from "./script-room.mjs";
 import { appendScriptFeedback, buildRunnerUpMessage } from "./script-feedback.mjs";
 import { ArticleFetchError, fetchArticleForTopic, USER_AGENT as STUDIO_USER_AGENT } from "./article-fetch.mjs";
 import {
@@ -111,8 +111,29 @@ export async function loadStudioConfig(configPath = DEFAULT_CONFIG_PATH) {
   if (scriptFlow !== "room" && scriptFlow !== "single") {
     throw new Error(`Invalid studio.config.json scriptFlow '${scriptFlow}': expected "room" (3 drafts + judge) or "single".`);
   }
+  const judgeAgent = parsed?.judgeAgent === undefined ? JUDGE_DEFAULTS.judgeAgent : parsed.judgeAgent;
+  if (judgeAgent !== "agy" && judgeAgent !== "claude") {
+    throw new Error(`Invalid studio.config.json judgeAgent '${judgeAgent}': expected "claude" or "agy".`);
+  }
+  if (scriptFlow === "room" && judgeAgent === writerAgent) {
+    throw new Error(
+      `Invalid studio.config.json: writerAgent and judgeAgent are both '${writerAgent}'. ` +
+      `The judge must be a different model from the writer; set "judgeAgent" to the other agent.`,
+    );
+  }
+  const judgeModel = parsed?.judgeModel === undefined ? JUDGE_DEFAULTS.judgeModel : parsed.judgeModel;
+  const judgeEffort = parsed?.judgeEffort === undefined ? JUDGE_DEFAULTS.judgeEffort : parsed.judgeEffort;
+  if (judgeModel !== null && (typeof judgeModel !== "string" || !judgeModel.trim())) {
+    throw new Error(`Invalid studio.config.json judgeModel '${judgeModel}': expected a model id like "claude-opus-5-5".`);
+  }
+  if (!["low", "medium", "high", "max"].includes(judgeEffort)) {
+    throw new Error(`Invalid studio.config.json judgeEffort '${judgeEffort}': expected low, medium, high or max.`);
+  }
   return {
     writerAgent,
+    judgeAgent,
+    judgeModel,
+    judgeEffort,
     director,
     scriptFlow,
     agentTimeoutMs,
