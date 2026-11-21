@@ -160,3 +160,39 @@ test("eval: a malformed judge answer is retried once, then counted as wrong (not
   assert.equal(summary.trusted, false);
   assert.match(summary.results[0].runs[0].error, /judge gave no valid verdict/);
 });
+
+test("hard gate: a script that doesn't end on a question never passes, whatever the judge says", async () => {
+  const { endsOnQuestion } = await import("../script-room.mjs");
+  assert.equal(endsOnQuestion("Would you buy it?"), true);
+  assert.equal(endsOnQuestion("PS5 Pro or wait? [pause]"), true);
+  assert.equal(endsOnQuestion('He asked, "really?"'), true);
+  assert.equal(endsOnQuestion("Probably ships with a building permit and a moving truck."), false);
+
+  const guide = await loadVoiceGuide();
+  const samples = await loadJudgeSamples();
+  const cases = buildJudgeEvalCases({ voiceGuide: guide, samples });
+  const noQuestion = cases.filter((c) => c.expect === "fail" && !endsOnQuestion(c.text)).map((c) => c.id);
+  assert.ok(noQuestion.includes("early-draft-nier-building-permit"));
+  assert.ok(noQuestion.includes("early-draft-ps5-pricing-shelf"));
+  for (const c of cases.filter((x) => x.expect === "pass")) assert.ok(endsOnQuestion(c.text), `${c.id} ends on a question`);
+
+  const summary = await runJudgeEval({
+    cases: cases.filter((c) => c.id === "early-draft-nier-building-permit"),
+    config: CFG,
+    askAgentFn: async () => verdictJson(true), // judge is fooled
+  });
+  assert.equal(summary.trusted, true, "the gate catches it anyway");
+  const run = summary.results[0].runs[0];
+  assert.equal(run.judgeGoodEnough, true);
+  assert.equal(run.gate, "no-ending-question");
+  assert.equal(run.goodEnough, false);
+});
+
+test("judge prompt is calibrated to the approved samples and doesn't punish facts it can't see", async () => {
+  const { buildJudgePrompt } = await import("../script-room.mjs");
+  const p = buildJudgePrompt({ voiceGuide: "G", labelled: [{ label: "A", angle: "x", text: "t?" }], oneDraftMode: true });
+  assert.match(p, /as good as those samples is goodEnough: true/);
+  assert.match(p, /not as a checklist/);
+  assert.match(p, /You do NOT see the news article/);
+  assert.match(p, /"Fine" is not goodEnough/);
+});

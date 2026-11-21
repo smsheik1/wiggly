@@ -229,7 +229,7 @@ TASK: write ${draftCount} complete drafts of a ~30-second script about this stor
 - Each draft MUST use a DIFFERENT angle (Shaz's own take). Not the same joke reworded.${avoidAngles.length ? `\n- Do NOT reuse these angles (already written): ${avoidAngles.map((a) => `"${a}"`).join("; ")}.` : ""}
 - Spoken words only for now: hook, 1-4 beats, landing. No card text, image queries, tags or rooms yet.
 - ${limits.minWords}-${limits.maxWords} spoken words per draft (hook + beats + landing). Count them.
-- Most drafts end on a question the viewer already has an answer to, ideally calling back to the joke. A pure punchline ending only when it's too good to follow.
+- Every draft ends on a question the viewer already has an answer to (1-3 words), calling back to the joke. A draft that doesn't end on a question is rejected.
 - Introduce anything unknown in a few words, and compare unknown products to famous ones.
 - Every line must land instantly for a casual viewer. No niche jargon, no metaphors that need decoding.
 - Facts only from the article. 2-5 claims, at least one targeting "hook", each with an exact quote from the article.
@@ -249,7 +249,13 @@ export function buildDraftRepairSuffix(failures) {
 
 export function buildJudgePrompt({ voiceGuide, labelled, oneDraftMode = false }) {
   const list = labelled.map((d) => `DRAFT ${d.label} (angle: ${d.angle}):\n${d.text}`).join("\n\n");
-  return `You are judging short-form video scripts for Shaz, a cartoon gamer who roasts the games and tech industry. You did not write them. Be honest and strict: Shaz only wants scripts he would LOVE, not ones that are fine.
+  return `You are judging short-form video scripts for Shaz, a cartoon gamer who roasts the games and tech industry. You did not write them. Shaz only posts scripts he would LOVE, not ones that are merely fine.
+
+HOW TO CALIBRATE (read this first):
+- The bar is the "Approved samples" in the voice guide. Shaz loved those and posted them. A draft that is as good as those samples is goodEnough: true. Do not hold a draft to a higher standard than the samples themselves meet.
+- The lessons describe what made scripts better or worse. Use them to judge the whole script, not as a checklist where one small miss fails it. Fail a draft for a real problem a viewer would feel (confusing, not funny, no take of its own, a boring or hard ending), not for a nitpick.
+- You do NOT see the news article. Assume the facts, names and quotes are correct and specific enough. Never mark a draft down for missing names, numbers or context you can't check; judge the writing.
+- "Fine" is not goodEnough. Clear-but-flat, a news summary with a joke stapled on, or an ending that isn't a quick question are all goodEnough: false.
 
 THE VOICE GUIDE (Shaz's own taste, built from his reactions):
 <<<VOICE GUIDE
@@ -380,7 +386,8 @@ export async function runJudge({ drafts, voiceGuide, oneDraftMode = false, ask, 
     const out = await ask(prompt);
     if (out?.__agentError) { lastErr = out.__agentError; continue; }
     try {
-      return { labelled, verdict: parseJudge(out, labels, { oneDraftMode: oneDraftMode || labels.length === 1 }) };
+      const verdict = parseJudge(out, labels, { oneDraftMode: oneDraftMode || labels.length === 1 });
+      return { labelled, verdict: applyHardGates(verdict, labelled) };
     } catch (err) {
       lastErr = err.message;
     }
@@ -388,6 +395,33 @@ export async function runJudge({ drafts, voiceGuide, oneDraftMode = false, ask, 
   const err = new Error(`judge gave no valid verdict: ${lastErr}`);
   err.name = "JudgeVerdictError";
   throw err;
+}
+
+/** Shaz's rule: every script ends on a question. Trailing [pause] marks and quotes don't count. */
+export function endsOnQuestion(text) {
+  const t = String(text || "").replace(/\[[^\]]*\]/g, "").replace(/["'\u201d\u2019)\s]+$/u, "").trim();
+  return t.endsWith("?");
+}
+
+export const NO_QUESTION_NOTE = "Hard rule: the script must end on a question the viewer can answer in 1-3 words, calling back to the joke. This one doesn't end on a question.";
+
+/**
+ * The hard gate on top of the judge: a winner that doesn't end on a question is never
+ * goodEnough, whatever the judge said. The judge's own call is kept as judgeGoodEnough.
+ */
+export function applyHardGates(verdict, labelled) {
+  const win = labelled.find((d) => d.label === verdict.winner);
+  const judgeGoodEnough = verdict.goodEnough;
+  if (win && !endsOnQuestion(win.text)) {
+    return {
+      ...verdict,
+      goodEnough: false,
+      judgeGoodEnough,
+      gate: "no-ending-question",
+      rewriteNotes: [NO_QUESTION_NOTE, verdict.rewriteNotes].filter(Boolean).join(" "),
+    };
+  }
+  return { ...verdict, judgeGoodEnough, gate: null };
 }
 
 /**

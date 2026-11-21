@@ -68,6 +68,8 @@ async function judgeOnce(c, { askAgentFn, judgeOpts }) {
   const s = verdict.scores.A;
   return {
     goodEnough: verdict.goodEnough,
+    judgeGoodEnough: verdict.judgeGoodEnough,
+    gate: verdict.gate,
     total: s.total,
     scores: s,
     notes: verdict.rewriteNotes || s.notes,
