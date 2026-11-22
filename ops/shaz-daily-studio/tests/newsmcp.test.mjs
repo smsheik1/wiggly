@@ -19,7 +19,7 @@ test("fetchNewsMcpEvents throws on HTTP non-ok and malformed JSON payloads while
   const events = await fetchNewsMcpEvents({
     apiKey: "nmcp_key_with=equals==",
     fetchFn: async (_url, init) => {
-      capturedAuth = init.headers.Authorization;
+      capturedAuth = init.headers["x-api-key"];
       return {
         ok: true,
         json: async () => ({
@@ -37,7 +37,7 @@ test("fetchNewsMcpEvents throws on HTTP non-ok and malformed JSON payloads while
       };
     },
   });
-  assert.equal(capturedAuth, "Bearer nmcp_key_with=equals==");
+  assert.equal(capturedAuth, "nmcp_key_with=equals==");
   assert.equal(events[0].eventId, "evt_101");
   assert.deepEqual(events[0].sources, ["https://example.com/a", "https://example.com/b"]);
 
@@ -70,11 +70,11 @@ test("secrets.mjs preserves '=' inside key values when reading from secrets.env"
       env: {},
       secretsPath: secretsFile,
       fetchFn: async (_url, init) => {
-        capturedAuth = init.headers.Authorization;
+        capturedAuth = init.headers["x-api-key"];
         return { ok: true, json: async () => ({ events: [] }) };
       },
     });
-    assert.equal(capturedAuth, "Bearer abc==def=123");
+    assert.equal(capturedAuth, "abc==def=123");
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }
@@ -208,4 +208,28 @@ test("pickDistinctEvents rejects picks with no conflict and its prompt asks for 
   assert.match(prompts[0], /CONFLICT IS REQUIRED/);
   assert.match(prompts[0], /ONE STORY PER GAME, FRANCHISE OR COMPANY/);
   assert.match(prompts[1], /no "conflict"/, "the exact error is fed back");
+});
+
+test("NewsMCP guardrail: key goes in x-api-key (never Bearer) and areas are searched one at a time", async () => {
+  let headers = null;
+  await fetchNewsMcpEvents({
+    apiKey: "k1",
+    fetchFn: async (_url, init) => { headers = init.headers; return { ok: true, json: async () => ({ events: [] }) }; },
+  });
+  assert.equal(headers["x-api-key"], "k1");
+  assert.equal(headers.Authorization, undefined, "Bearer makes NewsMCP treat us as keyless");
+
+  let inFlight = 0;
+  let maxInFlight = 0;
+  const { calls } = await fetchStoryPool({
+    fetchEventsFn: async ({ query }) => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((r) => setTimeout(r, 5));
+      inFlight -= 1;
+      return [{ eventId: `evt_${query.length}`, title: query }];
+    },
+  });
+  assert.equal(calls, STORY_AREAS.length);
+  assert.equal(maxInFlight, 1, "NewsMCP allows only 1 concurrent call");
 });
