@@ -31,12 +31,19 @@ export const MAX_PER_FRANCHISE = 1;
 /**
  * Fetches one pool across all story areas. Each event is tagged with the first area that found it.
  * A failing area is reported loudly (Rule 12); the run only stops if EVERY area fails.
+ * Areas are searched ONE AT A TIME: NewsMCP refuses a second concurrent call on every plan
+ * (max_concurrent 1, free tier included). Searching them in parallel failed 4 of 5 areas (2026-11-21).
  */
 export async function fetchStoryPool({ areas = STORY_AREAS, perAreaLimit = 8, fetchEventsFn, ...opts } = {}) {
   const fetchFn = fetchEventsFn || fetchNewsMcpEvents;
-  const results = await Promise.allSettled(
-    areas.map((area) => fetchFn({ ...opts, query: area.query, limit: perAreaLimit })),
-  );
+  const results = [];
+  for (const area of areas) {
+    try {
+      results.push({ status: "fulfilled", value: await fetchFn({ ...opts, query: area.query, limit: perAreaLimit }) });
+    } catch (reason) {
+      results.push({ status: "rejected", reason });
+    }
+  }
   const pool = new Map();
   const failures = [];
   results.forEach((r, i) => {
@@ -126,7 +133,9 @@ export async function fetchNewsMcpEvents({
   try {
     response = await fetchFn(url, {
       headers: {
-        Authorization: `Bearer ${key}`,
+        // NewsMCP's REST API reads the key ONLY from x-api-key. "Authorization: Bearer" is
+        // silently treated as keyless (20 calls/hour, 7-day lookback), not as an error.
+        "x-api-key": key,
         Accept: "application/json",
       },
       signal: AbortSignal.timeout(timeoutMs),
