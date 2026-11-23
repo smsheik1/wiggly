@@ -11,19 +11,18 @@ import { findSecretsEnvPath, getSecretKey, redactSecrets } from "./secrets.mjs";
 
 const STUDIO_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(STUDIO_DIR, "../..");
-const DEFAULT_NEWSMCP_QUERY = "playstation OR xbox OR nintendo OR steam OR video game";
-
 /**
- * Story areas (Shaz decision 2026-11-20): games plus 4 new areas, max 2 stories per area,
- * max 1 story per game/franchise/company, and only stories with real conflict.
- * No single franchise name (e.g. "gta") is hard-coded into a search.
+ * Story areas (rebuilt 2026-11-23). NO keyword or brand lists: each area is a NewsMCP industry
+ * sector, so we never decide which companies or games matter. NewsMCP returns the biggest
+ * stories in that sector; we rank them by virality (see viralityScore).
+ * Destroyed on purpose: the old "playstation OR xbox ...", "apple OR samsung ...",
+ * "youtuber OR streamer ..." and "pixar OR disney ..." lists, which hid huge stories that
+ * weren't on the list (Nvidia's CEO fight, 173 newsrooms) and pulled in junk that was.
  */
 export const STORY_AREAS = Object.freeze([
-  { id: "games", label: "Games industry", query: DEFAULT_NEWSMCP_QUERY },
-  { id: "indie-weird", label: "Indie & weird game news", query: "indie game OR game mod OR speedrun OR viral game OR game developer" },
-  { id: "tech", label: "Tech & gadgets", query: "apple OR samsung OR google OR gadget OR smartphone OR AI" },
-  { id: "creators", label: "Internet & creator culture", query: "youtuber OR streamer OR tiktok OR twitch OR influencer" },
-  { id: "animation", label: "Animation & movies", query: "pixar OR disney OR anime OR animated movie OR box office" },
+  { id: "games", label: "Games & esports", sector: "gaming_esports" },
+  { id: "tech", label: "Tech, AI, chips, cars & gadgets", sector: "software_it_services,semiconductors,telecommunications,ecommerce,automotive" },
+  { id: "entertainment", label: "Movies, TV, music & celebrities", sector: "media_entertainment" },
 ]);
 export const MAX_PER_AREA = 2;
 export const MAX_PER_FRANCHISE = 1;
@@ -34,14 +33,36 @@ export const MAX_PER_FRANCHISE = 1;
  * Areas are searched ONE AT A TIME: NewsMCP refuses a second concurrent call on every plan
  * (max_concurrent 1, free tier included). Searching them in parallel failed 4 of 5 areas (2026-11-21).
  */
-export async function fetchStoryPool({ areas = STORY_AREAS, perAreaLimit = 8, fetchEventsFn, ...opts } = {}) {
+export async function fetchStoryPool({
+  areas = STORY_AREAS,
+  perAreaLimit = 20,
+  fetchEventsFn,
+  pauseMs = 1_500,
+  retryPauseMs = 4_000,
+  waitFn = (ms) => new Promise((r) => setTimeout(r, ms)),
+  ...opts
+} = {}) {
   const fetchFn = fetchEventsFn || fetchNewsMcpEvents;
   const results = [];
-  for (const area of areas) {
+  for (const [i, area] of areas.entries()) {
+    // NewsMCP allows 1 call at a time and is slow to free the slot after a call ends, so
+    // back-to-back calls still hit "Max API Requests Concurrency Reached" (seen 2026-11-23).
+    if (i > 0) await waitFn(pauseMs);
+    const call = () => fetchFn({ ...opts, sector: area.sector, limit: perAreaLimit });
     try {
-      results.push({ status: "fulfilled", value: await fetchFn({ ...opts, query: area.query, limit: perAreaLimit }) });
+      results.push({ status: "fulfilled", value: await call() });
     } catch (reason) {
-      results.push({ status: "rejected", reason });
+      if (!/HTTP 429[\s\S]*Concurrency/i.test(String(reason?.message || ""))) {
+        results.push({ status: "rejected", reason });
+        continue;
+      }
+      // One retry for the concurrency slot only. A second failure is reported loudly below (Rule 12).
+      await waitFn(retryPauseMs);
+      try {
+        results.push({ status: "fulfilled", value: await call() });
+      } catch (retryReason) {
+        results.push({ status: "rejected", reason: retryReason });
+      }
     }
   }
   const pool = new Map();
@@ -115,8 +136,8 @@ function buildMissingKeyMessage() {
  * Fetches curated breaking news events strictly from NewsMCP, failing loudly on missing keys or API errors.
  */
 export async function fetchNewsMcpEvents({
-  query = DEFAULT_NEWSMCP_QUERY,
-  limit = 15,
+  sector,
+  limit = 20,
   apiKey = null,
   env = process.env,
   secretsPath,
@@ -128,7 +149,12 @@ export async function fetchNewsMcpEvents({
     throw new NewsMcpError(buildMissingKeyMessage());
   }
 
-  const url = `https://api.newsmcp.com/v0/news?q=${encodeURIComponent(query)}&limit=${limit}`;
+  if (!String(sector || "").trim()) {
+    throw new NewsMcpError("fetchNewsMcpEvents needs a NewsMCP sector (keyword searches were removed on 2026-11-23).");
+  }
+  // sort=trending: NewsMCP's own ranking (independent newsrooms weighted toward fresh stories).
+  // fields: ask for event_type + sector so we can spot fights without keywords.
+  const url = `https://api.newsmcp.com/v0/news?sector=${encodeURIComponent(sector)}&sort=trending&limit=${limit}&fields=abstract,sources,event_type,sector`;
   let response;
   try {
     response = await fetchFn(url, {
@@ -192,19 +218,78 @@ export async function fetchNewsMcpEvents({
       source: "newsmcp",
       newsrooms: evt?.newsrooms || evt?.source_count || 1,
       publishedAt: evt?.last_seen || evt?.first_seen || null,
+      firstSeen: evt?.first_seen || evt?.last_seen || null,
+      languageCount: Number(evt?.language_count) || 1,
+      eventType: evt?.event_type || null,
+      sector: evt?.sector || null,
     };
   });
 }
 
+/** NewsMCP timestamps have no zone and are UTC; Date.parse would read them as local time. */
+function parseUtc(value) {
+  const v = String(value || "").trim();
+  if (!v) return Number.NaN;
+  return Date.parse(/[zZ]|[+-]\d\d:?\d\d$/.test(v) ? v : `${v}Z`);
+}
+
+/** Hours since NewsMCP first saw the story (null if unknown; 0 if in the future). */
+export function hoursOld(evt, now = new Date()) {
+  const t = parseUtc(evt?.firstSeen || evt?.publishedAt);
+  if (!Number.isFinite(t)) return null;
+  return Math.max(0, (now.getTime() - t) / 3_600_000);
+}
+
+/** NewsMCP event types that are a fight by definition. These get a boost; nothing is excluded. */
+export const CONFLICT_EVENT_TYPES = Object.freeze([
+  "legal_regulatory.lawsuit_filed",
+  "legal_regulatory.regulatory_action",
+  "legal_regulatory.compliance_ruling",
+  "justice_crime.arrest_charge",
+  "justice_crime.trial_verdict",
+  "justice_crime.investigation",
+  "operations.layoffs",
+  "operations.plant_closure",
+  "governance.executive_departure",
+  "governance.board_change",
+  "product.product_recall",
+  "security.data_breach",
+  "security.cyberattack",
+]);
+export const CONFLICT_BOOST = 1.5;
+
+/**
+ * Virality from NewsMCP's own markers, no keywords and no outside tools:
+ *   spread speed = independent newsrooms per hour since NewsMCP first saw it
+ *   reach        = how many languages are covering it (1 + log2(languages))
+ *   fight        = x1.5 if NewsMCP labels it a lawsuit, layoffs, CEO exit, recall, breach...
+ * Unknown age counts as 24 hours.
+ */
+export function viralityScore(evt, now = new Date()) {
+  const newsrooms = Math.max(1, Number(evt?.newsrooms) || 1);
+  const languages = Math.max(1, Number(evt?.languageCount) || 1);
+  const age = hoursOld(evt, now) ?? 24;
+  const speed = newsrooms / (age + 2);
+  const reach = 1 + Math.log2(languages);
+  const fight = CONFLICT_EVENT_TYPES.includes(evt?.eventType) ? CONFLICT_BOOST : 1;
+  return speed * reach * fight;
+}
+
+/** Most viral stories first, regardless of which area search found them. */
+export function rankByVirality(events, now = new Date()) {
+  return [...events].sort((a, b) => viralityScore(b, now) - viralityScore(a, now));
+}
+
 function buildPickPrompt({ candidates, recentPublishedTitles, maxPicks, previousError = null }) {
-  const candidateBlock = candidates.map((c, idx) => ({
-    rankHint: idx + 1,
+  const candidateBlock = candidates.map((c) => ({
     eventId: c.eventId,
     headline: c.title,
     abstract: c.snippet,
     area: c.area || null,
-    publishedAt: c.publishedAt,
     newsrooms: c.newsrooms,
+    languages: c.languageCount || 1,
+    hoursOld: c.hoursOld,
+    storyType: c.eventType || null,
   }));
 
   const recentBlock = recentPublishedTitles.length > 0
@@ -218,12 +303,12 @@ function buildPickPrompt({ candidates, recentPublishedTitles, maxPicks, previous
     `RULES:\n` +
     `1. CONFLICT IS REQUIRED. Pick only stories with a clear "someone vs someone": a company vs its fans, a boss vs workers, a price hike, a ban, a backlash, a feud, a lawsuit, a flop, a ridiculous decision. In "conflict", name both sides in one sentence. A milestone, a review, a benchmark, a spec comparison, a release date or a "how to" has NO conflict: skip it.\n` +
     `2. A CASUAL VIEWER MUST GET IT IN ONE SENTENCE. Skip stories that need tech terms or niche lore to explain.\n` +
-    `3. ONE STORY PER GAME, FRANCHISE OR COMPANY TOPIC. Three different GTA stories are three picks of the same thing: keep only the best one. In "franchise", name the game/franchise/company it's about (or "none").\n` +
+    `3. ONE STORY PER GAME, FRANCHISE OR COMPANY TOPIC. Three stories about the same game or company are three picks of the same thing: keep only the best one. In "franchise", name the game/franchise/company it's about (or "none").\n` +
     `4. MIX THE AREAS. At most ${MAX_PER_AREA} picks from the same area. Areas:\n${areaBlock}\n` +
     `5. Never pick two headlines about the same real-world event, or a story already covered in RECENTLY PUBLISHED TITLES.\n` +
     `6. Rank the funniest, most relatable fight first. Use ONLY exact eventId values from CANDIDATES. If nothing has real conflict, return { "picks": [] }.\n\n` +
     `RECENTLY PUBLISHED TITLES (avoid repeating these stories):\n${recentBlock}\n\n` +
-    `CANDIDATES:\n${JSON.stringify(candidateBlock, null, 2)}\n\n` +
+    `CANDIDATES (ranked most viral first: how fast newsrooms picked it up, how many languages it reached, and a boost when NewsMCP labels it a fight like a lawsuit, layoffs or a CEO exit. Viral is a strong hint, but the best fight for Shaz still wins):\n${JSON.stringify(candidateBlock, null, 2)}\n\n` +
     (previousError ? `PREVIOUS ATTEMPT FAILED VALIDATION — FIX THIS EXACT ERROR:\n${previousError}\n\n` : "") +
     `Respond ONLY with valid JSON matching:\n` +
     `{\n  "picks": [\n    { "eventId": "<exact candidate eventId>", "area": "<area id>", "franchise": "<game/franchise/company or none>", "conflict": "<who vs who, one sentence>", "reason": "<why it's funny for Shaz, one sentence>" }\n  ]\n}`
@@ -241,10 +326,17 @@ export async function pickDistinctEvents({
   timeoutMs = 600_000,
   askAgentFn = askActiveAgent,
   maxAttempts = 2,
+  now = new Date(),
 } = {}) {
   if (!Array.isArray(candidates) || candidates.length === 0) {
     return [];
   }
+  // The pool arrives grouped by area, games first. Rank it by virality so list position
+  // reflects the news, never the area (Shaz, 2026-11-23).
+  candidates = rankByVirality(candidates, now).map((c) => {
+    const h = hoursOld(c, now);
+    return { ...c, hoursOld: h === null ? null : Math.round(h) };
+  });
 
   const byEventId = new Map(candidates.map((c) => [c.eventId, c]));
   const cappedMax = Math.min(candidates.length, Math.max(1, maxPicks));
