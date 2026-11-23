@@ -6,6 +6,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { STORY_AREAS } from "../newsmcp.mjs";
+
 import { loadLedger, recordTopic } from "../content-ledger.mjs";
 import {
   buildAuthorPrompt,
@@ -111,7 +113,7 @@ test("findTopStories uses NewsMCP only, applies v2 ledger filters, and delegates
     assert.equal(capturedAgentOpts.agent, "agy");
     assert.equal(capturedAgentOpts.requireJson, true);
     assert.deepEqual(picks.map((p) => p.topic.eventId), ["evt_new_b", "evt_new_a"]);
-    assert.equal(newsMcpCalls, 5, "one NewsMCP search per story area");
+    assert.equal(newsMcpCalls, STORY_AREAS.length, "one NewsMCP search per story area");
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }
