@@ -233,3 +233,9 @@ test("NewsMCP guardrail: key goes in x-api-key (never Bearer) and areas are sear
   assert.equal(calls, STORY_AREAS.length);
   assert.equal(maxInFlight, 1, "NewsMCP allows only 1 concurrent call");
 });
+
+test("tech area searches Tesla and self-driving (Shaz 2026-11-23: Tesla FSD V15 had 86 sources but never reached the pool)", () => {
+  const tech = STORY_AREAS.find((a) => a.id === "tech");
+  assert.match(tech.query, /\btesla\b/);
+  assert.match(tech.query, /\bself-driving\b/);
+});

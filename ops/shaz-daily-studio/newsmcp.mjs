@@ -21,7 +21,7 @@ const DEFAULT_NEWSMCP_QUERY = "playstation OR xbox OR nintendo OR steam OR video
 export const STORY_AREAS = Object.freeze([
   { id: "games", label: "Games industry", query: DEFAULT_NEWSMCP_QUERY },
   { id: "indie-weird", label: "Indie & weird game news", query: "indie game OR game mod OR speedrun OR viral game OR game developer" },
-  { id: "tech", label: "Tech & gadgets", query: "apple OR samsung OR google OR gadget OR smartphone OR AI" },
+  { id: "tech", label: "Tech & gadgets", query: "apple OR samsung OR google OR tesla OR self-driving OR gadget OR smartphone OR AI" },
   { id: "creators", label: "Internet & creator culture", query: "youtuber OR streamer OR tiktok OR twitch OR influencer" },
   { id: "animation", label: "Animation & movies", query: "pixar OR disney OR anime OR animated movie OR box office" },
 ]);
