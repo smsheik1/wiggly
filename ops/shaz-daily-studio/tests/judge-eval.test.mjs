@@ -21,9 +21,9 @@ function verdictJson(goodEnough) {
 
 const draftText = (prompt) => prompt.split("THE DRAFT:\n")[1].split("\n\nScore each draft")[0].replace(/^DRAFT A \(angle: [^)]*\):\n/, "");
 
-test("the real voice guide has the 6 approved samples Shaz loved", async () => {
+test("the real voice guide has the approved samples Shaz loved", async () => {
   const samples = parseApprovedSamples(await loadVoiceGuide());
-  assert.equal(samples.length, 6);
+  assert.ok(samples.length >= 9, "6 originals + 3 from the 2026-11-23 blind grading");
   assert.ok(samples.every((s) => s.text.split(/\s+/).length >= 60), "each sample is a full script");
   assert.match(samples[0].title, /Nier/);
 });
@@ -49,7 +49,7 @@ test("eval cases: approved samples must pass with themselves hidden; every grade
   const cases = buildJudgeEvalCases({ voiceGuide: guide, samples });
   const pass = cases.filter((c) => c.expect === "pass");
   const fail = cases.filter((c) => c.expect === "fail");
-  assert.equal(pass.length, 6);
+  assert.equal(pass.length, parseApprovedSamples(guide).length);
   assert.ok(fail.length >= 13, "Shaz's 10 posted scripts + IShowSpeed + 2 early drafts");
   for (const c of pass) assert.ok(!c.guide.includes(c.text), `${c.id}: judge's guide must not contain the sample it grades`);
   for (const c of fail) assert.equal(c.guide, guide, `${c.id}: judged with the full guide, like a real morning`);

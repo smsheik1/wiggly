@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "about": "Scripts the judge must FAIL (goodEnough false). Shaz graded them 2026-11-20: not the standard, would not post. The 6 approved samples that must PASS are read from voice-guide.md, so they live in one place only. Used by tools/judge-eval.mjs.",
+  "about": "Scripts the judge must FAIL (goodEnough false). Shaz graded them 2026-11-20: not the standard, would not post. The approved samples that must PASS are read from voice-guide.md, so they live in one place only. Used by tools/judge-eval.mjs.",
   "mustFail": [
     {
       "id": "posted-2026-11-05-ps5-pro-disc-drive",
@@ -66,6 +66,76 @@
       "id": "early-draft-ps5-pricing-shelf",
       "source": "earlier draft of the approved PlayStation pricing sample, before Shaz's edits (no viral trend, no question)",
       "text": "I check the PlayStation Store the way my uncle checks crypto, and now Sony's been caught testing dynamic pricing on PS5 again. Nobody outside Sony knows what makes the price move, so I'm assuming it reacts to me sighing near the console. A disc on a shelf never did this to me. It cost what the sticker said and minded its own business. I'm going back to physical copies, and my shelf is thrilled about the company."
+    },
+    {
+      "id": "graded-2026-11-23-forgotten-island-2",
+      "source": "blind grading 2026-11-23 #2 (agy), Shaz: fine",
+      "text": "DreamWorks dropped an eighty million dollar animated movie where two best friends have to sacrifice their memories, and audiences helped out by instantly forgetting to buy tickets. The film just wrapped its theatrical run at seventy-eight million dollars, leaving the studio nowhere near the two hundred million they needed to break even. Losing money on an island cartoon feels like paying for a cruise where nobody gets on the boat. Theater seats or streaming on your couch?"
+    },
+    {
+      "id": "graded-2026-11-23-ai-chips-ps5-price-3",
+      "source": "blind grading 2026-11-23 #3 (claude), Shaz: fine; Shaz favorite pick for this story (before edits).",
+      "text": "Black Friday is next week, and the cheapest PS5 costs double what it did a year ago. A watchdog group says AI data centers are eating all the memory chips. So this year's deal is, you don't get a discount, a chatbot gets your RAM. [pause] Somewhere a server is spending my console money writing a LinkedIn post about gratitude. I'm not shopping Black Friday, I'm just visiting my console at the store. Are you buying anything this Black Friday?"
+    },
+    {
+      "id": "graded-2026-11-23-gta6-remote-play-4",
+      "source": "blind grading 2026-11-23 #4 (agy), Shaz: no",
+      "text": "Nothing screams PC gamer denial quite like streaming GTA 6 from a PlayStation just to pretend your graphics card is invited. Modders figured out Remote Play streams to Windows without a capture card, purely to heal their wounded pride. It turns your monster gaming setup into a glorified television watching a PlayStation in the other room. Even the mod developers admitted this is nowhere near a real PC release. Wait for PC, or buy the console?"
+    },
+    {
+      "id": "graded-2026-11-23-forgotten-island-5",
+      "source": "blind grading 2026-11-23 #5 (claude), Shaz: not picked",
+      "text": "DreamWorks made an eighty million dollar cartoon called Forgotten Island, and audiences followed the instructions. [pause] It finished in theaters with seventy-eight million worldwide, which in Hollywood math is a big loss, because a movie has to make way more than its budget to break even. The film is literally about two friends losing their memories. Marketing really committed to the bit. Next time just call it Sold Out. What's the last cartoon you actually saw in theaters?"
+    },
+    {
+      "id": "graded-2026-11-23-ai-chips-ps5-price-6",
+      "source": "blind grading 2026-11-23 #6 (agy), Shaz: fine; Liked the ending question.",
+      "text": "Right before Black Friday, the price of the cheapest PlayStation 5 doubled because AI data centers bought all the memory chips. Usually this week brings discounts, but tech giants decided gamers should pay double so their servers can draft polite emails. My bank account is taking direct damage so a corporate chatbot can spend forty seconds hallucinating a pancake recipe. Did you get your console already, or are you skipping this year?"
+    },
+    {
+      "id": "graded-2026-11-23-gta6-console-tests-7",
+      "source": "blind grading 2026-11-23 #7 (claude), Shaz: fine; Best of the GTA console-tests story, but none of the 3 has a good angle; the puddle joke repeats 3 times and stops being funny after the 2nd.",
+      "text": "Tests say the PS5 Pro is the best way to play GTA 6, and the big upgrade is sharper reflections in the puddles. [pause] Seven hundred dollars, so the puddles look nice. I'm going to be running from five cop cars, and the one thing I stop to admire is a puddle. Sony looked at a crime game and decided the real crime was low-res water. Would you pay seven hundred dollars for better puddles?"
+    },
+    {
+      "id": "graded-2026-11-23-ai-chips-ps5-price-8",
+      "source": "blind grading 2026-11-23 #8 (agy), Shaz: fine; Liked the opener.",
+      "text": "Consoles are supposed to get cheaper with age, but the cheapest PlayStation 5 doubled in price over the past year. Every AI picture of a cat in a business suit costs a PlayStation another ten bucks. Leaving that dusty console plugged into my TV did more for my retirement than my friend's crypto. My mom was right about never throwing out old stuff, she was just wrong about the Beanie Babies. What old console in your closet is waiting to make you rich?"
+    },
+    {
+      "id": "graded-2026-11-23-gta6-console-tests-9",
+      "source": "blind grading 2026-11-23 #9 (agy), Shaz: no",
+      "text": "Xbox fans are treating the GTA 6 benchmarks like their Super Bowl because Series X had slightly better stability than the standard PS5. While PlayStation gets occasional frame drops during chaos, the big black fridge holds onto thirty frames like its life depends on it. Microsoft spent billions buying studios just for a side-by-side comparison to prove their console stutters slightly less when an ambulance explodes. Which room in your house sounds like a jet engine when you boot up Vice City?"
+    },
+    {
+      "id": "graded-2026-11-23-forgotten-island-10",
+      "source": "blind grading 2026-11-23 #10 (claude), Shaz: fine; Best DreamWorks pick; loved after swapping in script 15 critics line (see masters.json).",
+      "text": "Critics loved DreamWorks' new cartoon Forgotten Island, and families still stayed home and put on Shrek for the four hundredth time. It made seventy-eight million worldwide on an eighty million dollar budget, so it didn't even make back what it cost to animate. [pause] You can't beat Shrek. He's a twenty-five year old ogre and he's still outselling new movies in my living room. Be honest, which DreamWorks movie have you rewatched the most?"
+    },
+    {
+      "id": "graded-2026-11-23-ai-chips-ps5-price-11",
+      "source": "blind grading 2026-11-23 #11 (claude), Shaz: no",
+      "text": "The cheapest PS5 costs double what it did a year ago, and a report says AI data centers are buying up all the memory chips. So my console isn't getting old, it's getting promoted. [pause] Normally a five-year-old gadget is worth less than the box it came in. Now my PS5 is the only thing in my apartment going up in value, and that includes me. Would you sell your PS5 right now, yes or no?"
+    },
+    {
+      "id": "graded-2026-11-23-gta6-console-tests-12",
+      "source": "blind grading 2026-11-23 #12 (agy), Shaz: no",
+      "text": "Technical tests crowned the PS5 Pro the king of GTA 6, mostly because it makes Vice City puddles look expensive. The main upgrade against normal consoles is sharper reflections, so you can clearly see your own guilty expression while crashing into a billboard. Sony convinced players that stealing helicopters feels way more cinematic when the windshield glass is five percent glossier. Are you upgrading to a Pro for GTA, or staying put?"
+    },
+    {
+      "id": "graded-2026-11-23-forgotten-island-13",
+      "source": "blind grading 2026-11-23 #13 (agy), Shaz: not picked",
+      "text": "DreamWorks spent eighty million dollars making an animated movie called Forgotten Island, and audiences took that title as personal advice. The film just ended its theatrical run with seventy-eight million worldwide, meaning it couldn't even make back the cash they spent animating it. In Hollywood math, you needed two hundred million just to break even, so DreamWorks basically financed a private screening for the projectionist. Did you see this in theaters, yes or no?"
+    },
+    {
+      "id": "graded-2026-11-23-ai-chips-ps5-price-14",
+      "source": "blind grading 2026-11-23 #14 (agy), Shaz: fine; Really funny line.",
+      "text": "To play Grand Theft Auto Six, you need a PlayStation or an Xbox, but good luck buying one right now. AI data centers hoarded all the memory chips, so an Xbox costs forty-five percent more before Black Friday even arrives. We are one server farm expansion away from having to commit actual grand theft just to play in Vice City. Are you saving for GTA Six on console, or are you waiting for PC?"
+    },
+    {
+      "id": "graded-2026-11-23-forgotten-island-15",
+      "source": "blind grading 2026-11-23 #15 (agy), Shaz: fine",
+      "text": "Film critics showered DreamWorks' new cartoon Forgotten Island with glowing reviews, which was the universal signal for normal families to stay home. The movie pulled in seventy-eight million dollars against an eighty million dollar budget, completely missing the hundred million mark. Critics spent weeks writing love letters to an empty theater while parents took one look at the poster and put on Shrek again. Do you trust movie critics, yes or no?"
     }
   ]
 }

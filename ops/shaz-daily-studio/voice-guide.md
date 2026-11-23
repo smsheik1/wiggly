@@ -51,6 +51,10 @@ Roast companies and bad takes, never fans or individual developers. No swearing.
 16. **The best ending question calls back to the joke** and asks for a quick
     confession ("Be honest, how many emails did you make ChatGPT rewrite this week?").
 17. Length stays 70-85 words for ~30 seconds.
+18. **Don't run one joke more than twice.** Three lines riffing on the same puddle stop
+    being funny by the third (GTA 6 PS5 Pro reflections, 2026-11-23).
+19. **The more specific the jab, the funnier.** "A LinkedIn post about what it learned
+    about B2B sales" beats "a LinkedIn post about gratitude" (2026-11-23).
 
 ## Approved samples (target voice)
 
@@ -71,6 +75,15 @@ OpenAI's CEO wants parents to play a ChatGPT-made podcast for their kids every m
 
 ### Switch 2 price hikes (74 words)
 Nintendo's president says there won't be any more Switch 2 price hikes yet, and I read that last word three times. The pressure comes from an AI-driven memory shortage, so every time you ask ChatGPT to rewrite an email, a Switch 2 gets a little more expensive. That "yet" sounds exactly like my landlord telling me rent isn't going up this year. Be honest, how many emails did you make ChatGPT rewrite this week?
+
+### PS5 price doubled because of AI chips (Shaz combined his favorite lines) (84 words)
+Consoles are supposed to get cheaper with age, but the cheapest PlayStation 5 doubled in price over the past year. A watchdog group says AI data centers are eating all the memory chips. Somewhere a server is spending my console money writing a LinkedIn post about what it learned about B2B sales. [pause] We are one server farm expansion away from having to commit actual grand theft just to play in Vice City. Did you get your console already, or are you skipping this year?
+
+### Forgotten Island flop vs. Shrek (Shaz combined his favorite lines) (86 words)
+Critics loved DreamWorks' new cartoon Forgotten Island, and families still stayed home and put on Shrek for the four hundredth time. It made seventy-eight million worldwide on an eighty million dollar budget, so it didn't even make back what it cost to animate. [pause] You can't beat Shrek. He's a twenty-five year old ogre. Critics spent weeks writing love letters to an empty theater while parents took one look at the poster and put on Shrek again. Be honest, which DreamWorks movie have you rewatched the most?
+
+### PC players stream GTA 6 from a PlayStation (83 words)
+PC players are so desperate for GTA 6 they hooked a monster RTX 5080 up to babysit a PlayStation stream. A modder used Remote Play so his PC could invent fake frames and make the stream look twice as smooth. The video looks silky, but your controller inputs still take three business days to turn the steering wheel. That is two thousand dollars of hardware just to steer a laggy TV broadcast. How many seconds of lag would you tolerate for GTA 6?
 
 ## Rejected (do not imitate)
 - IShowSpeed passes 60M subscribers: a milestone with no conflict, not interesting by itself.
