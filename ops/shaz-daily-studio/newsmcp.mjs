@@ -196,9 +196,18 @@ export async function fetchNewsMcpEvents({
   });
 }
 
+/** Fisher-Yates shuffle into a new array. */
+export function shuffle(items, randomFn = Math.random) {
+  const out = [...items];
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(randomFn() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 function buildPickPrompt({ candidates, recentPublishedTitles, maxPicks, previousError = null }) {
-  const candidateBlock = candidates.map((c, idx) => ({
-    rankHint: idx + 1,
+  const candidateBlock = candidates.map((c) => ({
     eventId: c.eventId,
     headline: c.title,
     abstract: c.snippet,
@@ -218,12 +227,12 @@ function buildPickPrompt({ candidates, recentPublishedTitles, maxPicks, previous
     `RULES:\n` +
     `1. CONFLICT IS REQUIRED. Pick only stories with a clear "someone vs someone": a company vs its fans, a boss vs workers, a price hike, a ban, a backlash, a feud, a lawsuit, a flop, a ridiculous decision. In "conflict", name both sides in one sentence. A milestone, a review, a benchmark, a spec comparison, a release date or a "how to" has NO conflict: skip it.\n` +
     `2. A CASUAL VIEWER MUST GET IT IN ONE SENTENCE. Skip stories that need tech terms or niche lore to explain.\n` +
-    `3. ONE STORY PER GAME, FRANCHISE OR COMPANY TOPIC. Three different GTA stories are three picks of the same thing: keep only the best one. In "franchise", name the game/franchise/company it's about (or "none").\n` +
+    `3. ONE STORY PER GAME, FRANCHISE OR COMPANY TOPIC. Three stories about the same game or company are three picks of the same thing: keep only the best one. In "franchise", name the game/franchise/company it's about (or "none").\n` +
     `4. MIX THE AREAS. At most ${MAX_PER_AREA} picks from the same area. Areas:\n${areaBlock}\n` +
     `5. Never pick two headlines about the same real-world event, or a story already covered in RECENTLY PUBLISHED TITLES.\n` +
     `6. Rank the funniest, most relatable fight first. Use ONLY exact eventId values from CANDIDATES. If nothing has real conflict, return { "picks": [] }.\n\n` +
     `RECENTLY PUBLISHED TITLES (avoid repeating these stories):\n${recentBlock}\n\n` +
-    `CANDIDATES:\n${JSON.stringify(candidateBlock, null, 2)}\n\n` +
+    `CANDIDATES (shuffled: their order means nothing, judge each one on its own):\n${JSON.stringify(candidateBlock, null, 2)}\n\n` +
     (previousError ? `PREVIOUS ATTEMPT FAILED VALIDATION — FIX THIS EXACT ERROR:\n${previousError}\n\n` : "") +
     `Respond ONLY with valid JSON matching:\n` +
     `{\n  "picks": [\n    { "eventId": "<exact candidate eventId>", "area": "<area id>", "franchise": "<game/franchise/company or none>", "conflict": "<who vs who, one sentence>", "reason": "<why it's funny for Shaz, one sentence>" }\n  ]\n}`
@@ -241,10 +250,14 @@ export async function pickDistinctEvents({
   timeoutMs = 600_000,
   askAgentFn = askActiveAgent,
   maxAttempts = 2,
+  randomFn = Math.random,
 } = {}) {
   if (!Array.isArray(candidates) || candidates.length === 0) {
     return [];
   }
+  // The pool arrives grouped by area, games first. Shuffle it so list position can't make
+  // the picker favour any area (Shaz, 2026-11-23: "the picker sees games stories first").
+  candidates = shuffle(candidates, randomFn);
 
   const byEventId = new Map(candidates.map((c) => [c.eventId, c]));
   const cappedMax = Math.min(candidates.length, Math.max(1, maxPicks));
