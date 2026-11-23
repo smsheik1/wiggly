@@ -233,3 +233,29 @@ test("NewsMCP guardrail: key goes in x-api-key (never Bearer) and areas are sear
   assert.equal(calls, STORY_AREAS.length);
   assert.equal(maxInFlight, 1, "NewsMCP allows only 1 concurrent call");
 });
+
+test("picker guardrail: candidates are shuffled and carry no rank hint, so games-first pool order can't bias picks (2026-11-23)", async () => {
+  const { shuffle } = await import("../newsmcp.mjs");
+  const pool = [
+    ...["g1", "g2", "g3", "g4"].map((id) => ({ eventId: id, title: `Games ${id}`, snippet: "", area: "games", newsrooms: 5 })),
+    ...["t1", "t2", "t3", "t4"].map((id) => ({ eventId: id, title: `Tech ${id}`, snippet: "", area: "tech", newsrooms: 5 })),
+  ];
+  let prompt = "";
+  let seed = 7;
+  const randomFn = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await pickDistinctEvents({
+    candidates: pool,
+    randomFn,
+    askAgentFn: async (p) => { prompt = p; return { picks: [] }; },
+  });
+  assert.doesNotMatch(prompt, /rankHint/);
+  assert.doesNotMatch(prompt, /\bGTA\b/);
+  assert.match(prompt, /order means nothing/);
+  const order = [...prompt.matchAll(/"eventId": "([a-z]\d)"/g)].map((m) => m[1]);
+  assert.deepEqual([...order].sort(), pool.map((p) => p.eventId).sort(), "every candidate is shown once");
+  assert.notDeepEqual(order, pool.map((p) => p.eventId), "pool order (games first) is not passed through");
+  assert.ok(order.slice(0, 4).some((id) => id.startsWith("t")), "a tech story appears in the first half");
+
+  const s = shuffle([1, 2, 3, 4, 5], () => 0);
+  assert.deepEqual([...s].sort(), [1, 2, 3, 4, 5]);
+});
