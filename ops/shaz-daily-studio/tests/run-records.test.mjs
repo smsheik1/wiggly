@@ -13,7 +13,7 @@ import { KIT_ROOT, loadStudioConfig, runDailyBatch } from "../studio-daily.mjs";
 /** Mock writer for the script room: 3 drafts (same words, different angles), a verdict, and paperwork. */
 export function makeRoomAgent(script) {
   return async (prompt) => {
-    if (prompt.includes("You are judging")) {
+    if (prompt.includes("You are the filter and picker")) {
       const labels = [...prompt.matchAll(/^DRAFT ([A-Z]) \(angle/gm)].map((m) => m[1]);
       const scores = Object.fromEntries(labels.map((l) => [l, {
         instantClarity: 8, ownAngle: 8, funny: 8, relatable: 8, endingQuestion: 8, soundsLikeShaz: 8, notes: "ok",

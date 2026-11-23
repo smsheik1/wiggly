@@ -189,11 +189,11 @@ function validateSpoken(script, { topic, now, article, requireGroundedClaims, li
  */
 export const WRITER_HARD_RULES = `HARD RULES (the judge rejects drafts that break these):
 1. NO EXPLAINER LINES. Every sentence is a joke, a roast, or Shaz's reaction. Never summarize the news like a tech review ("New AI tech doubled the frames...", "The budget box runs the game but..."). State a fact only inside the joke that spins it.
-2. THE ENDING QUESTION IS ANSWERABLE IN 1-3 WORDS: a pick between two things, a yes/no, a name, a number. It calls back to the joke. Good: "PS5 Pro or wait for PC?" / "What did your parents play in the car?" Bad: anything that needs a story ("What's the most unhinged thing you've ever done...").
-3. CASUAL-VIEWER WORDS ONLY. Use the name everyone knows (Vice City, not Leonida). No tech terms (DLSS, frame generation, upscaling, latency) unless you instantly compare them to something everyday.
+2. THE ENDING QUESTION IS ANSWERABLE IN 1-3 WORDS: a pick between two things, a yes/no, a name, a number. It calls back to the joke. Good: "Buy it now or wait?" / "What did your parents play in the car?" Bad: anything that needs a story ("What's the most unhinged thing you've ever done...").
+3. CASUAL-VIEWER WORDS ONLY. Use the name everyone knows, not the insider or code name. No tech terms (DLSS, frame generation, upscaling, latency) unless you instantly compare them to something everyday.
 4. NO STOCK GAMER JOKES. "Pray to the PR gods", "crash before the road renders", "my wallet is crying" are what anyone would say. Shaz's angle must be specific to THIS story.
 5. ESCALATE. Each beat is sharper or sillier than the last. The biggest laugh is near the end, and it gets [pause] right after it.
-6. VIVID, EVERYDAY COMPARISONS beat abstract ones: "spending $1,500 on a graphics card to babysit a PlayStation".
+6. VIVID, EVERYDAY COMPARISONS beat abstract ones: "my landlord says the same thing about rent".
 Before you output, reread every sentence of every draft and ask: "Is this a joke or a reaction?" If it's information, rewrite it.`;
 
 const DRAFT_SHAPE = `{
@@ -249,13 +249,17 @@ export function buildDraftRepairSuffix(failures) {
 
 export function buildJudgePrompt({ voiceGuide, labelled, oneDraftMode = false }) {
   const list = labelled.map((d) => `DRAFT ${d.label} (angle: ${d.angle}):\n${d.text}`).join("\n\n");
-  return `You are judging short-form video scripts for Shaz, a cartoon gamer who roasts the games and tech industry. You did not write them. Shaz only posts scripts he would LOVE, not ones that are merely fine.
+  return `You are the filter and picker for Shaz, a cartoon gamer who roasts the games and tech industry on short videos. You did not write these scripts.
+Shaz makes the final call himself: he reviews every script you let through and only posts the ones he loves. You do two jobs (Shaz decision 2026-11-23):
 
-HOW TO CALIBRATE (read this first):
-- The bar is the "Approved samples" in the voice guide. Shaz loved those and posted them. A draft that is as good as those samples is goodEnough: true. Do not hold a draft to a higher standard than the samples themselves meet.
-- The lessons describe what made scripts better or worse. Use them to judge the whole script, not as a checklist where one small miss fails it. Fail a draft for a real problem a viewer would feel (confusing, not funny, no take of its own, a boring or hard ending), not for a nitpick.
-- You do NOT see the news article. Assume the facts, names and quotes are correct and specific enough. Never mark a draft down for missing names, numbers or context you can't check; judge the writing.
-- "Fine" is not goodEnough. Clear-but-flat, a news summary with a joke stapled on, or an ending that isn't a quick question are all goodEnough: false.
+1. PICK: "winner" is the draft Shaz is most likely to love${oneDraftMode ? "" : ', and "runnerUp" is the next best'}. Compare against the "Approved samples" in the voice guide: those are scripts Shaz loved.
+2. FILTER: "goodEnough" says whether the winner is worth Shaz's time. Set it false ONLY for a clear problem a viewer would feel:
+   - it reads like a news summary with a joke stapled on, or most lines are information, not jokes;
+   - it has no take of its own (anyone could have written it);
+   - a line would confuse a casual viewer;
+   - it simply isn't funny;
+   - the ending isn't a quick question the viewer can answer in a few words.
+   Do NOT fail a draft for a nitpick, for something the approved samples themselves do, or for facts, names or numbers you can't check (you don't see the article; assume they're right). When it's close, pass it: Shaz decides.
 
 THE VOICE GUIDE (Shaz's own taste, built from his reactions):
 <<<VOICE GUIDE
@@ -266,7 +270,7 @@ ${oneDraftMode ? "THE DRAFT:" : "THE DRAFTS:"}
 ${list}
 
 Score each draft 1-10 on: instantClarity (every line lands for a casual viewer), ownAngle (Shaz has his own take, not a borrowed one), funny, relatable (relatable over clever), endingQuestion (easy to answer, calls back to the joke), soundsLikeShaz (matches the approved samples).
-"goodEnough" is true only if the ${oneDraftMode ? "draft" : "winner"} is something Shaz would love as-is. If not, write concrete "rewriteNotes" naming the weak lines and what to do instead.
+"goodEnough" is the filter call on the ${oneDraftMode ? "draft" : "winner"} (see job 2). If false, write concrete "rewriteNotes" naming the weak lines and what to do instead.
 
 Output ONLY valid JSON:
 {
@@ -565,8 +569,9 @@ export async function runScriptRoom(topic, {
     };
     partial.rewrite = rewrite;
     if (!re.verdict.goodEnough) {
-      // Shaz decision 2026-11-20: high bar. "Fine" is not good enough to post. Skip.
-      fail(`judge still not happy after one rewrite: ${re.verdict.rewriteNotes}`);
+      // The judge is a filter (Shaz decision 2026-11-23): one rewrite, then skip. Shaz is the
+      // final "love" gate in Telegram, and "fine" still never posts because he rejects it there.
+      fail(`judge still filtered it out after one rewrite: ${re.verdict.rewriteNotes}`);
     }
     winner = { ...nd, text, wordCount: countWords(text), label: "R" };
   }

@@ -85,7 +85,7 @@ function makeAgent(handlers) {
   const calls = [];
   const fn = async (prompt, opts) => {
     calls.push({ prompt, opts });
-    if (prompt.includes("You are judging")) return handlers.judge(prompt, labelsIn(prompt), calls);
+    if (prompt.includes("You are the filter and picker")) return handlers.judge(prompt, labelsIn(prompt), calls);
     if (prompt.includes("A strict judge read")) return handlers.rewrite(prompt, calls);
     if (prompt.includes("spoken script below is FINAL")) return handlers.paperwork(prompt, calls);
     return handlers.drafts(prompt, calls);
@@ -156,7 +156,7 @@ test("the judge is blind: it gets only labels and angles, not the writer or draf
     labelled: [{ label: "A", angle: "one", text: "text one" }, { label: "B", angle: "two", text: "text two" }],
   });
   assert.doesNotMatch(prompt, /\bagy\b|\bclaude\b|first draft|^DRAFT \d/im);
-  assert.match(prompt, /You did not write them/);
+  assert.match(prompt, /You did not write these scripts/);
 });
 
 test("a draft that fails the checks gets the exact error and a replacement round", async () => {

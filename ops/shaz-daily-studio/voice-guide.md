@@ -51,9 +51,7 @@ Roast companies and bad takes, never fans or individual developers. No swearing.
 16. **The best ending question calls back to the joke** and asks for a quick
     confession ("Be honest, how many emails did you make ChatGPT rewrite this week?").
 17. Length stays 70-85 words for ~30 seconds.
-18. **Don't run one joke more than twice.** Three lines riffing on the same puddle stop
-    being funny by the third (GTA 6 PS5 Pro reflections, 2026-11-23).
-19. **The more specific the jab, the funnier.** "A LinkedIn post about what it learned
+18. **The more specific the jab, the funnier.** "A LinkedIn post about what it learned
     about B2B sales" beats "a LinkedIn post about gratitude" (2026-11-23).
 
 ## Approved samples (target voice)

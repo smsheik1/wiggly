@@ -8,7 +8,8 @@
  *   node tools/judge-eval.mjs --repeat 2      # every case twice; a case must be right both times
  *   node tools/judge-eval.mjs --parallel 3    # judge calls at once (default 3)
  *
- * Exit 0 = trusted (every approved sample passed, every "don't post" script failed).
+ * Exit 0 = trusted (every approved sample passed the filter, every "don't post" script was blocked,
+ * and the picker chose Shaz's favorite on enough stories).
  * Results are saved to <main wiggly checkout>/tmp/judge-evals/<timestamp>.json
  */
 import fs from "node:fs/promises";
@@ -49,9 +50,11 @@ async function main() {
     repeat,
     parallel,
     onResult: (c, run) => {
-      const got = run.error ? "ERROR" : run.goodEnough ? "pass" : "fail";
-      const ok = !run.error && (run.goodEnough === (c.expect === "pass"));
-      console.log(`${ok ? "✅" : "❌"} want ${c.expect}, got ${got}${run.total ? ` (${run.total}/60)` : ""}  ${c.id}`);
+      const picking = c.expect === "pick";
+      const got = run.error ? "ERROR" : picking ? (run.picked ? "favorite" : `picked ${run.pickedId}`) : run.goodEnough ? "pass" : "fail";
+      const ok = !run.error && (picking ? run.picked : run.goodEnough === (c.expect === "pass"));
+      const want = picking ? `Shaz's favorite ${c.favorite}` : c.expect;
+      console.log(`${ok ? "✅" : "❌"} want ${want}, got ${got}${run.total ? ` (${run.total}/60)` : ""}  ${c.id}`);
       if (!ok) console.log(`     judge said: ${short(run.error || run.notes, 300)}`);
     },
   });
@@ -65,7 +68,8 @@ async function main() {
   await fs.writeFile(file, `${JSON.stringify(summary, null, 2)}\n`);
 
   console.log(`\nApproved samples passed: ${summary.passCases.right}/${summary.passCases.total}`);
-  console.log(`"Don't post" scripts failed: ${summary.failCases.right}/${summary.failCases.total}`);
+  console.log(`"Don't post" scripts blocked: ${summary.failCases.right}/${summary.failCases.total}`);
+  console.log(`Picked Shaz's favorite: ${summary.pickCases.right}/${summary.pickCases.total} stories (need ${summary.pickCases.needed})`);
   console.log(summary.trusted ? "\n✅ JUDGE TRUSTED on this set." : "\n❌ JUDGE NOT TRUSTED yet. See the ❌ lines above.");
   console.log(`Saved: ${file}`);
   process.exit(summary.trusted ? 0 : 1);
