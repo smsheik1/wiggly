@@ -129,8 +129,6 @@ export async function loadStudioConfig(configPath = DEFAULT_CONFIG_PATH) {
  */
 export async function findTopStories({
   count = 3,
-  query,
-  limit = 15,
   now = new Date(),
   ledgerPath,
   env = process.env,
@@ -146,11 +144,8 @@ export async function findTopStories({
   const fetchOpts = { apiKey: deps.newsMcpApiKey, env, secretsPath: deps.secretsPath, fetchFn: deps.fetchFn };
   const [ledger, events] = await Promise.all([
     loadLedgerFn(ledgerPath, { env }),
-    query
-      // An explicit --query keeps the old single search.
-      ? fetchEventsFn({ query, limit, ...fetchOpts })
-      // Default: one search per story area (games, indie & weird, tech, creators, animation).
-      : fetchStoryPool({ ...fetchOpts, fetchEventsFn }).then((r) => r.events),
+    // One search per story area (NewsMCP sectors: games, tech, entertainment). No keywords.
+    fetchStoryPool({ ...fetchOpts, fetchEventsFn }).then((r) => r.events),
   ]);
 
   const eligible = filterFreshTopics(events, ledger, { now });

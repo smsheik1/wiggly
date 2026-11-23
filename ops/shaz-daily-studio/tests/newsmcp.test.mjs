@@ -18,6 +18,7 @@ test("fetchNewsMcpEvents throws on HTTP non-ok and malformed JSON payloads while
   let capturedAuth = null;
   const events = await fetchNewsMcpEvents({
     apiKey: "nmcp_key_with=equals==",
+    sector: "gaming_esports",
     fetchFn: async (_url, init) => {
       capturedAuth = init.headers["x-api-key"];
       return {
@@ -45,6 +46,7 @@ test("fetchNewsMcpEvents throws on HTTP non-ok and malformed JSON payloads while
     () =>
       fetchNewsMcpEvents({
         apiKey: "secret_token_value",
+        sector: "gaming_esports",
         fetchFn: async () => ({ ok: false, status: 429, statusText: "Too Many Requests", text: async () => "rate limited" }),
       }),
     (err) => err instanceof NewsMcpError && /HTTP 429/.test(err.message),
@@ -54,6 +56,7 @@ test("fetchNewsMcpEvents throws on HTTP non-ok and malformed JSON payloads while
     () =>
       fetchNewsMcpEvents({
         apiKey: "secret_token_value",
+        sector: "gaming_esports",
         fetchFn: async () => ({ ok: true, json: async () => ({ unexpected: [] }) }),
       }),
     (err) => err instanceof NewsMcpError && /missing 'events' array/.test(err.message),
@@ -69,6 +72,7 @@ test("secrets.mjs preserves '=' inside key values when reading from secrets.env"
     await fetchNewsMcpEvents({
       env: {},
       secretsPath: secretsFile,
+      sector: "gaming_esports",
       fetchFn: async (_url, init) => {
         capturedAuth = init.headers["x-api-key"];
         return { ok: true, json: async () => ({ events: [] }) };
@@ -136,21 +140,35 @@ test("pickDistinctEvents enforces valid unique eventIds, retries bad output, and
   assert.equal(calls, 1);
 });
 
-test("story areas: no franchise is hard-coded into a search, and there are 5 areas", () => {
-  assert.equal(STORY_AREAS.length, 5);
-  for (const a of STORY_AREAS) assert.doesNotMatch(a.query, /\bgta\b/i);
+test("story areas are NewsMCP sectors only: no keyword or brand lists (destroyed 2026-11-23)", () => {
+  assert.deepEqual(STORY_AREAS.map((a) => a.id), ["games", "tech", "entertainment"]);
+  for (const a of STORY_AREAS) {
+    assert.equal(a.query, undefined, `${a.id} has no keyword query`);
+    assert.match(a.sector, /^[a-z_]+(,[a-z_]+)*$/, `${a.id} is NewsMCP sector ids only`);
+  }
+  const all = JSON.stringify(STORY_AREAS).toLowerCase();
+  for (const name of ["playstation", "xbox", "nintendo", "gta", "apple", "samsung", "tesla", "youtuber", "disney", "pixar"]) {
+    assert.ok(!all.includes(name), `no brand name "${name}" in the searches`);
+  }
+});
+
+test("fetchNewsMcpEvents refuses a search with no sector (no silent keyword fallback)", async () => {
+  await assert.rejects(
+    () => fetchNewsMcpEvents({ apiKey: "k", fetchFn: async () => { throw new Error("should not be called"); } }),
+    (err) => err instanceof NewsMcpError && /needs a NewsMCP sector/.test(err.message),
+  );
 });
 
 test("fetchStoryPool searches every area, tags and dedupes events, and only fails if every area fails", async () => {
-  const queries = [];
+  const sectors = [];
   const { events, calls } = await fetchStoryPool({
-    fetchEventsFn: async ({ query }) => {
-      queries.push(query);
-      return [{ eventId: "shared", title: "Shared" }, { eventId: `only-${queries.length}`, title: query }];
+    fetchEventsFn: async ({ sector }) => {
+      sectors.push(sector);
+      return [{ eventId: "shared", title: "Shared" }, { eventId: `only-${sectors.length}`, title: sector }];
     },
   });
-  assert.equal(calls, 5);
-  assert.equal(queries.length, 5);
+  assert.equal(calls, STORY_AREAS.length);
+  assert.deepEqual(sectors, STORY_AREAS.map((a) => a.sector));
   assert.equal(events.filter((e) => e.eventId === "shared").length, 1);
   assert.equal(events.find((e) => e.eventId === "shared").area, "games");
 
@@ -158,12 +176,12 @@ test("fetchStoryPool searches every area, tags and dedupes events, and only fail
   console.warn = () => {};
   try {
     const partial = await fetchStoryPool({
-      fetchEventsFn: async ({ query }) => {
-        if (query.includes("youtuber")) throw new Error("boom");
-        return [{ eventId: query, title: query }];
+      fetchEventsFn: async ({ sector }) => {
+        if (sector === "media_entertainment") throw new Error("boom");
+        return [{ eventId: sector, title: sector }];
       },
     });
-    assert.equal(partial.events.length, 4);
+    assert.equal(partial.events.length, STORY_AREAS.length - 1);
     assert.equal(partial.failures.length, 1);
   } finally {
     console.warn = warn;
@@ -214,6 +232,7 @@ test("NewsMCP guardrail: key goes in x-api-key (never Bearer) and areas are sear
   let headers = null;
   await fetchNewsMcpEvents({
     apiKey: "k1",
+    sector: "gaming_esports",
     fetchFn: async (_url, init) => { headers = init.headers; return { ok: true, json: async () => ({ events: [] }) }; },
   });
   assert.equal(headers["x-api-key"], "k1");
@@ -222,40 +241,80 @@ test("NewsMCP guardrail: key goes in x-api-key (never Bearer) and areas are sear
   let inFlight = 0;
   let maxInFlight = 0;
   const { calls } = await fetchStoryPool({
-    fetchEventsFn: async ({ query }) => {
+    fetchEventsFn: async ({ sector }) => {
       inFlight += 1;
       maxInFlight = Math.max(maxInFlight, inFlight);
       await new Promise((r) => setTimeout(r, 5));
       inFlight -= 1;
-      return [{ eventId: `evt_${query.length}`, title: query }];
+      return [{ eventId: `evt_${sector}`, title: sector }];
     },
   });
   assert.equal(calls, STORY_AREAS.length);
   assert.equal(maxInFlight, 1, "NewsMCP allows only 1 concurrent call");
 });
 
-test("picker guardrail: candidates are shuffled and carry no rank hint, so games-first pool order can't bias picks (2026-11-23)", async () => {
-  const { shuffle } = await import("../newsmcp.mjs");
+test("picker guardrail: stories ranked by virality (speed x reach x fight), never by area or a rank hint (2026-11-23)", async () => {
+  const { rankByVirality, viralityScore, hoursOld } = await import("../newsmcp.mjs");
+  const now = new Date("2026-11-23T22:00:00Z");
+  const at = (h) => new Date(now.getTime() - h * 3_600_000).toISOString().replace(/\.\d+Z$/, "");
   const pool = [
-    ...["g1", "g2", "g3", "g4"].map((id) => ({ eventId: id, title: `Games ${id}`, snippet: "", area: "games", newsrooms: 5 })),
-    ...["t1", "t2", "t3", "t4"].map((id) => ({ eventId: id, title: `Tech ${id}`, snippet: "", area: "tech", newsrooms: 5 })),
+    { eventId: "g1", title: "Small local games story", snippet: "", area: "games", newsrooms: 14, languageCount: 1, firstSeen: at(2) },
+    { eventId: "g2", title: "Old games story", snippet: "", area: "games", newsrooms: 60, languageCount: 5, firstSeen: at(120) },
+    { eventId: "t1", title: "CEO fired and rehired", snippet: "", area: "tech", newsrooms: 173, languageCount: 30, firstSeen: at(8), eventType: "governance.board_change" },
+    { eventId: "e1", title: "Studio sued by fans", snippet: "", area: "entertainment", newsrooms: 14, languageCount: 6, firstSeen: at(2), eventType: "legal_regulatory.lawsuit_filed" },
   ];
+  assert.deepEqual(rankByVirality(pool, now).map((p) => p.eventId), ["t1", "e1", "g1", "g2"]);
+  const base = { newsrooms: 20, languageCount: 4, firstSeen: at(3) };
+  assert.ok(viralityScore(base, now) > viralityScore({ ...base, firstSeen: at(30) }, now), "spreading faster wins");
+  assert.ok(viralityScore({ ...base, languageCount: 20 }, now) > viralityScore(base, now), "more languages wins");
+  assert.ok(viralityScore({ ...base, eventType: "operations.layoffs" }, now) > viralityScore(base, now), "a labelled fight wins");
+  assert.equal(Math.round(hoursOld({ firstSeen: at(8) }, now)), 8, "zone-less NewsMCP times are read as UTC");
+
   let prompt = "";
-  let seed = 7;
-  const randomFn = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  await pickDistinctEvents({
-    candidates: pool,
-    randomFn,
-    askAgentFn: async (p) => { prompt = p; return { picks: [] }; },
-  });
+  await pickDistinctEvents({ candidates: pool, now, askAgentFn: async (p) => { prompt = p; return { picks: [] }; } });
   assert.doesNotMatch(prompt, /rankHint/);
   assert.doesNotMatch(prompt, /\bGTA\b/);
-  assert.match(prompt, /order means nothing/);
+  assert.match(prompt, /ranked most viral first/);
   const order = [...prompt.matchAll(/"eventId": "([a-z]\d)"/g)].map((m) => m[1]);
-  assert.deepEqual([...order].sort(), pool.map((p) => p.eventId).sort(), "every candidate is shown once");
-  assert.notDeepEqual(order, pool.map((p) => p.eventId), "pool order (games first) is not passed through");
-  assert.ok(order.slice(0, 4).some((id) => id.startsWith("t")), "a tech story appears in the first half");
+  assert.deepEqual(order, ["t1", "e1", "g1", "g2"], "the viral tech fight leads, not the games area");
+  assert.match(prompt, /"languages": 30/);
+  assert.match(prompt, /"storyType": "governance.board_change"/);
+});
 
-  const s = shuffle([1, 2, 3, 4, 5], () => 0);
-  assert.deepEqual([...s].sort(), [1, 2, 3, 4, 5]);
+test("NewsMCP searches are by sector, sorted trending, and ask for story type", async () => {
+  let url = "";
+  await fetchNewsMcpEvents({ apiKey: "k", sector: "gaming_esports", fetchFn: async (u) => { url = u; return { ok: true, json: async () => ({ events: [] }) }; } });
+  assert.match(url, /[?&]sort=trending\b/);
+  assert.match(url, /[?&]sector=gaming_esports\b/);
+  assert.match(url, /event_type/);
+  assert.doesNotMatch(url, /[?&]q=/, "no keyword search");
+});
+
+test("fetchStoryPool pauses between areas and retries a busy NewsMCP slot once, then fails loudly", async () => {
+  const waits = [];
+  let calls = 0;
+  const busy = () => new NewsMcpError('NewsMCP returned HTTP 429 Body: {"message":"Max API Requests Concurrency Reached"}');
+  const r = await fetchStoryPool({
+    waitFn: async (ms) => { waits.push(ms); },
+    fetchEventsFn: async ({ sector }) => {
+      calls += 1;
+      if (calls === 2) throw busy(); // tech is busy once
+      return [{ eventId: `evt_${sector}`, title: sector }];
+    },
+  });
+  assert.equal(r.failures.length, 0, "the retry recovered the busy area");
+  assert.equal(calls, STORY_AREAS.length + 1);
+  assert.deepEqual(waits, [1500, 4000, 1500]);
+
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const always = await fetchStoryPool({
+      waitFn: async () => {},
+      fetchEventsFn: async ({ sector }) => { if (sector === "media_entertainment") throw busy(); return [{ eventId: sector, title: sector }]; },
+    });
+    assert.equal(always.failures.length, 1, "still busy after one retry is reported, not hidden");
+  } finally {
+    console.warn = warn;
+  }
 });
