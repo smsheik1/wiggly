@@ -234,28 +234,31 @@ test("NewsMCP guardrail: key goes in x-api-key (never Bearer) and areas are sear
   assert.equal(maxInFlight, 1, "NewsMCP allows only 1 concurrent call");
 });
 
-test("picker guardrail: candidates are shuffled and carry no rank hint, so games-first pool order can't bias picks (2026-11-23)", async () => {
-  const { shuffle } = await import("../newsmcp.mjs");
+test("picker guardrail: stories are ranked by size and freshness, never by area or a rank hint (2026-11-23)", async () => {
+  const { rankByTrend, trendScore } = await import("../newsmcp.mjs");
+  const now = new Date("2026-11-23T22:00:00Z");
+  const at = (h) => new Date(now.getTime() - h * 3_600_000).toISOString();
   const pool = [
-    ...["g1", "g2", "g3", "g4"].map((id) => ({ eventId: id, title: `Games ${id}`, snippet: "", area: "games", newsrooms: 5 })),
-    ...["t1", "t2", "t3", "t4"].map((id) => ({ eventId: id, title: `Tech ${id}`, snippet: "", area: "tech", newsrooms: 5 })),
+    { eventId: "g1", title: "Small games story", snippet: "", area: "games", newsrooms: 3, firstSeen: at(2) },
+    { eventId: "g2", title: "Old games story", snippet: "", area: "games", newsrooms: 20, firstSeen: at(120) },
+    { eventId: "t1", title: "Huge tech story", snippet: "", area: "tech", newsrooms: 173, firstSeen: at(8) },
+    { eventId: "c1", title: "Mid creator story", snippet: "", area: "creators", newsrooms: 11, firstSeen: at(1) },
   ];
+  assert.deepEqual(rankByTrend(pool, now).map((p) => p.eventId), ["t1", "c1", "g2", "g1"]);
+  assert.ok(trendScore({ newsrooms: 20, firstSeen: at(1) }, now) > trendScore({ newsrooms: 20, firstSeen: at(48) }, now), "fresher wins at equal size");
+
   let prompt = "";
-  let seed = 7;
-  const randomFn = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  await pickDistinctEvents({
-    candidates: pool,
-    randomFn,
-    askAgentFn: async (p) => { prompt = p; return { picks: [] }; },
-  });
+  await pickDistinctEvents({ candidates: pool, now, askAgentFn: async (p) => { prompt = p; return { picks: [] }; } });
   assert.doesNotMatch(prompt, /rankHint/);
   assert.doesNotMatch(prompt, /\bGTA\b/);
-  assert.match(prompt, /order means nothing/);
+  assert.match(prompt, /ranked biggest first/);
   const order = [...prompt.matchAll(/"eventId": "([a-z]\d)"/g)].map((m) => m[1]);
-  assert.deepEqual([...order].sort(), pool.map((p) => p.eventId).sort(), "every candidate is shown once");
-  assert.notDeepEqual(order, pool.map((p) => p.eventId), "pool order (games first) is not passed through");
-  assert.ok(order.slice(0, 4).some((id) => id.startsWith("t")), "a tech story appears in the first half");
+  assert.deepEqual(order, ["t1", "c1", "g2", "g1"], "the huge tech story leads, not the games area");
+  assert.match(prompt, /"hoursOld": 8/);
+});
 
-  const s = shuffle([1, 2, 3, 4, 5], () => 0);
-  assert.deepEqual([...s].sort(), [1, 2, 3, 4, 5]);
+test("NewsMCP searches ask for trending, not text relevance", async () => {
+  let url = "";
+  await fetchNewsMcpEvents({ apiKey: "k", query: "x", fetchFn: async (u) => { url = u; return { ok: true, json: async () => ({ events: [] }) }; } });
+  assert.match(url, /[?&]sort=trending\b/);
 });

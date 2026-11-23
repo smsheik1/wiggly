@@ -128,7 +128,9 @@ export async function fetchNewsMcpEvents({
     throw new NewsMcpError(buildMissingKeyMessage());
   }
 
-  const url = `https://api.newsmcp.com/v0/news?q=${encodeURIComponent(query)}&limit=${limit}`;
+  // sort=trending: most independent newsrooms, weighted toward fresh stories (NewsMCP's own ranking).
+  // Without it a keyword search sorts by text relevance, which surfaced small stories.
+  const url = `https://api.newsmcp.com/v0/news?q=${encodeURIComponent(query)}&sort=trending&limit=${limit}`;
   let response;
   try {
     response = await fetchFn(url, {
@@ -192,23 +194,39 @@ export async function fetchNewsMcpEvents({
       source: "newsmcp",
       newsrooms: evt?.newsrooms || evt?.source_count || 1,
       publishedAt: evt?.last_seen || evt?.first_seen || null,
+      firstSeen: evt?.first_seen || evt?.last_seen || null,
     };
   });
 }
 
-/** Fisher-Yates shuffle into a new array. */
-export function shuffle(items, randomFn = Math.random) {
-  const out = [...items];
-  for (let i = out.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(randomFn() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
+/** Hours since NewsMCP first saw the story (0 if unknown or in the future). */
+export function hoursOld(evt, now = new Date()) {
+  const t = Date.parse(evt?.firstSeen || evt?.publishedAt || "");
+  if (!Number.isFinite(t)) return null;
+  return Math.max(0, (now.getTime() - t) / 3_600_000);
+}
+
+/**
+ * How big the story is right now: independent newsrooms covering it, decayed by age
+ * (a day-old story counts a bit less than half as much as a brand-new one). Same idea as
+ * NewsMCP's own "trending" sort, computed here so stories from different area searches
+ * can be ranked against each other. Unknown age counts as 24 hours.
+ */
+export function trendScore(evt, now = new Date()) {
+  const newsrooms = Math.max(1, Number(evt?.newsrooms) || 1);
+  const age = hoursOld(evt, now) ?? 24;
+  return newsrooms / Math.pow(age + 2, 0.35);
+}
+
+/** Biggest, freshest stories first, regardless of which area search found them. */
+export function rankByTrend(events, now = new Date()) {
+  return [...events].sort((a, b) => trendScore(b, now) - trendScore(a, now));
 }
 
 function buildPickPrompt({ candidates, recentPublishedTitles, maxPicks, previousError = null }) {
   const candidateBlock = candidates.map((c) => ({
     eventId: c.eventId,
+    hoursOld: c.hoursOld,
     headline: c.title,
     abstract: c.snippet,
     area: c.area || null,
@@ -232,7 +250,7 @@ function buildPickPrompt({ candidates, recentPublishedTitles, maxPicks, previous
     `5. Never pick two headlines about the same real-world event, or a story already covered in RECENTLY PUBLISHED TITLES.\n` +
     `6. Rank the funniest, most relatable fight first. Use ONLY exact eventId values from CANDIDATES. If nothing has real conflict, return { "picks": [] }.\n\n` +
     `RECENTLY PUBLISHED TITLES (avoid repeating these stories):\n${recentBlock}\n\n` +
-    `CANDIDATES (shuffled: their order means nothing, judge each one on its own):\n${JSON.stringify(candidateBlock, null, 2)}\n\n` +
+    `CANDIDATES (ranked biggest first: most independent newsrooms, weighted toward fresh stories. A big story is a strong hint, but the best fight still wins):\n${JSON.stringify(candidateBlock, null, 2)}\n\n` +
     (previousError ? `PREVIOUS ATTEMPT FAILED VALIDATION — FIX THIS EXACT ERROR:\n${previousError}\n\n` : "") +
     `Respond ONLY with valid JSON matching:\n` +
     `{\n  "picks": [\n    { "eventId": "<exact candidate eventId>", "area": "<area id>", "franchise": "<game/franchise/company or none>", "conflict": "<who vs who, one sentence>", "reason": "<why it's funny for Shaz, one sentence>" }\n  ]\n}`
@@ -250,14 +268,17 @@ export async function pickDistinctEvents({
   timeoutMs = 600_000,
   askAgentFn = askActiveAgent,
   maxAttempts = 2,
-  randomFn = Math.random,
+  now = new Date(),
 } = {}) {
   if (!Array.isArray(candidates) || candidates.length === 0) {
     return [];
   }
-  // The pool arrives grouped by area, games first. Shuffle it so list position can't make
-  // the picker favour any area (Shaz, 2026-11-23: "the picker sees games stories first").
-  candidates = shuffle(candidates, randomFn);
+  // The pool arrives grouped by area, games first. Rank it by how big the story is right now,
+  // so list position reflects the news, never the area (Shaz, 2026-11-23).
+  candidates = rankByTrend(candidates, now).map((c) => {
+    const h = hoursOld(c, now);
+    return { ...c, hoursOld: h === null ? null : Math.round(h) };
+  });
 
   const byEventId = new Map(candidates.map((c) => [c.eventId, c]));
   const cappedMax = Math.min(candidates.length, Math.max(1, maxPicks));
