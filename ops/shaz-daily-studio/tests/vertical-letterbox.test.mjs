@@ -14,6 +14,9 @@ import {
   composeVerticalVideo,
   formatSafeHeadline,
   VERTICAL_ENCODE_ARGS,
+  OTS_GRAPHIC_ZONE,
+  verticalStageGeometry,
+  visibleStageRange,
 } from "../vertical-letterbox.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -281,7 +284,7 @@ test("composeVerticalVideo enforces capped bitrate encode flags without ultrafas
   }
 });
 
-test("composeVerticalVideo applies Layout B geometry (1080x810 centered video at Y=500, header at Y=180, subtitle at Y=1360)", async () => {
+test("composeVerticalVideo applies Layout B geometry (stage window centered in the 500-1310 band, header at Y=180, subtitle at Y=1360)", async () => {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "shaz-vert-layoutb-"));
   const inputVideo = path.join(tempDir, "input.mp4");
   const outputVideo = path.join(tempDir, "output-vertical.mp4");
@@ -306,11 +309,25 @@ test("composeVerticalVideo applies Layout B geometry (1080x810 centered video at
     assert.ok(filterComplexIdx !== -1, "must have -filter_complex argument");
     const filter = capturedArgs[filterComplexIdx + 1];
 
-    assert.match(filter, /scale=1440:810,crop=1080:810/);
-    assert.match(filter, /overlay=0:500/);
+    assert.match(filter, /scale=1280:720,crop=1080:720:48:0/);
+    assert.match(filter, /overlay=0:545/);
     assert.match(filter, /overlay=0:180/);
     assert.match(filter, /overlay=0:1360/);
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
   }
+});
+
+test("vertical crop keeps the whole picture card and Shaz in view (2026-11-24 cut-off card bug)", () => {
+  const range = visibleStageRange(verticalStageGeometry());
+  const cardLeft = OTS_GRAPHIC_ZONE.left;
+  const cardRight = OTS_GRAPHIC_ZONE.left + OTS_GRAPHIC_ZONE.width;
+  assert.ok(range.left <= cardLeft - 16, `card left edge ${cardLeft} is cut: view starts at ${range.left}`);
+  assert.ok(range.right >= cardRight + 16, `card right edge ${cardRight} is cut: view ends at ${range.right}`);
+  // Shaz's lean poses reach past x=1100; never cut more of his right side than the old center crop (x 1120).
+  assert.ok(range.right >= 1120, `Shaz's right side is cut: view ends at ${range.right}`);
+  const geo = verticalStageGeometry();
+  assert.ok(geo.cropX + 1080 <= geo.scaledWidth, "crop stays inside the scaled stage");
+  assert.ok(geo.overlayY >= 460, "video stays below the header card");
+  assert.ok(geo.overlayY + geo.scaledHeight <= 1360, "video stays above the subtitles");
 });
