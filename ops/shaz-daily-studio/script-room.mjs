@@ -47,6 +47,71 @@ export async function loadVoiceGuide(guidePath = DEFAULT_VOICE_GUIDE_PATH) {
   return text;
 }
 
+function approvedSection(guide) {
+  const start = guide.indexOf("## Approved samples");
+  if (start < 0) throw new Error('voice guide has no "## Approved samples" section');
+  const after = guide.indexOf("\n## ", start + 1);
+  return { start, end: after < 0 ? guide.length : after + 1 };
+}
+
+/**
+ * Lists the approved samples in the voice guide: one per "### <title>" heading.
+ * @returns {{ title: string, text: string }[]}
+ */
+export function parseApprovedSamples(guide) {
+  const { start, end } = approvedSection(guide);
+  const body = guide.slice(start, end);
+  return [...body.matchAll(/^### (.+)\n([\s\S]*?)(?=^### |^## |(?![\s\S]))/gm)]
+    .map((m) => ({ title: m[1].trim(), text: m[2].trim() }))
+    .filter((s) => s.text);
+}
+
+/**
+ * The voice guide with one approved sample taken out, so the judge cannot pass that
+ * sample just by recognising it (Shaz decision 2026-11-20, judge eval).
+ */
+export function voiceGuideWithoutSample(guide, title) {
+  const { start, end } = approvedSection(guide);
+  const section = guide.slice(start, end);
+  const heading = `### ${title}\n`;
+  const at = section.indexOf(heading);
+  if (at < 0) throw new Error(`voice guide has no approved sample titled "${title}"`);
+  const next = section.indexOf("\n### ", at + heading.length);
+  const cut = section.slice(0, at) + (next < 0 ? "" : section.slice(next + 1));
+  return guide.slice(0, start) + cut + guide.slice(end);
+}
+
+/** Judge defaults: a different model from the writer (Shaz decision 2026-11-20: Claude judges, agy writes). */
+export const JUDGE_DEFAULTS = Object.freeze({ judgeAgent: "claude", judgeModel: "claude-opus-5-5", judgeEffort: "high" });
+
+/**
+ * Agent options for every judge call. Refuses a judge that is the same agent as the writer:
+ * a writer grading its own drafts is the bias this whole step exists to remove.
+ */
+export function judgeCallOptions(cfg) {
+  const judgeAgent = cfg?.judgeAgent;
+  if (judgeAgent !== "agy" && judgeAgent !== "claude") {
+    throw new Error(
+      `studio.config.json "judgeAgent" is '${judgeAgent}', expected "claude" or "agy".\n` +
+      `Fix: open ops/shaz-daily-studio/studio.config.json and add "judgeAgent": "claude".`,
+    );
+  }
+  if (judgeAgent === cfg.writerAgent) {
+    throw new Error(
+      `studio.config.json uses '${judgeAgent}' as both writer and judge. The judge must be a different model.\n` +
+      `Fix: open ops/shaz-daily-studio/studio.config.json and set "judgeAgent" to the agent that is NOT "${cfg.writerAgent}".`,
+    );
+  }
+  return {
+    agent: judgeAgent,
+    ...(cfg.judgeModel ? { model: cfg.judgeModel } : {}),
+    ...(cfg.judgeEffort ? { effort: cfg.judgeEffort } : {}),
+    timeoutMs: cfg.agentTimeoutMs,
+    requireJson: true,
+    isolated: true,
+  };
+}
+
 /**
  * Removes stage marks the voice step cannot speak yet. `[pause]` timing is a separate
  * feature; until it lands, marks are stripped before checks and voice so "pause" is
@@ -124,11 +189,11 @@ function validateSpoken(script, { topic, now, article, requireGroundedClaims, li
  */
 export const WRITER_HARD_RULES = `HARD RULES (the judge rejects drafts that break these):
 1. NO EXPLAINER LINES. Every sentence is a joke, a roast, or Shaz's reaction. Never summarize the news like a tech review ("New AI tech doubled the frames...", "The budget box runs the game but..."). State a fact only inside the joke that spins it.
-2. THE ENDING QUESTION IS ANSWERABLE IN 1-3 WORDS: a pick between two things, a yes/no, a name, a number. It calls back to the joke. Good: "PS5 Pro or wait for PC?" / "What did your parents play in the car?" Bad: anything that needs a story ("What's the most unhinged thing you've ever done...").
-3. CASUAL-VIEWER WORDS ONLY. Use the name everyone knows (Vice City, not Leonida). No tech terms (DLSS, frame generation, upscaling, latency) unless you instantly compare them to something everyday.
+2. THE ENDING QUESTION IS ANSWERABLE IN 1-3 WORDS: a pick between two things, a yes/no, a name, a number. It calls back to the joke. Good: "Buy it now or wait?" / "What did your parents play in the car?" Bad: anything that needs a story ("What's the most unhinged thing you've ever done...").
+3. CASUAL-VIEWER WORDS ONLY. Use the name everyone knows, not the insider or code name. No tech terms (DLSS, frame generation, upscaling, latency) unless you instantly compare them to something everyday.
 4. NO STOCK GAMER JOKES. "Pray to the PR gods", "crash before the road renders", "my wallet is crying" are what anyone would say. Shaz's angle must be specific to THIS story.
 5. ESCALATE. Each beat is sharper or sillier than the last. The biggest laugh is near the end, and it gets [pause] right after it.
-6. VIVID, EVERYDAY COMPARISONS beat abstract ones: "spending $1,500 on a graphics card to babysit a PlayStation".
+6. VIVID, EVERYDAY COMPARISONS beat abstract ones: "my landlord says the same thing about rent".
 Before you output, reread every sentence of every draft and ask: "Is this a joke or a reaction?" If it's information, rewrite it.`;
 
 const DRAFT_SHAPE = `{
@@ -164,7 +229,7 @@ TASK: write ${draftCount} complete drafts of a ~30-second script about this stor
 - Each draft MUST use a DIFFERENT angle (Shaz's own take). Not the same joke reworded.${avoidAngles.length ? `\n- Do NOT reuse these angles (already written): ${avoidAngles.map((a) => `"${a}"`).join("; ")}.` : ""}
 - Spoken words only for now: hook, 1-4 beats, landing. No card text, image queries, tags or rooms yet.
 - ${limits.minWords}-${limits.maxWords} spoken words per draft (hook + beats + landing). Count them.
-- Most drafts end on a question the viewer already has an answer to, ideally calling back to the joke. A pure punchline ending only when it's too good to follow.
+- Every draft ends on a question the viewer already has an answer to (1-3 words), calling back to the joke. A draft that doesn't end on a question is rejected.
 - Introduce anything unknown in a few words, and compare unknown products to famous ones.
 - Every line must land instantly for a casual viewer. No niche jargon, no metaphors that need decoding.
 - Facts only from the article. 2-5 claims, at least one targeting "hook", each with an exact quote from the article.
@@ -184,7 +249,17 @@ export function buildDraftRepairSuffix(failures) {
 
 export function buildJudgePrompt({ voiceGuide, labelled, oneDraftMode = false }) {
   const list = labelled.map((d) => `DRAFT ${d.label} (angle: ${d.angle}):\n${d.text}`).join("\n\n");
-  return `You are judging short-form video scripts for Shaz, a cartoon gamer who roasts the games and tech industry. You did not write them. Be honest and strict: Shaz only wants scripts he would LOVE, not ones that are fine.
+  return `You are the filter and picker for Shaz, a cartoon gamer who roasts the games and tech industry on short videos. You did not write these scripts.
+Shaz makes the final call himself: he reviews every script you let through and only posts the ones he loves. You do two jobs (Shaz decision 2026-11-23):
+
+1. PICK: "winner" is the draft Shaz is most likely to love${oneDraftMode ? "" : ', and "runnerUp" is the next best'}. Compare against the "Approved samples" in the voice guide: those are scripts Shaz loved.
+2. FILTER: "goodEnough" says whether the winner is worth Shaz's time. Set it false ONLY for a clear problem a viewer would feel:
+   - it reads like a news summary with a joke stapled on, or most lines are information, not jokes;
+   - it has no take of its own (anyone could have written it);
+   - a line would confuse a casual viewer;
+   - it simply isn't funny;
+   - the ending isn't a quick question the viewer can answer in a few words.
+   Do NOT fail a draft for a nitpick, for something the approved samples themselves do, or for facts, names or numbers you can't check (you don't see the article; assume they're right). When it's close, pass it: Shaz decides.
 
 THE VOICE GUIDE (Shaz's own taste, built from his reactions):
 <<<VOICE GUIDE
@@ -195,7 +270,7 @@ ${oneDraftMode ? "THE DRAFT:" : "THE DRAFTS:"}
 ${list}
 
 Score each draft 1-10 on: instantClarity (every line lands for a casual viewer), ownAngle (Shaz has his own take, not a borrowed one), funny, relatable (relatable over clever), endingQuestion (easy to answer, calls back to the joke), soundsLikeShaz (matches the approved samples).
-"goodEnough" is true only if the ${oneDraftMode ? "draft" : "winner"} is something Shaz would love as-is. If not, write concrete "rewriteNotes" naming the weak lines and what to do instead.
+"goodEnough" is the filter call on the ${oneDraftMode ? "draft" : "winner"} (see job 2). If false, write concrete "rewriteNotes" naming the weak lines and what to do instead.
 
 Output ONLY valid JSON:
 {
@@ -300,6 +375,60 @@ function parseJudge(raw, labels, { oneDraftMode }) {
 }
 
 /**
+ * One blind judging: shuffles and labels the drafts, asks the judge, retries once on a
+ * bad answer. Shared by the daily room and tools/judge-eval.mjs so both use the same judge.
+ * `ask(prompt)` returns the parsed JSON, or `{ __agentError }` for bad output.
+ * @returns {Promise<{ labelled: object[], verdict: object }>}
+ */
+export async function runJudge({ drafts, voiceGuide, oneDraftMode = false, ask, randomFn = Math.random, maxAttempts = SCRIPT_ROOM_DEFAULTS.maxJudgeAttempts }) {
+  const labelled = shuffleLabels(drafts, randomFn);
+  const labels = labelled.map((d) => d.label);
+  let lastErr = null;
+  for (let a = 1; a <= maxAttempts; a += 1) {
+    const prompt = buildJudgePrompt({ voiceGuide, labelled, oneDraftMode })
+      + (lastErr ? `\n\nYour previous answer was invalid: ${lastErr}. Answer again in the exact JSON shape.` : "");
+    const out = await ask(prompt);
+    if (out?.__agentError) { lastErr = out.__agentError; continue; }
+    try {
+      const verdict = parseJudge(out, labels, { oneDraftMode: oneDraftMode || labels.length === 1 });
+      return { labelled, verdict: applyHardGates(verdict, labelled) };
+    } catch (err) {
+      lastErr = err.message;
+    }
+  }
+  const err = new Error(`judge gave no valid verdict: ${lastErr}`);
+  err.name = "JudgeVerdictError";
+  throw err;
+}
+
+/** Shaz's rule: every script ends on a question. Trailing [pause] marks and quotes don't count. */
+export function endsOnQuestion(text) {
+  const t = String(text || "").replace(/\[[^\]]*\]/g, "").replace(/["'\u201d\u2019)\s]+$/u, "").trim();
+  return t.endsWith("?");
+}
+
+export const NO_QUESTION_NOTE = "Hard rule: the script must end on a question the viewer can answer in 1-3 words, calling back to the joke. This one doesn't end on a question.";
+
+/**
+ * The hard gate on top of the judge: a winner that doesn't end on a question is never
+ * goodEnough, whatever the judge said. The judge's own call is kept as judgeGoodEnough.
+ */
+export function applyHardGates(verdict, labelled) {
+  const win = labelled.find((d) => d.label === verdict.winner);
+  const judgeGoodEnough = verdict.goodEnough;
+  if (win && !endsOnQuestion(win.text)) {
+    return {
+      ...verdict,
+      goodEnough: false,
+      judgeGoodEnough,
+      gate: "no-ending-question",
+      rewriteNotes: [NO_QUESTION_NOTE, verdict.rewriteNotes].filter(Boolean).join(" "),
+    };
+  }
+  return { ...verdict, judgeGoodEnough, gate: null };
+}
+
+/**
  * Runs the full script room for one story.
  * @returns {Promise<{ script: object, receipt: object, room: object }>}
  */
@@ -316,18 +445,22 @@ export async function runScriptRoom(topic, {
 } = {}) {
   const cfg = config;
   const limits = { ...SCRIPT_ROOM_DEFAULTS, ...(cfg?.scriptRoom || {}) };
+  // Checked before any agent call: a bad judge setting stops the run loudly (Rule 12).
+  const judgeOpts = judgeCallOptions(cfg);
+  const writerOpts = { agent: cfg.writerAgent, timeoutMs: cfg.agentTimeoutMs, requireJson: true };
   const guide = voiceGuide ?? await loadVoiceGuide();
   const startedAt = Date.now();
   const calls = [];
 
   async function ask(stage, prompt) {
     const t0 = Date.now();
+    const opts = stage.startsWith("judge") ? judgeOpts : writerOpts;
     try {
-      const out = await askAgentFn(prompt, { agent: cfg.writerAgent, timeoutMs: cfg.agentTimeoutMs, requireJson: true });
-      calls.push({ stage, ok: true, durationMs: Date.now() - t0, promptSha256: sha256(prompt) });
+      const out = await askAgentFn(prompt, opts);
+      calls.push({ stage, agent: opts.agent, ok: true, durationMs: Date.now() - t0, promptSha256: sha256(prompt) });
       return out;
     } catch (err) {
-      calls.push({ stage, ok: false, errorType: err?.name || "Error", error: err?.message || String(err), durationMs: Date.now() - t0, promptSha256: sha256(prompt) });
+      calls.push({ stage, agent: opts.agent, ok: false, errorType: err?.name || "Error", error: err?.message || String(err), durationMs: Date.now() - t0, promptSha256: sha256(prompt) });
       if (err instanceof AgentUnavailableError) throw err;
       return { __agentError: err?.message || String(err) };
     }
@@ -390,22 +523,19 @@ export async function runScriptRoom(topic, {
 
   // 2. Judge (blind)
   async function judge(drafts, oneDraftMode) {
-    const labelled = shuffleLabels(drafts, randomFn);
-    const labels = labelled.map((d) => d.label);
-    let lastErr = null;
-    for (let a = 1; a <= limits.maxJudgeAttempts; a += 1) {
-      const prompt = buildJudgePrompt({ voiceGuide: guide, labelled, oneDraftMode })
-        + (lastErr ? `\n\nYour previous answer was invalid: ${lastErr}. Answer again in the exact JSON shape.` : "");
-      const out = await ask(oneDraftMode ? "judge-rewrite" : "judge", prompt);
-      if (out?.__agentError) { lastErr = out.__agentError; continue; }
-      try {
-        const verdict = parseJudge(out, labels, { oneDraftMode: oneDraftMode || labels.length === 1 });
-        return { labelled, verdict };
-      } catch (err) {
-        lastErr = err.message;
-      }
+    try {
+      return await runJudge({
+        drafts,
+        voiceGuide: guide,
+        oneDraftMode,
+        ask: (prompt) => ask(oneDraftMode ? "judge-rewrite" : "judge", prompt),
+        randomFn,
+        maxAttempts: limits.maxJudgeAttempts,
+      });
+    } catch (err) {
+      if (err?.name !== "JudgeVerdictError") throw err;
+      fail(err.message);
     }
-    fail(`judge gave no valid verdict: ${lastErr}`);
   }
 
   partial.drafts = valid.map((d) => ({ angle: d.angle, text: d.text, wordCount: d.wordCount, originalSpoken: d.originalSpoken, round: d.round }));
@@ -439,8 +569,9 @@ export async function runScriptRoom(topic, {
     };
     partial.rewrite = rewrite;
     if (!re.verdict.goodEnough) {
-      // Shaz decision 2026-11-20: high bar. "Fine" is not good enough to post. Skip.
-      fail(`judge still not happy after one rewrite: ${re.verdict.rewriteNotes}`);
+      // The judge is a filter (Shaz decision 2026-11-23): one rewrite, then skip. Shaz is the
+      // final "love" gate in Telegram, and "fine" still never posts because he rejects it there.
+      fail(`judge still filtered it out after one rewrite: ${re.verdict.rewriteNotes}`);
     }
     winner = { ...nd, text, wordCount: countWords(text), label: "R" };
   }
@@ -496,6 +627,8 @@ export async function runScriptRoom(topic, {
     quality,
     agent: cfg.writerAgent,
     writerAgent: cfg.writerAgent,
+    judgeAgent: judgeOpts.agent,
+    judgeModel: judgeOpts.model ?? null,
     // The writing round that produced the shipped script (1 = first drafts; rewrite = last round + 1).
     finalAttempt: rewrite ? Math.max(...valid.map((d) => Number(d.round) || 1)) + 1 : Number(winner.round) || 1,
     finalWordCount: countWords(dialogue),

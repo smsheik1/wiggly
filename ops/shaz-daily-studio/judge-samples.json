@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 2,
+  "about": "Judge eval data (Shaz, 2026-11-23: the judge is a FILTER and PICKER; Shaz is the final love gate). mustFail: clearly bad scripts the filter must block. pickerSets: drafts of one story Shaz graded blind; the judge must pick his favorite. The approved samples that must pass the filter are read from voice-guide.md.",
+  "mustFail": [
+    {
+      "id": "posted-2026-11-05-ps5-pro-disc-drive",
+      "source": "posted daily-2026-11-05-mw2ze5sr",
+      "text": "Sony just announced a $700 PS5 Pro, but they didn't even put a disc drive in the box. Therefore, if you actually want to play the discs you already own, Sony makes you buy an $80 plastic drive and snap it onto the side. But once you add the stand in sales tax, you're looking at almost $900 just to play existing games. Honestly, are you dropping 900 bucks on this, or has Sony officially lost their minds?"
+    },
+    {
+      "id": "posted-2026-11-06-gta6-delay-rumor",
+      "source": "posted daily-2026-11-06-mw5jr94b",
+      "text": "We waited 12 years for GTA 6, but everyone is falling for the exact same delay rumor every single week. Take 2 confirmed the fall 2025 window is locked, anonymous twitter accounts know that saying delay gets 50 million free impressions. The internet enters complete meltdown mode over a random screenshot with zero proof, so relax. Until Rockstar drops trailer 2, don't believe everything your feed tells you."
+    },
+    {
+      "id": "posted-2026-11-06-foldable-iphone",
+      "source": "posted daily-2026-11-06-mw5k2068",
+      "text": "Tim Cook retired, John Ternus dropped the foldable iPhone, and everyone is acting like three grand is normal. Therefore, now that people have it, the real test is the repair bill. But the moment you hear that crunch when closing it, your heart completely stops. Therefore, John Ternus celebrates Apple's new era while your bank account is in hospice. Are you daily driving the folding iPhone? Or too scared to touch it?"
+    },
+    {
+      "id": "posted-2026-11-07-steam-deck-reskins",
+      "source": "posted daily-2026-11-07-55y182wa",
+      "text": "PC gamers spent years mocking consoles, yet the second we get open handhelds, we fake a PlayStation. Decky Loader modders just dropped plugins that reskin SteamOS into PS5 and Xbox dashboards. You get zero console exclusives, just the exact same bloated, tiled corporate home screens. We fought for open portable Linux purely to cosplay as an overpriced Sony console. Are you skinning your Steam deck or keeping your gaming handheld pure PC?"
+    },
+    {
+      "id": "posted-2026-11-09-black-friday-clickbait",
+      "source": "posted daily-2026-11-09-48fi0w9c",
+      "text": "Black Friday is under three weeks away, and gaming sites are already dropping shopping guides with zero actual prices. Polish tech blogs are blasting massive articles telling you to maybe buy an Xbox or Gran Turismo. Not a single retailer confirmed a dime off, making the entire guide pure algorithmic clickbait. You get to read 12 paragraphs of filler just to learn consoles still cost retail money. Are you actually falling for unconfirmed deal rumors this November or waiting for real receipts?"
+    },
+    {
+      "id": "posted-2026-11-09-refurbished-ps5",
+      "source": "posted daily-2026-11-09-mw9um7a3",
+      "text": "With GTA 6 landing any minute now, retailers think 40 Euros off crusty used playstations will calm our panic. Back Market knocked 40 Euros off refurbished PS5s right as gamers enter full emergency hoarding mode. That discount barely covers half the game's disc, yet refurbished stock is evaporating instantly. People would rather buy somebody's pre-owned console today than battle violent scalpers at midnight. Would you buy a pre-owned playstation right now or risk total launch day heartbreak?"
+    },
+    {
+      "id": "posted-2026-11-11-gta6-eight-days",
+      "source": "posted daily-2026-11-11-pblvmjfr",
+      "text": "GTA 6 drops in exactly 8 days, and half your squad still thinks their dusty Xbox One can run it. Rockstar confirmed next Thursday is current gen only, leaving your ancient hardware completely in the dust. PC players have to wait months while console owners get to crash Vice City next week. Now everyone is panic buying PS5s like toilet paper in 2020 just to play on day one. Are you dropping 500 bucks right now or watching walkthroughs on YouTube like a peasant?"
+    },
+    {
+      "id": "posted-2026-11-18-project-helix",
+      "source": "posted daily-2026-11-18-xjd2e3gk",
+      "text": "Microsoft swears Project Helix is a console, but let's be real, it is just a pre-built PC in a plastic trench coat. They want you playing your massive Steam backlog straight from your couch with zero driver headaches. Nobody knows how storefront licensing works yet, or if Microsoft will charge full PC prices. If it blue screens while launching Cyberpunk, slapping an Xbox badge on it won't fool anyone. Would you buy a living room console that lets you access your entire Steam library?"
+    },
+    {
+      "id": "posted-2026-11-18-ps5-storage-212gb",
+      "source": "posted daily-2026-11-18-tmhufg7e",
+      "text": "You waited 12 years for GTA 6, but your PS5 is about to hold your storage drive hostage. Sony dropped a mandatory firmware update, while reports confirm the game devours 212 gigabytes. Meanwhile, Xbox players are already setting their console location to New Zealand to sneak in early, so while they're exploring Vice City, you'll be furiously deleting every game you own. Which beloved game are you brutally sacrificing off your SSD tonight to make room?"
+    },
+    {
+      "id": "posted-2026-11-18-ps5-pro-locker-codes",
+      "source": "posted daily-2026-11-18-dj26i72g",
+      "text": "Gamers are dropping 700 bucks on a PS5 Pro just to inspect foliage reflections in GTA 6. Everyone is arguing online whether Xbox Series X looks identical for half the price. A parcel locker company named InPost is already handing out GTA cheat codes on PlayStation. We are literally getting locker promo cheats before Rockstar even shows real uncompressed gameplay. Are you dropping 700 for slightly shinier palm trees or sticking with your current box?"
+    },
+    {
+      "id": "rejected-ishowspeed-60m",
+      "source": "voice-guide.md Rejected: milestone with no conflict",
+      "text": "IShowSpeed just passed 60 million YouTube subscribers and is now the most-followed streamer on the whole platform. That's a stadium full of people who signed up to watch one guy yell at everything with his entire chest, and he earned every one of them. Nobody on YouTube commits to a bit harder. Meanwhile I spent last night rendering one cartoon blink. What's the most unhinged thing you'd do on camera for that many subscribers?"
+    },
+    {
+      "id": "early-draft-nier-building-permit",
+      "source": "earlier draft of the approved Nier sample, before Shaz's edits (abstract metaphor ending, no question)",
+      "text": "Nier: Automata got a small update on Steam, and the install went from 50 gigs to 366. I've lived in apartments with less storage than that. The game is about robots wondering why they exist, and after this download my SSD is wondering the same thing. Somewhere a developer typed minor fixes into the patch notes and went to lunch. I'm scared to see what a major update looks like. Probably ships with a building permit and a moving truck."
+    },
+    {
+      "id": "early-draft-ps5-pricing-shelf",
+      "source": "earlier draft of the approved PlayStation pricing sample, before Shaz's edits (no viral trend, no question)",
+      "text": "I check the PlayStation Store the way my uncle checks crypto, and now Sony's been caught testing dynamic pricing on PS5 again. Nobody outside Sony knows what makes the price move, so I'm assuming it reacts to me sighing near the console. A disc on a shelf never did this to me. It cost what the sticker said and minded its own business. I'm going back to physical copies, and my shelf is thrilled about the company."
+    }
+  ],
+  "pickerSets": [
+    {
+      "id": "pick-ai-chips-ps5-price",
+      "story": "AI data centers bought up memory chips; cheapest PS5 doubled in a year",
+      "favorite": "graded-2026-11-23-ai-chips-ps5-price-3",
+      "hideApproved": [
+        "PS5 price doubled because of AI chips (Shaz combined his favorite lines) (84 words)"
+      ],
+      "drafts": [
+        {
+          "id": "graded-2026-11-23-ai-chips-ps5-price-3",
+          "text": "Black Friday is next week, and the cheapest PS5 costs double what it did a year ago. A watchdog group says AI data centers are eating all the memory chips. So this year's deal is, you don't get a discount, a chatbot gets your RAM. [pause] Somewhere a server is spending my console money writing a LinkedIn post about gratitude. I'm not shopping Black Friday, I'm just visiting my console at the store. Are you buying anything this Black Friday?"
+        },
+        {
+          "id": "graded-2026-11-23-ai-chips-ps5-price-6",
+          "text": "Right before Black Friday, the price of the cheapest PlayStation 5 doubled because AI data centers bought all the memory chips. Usually this week brings discounts, but tech giants decided gamers should pay double so their servers can draft polite emails. My bank account is taking direct damage so a corporate chatbot can spend forty seconds hallucinating a pancake recipe. Did you get your console already, or are you skipping this year?"
+        },
+        {
+          "id": "graded-2026-11-23-ai-chips-ps5-price-8",
+          "text": "Consoles are supposed to get cheaper with age, but the cheapest PlayStation 5 doubled in price over the past year. Every AI picture of a cat in a business suit costs a PlayStation another ten bucks. Leaving that dusty console plugged into my TV did more for my retirement than my friend's crypto. My mom was right about never throwing out old stuff, she was just wrong about the Beanie Babies. What old console in your closet is waiting to make you rich?"
+        },
+        {
+          "id": "graded-2026-11-23-ai-chips-ps5-price-11",
+          "text": "The cheapest PS5 costs double what it did a year ago, and a report says AI data centers are buying up all the memory chips. So my console isn't getting old, it's getting promoted. [pause] Normally a five-year-old gadget is worth less than the box it came in. Now my PS5 is the only thing in my apartment going up in value, and that includes me. Would you sell your PS5 right now, yes or no?"
+        },
+        {
+          "id": "graded-2026-11-23-ai-chips-ps5-price-14",
+          "text": "To play Grand Theft Auto Six, you need a PlayStation or an Xbox, but good luck buying one right now. AI data centers hoarded all the memory chips, so an Xbox costs forty-five percent more before Black Friday even arrives. We are one server farm expansion away from having to commit actual grand theft just to play in Vice City. Are you saving for GTA Six on console, or are you waiting for PC?"
+        }
+      ]
+    },
+    {
+      "id": "pick-forgotten-island",
+      "story": "DreamWorks cartoon Forgotten Island: $80M budget, $78M worldwide",
+      "favorite": "graded-2026-11-23-forgotten-island-10",
+      "hideApproved": [
+        "Forgotten Island flop vs. Shrek (Shaz combined his favorite lines) (86 words)"
+      ],
+      "drafts": [
+        {
+          "id": "graded-2026-11-23-forgotten-island-2",
+          "text": "DreamWorks dropped an eighty million dollar animated movie where two best friends have to sacrifice their memories, and audiences helped out by instantly forgetting to buy tickets. The film just wrapped its theatrical run at seventy-eight million dollars, leaving the studio nowhere near the two hundred million they needed to break even. Losing money on an island cartoon feels like paying for a cruise where nobody gets on the boat. Theater seats or streaming on your couch?"
+        },
+        {
+          "id": "graded-2026-11-23-forgotten-island-5",
+          "text": "DreamWorks made an eighty million dollar cartoon called Forgotten Island, and audiences followed the instructions. [pause] It finished in theaters with seventy-eight million worldwide, which in Hollywood math is a big loss, because a movie has to make way more than its budget to break even. The film is literally about two friends losing their memories. Marketing really committed to the bit. Next time just call it Sold Out. What's the last cartoon you actually saw in theaters?"
+        },
+        {
+          "id": "graded-2026-11-23-forgotten-island-10",
+          "text": "Critics loved DreamWorks' new cartoon Forgotten Island, and families still stayed home and put on Shrek for the four hundredth time. It made seventy-eight million worldwide on an eighty million dollar budget, so it didn't even make back what it cost to animate. [pause] You can't beat Shrek. He's a twenty-five year old ogre and he's still outselling new movies in my living room. Be honest, which DreamWorks movie have you rewatched the most?"
+        },
+        {
+          "id": "graded-2026-11-23-forgotten-island-13",
+          "text": "DreamWorks spent eighty million dollars making an animated movie called Forgotten Island, and audiences took that title as personal advice. The film just ended its theatrical run with seventy-eight million worldwide, meaning it couldn't even make back the cash they spent animating it. In Hollywood math, you needed two hundred million just to break even, so DreamWorks basically financed a private screening for the projectionist. Did you see this in theaters, yes or no?"
+        },
+        {
+          "id": "graded-2026-11-23-forgotten-island-15",
+          "text": "Film critics showered DreamWorks' new cartoon Forgotten Island with glowing reviews, which was the universal signal for normal families to stay home. The movie pulled in seventy-eight million dollars against an eighty million dollar budget, completely missing the hundred million mark. Critics spent weeks writing love letters to an empty theater while parents took one look at the poster and put on Shrek again. Do you trust movie critics, yes or no?"
+        }
+      ]
+    },
+    {
+      "id": "pick-gta6-console-tests",
+      "story": "Console tests for GTA 6",
+      "favorite": "graded-2026-11-23-gta6-console-tests-7",
+      "hideApproved": [],
+      "drafts": [
+        {
+          "id": "graded-2026-11-23-gta6-console-tests-7",
+          "text": "Tests say the PS5 Pro is the best way to play GTA 6, and the big upgrade is sharper reflections in the puddles. [pause] Seven hundred dollars, so the puddles look nice. I'm going to be running from five cop cars, and the one thing I stop to admire is a puddle. Sony looked at a crime game and decided the real crime was low-res water. Would you pay seven hundred dollars for better puddles?"
+        },
+        {
+          "id": "graded-2026-11-23-gta6-console-tests-9",
+          "text": "Xbox fans are treating the GTA 6 benchmarks like their Super Bowl because Series X had slightly better stability than the standard PS5. While PlayStation gets occasional frame drops during chaos, the big black fridge holds onto thirty frames like its life depends on it. Microsoft spent billions buying studios just for a side-by-side comparison to prove their console stutters slightly less when an ambulance explodes. Which room in your house sounds like a jet engine when you boot up Vice City?"
+        },
+        {
+          "id": "graded-2026-11-23-gta6-console-tests-12",
+          "text": "Technical tests crowned the PS5 Pro the king of GTA 6, mostly because it makes Vice City puddles look expensive. The main upgrade against normal consoles is sharper reflections, so you can clearly see your own guilty expression while crashing into a billboard. Sony convinced players that stealing helicopters feels way more cinematic when the windshield glass is five percent glossier. Are you upgrading to a Pro for GTA, or staying put?"
+        }
+      ]
+    },
+    {
+      "id": "pick-gta6-remote-play",
+      "story": "Modders stream GTA 6 from a PS5 to PC",
+      "favorite": "graded-2026-11-23-gta6-remote-play-1",
+      "hideApproved": [
+        "PC players stream GTA 6 from a PlayStation (83 words)"
+      ],
+      "drafts": [
+        {
+          "id": "graded-2026-11-23-gta6-remote-play-1",
+          "text": "PC players are so desperate for GTA 6 they hooked a monster RTX 5080 up to babysit a PlayStation stream. A modder used Remote Play so his PC could invent fake frames and make the stream look twice as smooth. The video looks silky, but your controller inputs still take three business days to turn the steering wheel. That is two thousand dollars of hardware just to steer a laggy TV broadcast. How many seconds of lag would you tolerate for GTA 6?"
+        },
+        {
+          "id": "graded-2026-11-23-gta6-remote-play-4",
+          "text": "Nothing screams PC gamer denial quite like streaming GTA 6 from a PlayStation just to pretend your graphics card is invited. Modders figured out Remote Play streams to Windows without a capture card, purely to heal their wounded pride. It turns your monster gaming setup into a glorified television watching a PlayStation in the other room. Even the mod developers admitted this is nowhere near a real PC release. Wait for PC, or buy the console?"
+        }
+      ]
+    }
+  ]
+}

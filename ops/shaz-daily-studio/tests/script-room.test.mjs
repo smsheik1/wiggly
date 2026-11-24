@@ -29,7 +29,7 @@ const ARTICLE = {
   ].join(" "),
 };
 const TOPIC = { title: "Grand Theft Auto VI Confirmed for November 19, 2026", link: URL };
-const CFG = { writerAgent: "agy", agentTimeoutMs: 60_000, maxScriptAttempts: 3, batchSize: 3, scriptFlow: "room" };
+const CFG = { writerAgent: "agy", judgeAgent: "claude", judgeModel: "claude-opus-5-5", judgeEffort: "high", agentTimeoutMs: 60_000, maxScriptAttempts: 3, batchSize: 3, scriptFlow: "room" };
 const GUIDE = "# Shaz voice guide\n\n## Approved samples\n\nSample one goes here.\n";
 
 function draft(angle, { landing = "Are you paying $69.99 on day one or waiting until next month?", hook } = {}) {
@@ -85,7 +85,7 @@ function makeAgent(handlers) {
   const calls = [];
   const fn = async (prompt, opts) => {
     calls.push({ prompt, opts });
-    if (prompt.includes("You are judging")) return handlers.judge(prompt, labelsIn(prompt), calls);
+    if (prompt.includes("You are the filter and picker")) return handlers.judge(prompt, labelsIn(prompt), calls);
     if (prompt.includes("A strict judge read")) return handlers.rewrite(prompt, calls);
     if (prompt.includes("spoken script below is FINAL")) return handlers.paperwork(prompt, calls);
     return handlers.drafts(prompt, calls);
@@ -125,7 +125,19 @@ test("happy path: 3 drafts -> blind judge -> paperwork; spoken words are locked"
   const { script, receipt, room } = await runScriptRoom(TOPIC, ROOM_OPTS(agent));
 
   assert.equal(agent.calls.length, 3, "drafts + judge + paperwork");
-  assert.ok(agent.calls.every((c) => c.opts.agent === "agy" && c.opts.requireJson === true));
+  assert.ok(agent.calls.every((c) => c.opts.requireJson === true));
+  // Writer (drafts, paperwork) = agy; judge = a different model (Claude), isolated from project files.
+  const [draftCall, judgeCall, paperCall] = agent.calls;
+  assert.equal(draftCall.opts.agent, "agy");
+  assert.equal(paperCall.opts.agent, "agy");
+  assert.equal(judgeCall.opts.agent, "claude");
+  assert.equal(judgeCall.opts.model, "claude-opus-5-5");
+  assert.equal(judgeCall.opts.effort, "high");
+  assert.equal(judgeCall.opts.isolated, true);
+  assert.equal(draftCall.opts.isolated, undefined, "the writer call is unchanged");
+  assert.equal(receipt.judgeAgent, "claude");
+  assert.equal(receipt.judgeModel, "claude-opus-5-5");
+  assert.deepEqual(receipt.attempts.map((a) => a.agent), ["agy", "claude", "agy"]);
   assert.equal(room.drafts.length, 3);
   assert.ok(room.winner.angle && room.runnerUp.angle && room.winner.angle !== room.runnerUp.angle);
   assert.equal(script.headline, "GTA 6 NOVEMBER LAUNCH");
@@ -144,7 +156,7 @@ test("the judge is blind: it gets only labels and angles, not the writer or draf
     labelled: [{ label: "A", angle: "one", text: "text one" }, { label: "B", angle: "two", text: "text two" }],
   });
   assert.doesNotMatch(prompt, /\bagy\b|\bclaude\b|first draft|^DRAFT \d/im);
-  assert.match(prompt, /You did not write them/);
+  assert.match(prompt, /You did not write these scripts/);
 });
 
 test("a draft that fails the checks gets the exact error and a replacement round", async () => {
