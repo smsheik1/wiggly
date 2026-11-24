@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import sharp from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/sharp.mjs";
 import { assertScriptAligned } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/script-alignment.mjs";
+import { OTS_GRAPHIC_ZONE } from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/ots-card-renderer.mjs";
 
 const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -213,6 +214,35 @@ export const VERTICAL_ENCODE_ARGS = [
 ];
 
 /**
+ * Which part of the 1280x720 stage the vertical video keeps.
+ * The stage is wider than the 1080px vertical frame, so we keep stage x 48 -> 1128 at 1:1 (no scaling).
+ * That keeps the whole picture card (x 64 -> 420) in view, and never cuts more of Shaz's right side
+ * (lean poses reach past x 1100) than the old center crop did.
+ * Before 2026-11-24 we kept the center (x 160 -> 1120), which cut off the left of every picture card.
+ */
+export const STAGE_SIZE = Object.freeze({ width: 1280, height: 720 });
+export const VERTICAL_STAGE_WINDOW = Object.freeze({ left: 48, width: 1080 });
+export const VERTICAL_VIDEO_BAND = Object.freeze({ top: 500, height: 810 });
+
+export function verticalStageGeometry(windowBox = VERTICAL_STAGE_WINDOW) {
+  const scale = 1080 / windowBox.width;
+  const even = (n) => 2 * Math.round(n / 2);
+  const scaledWidth = even(STAGE_SIZE.width * scale);
+  const scaledHeight = even(STAGE_SIZE.height * scale);
+  const cropX = Math.round(windowBox.left * scale);
+  const overlayY = VERTICAL_VIDEO_BAND.top + Math.round((VERTICAL_VIDEO_BAND.height - scaledHeight) / 2);
+  return { scale, scaledWidth, scaledHeight, cropX, overlayY };
+}
+
+/** Stage x range that survives the vertical crop. */
+export function visibleStageRange(geometry = verticalStageGeometry()) {
+  const left = geometry.cropX / geometry.scale;
+  return { left, right: left + 1080 / geometry.scale };
+}
+
+export { OTS_GRAPHIC_ZONE };
+
+/**
  * Composes a 1280x720 video into a 1080x1920 vertical video with header and kinetic subtitles.
  *
  * @param {Object} options
@@ -282,11 +312,12 @@ export async function composeVerticalVideo({
     ];
 
     let filterComplex = "";
-    // Step A: Gaussian blurred atmospheric visual backdrop + foreground centered video (Layout B: 1080x810 centered)
+    // Step A: blurred backdrop + the stage window (VERTICAL_STAGE_WINDOW), centered in the 500 -> 1310 band
+    const geo = verticalStageGeometry();
     filterComplex += `[0:v]split=2[fg][bg];`;
     filterComplex += `[bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=35:5,eq=brightness=-0.16:contrast=0.9[blurred_bg];`;
-    filterComplex += `[fg]scale=1440:810,crop=1080:810:(in_w-out_w)/2:0[main];`;
-    filterComplex += `[blurred_bg][main]overlay=0:500[with_video];`;
+    filterComplex += `[fg]scale=${geo.scaledWidth}:${geo.scaledHeight},crop=1080:${geo.scaledHeight}:${geo.cropX}:0[main];`;
+    filterComplex += `[blurred_bg][main]overlay=0:${geo.overlayY}[with_video];`;
     // Step B: Overlay header card at top (x=0, y=180)
     filterComplex += `[with_video][1:v]overlay=0:180[with_header]`;
 
