@@ -153,6 +153,25 @@ export function groupWordsIntoCues(words) {
   return cues;
 }
 
+const SUBTITLE_MAX_FONT = 54;
+// Grobold caps run ~0.72em wide on average; stroke and word gaps added on top.
+const SUBTITLE_CHAR_EM = 0.72;
+
+/** Estimated pixel width of a caption phrase at a font size. */
+export function estimateSubtitleWidth(phraseWords, fontSize = SUBTITLE_MAX_FONT) {
+  const texts = (phraseWords || []).map((w) => String(w?.text || w?.word || "").trim().toUpperCase());
+  const chars = texts.reduce((n, t) => n + t.length, 0);
+  const gaps = Math.max(0, texts.length - 1) * (26 + fontSize * 0.3);
+  return chars * fontSize * SUBTITLE_CHAR_EM + gaps + 14;
+}
+
+/** Biggest font (max 54px) that keeps the phrase inside the safe width. */
+export function subtitleFontSize(phraseWords, maxWidth = VERTICAL_SAFE_AREA.right - VERTICAL_SAFE_AREA.left) {
+  const width = estimateSubtitleWidth(phraseWords, SUBTITLE_MAX_FONT);
+  if (width <= maxWidth) return SUBTITLE_MAX_FONT;
+  return Math.max(28, Math.floor(SUBTITLE_MAX_FONT * (maxWidth / width)));
+}
+
 /**
  * Renders a dynamic subtitle overlay frame for a given phrase with active word pop.
  */
@@ -189,10 +208,13 @@ export async function renderSubtitlePhrase({
     return `<tspan fill="${color}" ${dx}>${escapeXml(wordStr.toUpperCase())}${spacer}</tspan>`;
   }).join("");
 
+  // Long phrases shrink so the caption never runs into the apps' side crop.
+  const fontSize = subtitleFontSize(phraseWords);
+
   const svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
     <style>
       ${fontFaceStyle}
-      .sub-text { font-family: ${fontFamily}; font-size: 54px; font-weight: 900; text-anchor: middle; }
+      .sub-text { font-family: ${fontFamily}; font-size: ${fontSize}px; font-weight: 900; text-anchor: middle; }
     </style>
     <rect width="100%" height="100%" fill="transparent" />
     <g transform="translate(${Math.round(width / 2)}, 100)">
@@ -214,30 +236,61 @@ export const VERTICAL_ENCODE_ARGS = [
 ];
 
 /**
- * Which part of the 1280x720 stage the vertical video keeps.
- * The stage is wider than the 1080px vertical frame, so we keep stage x 48 -> 1128 at 1:1 (no scaling).
- * That keeps the whole picture card (x 64 -> 420) in view, and never cuts more of Shaz's right side
- * (lean poses reach past x 1100) than the old center crop did.
- * Before 2026-11-24 we kept the center (x 160 -> 1120), which cut off the left of every picture card.
+ * The part of the 1080x1920 frame every app leaves alone.
+ * YouTube Shorts, TikTok and Reels zoom the video a little to fill the screen (measured on an
+ * iPhone: YouTube cuts ~36px per side, TikTok/Reels ~45px) and draw their own buttons, top bar,
+ * channel name and title over the top ~15% and bottom ~30%.
+ * - The stage (picture card + Shaz) keeps a 50px side margin: as big as it can be while
+ *   clearing that cut. (100px made it needlessly small, 2026-11-25.)
+ * - Text (headline, captions) keeps a wider 100px margin, since letters cut off read worst.
+ * Before 2026-11-25 the card sat 16px from the edge and YouTube cut it off; the headline sat
+ * under YouTube's top bar and captions under the channel name.
+ */
+export const VERTICAL_SAFE_AREA = Object.freeze({ left: 100, right: 980, top: 300, bottom: 1340 });
+export const VERTICAL_STAGE_SIDE_MARGIN = 50;
+
+/**
+ * Which part of the 1280x720 stage the vertical video keeps (stage x 48 -> 1128: the whole
+ * picture card at x 64 -> 420 and Shaz, including lean poses past x 1100), and where it goes:
+ * shrunk to the safe width and centered.
  */
 export const STAGE_SIZE = Object.freeze({ width: 1280, height: 720 });
 export const VERTICAL_STAGE_WINDOW = Object.freeze({ left: 48, width: 1080 });
-export const VERTICAL_VIDEO_BAND = Object.freeze({ top: 500, height: 810 });
+export const VERTICAL_STAGE_OUTPUT = Object.freeze({
+  x: VERTICAL_STAGE_SIDE_MARGIN,
+  width: 1080 - 2 * VERTICAL_STAGE_SIDE_MARGIN,
+});
+export const VERTICAL_HEADER_Y = 256;
+export const VERTICAL_VIDEO_TOP = 545;
+// The caption overlay is 200px tall with its baseline at +100 (renderSubtitlePhrase).
+export const VERTICAL_SUBTITLE_Y = 1200;
 
-export function verticalStageGeometry(windowBox = VERTICAL_STAGE_WINDOW) {
-  const scale = 1080 / windowBox.width;
+export function verticalStageGeometry(windowBox = VERTICAL_STAGE_WINDOW, output = VERTICAL_STAGE_OUTPUT) {
+  const scale = output.width / windowBox.width;
   const even = (n) => 2 * Math.round(n / 2);
   const scaledWidth = even(STAGE_SIZE.width * scale);
   const scaledHeight = even(STAGE_SIZE.height * scale);
   const cropX = Math.round(windowBox.left * scale);
-  const overlayY = VERTICAL_VIDEO_BAND.top + Math.round((VERTICAL_VIDEO_BAND.height - scaledHeight) / 2);
-  return { scale, scaledWidth, scaledHeight, cropX, overlayY };
+  return {
+    scale,
+    scaledWidth,
+    scaledHeight,
+    cropX,
+    outputWidth: output.width,
+    overlayX: output.x,
+    overlayY: VERTICAL_VIDEO_TOP,
+  };
 }
 
 /** Stage x range that survives the vertical crop. */
 export function visibleStageRange(geometry = verticalStageGeometry()) {
   const left = geometry.cropX / geometry.scale;
-  return { left, right: left + 1080 / geometry.scale };
+  return { left, right: left + geometry.outputWidth / geometry.scale };
+}
+
+/** Where a stage x coordinate lands in the 1080-wide vertical frame. */
+export function stageXToVerticalX(stageX, geometry = verticalStageGeometry()) {
+  return geometry.overlayX + stageX * geometry.scale - geometry.cropX;
 }
 
 export { OTS_GRAPHIC_ZONE };
@@ -297,7 +350,7 @@ export async function composeVerticalVideo({
   const headerPath = path.join(scratchDir, "header.png");
 
   try {
-    // 1. Render Top Header Card (at y = 140)
+    // 1. Render Top Header Card (at VERTICAL_HEADER_Y)
     const headerBuffer = await renderHeaderCard({ badge, headline });
     await fs.writeFile(headerPath, headerBuffer);
 
@@ -312,14 +365,14 @@ export async function composeVerticalVideo({
     ];
 
     let filterComplex = "";
-    // Step A: blurred backdrop + the stage window (VERTICAL_STAGE_WINDOW), centered in the 500 -> 1310 band
+    // Step A: blurred backdrop + the stage window (VERTICAL_STAGE_WINDOW), shrunk into the safe area
     const geo = verticalStageGeometry();
     filterComplex += `[0:v]split=2[fg][bg];`;
     filterComplex += `[bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=35:5,eq=brightness=-0.16:contrast=0.9[blurred_bg];`;
-    filterComplex += `[fg]scale=${geo.scaledWidth}:${geo.scaledHeight},crop=1080:${geo.scaledHeight}:${geo.cropX}:0[main];`;
-    filterComplex += `[blurred_bg][main]overlay=0:${geo.overlayY}[with_video];`;
-    // Step B: Overlay header card at top (x=0, y=180)
-    filterComplex += `[with_video][1:v]overlay=0:180[with_header]`;
+    filterComplex += `[fg]scale=${geo.scaledWidth}:${geo.scaledHeight},crop=${geo.outputWidth}:${geo.scaledHeight}:${geo.cropX}:0[main];`;
+    filterComplex += `[blurred_bg][main]overlay=${geo.overlayX}:${geo.overlayY}[with_video];`;
+    // Step B: Overlay header card below the apps' top bars
+    filterComplex += `[with_video][1:v]overlay=0:${VERTICAL_HEADER_Y}[with_header]`;
 
     let lastLabel = "[with_header]";
 
@@ -354,7 +407,7 @@ export async function composeVerticalVideo({
           const endSec = (wEndMs / 1000).toFixed(2);
           const nextLabel = `[sub_v${overlayIndex - 2}]`;
 
-          filterComplex += `;${lastLabel}[${overlayIndex}:v]overlay=0:1360:enable='between(t,${startSec},${endSec})'${nextLabel}`;
+          filterComplex += `;${lastLabel}[${overlayIndex}:v]overlay=0:${VERTICAL_SUBTITLE_Y}:enable='between(t,${startSec},${endSec})'${nextLabel}`;
           lastLabel = nextLabel;
           overlayIndex += 1;
         }
