@@ -8,7 +8,7 @@ import test from "node:test";
 
 import { RunStopError } from "../errors.mjs";
 import { parseSecretsEnv, redactSecrets } from "../secrets.mjs";
-import { getPendingBatchPath, resumePendingBatchPoll, runDailyBatch } from "../studio-daily.mjs";
+import { getPendingBatchPath, pickTopUnrejectedCandidate, resumePendingBatchPoll, runDailyBatch } from "../studio-daily.mjs";
 import {
   computeChicagoDeadline,
   escapeTelegramHtml,
@@ -497,6 +497,7 @@ test("runDailyBatch --dry-run sends buttonless labeled preview & resumePendingBa
     const resumedNoPick = await resumePendingBatchPoll({
       env: testEnv,
       deps: {
+        loadStudioConfig: async () => ({ noPickAction: "skip" }),
         pollBatchDecision: async ({ initialUpdateId }) => {
           assert.equal(initialUpdateId, 77);
           return { status: "no-pick" };
@@ -513,4 +514,76 @@ test("runDailyBatch --dry-run sends buttonless labeled preview & resumePendingBa
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   }
+});
+
+test("no pick by 8pm auto-posts the top video Shaz didn't pass on, marked deadline-auto-pick (2026-11-25)", async () => {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "tg-auto-pick-"));
+  const testEnv = { ...process.env, WIGGLY_STUDIO_HOME: tmpDir };
+  const writePending = (rejectedRunIds) =>
+    fs.writeFile(
+      getPendingBatchPath(testEnv),
+      JSON.stringify({
+        schemaVersion: 1,
+        batchId: "batch-auto",
+        baselineUpdateId: 1,
+        deadlineIso: new Date(Date.now() + 60_000).toISOString(),
+        rejectedRunIds,
+        candidates: [
+          { candidateNumber: 1, runId: "daily-top", script: { title: "Top Story" }, rawMasterVideo: "/v/top-master.mp4", verticalVideoPath: "/v/top.mp4", runDirectory: tmpDir, approval: { messageId: 1, chatId: "9" } },
+          { candidateNumber: 2, runId: "daily-second", script: { title: "Second Story" }, rawMasterVideo: "/v/second-master.mp4", verticalVideoPath: "/v/second.mp4", runDirectory: tmpDir, approval: { messageId: 2, chatId: "9" } },
+        ],
+      }),
+    );
+
+  try {
+    // Shaz passed on #1 and never picked: #2 is published as an auto pick.
+    await writePending(["daily-top"]);
+    const messages = [];
+    let publishedPath = null;
+    await assert.rejects(
+      () =>
+        resumePendingBatchPoll({
+          env: testEnv,
+          deps: {
+            loadStudioConfig: async () => ({ noPickAction: "post-top" }),
+            pollBatchDecision: async () => ({ status: "no-pick", rejectedRunIds: ["daily-top"] }),
+            sendTelegramMessage: async ({ text }) => (messages.push(text), {}),
+            sha256: async (videoPath) => {
+              publishedPath = videoPath;
+              throw new Error("stop-after-pick");
+            },
+          },
+        }),
+      /stop-after-pick/,
+    );
+    assert.equal(publishedPath, "/v/second-master.mp4", "posts the top video Shaz didn't pass on");
+    assert.match(messages[0], /No pick by 8:00 PM<\/b> — auto-posting the top video/);
+    assert.match(messages[0], /#2 <b>Second Story<\/b>/);
+
+    // Shaz passed on everything that reached the deadline: nothing posts.
+    await writePending(["daily-top", "daily-second"]);
+    messages.length = 0;
+    const res = await resumePendingBatchPoll({
+      env: testEnv,
+      deps: {
+        loadStudioConfig: async () => ({ noPickAction: "post-top" }),
+        pollBatchDecision: async () => ({ status: "no-pick", rejectedRunIds: ["daily-top", "daily-second"] }),
+        sendTelegramMessage: async ({ text }) => (messages.push(text), {}),
+        sha256: async () => {
+          throw new Error("must not publish");
+        },
+      },
+    });
+    assert.equal(res.status, "no-pick");
+    assert.match(messages[0], /No pick today/);
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+  }
+});
+
+test("pickTopUnrejectedCandidate keeps story-picker order and skips passed videos", () => {
+  const cands = [{ runId: "a" }, { runId: "b" }, { runId: "c" }];
+  assert.equal(pickTopUnrejectedCandidate(cands, []).runId, "a");
+  assert.equal(pickTopUnrejectedCandidate(cands, ["a"]).runId, "b");
+  assert.equal(pickTopUnrejectedCandidate(cands, ["a", "b", "c"]), null);
 });

@@ -129,7 +129,12 @@ export async function loadStudioConfig(configPath = DEFAULT_CONFIG_PATH) {
   if (!["low", "medium", "high", "max"].includes(judgeEffort)) {
     throw new Error(`Invalid studio.config.json judgeEffort '${judgeEffort}': expected low, medium, high or max.`);
   }
+  const noPickAction = parsed?.noPickAction === undefined ? "skip" : parsed.noPickAction;
+  if (noPickAction !== "skip" && noPickAction !== "post-top") {
+    throw new Error(`Invalid studio.config.json noPickAction '${noPickAction}': expected "post-top" or "skip".`);
+  }
   return {
+    noPickAction,
     writerAgent,
     judgeAgent,
     judgeModel,
@@ -1584,6 +1589,12 @@ async function publishWithCheckpointsAndLedger({
   return { postResult, cleanup, publishStatePath, state: finalState };
 }
 
+/** Top-ranked candidate (story picker order) that Shaz didn't pass on, or null. */
+export function pickTopUnrejectedCandidate(candidates, rejectedRunIds = []) {
+  const rejected = new Set(rejectedRunIds || []);
+  return (candidates || []).find((c) => !rejected.has(c.runId)) || null;
+}
+
 async function completeBatchDecisionAndPublish({
   decision,
   candidates,
@@ -1592,10 +1603,36 @@ async function completeBatchDecisionAndPublish({
   ledgerPath,
   env,
   noTelegram = false,
+  noPickAction = "skip",
   d,
 }) {
   if (pendingBatchPath) {
     await fs.unlink(pendingBatchPath).catch(() => {});
+  }
+
+  // No pick by 8pm: post the top-ranked video Shaz didn't pass on, and mark it as an auto pick
+  // ("deadline-auto-pick") so Shaz's real picks and the studio's own picks stay apart in the data.
+  if (decision?.status === "no-pick" && noPickAction === "post-top") {
+    const autoPick = pickTopUnrejectedCandidate(candidates, decision.rejectedRunIds);
+    if (autoPick) {
+      console.log(`  ⏱️ 8:00 PM Central deadline passed without a pick. Auto-posting the top video: #${autoPick.candidateNumber} ("${autoPick.script?.title}").`);
+      if (!noTelegram) {
+        await d.sendTelegramMessage({
+          text:
+            `⏱️ <b>No pick by 8:00 PM</b> — auto-posting the top video:\n` +
+            `#${autoPick.candidateNumber} <b>${escapeTelegramHtml(autoPick.script?.title || "")}</b>`,
+        }).catch(() => {});
+      }
+      decision = {
+        status: "approved",
+        mode: "deadline-auto-pick",
+        runId: autoPick.runId,
+        messageId: autoPick.approval?.messageId ?? null,
+        chatId: autoPick.approval?.chatId ?? null,
+        telegramUserId: null,
+        pickedAt: new Date().toISOString(),
+      };
+    }
   }
 
   if (decision?.status === "no-pick") {
@@ -1674,7 +1711,7 @@ async function completeBatchDecisionAndPublish({
   if (!noTelegram) {
     await d.sendTelegramMessage({
       text:
-        `🎉 <b>DAILY POST LIVE!</b>\n\n` +
+        `🎉 <b>DAILY POST LIVE!</b>${decision?.mode === "deadline-auto-pick" ? " (auto-picked: no pick by 8pm)" : ""}\n\n` +
         `Candidate #${winner.candidateNumber} (<b>${escapeTelegramHtml(winner.script.title)}</b>) posted: ${summaryHtml}` +
         `${pendingNote}\n\n` +
         `Run ID: <code>${escapeTelegramHtml(winner.runId)}</code>`,
@@ -2320,6 +2357,7 @@ export async function runDailyBatch({
       ledgerPath,
       env,
       noTelegram,
+      noPickAction: cfg.noPickAction,
       d,
     });
     await d.pruneOldRuns({ retentionDays: cfg.retentionDays }).catch(() => {});
@@ -2404,6 +2442,7 @@ export async function resumePendingBatchPoll({
       ledgerPath,
       env,
       noTelegram: false,
+      noPickAction: (await d.loadStudioConfig()).noPickAction,
       d,
     });
   } catch (err) {
