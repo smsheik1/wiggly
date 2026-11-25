@@ -59,6 +59,19 @@ function makeFakeBufferFetch(options = {}) {
     }
 
     if (query.includes("RecentChannelPosts")) {
+      // Act like the real Buffer schema: posts(input, first, after) and nothing else.
+      // (The real API rejected a `sort` argument for weeks while this mock accepted it.)
+      const topLevel = (query.match(/posts\s*\(([^)]*)\)/)?.[1] || "")
+        .replace(/\[[^\]]*\]/g, "")
+        .replace(/\{[^}]*\}/g, "");
+      const argNames = [...topLevel.matchAll(/(\w+)\s*:/g)].map((m) => m[1]);
+      const bad = argNames.filter((name) => !["input", "first", "after"].includes(name));
+      if (bad.length) {
+        return jsonResponse({ errors: [{ message: `Unknown argument "${bad[0]}" on field "Query.posts".` }] });
+      }
+      if (options.recentPostsError) {
+        return jsonResponse({ errors: [{ message: options.recentPostsError }] });
+      }
       const channelId = parsed.variables?.input?.filter?.channelIds?.[0];
       postsQueries.push({ channelId, variables: parsed.variables });
       const recentMap = options.recentPostsByChannel || {};
@@ -673,4 +686,96 @@ test("Buffer missing key / 401 / UnauthorizedError stops run immediately without
     (err) => err instanceof BufferApiError && err.isAccountError === true && classifyRunError(err).kind === "stop",
   );
   assert.equal(gqlAttempts, 1, "GraphQL UnauthorizedError must fail immediately without retries");
+});
+
+test("a failed Buffer check never counts as 'no post': unknown channels are not re-posted blind (2026-11-25 swallowed-lookup bug)", async () => {
+  // Resume: YouTube was left unknown; checking Buffer now fails -> must NOT createPost again.
+  {
+    const { fetchFn, createCalls } = makeFakeBufferFetch({
+      recentPostsError: "Service temporarily unavailable",
+    });
+    const errors = [];
+    const origError = console.error;
+    console.error = (...a) => errors.push(a.join(" "));
+    let resumed;
+    try {
+      resumed = await publishVideoToAllChannels({
+        videoUrl: "https://cdn.example.com/v.mp4",
+        title: "Check Failed Story",
+        checkpoint: {
+          schemaVersion: 1,
+          channels: {
+            instagram: { service: "instagram", status: "posted", channelId: "ch-ig", postId: "ig-already" },
+            youtube: { service: "youtube", status: "unknown", channelId: "ch-yt", attemptedAt: "2026-11-11T15:00:00Z" },
+          },
+        },
+        retryUnknownWhenMissing: true,
+        apiKey: "buf-test",
+        fetchFn,
+      });
+    } finally {
+      console.error = origError;
+    }
+    assert.equal(createCalls.filter((c) => c.channelId === "ch-yt").length, 0, "must not re-post when Buffer can't be checked");
+    assert.equal(resumed.channelStates.youtube.status, "unknown");
+    assert.match(resumed.channelStates.youtube.lastError, /Could not check Buffer.*temporarily unavailable/);
+    assert.ok(errors.some((e) => /UNKNOWN/.test(e) && /publish\.buffer\.com/.test(e)), "failure is shouted, not hidden");
+  }
+
+  // Fresh publish: YouTube times out and the follow-up check fails -> unknown, with both errors recorded.
+  {
+    const { fetchFn, createCalls } = makeFakeBufferFetch({
+      recentPostsError: "Service temporarily unavailable",
+      onCreatePost: async (input) => {
+        if (input.channelId === "ch-yt") throw new DOMException("Timed out", "AbortError");
+        return jsonResponse({
+          data: { createPost: { __typename: "PostActionSuccess", post: { id: `${input.channelId}-ok`, status: "sending" } } },
+        });
+      },
+    });
+    const origError = console.error;
+    console.error = () => {};
+    let res;
+    try {
+      res = await publishVideoToAllChannels({
+        videoUrl: "https://cdn.example.com/v.mp4",
+        title: "Timeout Then Check Fails",
+        caption: "Body",
+        apiKey: "buf-test",
+        nowFn: () => new Date("2026-11-11T15:00:00Z"),
+        fetchFn,
+      });
+    } finally {
+      console.error = origError;
+    }
+    assert.equal(res.channelStates.youtube.status, "unknown");
+    assert.match(res.channelStates.youtube.lastError, /Could not check Buffer for the post afterwards/);
+    assert.equal(createCalls.filter((c) => c.channelId === "ch-yt").length, 1);
+  }
+});
+
+test("timeout recovery asks Buffer only for posts since the attempt, using arguments Buffer accepts", async () => {
+  const { fetchFn, postsQueries } = makeFakeBufferFetch({
+    recentPostsByChannel: {
+      "ch-yt": [
+        { id: "older", status: "sent", text: "Sorted Story #Shorts", createdAt: "2026-11-11T14:59:59Z" },
+        { id: "newest", status: "sending", text: "Sorted Story #Shorts", createdAt: "2026-11-11T15:00:30Z" },
+      ],
+    },
+    onCreatePost: async (input) => {
+      if (input.channelId === "ch-yt") throw new DOMException("Timed out", "AbortError");
+      return jsonResponse({
+        data: { createPost: { __typename: "PostActionSuccess", post: { id: `${input.channelId}-ok`, status: "sending" } } },
+      });
+    },
+  });
+  const res = await publishVideoToAllChannels({
+    videoUrl: "https://cdn.example.com/v.mp4",
+    title: "Sorted Story",
+    apiKey: "buf-test",
+    nowFn: () => new Date("2026-11-11T15:00:00Z"),
+    fetchFn,
+  });
+  assert.equal(res.channels.youtube.postId, "newest", "newest matching post wins (sorted here, not by Buffer)");
+  assert.equal(postsQueries[0].variables.input.filter.createdAt.start, "2026-11-11T14:58:00.000Z");
 });
