@@ -237,14 +237,17 @@ export const VERTICAL_ENCODE_ARGS = [
 
 /**
  * The part of the 1080x1920 frame every app leaves alone.
- * YouTube Shorts, TikTok and Reels zoom the video to fill tall phones (up to ~10% cut off
- * each side on 19.5:9 screens) and draw their own buttons, top bar, channel name and title
- * over the top ~15% and bottom ~30%. Anything that must be seen (picture cards, Shaz,
- * headline, captions) stays inside this box.
+ * YouTube Shorts, TikTok and Reels zoom the video a little to fill the screen (measured on an
+ * iPhone: YouTube cuts ~36px per side, TikTok/Reels ~45px) and draw their own buttons, top bar,
+ * channel name and title over the top ~15% and bottom ~30%.
+ * - The stage (picture card + Shaz) keeps a 50px side margin: as big as it can be while
+ *   clearing that cut. (100px made it needlessly small, 2026-11-25.)
+ * - Text (headline, captions) keeps a wider 100px margin, since letters cut off read worst.
  * Before 2026-11-25 the card sat 16px from the edge and YouTube cut it off; the headline sat
  * under YouTube's top bar and captions under the channel name.
  */
 export const VERTICAL_SAFE_AREA = Object.freeze({ left: 100, right: 980, top: 300, bottom: 1340 });
+export const VERTICAL_STAGE_SIDE_MARGIN = 50;
 
 /**
  * Which part of the 1280x720 stage the vertical video keeps (stage x 48 -> 1128: the whole
@@ -254,13 +257,13 @@ export const VERTICAL_SAFE_AREA = Object.freeze({ left: 100, right: 980, top: 30
 export const STAGE_SIZE = Object.freeze({ width: 1280, height: 720 });
 export const VERTICAL_STAGE_WINDOW = Object.freeze({ left: 48, width: 1080 });
 export const VERTICAL_STAGE_OUTPUT = Object.freeze({
-  x: VERTICAL_SAFE_AREA.left,
-  width: VERTICAL_SAFE_AREA.right - VERTICAL_SAFE_AREA.left,
+  x: VERTICAL_STAGE_SIDE_MARGIN,
+  width: 1080 - 2 * VERTICAL_STAGE_SIDE_MARGIN,
 });
 export const VERTICAL_HEADER_Y = 256;
-export const VERTICAL_VIDEO_TOP = 560;
+export const VERTICAL_VIDEO_TOP = 545;
 // The caption overlay is 200px tall with its baseline at +100 (renderSubtitlePhrase).
-export const VERTICAL_SUBTITLE_Y = 1150;
+export const VERTICAL_SUBTITLE_Y = 1200;
 
 export function verticalStageGeometry(windowBox = VERTICAL_STAGE_WINDOW, output = VERTICAL_STAGE_OUTPUT) {
   const scale = output.width / windowBox.width;

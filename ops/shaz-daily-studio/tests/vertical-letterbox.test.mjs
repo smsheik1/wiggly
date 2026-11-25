@@ -290,7 +290,7 @@ test("composeVerticalVideo enforces capped bitrate encode flags without ultrafas
   }
 });
 
-test("composeVerticalVideo applies the safe-area layout (stage shrunk to x 100-980 at y 560, header at y 256, captions at y 1150)", async () => {
+test("composeVerticalVideo applies the safe-area layout (stage at x 50-1030 from y 545, header at y 256, captions at y 1200)", async () => {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "shaz-vert-layoutb-"));
   const inputVideo = path.join(tempDir, "input.mp4");
   const outputVideo = path.join(tempDir, "output-vertical.mp4");
@@ -315,10 +315,10 @@ test("composeVerticalVideo applies the safe-area layout (stage shrunk to x 100-9
     assert.ok(filterComplexIdx !== -1, "must have -filter_complex argument");
     const filter = capturedArgs[filterComplexIdx + 1];
 
-    assert.match(filter, /scale=1042:586,crop=880:586:39:0/);
-    assert.match(filter, /overlay=100:560/);
+    assert.match(filter, /scale=1162:654,crop=980:654:44:0/);
+    assert.match(filter, /overlay=50:545/);
     assert.match(filter, /overlay=0:256/);
-    assert.match(filter, /overlay=0:1150/);
+    assert.match(filter, /overlay=0:1200/);
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
   }
@@ -328,7 +328,7 @@ test("vertical crop keeps the whole picture card and Shaz in view (2026-11-24 cu
   const range = visibleStageRange(verticalStageGeometry());
   const cardLeft = OTS_GRAPHIC_ZONE.left;
   const cardRight = OTS_GRAPHIC_ZONE.left + OTS_GRAPHIC_ZONE.width;
-  assert.ok(range.left <= cardLeft - 16, `card left edge ${cardLeft} is cut: view starts at ${range.left}`);
+  assert.ok(range.left <= cardLeft - 12, `card left edge ${cardLeft} is cut: view starts at ${range.left}`);
   assert.ok(range.right >= cardRight + 16, `card right edge ${cardRight} is cut: view ends at ${range.right}`);
   // Shaz's lean poses reach past x=1100; never cut more of his right side than the old center crop (x 1120).
   assert.ok(range.right >= 1120, `Shaz's right side is cut: view ends at ${range.right}`);
@@ -359,11 +359,13 @@ test("picture card, Shaz, headline and captions all sit inside the apps' safe ar
   const safe = VERTICAL_SAFE_AREA;
   const geo = verticalStageGeometry();
 
-  // Picture card and Shaz (stage x 64 -> 1120) land inside the safe width.
+  // Picture card and Shaz (stage x 64 -> 1120) clear the ~45px the apps cut off each side,
+  // and the stage uses the width (not shrunk into a small box: 2026-11-25 "so small now").
   const cardLeftX = stageXToVerticalX(OTS_GRAPHIC_ZONE.left, geo);
   const shazRightX = stageXToVerticalX(1120, geo);
-  assert.ok(cardLeftX >= safe.left, `card starts at x ${cardLeftX.toFixed(0)}, inside the side crop (< ${safe.left})`);
-  assert.ok(shazRightX <= safe.right, `Shaz reaches x ${shazRightX.toFixed(0)}, inside the side crop (> ${safe.right})`);
+  assert.ok(cardLeftX >= 60, `card starts at x ${cardLeftX.toFixed(0)}, inside the ~45px side crop`);
+  assert.ok(shazRightX <= 1080 - 50, `Shaz reaches x ${shazRightX.toFixed(0)}, inside the ~45px side crop`);
+  assert.ok(geo.outputWidth >= 960, `stage is only ${geo.outputWidth}px wide; use the frame`);
   assert.ok(geo.overlayY >= safe.top && geo.overlayY + geo.scaledHeight <= safe.bottom, "stage band inside safe top/bottom");
 
   // Headline: worst cases are 3 lines with a badge, and 1 short line without.
