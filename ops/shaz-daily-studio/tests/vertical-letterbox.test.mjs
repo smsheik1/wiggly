@@ -17,7 +17,13 @@ import {
   OTS_GRAPHIC_ZONE,
   verticalStageGeometry,
   visibleStageRange,
+  stageXToVerticalX,
+  subtitleFontSize,
+  VERTICAL_SAFE_AREA,
+  VERTICAL_HEADER_Y,
+  VERTICAL_SUBTITLE_Y,
 } from "../vertical-letterbox.mjs";
+import sharp from "sharp";
 
 const execFileAsync = promisify(execFile);
 
@@ -284,7 +290,7 @@ test("composeVerticalVideo enforces capped bitrate encode flags without ultrafas
   }
 });
 
-test("composeVerticalVideo applies Layout B geometry (stage window centered in the 500-1310 band, header at Y=180, subtitle at Y=1360)", async () => {
+test("composeVerticalVideo applies the safe-area layout (stage shrunk to x 100-980 at y 560, header at y 256, captions at y 1150)", async () => {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "shaz-vert-layoutb-"));
   const inputVideo = path.join(tempDir, "input.mp4");
   const outputVideo = path.join(tempDir, "output-vertical.mp4");
@@ -309,10 +315,10 @@ test("composeVerticalVideo applies Layout B geometry (stage window centered in t
     assert.ok(filterComplexIdx !== -1, "must have -filter_complex argument");
     const filter = capturedArgs[filterComplexIdx + 1];
 
-    assert.match(filter, /scale=1280:720,crop=1080:720:48:0/);
-    assert.match(filter, /overlay=0:545/);
-    assert.match(filter, /overlay=0:180/);
-    assert.match(filter, /overlay=0:1360/);
+    assert.match(filter, /scale=1042:586,crop=880:586:39:0/);
+    assert.match(filter, /overlay=100:560/);
+    assert.match(filter, /overlay=0:256/);
+    assert.match(filter, /overlay=0:1150/);
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
   }
@@ -327,7 +333,58 @@ test("vertical crop keeps the whole picture card and Shaz in view (2026-11-24 cu
   // Shaz's lean poses reach past x=1100; never cut more of his right side than the old center crop (x 1120).
   assert.ok(range.right >= 1120, `Shaz's right side is cut: view ends at ${range.right}`);
   const geo = verticalStageGeometry();
-  assert.ok(geo.cropX + 1080 <= geo.scaledWidth, "crop stays inside the scaled stage");
-  assert.ok(geo.overlayY >= 460, "video stays below the header card");
-  assert.ok(geo.overlayY + geo.scaledHeight <= 1360, "video stays above the subtitles");
+  assert.ok(geo.cropX + geo.outputWidth <= geo.scaledWidth, "crop stays inside the scaled stage");
+});
+
+// 2026-11-25: on YouTube the card was still cut off. Shorts/TikTok/Reels zoom the video to fill
+// tall phones (up to ~10% off each side) and draw their UI over the top and bottom. Everything
+// that matters must sit inside VERTICAL_SAFE_AREA. Measured on real rendered pixels.
+async function inkBounds(png) {
+  const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let minX = Infinity, minY = Infinity, maxX = -1, maxY = -1;
+  for (let y = 0; y < info.height; y += 1) {
+    for (let x = 0; x < info.width; x += 1) {
+      if (data[(y * info.width + x) * 4 + 3] > 20) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  return { minX, minY, maxX, maxY };
+}
+
+test("picture card, Shaz, headline and captions all sit inside the apps' safe area", async () => {
+  const safe = VERTICAL_SAFE_AREA;
+  const geo = verticalStageGeometry();
+
+  // Picture card and Shaz (stage x 64 -> 1120) land inside the safe width.
+  const cardLeftX = stageXToVerticalX(OTS_GRAPHIC_ZONE.left, geo);
+  const shazRightX = stageXToVerticalX(1120, geo);
+  assert.ok(cardLeftX >= safe.left, `card starts at x ${cardLeftX.toFixed(0)}, inside the side crop (< ${safe.left})`);
+  assert.ok(shazRightX <= safe.right, `Shaz reaches x ${shazRightX.toFixed(0)}, inside the side crop (> ${safe.right})`);
+  assert.ok(geo.overlayY >= safe.top && geo.overlayY + geo.scaledHeight <= safe.bottom, "stage band inside safe top/bottom");
+
+  // Headline: worst cases are 3 lines with a badge, and 1 short line without.
+  for (const [headline, badge] of [
+    ["Sony Says PS5 Pro Owners Must Update Before GTA Six Launch Day", "BREAKING"],
+    ["GTA", null],
+  ]) {
+    const b = await inkBounds(await renderHeaderCard({ headline, badge }));
+    const top = VERTICAL_HEADER_Y + b.minY;
+    const bottom = VERTICAL_HEADER_Y + b.maxY;
+    assert.ok(top >= safe.top, `headline "${headline}" starts at y ${top}, under the apps' top bar`);
+    assert.ok(bottom < geo.overlayY, `headline "${headline}" (to y ${bottom}) overlaps the video at y ${geo.overlayY}`);
+    assert.ok(b.minX >= safe.left && b.maxX <= safe.right, `headline "${headline}" x ${b.minX}-${b.maxX} hits the side crop`);
+  }
+
+  // Captions: a long 3-word phrase must shrink to fit, and stay above the channel name / title.
+  for (const words of [["HIS", "RETRO", "GAME"], ["CONTROVERSIAL", "ANNOUNCEMENT", "CONFIRMED"]]) {
+    const phraseWords = words.map((text) => ({ text }));
+    const b = await inkBounds(await renderSubtitlePhrase({ phraseWords, activeWordIndex: 1 }));
+    assert.ok(b.minX >= safe.left && b.maxX <= safe.right, `caption "${words.join(" ")}" x ${b.minX}-${b.maxX} hits the side crop (font ${subtitleFontSize(phraseWords)}px)`);
+    assert.ok(VERTICAL_SUBTITLE_Y + b.minY > geo.overlayY + geo.scaledHeight, "caption sits below the video");
+    assert.ok(VERTICAL_SUBTITLE_Y + b.maxY <= safe.bottom, `caption bottom y ${VERTICAL_SUBTITLE_Y + b.maxY} is under the channel name`);
+  }
 });
