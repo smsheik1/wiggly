@@ -31,6 +31,7 @@ async function isPickedOrPublishedRun(runDir) {
         parsed?.status === "approved" ||
         parsed?.mode === "telegram-pick" ||
         parsed?.mode === "auto-approve" ||
+        parsed?.mode === "deadline-auto-pick" ||
         Boolean(parsed?.publishedMediaSha256)
       ) {
         return true;

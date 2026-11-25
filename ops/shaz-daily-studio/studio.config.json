@@ -5,6 +5,7 @@
   "judgeEffort": "high",
   "director": "jev",
   "scriptFlow": "single",
+  "noPickAction": "post-top",
   "agentTimeoutMs": 600000,
   "maxScriptAttempts": 3,
   "batchSize": 3,
