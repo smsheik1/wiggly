@@ -703,6 +703,12 @@ export function filterCandidateImages(candidates = [], { minW = 600, minH = 400 
 
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const DHASH_DUPLICATE_THRESHOLD = 6;
+// Vertical videos show story photos full-width (1080px). Search photos narrower than this are held
+// back as reserves and only used when not enough full-width photos turn up.
+export const PREFERRED_PHOTO_MIN_WIDTH = 1080;
+// Full-size originals are kept next to the 1280x720 b-roll so vertical layouts can crop from the real photo.
+export const ORIGINAL_MEDIA_DIR = "media/original";
+const ORIGINAL_EXTENSIONS = { jpeg: "jpg", png: "png", webp: "webp", avif: "avif", gif: "gif", tiff: "tiff", heif: "heic" };
 
 async function downloadAndValidateImage(candidate, { fetchFn = fetch, minW = 600, minH = 400 } = {}) {
   const res = await fetchFn(candidate.imageUrl, {
@@ -730,17 +736,47 @@ async function downloadAndValidateImage(candidate, { fetchFn = fetch, minW = 600
   if (!meta.width || !meta.height || meta.width < minW || meta.height < minH) {
     throw new Error(`Image too small (${meta.width || 0}x${meta.height || 0} < ${minW}x${minH})`);
   }
+  const extension = ORIGINAL_EXTENSIONS[meta.format];
+  if (!extension) {
+    throw new Error(`Unsupported image format '${meta.format || "unknown"}'`);
+  }
 
   const rawSha = crypto.createHash("sha256").update(rawBuf).digest("hex");
   const dhash = await computeImageDHash(rawBuf);
 
+  // EXIF-rotated photos (phone shots) report swapped width/height; record the size as displayed.
+  const rotated = (meta.orientation ?? 1) >= 5;
   return {
     rawBuf,
-    width: meta.width,
-    height: meta.height,
+    width: rotated ? meta.height : meta.width,
+    height: rotated ? meta.width : meta.height,
+    extension,
     rawSha,
     dhash,
   };
+}
+
+/**
+ * Copies every full-size original listed in the staged media-sources.json into the run folder.
+ * A listed original that is missing is a bug, so it throws instead of quietly skipping.
+ */
+export async function copyOriginalMedia({ stageDir, runDirectory }) {
+  const receiptPath = path.join(stageDir, "media-sources.json");
+  if (!fsSync.existsSync(receiptPath)) return [];
+  const receipt = JSON.parse(await fs.readFile(receiptPath, "utf8"));
+  const copied = [];
+  for (const item of receipt.items ?? []) {
+    if (!item.originalFile) continue;
+    const src = path.join(stageDir, item.originalFile);
+    if (!fsSync.existsSync(src)) {
+      throw new Error(`Original photo listed in media-sources.json is missing: ${item.originalFile}`);
+    }
+    const dst = path.join(runDirectory, item.originalFile);
+    await fs.mkdir(path.dirname(dst), { recursive: true });
+    await fs.copyFile(src, dst);
+    copied.push(item.originalFile);
+  }
+  return copied;
 }
 
 /**
@@ -765,6 +801,7 @@ export async function sourceStoryMedia({
 
   const mediaDir = path.join(stageDir, "media");
   await fs.mkdir(mediaDir, { recursive: true });
+  await fs.mkdir(path.join(stageDir, ORIGINAL_MEDIA_DIR), { recursive: true });
 
   const uniqueRecords = [];
   const seenUrls = new Set();
@@ -772,6 +809,40 @@ export async function sourceStoryMedia({
   const seenDhashes = [];
   let serperQueries = 0;
   let serperDownloads = 0;
+
+  // Small search photos wait here; they only get used if full-width ones run out.
+  const reserves = [];
+
+  const isDuplicate = (checked) =>
+    seenShas.has(checked.rawSha) ||
+    seenDhashes.some((prev) => dHashHammingDistance(prev, checked.dhash) <= DHASH_DUPLICATE_THRESHOLD);
+
+  const saveAccepted = async ({ candidate, origin, queryUsed, cleanUrl, checked }) => {
+    const slotIndex = uniqueRecords.length + 1;
+    const slotName = `broll-${String(slotIndex).padStart(2, "0")}`;
+    const relPath = `media/${slotName}.png`;
+    const originalRelPath = `${ORIGINAL_MEDIA_DIR}/${slotName}.${checked.extension}`;
+    const normalized = await normalizeBrollMedia(checked.rawBuf);
+    await fs.writeFile(path.join(stageDir, relPath), normalized);
+    await fs.writeFile(path.join(stageDir, originalRelPath), checked.rawBuf);
+
+    seenShas.add(checked.rawSha);
+    seenDhashes.push(checked.dhash);
+    uniqueRecords.push({
+      file: relPath,
+      originalFile: originalRelPath,
+      origin,
+      sourceUrl: cleanUrl,
+      pageUrl: candidate.pageUrl || candidate.contextUrl || article?.url || null,
+      query: queryUsed || null,
+      width: checked.width,
+      height: checked.height,
+      sha256: checked.rawSha,
+      dhash: checked.dhash,
+      repeats: 0,
+    });
+    console.log(`  Saved ${origin} media [${slotIndex}/${desiredCount}]: ${relPath} (${checked.width}x${checked.height}) [${candidate.domain || "article"}]`);
+  };
 
   const tryAcceptCandidate = async (candidate, origin, queryUsed) => {
     const cleanUrl = String(candidate?.imageUrl || "").trim();
@@ -785,31 +856,17 @@ export async function sourceStoryMedia({
     try {
       if (origin === "serper") serperDownloads += 1;
       const checked = await downloadAndValidateImage(candidate, { fetchFn });
-      if (seenShas.has(checked.rawSha)) return false;
-      if (seenDhashes.some((prev) => dHashHammingDistance(prev, checked.dhash) <= DHASH_DUPLICATE_THRESHOLD)) {
+      if (isDuplicate(checked)) return false;
+
+      // The article's own photos are the real story, so they are always used. Search photos that are
+      // too narrow for a full-width vertical frame wait as reserves.
+      if (origin === "serper" && checked.width < PREFERRED_PHOTO_MIN_WIDTH) {
+        reserves.push({ candidate, origin, queryUsed, cleanUrl, checked });
+        console.log(`    Holding small photo as reserve (${checked.width}x${checked.height}) [${candidate.domain || cleanUrl.slice(0, 60)}]`);
         return false;
       }
 
-      const normalized = await normalizeBrollMedia(checked.rawBuf);
-      const slotIndex = uniqueRecords.length + 1;
-      const relPath = `media/broll-${String(slotIndex).padStart(2, "0")}.png`;
-      await fs.writeFile(path.join(stageDir, relPath), normalized);
-
-      seenShas.add(checked.rawSha);
-      seenDhashes.push(checked.dhash);
-      uniqueRecords.push({
-        file: relPath,
-        origin,
-        sourceUrl: cleanUrl,
-        pageUrl: candidate.pageUrl || candidate.contextUrl || article?.url || null,
-        query: queryUsed || null,
-        width: checked.width,
-        height: checked.height,
-        sha256: checked.rawSha,
-        dhash: checked.dhash,
-        repeats: 0,
-      });
-      console.log(`  Saved ${origin} media [${slotIndex}/${desiredCount}]: ${relPath} (${checked.width}x${checked.height}) [${candidate.domain || "article"}]`);
+      await saveAccepted({ candidate, origin, queryUsed, cleanUrl, checked });
       return true;
     } catch (err) {
       console.warn(`    Skipped image candidate (${candidate.domain || cleanUrl.slice(0, 60)}): ${err.message}`);
@@ -868,6 +925,15 @@ export async function sourceStoryMedia({
     }
   }
 
+  // 3. Not enough full-width photos: fall back to the small ones we held back, in the order found.
+  let reservesUsed = 0;
+  for (const reserve of reserves) {
+    if (uniqueRecords.length >= desiredCount) break;
+    if (isDuplicate(reserve.checked)) continue;
+    await saveAccepted(reserve);
+    reservesUsed += 1;
+  }
+
   if (uniqueRecords.length < 2) {
     throw new CandidateSkipError(
       `\n================================================================================\n` +
@@ -905,7 +971,10 @@ export async function sourceStoryMedia({
         telemetry: {
           serperQueries,
           serperDownloads,
+          reservesHeld: reserves.length,
+          reservesUsed,
         },
+        preferredMinWidth: PREFERRED_PHOTO_MIN_WIDTH,
         sequence,
         items: uniqueRecords,
       },
@@ -1239,6 +1308,7 @@ async function produceGroundedCandidateRun({
           await fs.copyFile(src, dst);
         }
       }
+      await copyOriginalMedia({ stageDir, runDirectory });
     }
 
     const rawMasterVideo = path.join(runDirectory, "final.mp4");

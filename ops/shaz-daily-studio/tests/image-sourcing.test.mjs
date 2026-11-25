@@ -13,7 +13,10 @@ import {
   buildTargetedImageQueries,
   computeImageDHash,
   computeTargetImageCount,
+  copyOriginalMedia,
   dHashHammingDistance,
+  ORIGINAL_MEDIA_DIR,
+  PREFERRED_PHOTO_MIN_WIDTH,
   measureAudioDurationSeconds,
   sourceStoryMedia,
 } from "../studio-daily.mjs";
@@ -287,5 +290,179 @@ test("sourceStoryMedia spreads non-adjacent repeats when 2 <= unique < target an
     );
   } finally {
     await fs.rm(stageDir, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------------------------
+// Full-size originals + preferring photos wide enough for a full-width vertical frame.
+// Guards the bug class where layout code only had the squashed 1280x720 b-roll to work from.
+// ---------------------------------------------------------------------------------------------
+
+function imageServer(map) {
+  return async (url) => {
+    const entry = map[url];
+    if (!entry) return new Response("missing", { status: 404 });
+    return new Response(entry.buf, { status: 200, headers: { "content-type": entry.type || "image/png" } });
+  };
+}
+
+test("sourceStoryMedia keeps a byte-identical full-size original for every photo it uses", async () => {
+  const stageDir = await fs.mkdtemp(path.join(os.tmpdir(), "wiggly-media-originals-"));
+  const bigJpeg = await sharp(await makeTestPng({ width: 1600, height: 900, variant: 0 })).jpeg({ quality: 90 }).toBuffer();
+  const bigPng = await makeTestPng({ width: 1400, height: 1000, variant: 3 });
+  try {
+    await sourceStoryMedia({
+      topic: { title: "Originals" },
+      article: {
+        url: "https://article.example.com/post",
+        images: [
+          { imageUrl: "https://cdn.example.com/a.jpg", domain: "cdn.example.com" },
+          { imageUrl: "https://cdn.example.com/b.png", domain: "cdn.example.com" },
+        ],
+      },
+      script: { title: "Originals", visualQueries: ["q1", "q2"] },
+      targetCount: 2,
+      stageDir,
+      searchFn: async () => [],
+      fetchFn: imageServer({
+        "https://cdn.example.com/a.jpg": { buf: bigJpeg, type: "image/jpeg" },
+        "https://cdn.example.com/b.png": { buf: bigPng },
+      }),
+    });
+
+    const receipt = JSON.parse(await fs.readFile(path.join(stageDir, "media-sources.json"), "utf8"));
+    assert.deepEqual(receipt.items.map((i) => i.originalFile), [
+      `${ORIGINAL_MEDIA_DIR}/broll-01.jpg`,
+      `${ORIGINAL_MEDIA_DIR}/broll-02.png`,
+    ]);
+    assert.ok((await fs.readFile(path.join(stageDir, receipt.items[0].originalFile))).equals(bigJpeg));
+    assert.ok((await fs.readFile(path.join(stageDir, receipt.items[1].originalFile))).equals(bigPng));
+    // The 1280x720 b-roll the current renderer uses is still written unchanged.
+    const broll = await sharp(path.join(stageDir, receipt.items[0].file)).metadata();
+    assert.deepEqual([broll.width, broll.height], [1280, 720]);
+    assert.deepEqual([receipt.items[0].width, receipt.items[0].height], [1600, 900]);
+  } finally {
+    await fs.rm(stageDir, { recursive: true, force: true });
+  }
+});
+
+test("sourceStoryMedia records phone photos at their displayed (EXIF-rotated) size", async () => {
+  const stageDir = await fs.mkdtemp(path.join(os.tmpdir(), "wiggly-media-exif-"));
+  // Stored landscape 1600x1200 but tagged "rotate 90" -> displays as 1200x1600 portrait.
+  const rotated = await sharp(await makeTestPng({ width: 1600, height: 1200, variant: 1 })).jpeg().withMetadata({ orientation: 6 }).toBuffer();
+  const plain = await makeTestPng({ width: 1300, height: 800, variant: 4 });
+  try {
+    await sourceStoryMedia({
+      topic: { title: "Exif" },
+      article: {
+        url: "https://article.example.com/post",
+        images: [
+          { imageUrl: "https://cdn.example.com/r.jpg", domain: "cdn.example.com" },
+          { imageUrl: "https://cdn.example.com/p.png", domain: "cdn.example.com" },
+        ],
+      },
+      script: { title: "Exif", visualQueries: ["q1", "q2"] },
+      targetCount: 2,
+      stageDir,
+      searchFn: async () => [],
+      fetchFn: imageServer({
+        "https://cdn.example.com/r.jpg": { buf: rotated, type: "image/jpeg" },
+        "https://cdn.example.com/p.png": { buf: plain },
+      }),
+    });
+    const receipt = JSON.parse(await fs.readFile(path.join(stageDir, "media-sources.json"), "utf8"));
+    assert.deepEqual([receipt.items[0].width, receipt.items[0].height], [1200, 1600]);
+  } finally {
+    await fs.rm(stageDir, { recursive: true, force: true });
+  }
+});
+
+test("sourceStoryMedia prefers search photos wide enough for a full-width vertical frame", async () => {
+  assert.equal(PREFERRED_PHOTO_MIN_WIDTH, 1080);
+  const stageDir = await fs.mkdtemp(path.join(os.tmpdir(), "wiggly-media-prefer-"));
+  const small = await makeTestPng({ width: 800, height: 600, variant: 0 });
+  const bigA = await makeTestPng({ width: 1400, height: 800, variant: 3 });
+  const bigB = await makeTestPng({ width: 1600, height: 900, variant: 5 });
+  try {
+    await sourceStoryMedia({
+      topic: { title: "Prefer Big" },
+      article: null,
+      script: { title: "Prefer Big", visualQueries: ["q1", "q2"] },
+      targetCount: 2,
+      stageDir,
+      // The search result claims the small photo is huge, so it sorts first; the real size is only known after download.
+      searchFn: async () => [
+        { imageUrl: "https://s.example.com/small.png", domain: "s.example.com", width: 3000, height: 2000 },
+        { imageUrl: "https://s.example.com/bigA.png", domain: "s.example.com", width: 1400, height: 800 },
+        { imageUrl: "https://s.example.com/bigB.png", domain: "s.example.com", width: 1600, height: 900 },
+      ],
+      fetchFn: imageServer({
+        "https://s.example.com/small.png": { buf: small },
+        "https://s.example.com/bigA.png": { buf: bigA },
+        "https://s.example.com/bigB.png": { buf: bigB },
+      }),
+    });
+    const receipt = JSON.parse(await fs.readFile(path.join(stageDir, "media-sources.json"), "utf8"));
+    // Both big photos are used (biggest first, by the search sort); the small one stays in reserve.
+    assert.deepEqual(receipt.items.map((i) => i.sourceUrl), ["https://s.example.com/bigB.png", "https://s.example.com/bigA.png"]);
+    assert.equal(receipt.telemetry.reservesHeld, 1);
+    assert.equal(receipt.telemetry.reservesUsed, 0);
+  } finally {
+    await fs.rm(stageDir, { recursive: true, force: true });
+  }
+});
+
+test("sourceStoryMedia still uses small search photos when there are not enough big ones, and always uses the article's own photos", async () => {
+  const stageDir = await fs.mkdtemp(path.join(os.tmpdir(), "wiggly-media-reserve-"));
+  const articleSmall = await makeTestPng({ width: 700, height: 500, variant: 1 });
+  const big = await makeTestPng({ width: 1400, height: 800, variant: 3 });
+  const small = await makeTestPng({ width: 800, height: 600, variant: 6 });
+  try {
+    await sourceStoryMedia({
+      topic: { title: "Reserve" },
+      article: { url: "https://article.example.com/post", images: [{ imageUrl: "https://cdn.example.com/lead.png", domain: "cdn.example.com" }] },
+      script: { title: "Reserve", visualQueries: ["q1", "q2"] },
+      targetCount: 3,
+      stageDir,
+      searchFn: async () => [
+        { imageUrl: "https://s.example.com/small.png", domain: "s.example.com", width: 3000, height: 2000 },
+        { imageUrl: "https://s.example.com/big.png", domain: "s.example.com", width: 1400, height: 800 },
+      ],
+      fetchFn: imageServer({
+        "https://cdn.example.com/lead.png": { buf: articleSmall },
+        "https://s.example.com/small.png": { buf: small },
+        "https://s.example.com/big.png": { buf: big },
+      }),
+    });
+    const receipt = JSON.parse(await fs.readFile(path.join(stageDir, "media-sources.json"), "utf8"));
+    assert.deepEqual(receipt.items.map((i) => i.sourceUrl), [
+      "https://cdn.example.com/lead.png", // article photo first, even though it is small
+      "https://s.example.com/big.png", // big search photo beats the small one
+      "https://s.example.com/small.png", // small one fills the last slot
+    ]);
+    assert.equal(receipt.telemetry.reservesUsed, 1);
+    assert.ok(receipt.items.every((i) => i.originalFile));
+  } finally {
+    await fs.rm(stageDir, { recursive: true, force: true });
+  }
+});
+
+test("copyOriginalMedia copies listed originals into the run folder and fails loudly if one is missing", async () => {
+  const stageDir = await fs.mkdtemp(path.join(os.tmpdir(), "wiggly-copy-stage-"));
+  const runDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "wiggly-copy-run-"));
+  try {
+    await fs.mkdir(path.join(stageDir, ORIGINAL_MEDIA_DIR), { recursive: true });
+    await fs.writeFile(path.join(stageDir, ORIGINAL_MEDIA_DIR, "broll-01.jpg"), "photo-bytes");
+    const writeReceipt = (items) => fs.writeFile(path.join(stageDir, "media-sources.json"), JSON.stringify({ items }));
+
+    await writeReceipt([{ file: "media/broll-01.png", originalFile: `${ORIGINAL_MEDIA_DIR}/broll-01.jpg` }]);
+    assert.deepEqual(await copyOriginalMedia({ stageDir, runDirectory }), [`${ORIGINAL_MEDIA_DIR}/broll-01.jpg`]);
+    assert.equal(await fs.readFile(path.join(runDirectory, ORIGINAL_MEDIA_DIR, "broll-01.jpg"), "utf8"), "photo-bytes");
+
+    await writeReceipt([{ file: "media/broll-02.png", originalFile: `${ORIGINAL_MEDIA_DIR}/broll-02.jpg` }]);
+    await assert.rejects(() => copyOriginalMedia({ stageDir, runDirectory }), /missing: media\/original\/broll-02\.jpg/);
+  } finally {
+    await fs.rm(stageDir, { recursive: true, force: true });
+    await fs.rm(runDirectory, { recursive: true, force: true });
   }
 });
