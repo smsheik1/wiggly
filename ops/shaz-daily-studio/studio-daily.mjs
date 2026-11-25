@@ -67,6 +67,7 @@ import {
   writeRunUsage,
 } from "./run-usage.mjs";
 import sharp from "../../v3/public/format-repositories/shaz-puppet-runtime-v1/runtime/sharp.mjs";
+import { formatScoreboard, getDefaultPostStatsPath, refreshPostStats } from "./post-stats.mjs";
 
 export const STUDIO_ROOT = path.dirname(fileURLToPath(import.meta.url));
 export const KIT_ROOT = path.resolve(STUDIO_ROOT, "../../v3/public/format-repositories/shaz-puppet-runtime-v1");
@@ -968,6 +969,9 @@ function resolveStudioDeps(deps = {}) {
     pruneOldRuns: typeof deps.resolveRunDirectory === "function"
       ? async () => ({ runsPruned: 0, filesDeleted: 0 })
       : pruneOldRuns,
+    refreshPostStats: typeof deps.resolveRunDirectory === "function" || hasMockTelegram
+      ? async () => null
+      : refreshPostStats,
     sha256,
     writeJson,
     assertScriptAligned,
@@ -2128,6 +2132,40 @@ export async function runDailyStudio({
  * @param {boolean} [options.autoApprove=false]
  * @param {Array} [options.customTopics=null]
  */
+/**
+ * Audience data loop: before making today's videos, pull how every past video
+ * is doing (views, watch time, likes per channel) into post-stats.json.
+ *
+ * A failure here is shouted with fix steps, but today's videos still get made:
+ * the stats are a record for learning, not part of the video. Nothing fake or
+ * partial is ever written; the old post-stats.json stays as it was.
+ */
+export async function refreshAudienceStats(d) {
+  try {
+    const result = await d.refreshPostStats();
+    if (!result) return { status: "skipped" };
+    console.log("📊 Audience stats refreshed (" + getDefaultPostStatsPath() + "):");
+    console.log(formatScoreboard(result.stats));
+    return { status: "ok", videos: result.stats.videos.length };
+  } catch (err) {
+    console.error(redactSecrets(
+      "\n================================================================================\n" +
+      "❌ AUDIENCE STATS FAILED: could not read post numbers from Buffer\n" +
+      "================================================================================\n" +
+      `${err.message}\n\n` +
+      "Today's videos will still be made, but yesterday's views were NOT recorded.\n" +
+      "Baby steps to fix:\n" +
+      "1. Open https://publish.buffer.com and check you are signed in and your plan is active.\n" +
+      "2. Under Channels, check TikTok, Instagram and YouTube are all connected (reconnect any that show a warning).\n" +
+      "3. If the error says the key is missing or not authorized: open secrets.env at the repo root and check the BUFFER_API_KEY line\n" +
+      "   (new key: https://developers.buffer.com/ → Public API Access Token).\n" +
+      "4. Retry by hand: node ops/shaz-daily-studio/post-stats.mjs\n" +
+      "================================================================================\n",
+    ));
+    return { status: "failed", error: err.message };
+  }
+}
+
 export async function runDailyBatch({
   count,
   dryRun = false,
@@ -2161,6 +2199,10 @@ export async function runDailyBatch({
     const baselineUpdateId = (!noTelegram && !dryRun && !autoApprove)
       ? await d.flushTelegramBacklog({ env })
       : 0;
+
+    if (!dryRun) {
+      await refreshAudienceStats(d);
+    }
 
     const targetCount = count ?? cfg.batchSize;
 
