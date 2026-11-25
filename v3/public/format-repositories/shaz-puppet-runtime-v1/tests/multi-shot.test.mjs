@@ -9,7 +9,7 @@ import sharp from "sharp";
 
 import { renderTextCardFrame } from "../runtime/text-card-renderer.mjs";
 import {
-  calculateKenBurnsCrop,
+  calculateKenBurnsWindow,
   renderKenBurnsFrame,
 } from "../runtime/broll-renderer.mjs";
 import {
@@ -214,20 +214,20 @@ test("deriveMultiShotPlan creates a complete, valid multi-shot plan from transcr
   }
 });
 
-test("calculateKenBurnsCrop calculates accurate crop windows for all motion types", () => {
+test("calculateKenBurnsWindow calculates accurate crop windows for all motion types", () => {
   for (const motion of ["zoom-in", "zoom-out", "pan-left", "pan-right", "pan-up", "pan-down"]) {
-    const startCrop = calculateKenBurnsCrop({ motion, progress: 0, sourceWidth: 1280, sourceHeight: 720 });
-    const endCrop = calculateKenBurnsCrop({ motion, progress: 1, sourceWidth: 1280, sourceHeight: 720 });
+    const startCrop = calculateKenBurnsWindow({ motion, progress: 0, sourceWidth: 1280, sourceHeight: 720 });
+    const endCrop = calculateKenBurnsWindow({ motion, progress: 1, sourceWidth: 1280, sourceHeight: 720 });
 
     assert.ok(startCrop.width > 0 && startCrop.width <= 1280);
     assert.ok(startCrop.height > 0 && startCrop.height <= 720);
-    assert.ok(startCrop.left >= 0 && startCrop.left + startCrop.width <= 1280);
-    assert.ok(startCrop.top >= 0 && startCrop.top + startCrop.height <= 720);
+    assert.ok(startCrop.left >= 0 && startCrop.left + startCrop.width <= 1280 + 1e-9);
+    assert.ok(startCrop.top >= 0 && startCrop.top + startCrop.height <= 720 + 1e-9);
 
     assert.ok(endCrop.width > 0 && endCrop.width <= 1280);
     assert.ok(endCrop.height > 0 && endCrop.height <= 720);
-    assert.ok(endCrop.left >= 0 && endCrop.left + endCrop.width <= 1280);
-    assert.ok(endCrop.top >= 0 && endCrop.top + endCrop.height <= 720);
+    assert.ok(endCrop.left >= 0 && endCrop.left + endCrop.width <= 1280 + 1e-9);
+    assert.ok(endCrop.top >= 0 && endCrop.top + endCrop.height <= 720 + 1e-9);
   }
 });
 

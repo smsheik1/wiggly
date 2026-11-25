@@ -10,9 +10,14 @@ export const KEN_BURNS_MOTIONS = [
 ];
 
 /**
- * Calculates the crop window for a Ken Burns effect frame.
+ * Calculates the exact (fractional) window of the source a Ken Burns frame shows.
+ *
+ * Do not round this window to whole pixels. Rounding width, height and offset on
+ * their own made the picture's center hop about half a pixel back and forth every
+ * frame while the zoom itself only moved ~1.3px, so zooms and pans looked like a
+ * shaky handheld camera (2026-11-25). renderKenBurnsFrame places it sub-pixel exactly.
  */
-export function calculateKenBurnsCrop({
+export function calculateKenBurnsWindow({
   motion = "zoom-in",
   progress = 0,
   sourceWidth = 1280,
@@ -68,16 +73,13 @@ export function calculateKenBurnsCrop({
     }
   }
 
-  const cropW = Math.max(1, Math.min(sourceWidth, Math.round(sourceWidth / zoom)));
-  const cropH = Math.max(1, Math.min(sourceHeight, Math.round(sourceHeight / zoom)));
+  const safeZoom = Math.max(1, zoom);
+  const width = sourceWidth / safeZoom;
+  const height = sourceHeight / safeZoom;
+  const left = (sourceWidth - width) * focusX;
+  const top = (sourceHeight - height) * focusY;
 
-  const maxLeft = sourceWidth - cropW;
-  const maxTop = sourceHeight - cropH;
-
-  const left = Math.max(0, Math.min(maxLeft, Math.round(maxLeft * focusX)));
-  const top = Math.max(0, Math.min(maxTop, Math.round(maxTop * focusY)));
-
-  return { left, top, width: cropW, height: cropH };
+  return { left, top, width, height };
 }
 
 /**
@@ -261,16 +263,47 @@ export async function renderKenBurnsFrame({
   durationFrames = 24,
 }) {
   const progress = durationFrames > 1 ? localFrame / (durationFrames - 1) : 0;
-  const crop = calculateKenBurnsCrop({
+  const view = calculateKenBurnsWindow({
     motion,
     progress,
     sourceWidth,
     sourceHeight,
   });
 
-  return sharp(sourceBuffer)
-    .extract(crop)
-    .resize(targetWidth, targetHeight, { fit: "fill" })
+  // Scale the whole picture so the window fills the frame, nudging it by the
+  // fractional part of the offset, then cut the frame out at whole pixels.
+  // The picture is padded with copies of its edge pixels first so the frame
+  // edge never blends with black.
+  const pad = 4;
+  const scaleX = targetWidth / view.width;
+  const scaleY = targetHeight / view.height;
+  const offsetX = (view.left + pad) * scaleX;
+  const offsetY = (view.top + pad) * scaleY;
+  const wholeX = Math.floor(offsetX);
+  const wholeY = Math.floor(offsetY);
+
+  const padded = await sharp(sourceBuffer)
+    .resize(sourceWidth, sourceHeight, { fit: "fill" })
+    .extend({ top: pad, bottom: pad, left: pad, right: pad, extendWith: "copy" })
+    .toBuffer();
+  // affine and extract must run as two steps: in one sharp pipeline the
+  // extract would happen before the affine.
+  const scaled = await sharp(padded)
+    .affine([scaleX, 0, 0, scaleY], {
+      interpolator: "bicubic",
+      odx: -(offsetX - wholeX),
+      ody: -(offsetY - wholeY),
+    })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const cutLeft = Math.max(0, Math.min(scaled.info.width - targetWidth, wholeX));
+  const cutTop = Math.max(0, Math.min(scaled.info.height - targetHeight, wholeY));
+
+  return sharp(scaled.data, {
+    raw: { width: scaled.info.width, height: scaled.info.height, channels: scaled.info.channels },
+  })
+    .extract({ left: cutLeft, top: cutTop, width: targetWidth, height: targetHeight })
     .png()
     .toBuffer();
 }
