@@ -174,6 +174,11 @@ export async function getBufferChannels({ apiKey, fetchFn = fetch } = {}) {
 
 /**
  * Checks Buffer's recent posts on a channel to recover a post created just before an ambiguous timeout.
+ *
+ * Throws if Buffer can't be asked. Callers must treat that as "don't know",
+ * never as "no post": re-posting on a failed check can double-post. (Until
+ * 2026-11-25 this query sent a `sort` argument Buffer rejects and the error was
+ * swallowed, so recovery never worked.)
  */
 export async function findRecentBufferPost({
   organizationId,
@@ -186,7 +191,7 @@ export async function findRecentBufferPost({
   if (!organizationId || !channelId) return null;
 
   const query = `query RecentChannelPosts($input: PostsInput!) {
-    posts(input: $input, sort: [{ field: createdAt, direction: desc }], first: 10) {
+    posts(input: $input, first: 50) {
       edges {
         node {
           id
@@ -199,27 +204,28 @@ export async function findRecentBufferPost({
     }
   }`;
 
-  let data;
-  try {
-    data = await executeBufferGraphQL({
-      query,
-      variables: {
-        input: {
-          organizationId,
-          filter: { channelIds: [channelId] },
+  const sinceMsForFilter = sinceIso ? Date.parse(sinceIso) : Number.NaN;
+  const data = await executeBufferGraphQL({
+    query,
+    variables: {
+      input: {
+        organizationId,
+        filter: {
+          channelIds: [channelId],
+          ...(Number.isFinite(sinceMsForFilter)
+            ? { createdAt: { start: new Date(sinceMsForFilter - 120_000).toISOString() } }
+            : {}),
         },
       },
-      apiKey,
-      fetchFn,
-    });
-  } catch (err) {
-    if (err instanceof BufferApiError && err.isAccountError) {
-      throw err;
-    }
-    return null;
-  }
+    },
+    apiKey,
+    fetchFn,
+  });
 
-  const edges = data?.posts?.edges || [];
+  // Buffer's posts query takes no sort argument; newest first is done here.
+  const edges = [...(data?.posts?.edges || [])].sort(
+    (a, b) => String(b?.node?.createdAt || "").localeCompare(String(a?.node?.createdAt || "")),
+  );
   const sinceMs = sinceIso ? Date.parse(sinceIso) : Number.NaN;
   const normalizedTarget = String(expectedTextPrefix || "").trim().toLowerCase().replace(/\s+/g, " ").slice(0, 40);
 
@@ -662,14 +668,24 @@ export async function publishVideoToAllChannels({
     }
 
     if (existing?.status === "unknown") {
-      const recovered = await findRecentBufferPost({
-        organizationId: organization.id,
-        channelId: targetChannel.id,
-        expectedTextPrefix: spec.expectedTextPrefix,
-        sinceIso: existing.attemptedAt,
-        apiKey,
-        fetchFn,
-      });
+      let recovered;
+      try {
+        recovered = await findRecentBufferPost({
+          organizationId: organization.id,
+          channelId: targetChannel.id,
+          expectedTextPrefix: spec.expectedTextPrefix,
+          sinceIso: existing.attemptedAt,
+          apiKey,
+          fetchFn,
+        });
+      } catch (lookupErr) {
+        if (lookupErr instanceof BufferApiError && lookupErr.isAccountError) throw lookupErr;
+        // Can't tell whether the earlier post went through: never re-post blind.
+        const note = redactSecrets(`Could not check Buffer for an earlier ${spec.service} post: ${lookupErr.message}`);
+        console.error(`\n❌ ${note}\n   Left as UNKNOWN (not re-posted, to avoid a duplicate). Check https://publish.buffer.com → ${spec.service} → Sent.\n`);
+        await saveChannelState(spec.service, { ...existing, lastError: note });
+        continue;
+      }
       if (recovered) {
         await saveChannelState(spec.service, {
           status: "posted",
@@ -716,14 +732,22 @@ export async function publishVideoToAllChannels({
         }
 
         if (err instanceof BufferApiError && err.isAmbiguousTimeout) {
-          const recovered = await findRecentBufferPost({
-            organizationId: organization.id,
-            channelId: targetChannel.id,
-            expectedTextPrefix: spec.expectedTextPrefix,
-            sinceIso: attemptedAt,
-            apiKey,
-            fetchFn,
-          });
+          let recovered;
+          let lookupNote = "";
+          try {
+            recovered = await findRecentBufferPost({
+              organizationId: organization.id,
+              channelId: targetChannel.id,
+              expectedTextPrefix: spec.expectedTextPrefix,
+              sinceIso: attemptedAt,
+              apiKey,
+              fetchFn,
+            });
+          } catch (lookupErr) {
+            if (lookupErr instanceof BufferApiError && lookupErr.isAccountError) throw lookupErr;
+            lookupNote = ` | Could not check Buffer for the post afterwards: ${lookupErr.message}`;
+            console.error(redactSecrets(`\n❌ ${spec.service}: Buffer timed out and the follow-up check failed (${lookupErr.message}).\n   Left as UNKNOWN. Check https://publish.buffer.com → ${spec.service} → Sent before re-posting.\n`));
+          }
           if (recovered) {
             await saveChannelState(spec.service, {
               status: "posted",
@@ -752,7 +776,7 @@ export async function publishVideoToAllChannels({
             channelId: targetChannel.id,
             attempts: attempt,
             attemptedAt,
-            lastError: redactSecrets(err.message),
+            lastError: redactSecrets(err.message + lookupNote),
           });
           break;
         }
